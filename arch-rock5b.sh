@@ -22,14 +22,27 @@ fi
 
 drive=$1
 if [ -z $drive ]; then
-  echo "Please specify a drive (e.g. /dev/sda)"
-  exit 1
+  echo "Do you want to create an image (y/n)?"
+  read answer
+  if [ "$answer" == "y" ]; then
+    sudo mkdir -p out
+    drive=out/archlinux.img
+    dd if=/dev/zero of=$drive bs=1M count=4096
+  else
+    echo "Please specify a drive (e.g. /dev/sda)"
+    exit 1
+  fi
 fi
 
 boot_image=$2
 if [ -z $boot_image ]; then
-  echo "Please specify a boot image (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
-  exit 1
+  if [ -z $drive ]; then
+    echo "Specify a boot image (e.g. /path/to/boot.tar.gz or /path/to/boot.img): "
+    read answer
+    boot_image=answer
+   else
+    echo "Please specify a boot image (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
+    exit 1
 fi
 
 root_mount_dir=$(mktemp -d)
@@ -99,3 +112,4 @@ rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz
 echo "Process completed successfully"
 echo "Root partition UUID: $root_uuid"
 echo "Root partition PARTUUID: $root_part_uuid"
+
