@@ -27,7 +27,7 @@ if [ -z $drive ]; then
   if [ "$answer" == "y" ]; then
     sudo mkdir -p out
     drive=out/archlinux.img
-    dd if=/dev/zero of=$drive bs=1M count=4096
+    sudo dd if=/dev/zero of=$drive bs=1M count=4096
   else
     echo "Please specify a drive (e.g. /dev/sda)"
     exit 1
@@ -43,6 +43,7 @@ if [ -z $boot_image ]; then
    else
     echo "Please specify a boot image (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
     exit 1
+   fi
 fi
 
 root_mount_dir=$(mktemp -d)
@@ -112,4 +113,3 @@ rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz
 echo "Process completed successfully"
 echo "Root partition UUID: $root_uuid"
 echo "Root partition PARTUUID: $root_part_uuid"
-
