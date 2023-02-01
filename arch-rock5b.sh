@@ -25,8 +25,10 @@ if [ -z $drive ]; then
   echo "Do you want to create an image (y/n)?"
   read answer
   if [ "$answer" == "y" ]; then
-    sudo mkdir -p out
-    drive=out/archlinux.img
+    if [ ! -d "./out" ]; then
+      sudo mkdir ./out
+    fi
+    drive=./out/archlinux.img
     sudo dd if=/dev/zero of=$drive bs=1M count=4096
   else
     echo "Please specify a drive (e.g. /dev/sda)"
