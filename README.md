@@ -13,9 +13,15 @@ Usage :
 
 `./arch-rock5b.sh <target_drive_path> <boot_image_path>`
 
-Example (this will format the disk in /dev/sdb, then download arch linux roofs and use boot-arch-rkbsp-latest.tar.gz as boot partition to the disk): 
+Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and use boot-arch-rkbsp-latest.tar.gz as boot partition to the disk): 
 
 `./arch-rock5b.sh /dev/sdb boot-arch-rkbsp-latest.tar.gz`
+
+Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format the disk in /dev/nvme0n1, then download arch linux roofs and use boot-arch-rkbsp-latest.tar.gz as boot partition to the disk): 
+
+`./arch-rock5b.sh /dev/nvme0n1 boot-arch-rkbsp-latest.tar.gz`
+
+
 
 If it success, you should see a UUID and a PARTUUID. Your disk's rootfs and boot partition (500MB) should be mounted.
 
