@@ -1,42 +1,94 @@
-# archlinux-installer-rock5
-This is a script / packages that setup archlinux, currently target for Radxa Rock 5B only.
+# Arch Linux image / disk creation tool for Rock 5B / RK3588
+This is a script / packages that setup archlinux, currently target for Radxa Rock 5B only.It automatically format,download, and flash an Arch Linux system.
 
-This script automatically format,download, and flash an Arch Linux system, it requires an input of a boot partition image (a /boot packed as .img or .tar.gz)
+# Quick Start
 
-the boot image is now available in this repo, you may now just clone the repo.
+NOTE: Currently, only installation to a disk (directly on a Rock 5B or any Linux system with the targetted disk to install) is supported. Functionality to create an .img image is still work-in-progress.
 
-Usage :
+Download and run the script below:
+ ```bash
+ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh)"
+```
 
-`git clone https://github.com/kwankiu/archlinux-installer-rock5.git`
+# Post Install
 
-`chmod +x ./arch-rock5b.sh`
+This script gets you a bootable Arch Linux on your Disk. The default login is alarm/alarm and root login is root/root.
 
-`./arch-rock5b.sh <target_drive_path> <boot_image_path>`
+1. Login as root/root
+2. After booting, initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+```
+pacman-key --init
+pacman-key --populate archlinuxarm
+```
+3. Add `alarm` to sudo (or u can create your own user account and replace `alarm` with your user)
 
-Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and use boot-arch-rkbsp-latest.tar.gz as boot partition to the disk): 
+Edit the sudoers file
+```
+nano /etc/sudoers
+```
 
-`./arch-rock5b.sh /dev/sdb boot-arch-rkbsp-latest.tar.gz`
+Uncomment the line :
+```
+%wheel ALL=(ALL) ALL
+```
 
-Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format the disk in /dev/nvme0n1, then download arch linux roofs and use boot-arch-rkbsp-latest.tar.gz as boot partition to the disk): 
+Then save and exit by Ctrl+O then Enter then Ctrl+X.
 
-`./arch-rock5b.sh /dev/nvme0n1 boot-arch-rkbsp-latest.tar.gz`
+Add the user to sudo :
+```
+usermod -aG wheel alarm
+```
+
+4. Mount your first boot partition to /boot folder in rootfs. This allow Arch to manage the kernels. 
+
+Edit /etc/fstab
+```
+nano /etc/fstab
+```
+
+Add this line (Make sure to adapt your device if you are not using NVME (mmcblk for sdcard etc).)
+```
+/dev/nvme0n1p1 /boot vfat dmask=000,fmask=0111,user 0 0
+```
+Then save and exit by Ctrl+O then Enter then Ctrl+X.
+
+5. Logout from root
+```
+exit
+```
+
+6.  Login to alarm/alarm (or the user account you created).
+
+7. Install your favourite Desktop Environment or use it as CLI.
+
+# Installing Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
+
+To be updated.
+Read [https://forum.radxa.com/t/archlinux-on-rock5b/13851](https://forum.radxa.com/t/archlinux-on-rock5b/13851) for reference.
+
+# Usage
+
+```
+./arch-rock5b.sh <disk_path> <boot_img_path>
+```
 
 
+Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and use boot.img as boot partition to the disk): 
 
-If it success, you should see a UUID and a PARTUUID. Your disk's rootfs and boot partition (500MB) should be mounted.
+```
+./arch-rock5b.sh /dev/sdb boot.img
+```
 
-In boot partition :
-Open /extlinux/extlinux.conf with your prefered text editor, replace the UUID with the one the script output.
+Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format the disk in /dev/nvme0n1, then download arch linux roofs and use boot.img as boot partition to the disk): 
 
-In rootfs partition :
-Open /etc/fstab with your prefered text editor, add this line :
-`/dev/nvme0n1p1 /boot vfat dmask=000,fmask=0111,user 0 0`
+```
+./arch-rock5b.sh /dev/nvme0n1 boot.img
+```
 
-WIP / TODO List :
-1. Run the script automatically without cloning git repo for example `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh)"`
-2. Make a pre-install and post-install script to setup UUID, create user account and add sudoers, add pacman-key, install gpu and rkmpp, etc.
-3. Use the script to automatically build image so that can flash using your desired image tool and use multiple times without needing to plug in the nvme drive to a linux pc or the rock 5B to use this script
-4. idk
-
+# WIP / TODO List / Known Issues
+1. Make a pre-install and post-install script to setup UUID, create user account and add sudoers, add pacman-key, install gpu and rkmpp, etc.
+2. Use the script to automatically build image so that can flash using your desired image tool and use multiple times without needing to plug in the nvme drive to a linux pc or the rock 5B to use this script
+3. Create image is not yet working
+4. When choosing a disk, on some system, the path may not be read properly (/dev/nvme0n1 1024G may become /dev/1024G, temp solution is to manually enter the disk path)
 
 
