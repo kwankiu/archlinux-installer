@@ -72,14 +72,21 @@ Read [https://forum.radxa.com/t/archlinux-on-rock5b/13851](https://forum.radxa.c
 ./arch-rock5b.sh <disk_path> <boot_img_path>
 ```
 
+You can simply run the script without any parameters, the script will prompt and ask you.
 
-Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and use boot.img as boot partition to the disk): 
+You can pass only the first parameter <disk_path> (e.g. /dev/nvme0n1 for Rock 5B's NVme Slot), this will install Arch Linux to your disk path using the boot partition file from github release.
+
+You can pass both parameters which you can use your own boot partition file path (which can be .img or .tar.gz).
+
+
+
+Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and the boot partition from github release to the disk): 
 
 ```
-./arch-rock5b.sh /dev/sdb boot.img
+./arch-rock5b.sh /dev/sdb
 ```
 
-Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format the disk in /dev/nvme0n1, then download arch linux roofs and use boot.img as boot partition to the disk): 
+Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format the disk in /dev/nvme0n1, then download arch linux roofs and use your own boot.img as boot partition to the disk): 
 
 ```
 ./arch-rock5b.sh /dev/nvme0n1 boot.img
