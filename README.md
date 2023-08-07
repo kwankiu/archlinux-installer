@@ -32,10 +32,8 @@ In rootfs partition :
 Open /etc/fstab with your prefered text editor, add this line :
 `/dev/nvme0n1p1 /boot vfat dmask=000,fmask=0111,user 0 0`
 
-
-
 WIP / TODO List :
-1. Run the script automatically without cloning git repo for example `wget https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh | bash`
+1. Run the script automatically without cloning git repo for example `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh)"`
 2. Make a pre-install and post-install script to setup UUID, create user account and add sudoers, add pacman-key, install gpu and rkmpp, etc.
 3. Use the script to automatically build image so that can flash using your desired image tool and use multiple times without needing to plug in the nvme drive to a linux pc or the rock 5B to use this script
 4. idk
