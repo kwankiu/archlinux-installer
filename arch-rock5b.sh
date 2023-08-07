@@ -187,7 +187,7 @@ echo "Root partition UUID: $root_uuid"
 echo "Root partition PARTUUID: $root_part_uuid"
 
 # Change UUID for extlinux.conf
-sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $root_partition/extlinux/extlinux.conf
+sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
 
 # Unmount the boot and root partitions
 sudo umount $boot_mount_dir $root_mount_dir
