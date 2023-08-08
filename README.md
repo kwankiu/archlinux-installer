@@ -3,63 +3,30 @@ This is a script / packages that setup archlinux, currently target for Radxa Roc
 
 # Quick Start
 
-NOTE: Currently, only installation to a disk (directly on a Rock 5B or any Linux system with the targetted disk to install) is supported. Functionality to create an .img image is still work-in-progress.
+Note: Currently, only installation to a disk (directly on a Rock 5B or any Linux system with the targetted disk to install) is supported. Functionality to create an .img image is still work-in-progress.
 
 Download and run the script below:
  ```bash
  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh)"
 ```
 
-# Post Install
+This will get you a bootable Arch Linux on your Disk. The default login is alarm/alarm and root login is root/root.
 
-This script gets you a bootable Arch Linux on your Disk. The default login is alarm/alarm and root login is root/root.
+# First Boot Setup / Post Install
+
+Note : If you have installed your copy of Arch Linux using the script above, there is a `firstbootsetup.sh` script already added to your root directory. 
+
+IF ONLY YOU DONT ALREADY HAVE THE SCRIPT, you may download it using (skip this unless you do not have it):
+ ```bash
+ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/firstbootsetup.sh)"
+```
 
 1. Login as root/root
-2. After booting, initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+2. Now run the script
 ```
-pacman-key --init
-pacman-key --populate archlinuxarm
+./firstbootsetup.sh
 ```
-3. Add `alarm` to sudo (or u can create your own user account and replace `alarm` with your user)
-
-Edit the sudoers file
-```
-nano /etc/sudoers
-```
-
-Uncomment the line :
-```
-%wheel ALL=(ALL) ALL
-```
-
-Then save and exit by Ctrl+O then Enter then Ctrl+X.
-
-Add the user to sudo :
-```
-usermod -aG wheel alarm
-```
-
-4. Mount your first boot partition to /boot folder in rootfs. This allow Arch to manage the kernels. 
-
-Edit /etc/fstab
-```
-nano /etc/fstab
-```
-
-Add this line (Make sure to adapt your device if you are not using NVME (mmcblk for sdcard etc).)
-```
-/dev/nvme0n1p1 /boot vfat dmask=000,fmask=0111,user 0 0
-```
-Then save and exit by Ctrl+O then Enter then Ctrl+X.
-
-5. Logout from root
-```
-exit
-```
-
-6.  Login to alarm/alarm (or the user account you created).
-
-7. Install your favourite Desktop Environment or use it as CLI.
+3. Once it's done, the script should automatically reboot your system. Now, login to your newly created user account and enjoy!
 
 # Installing Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
 
