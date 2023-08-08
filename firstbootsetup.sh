@@ -12,6 +12,28 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+# Check internet connection
+echo "Checking internet connection..."
+servers=("8.8.8.8" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile (for China users)
+internet_available=false
+
+for server in "${servers[@]}"; do
+    if ping -q -c 3 "$server" >/dev/null; then
+        echo "Internet is available via $server."
+        internet_available=true
+        break
+    fi
+done
+
+if ! "$internet_available"; then
+    echo "No internet connection. We might not be able to set you up if you dont have internet connection. Are you sure to continue (y/n)?"
+    read answer
+    if [ "$answer" = "n" ]; then
+        echo "Aborted because no internet connection. Exiting ..."
+        exit 1
+    fi
+fi
+
 #initialize the pacman keyring and populate the Arch Linux ARM package signing keys
 pacman-key --init
 pacman-key --populate archlinuxarm
@@ -105,6 +127,8 @@ fi
 echo "Installing sudo"
 pacman -Sy sudo --noconfirm
 
+# TODO: Download postinstall.sh to user home directory
+
 echo "Done, you may login to your newly created user account $new_username after the reboot."
 
 # Prompt user if they want to reboot
@@ -113,6 +137,8 @@ read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. D
 if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
     echo "You can manually reboot later to apply the changes."
 else
-    echo "Rebooting..."
+    echo "Removing this script ..."
+    rm -rf firstbootsetup.sh
+    echo "Done. Rebooting..."
     reboot
 fi
