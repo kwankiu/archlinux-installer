@@ -2,7 +2,7 @@
 
 ################################################################
 #                                                              #
-#    Arch Linux post installation tool for Rock 5B / RK3588    #
+#    Arch Linux first boot setup tool for Rock 5B / RK3588     #
 #                                                              #
 ################################################################
 
@@ -128,7 +128,14 @@ fi
 echo "Installing sudo"
 pacman -Sy sudo --noconfirm
 
-# TODO: Download postinstall.sh to user home directory
+# Download postinstall scripts to user home directory
+cd /home/$new_username/
+mkdir tools
+cd tools
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-kernel.sh
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/post-install.sh
+chmod +x install-kernel.sh
+chmod +x post-install.sh
 
 echo "Done, you may login to your newly created user account $new_username after the reboot."
 
@@ -139,7 +146,7 @@ if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
     echo "You can manually reboot later to apply the changes."
 else
     echo "Removing this script ..."
-    rm -rf firstbootsetup.sh
+    rm -rf /root/firstbootsetup.sh
     echo "Done. Rebooting..."
     reboot
 fi
