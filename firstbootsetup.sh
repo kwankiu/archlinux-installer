@@ -72,20 +72,10 @@ fi
 echo "Please set a root password : "
 passwd
 
-# Get the rootfs partition from the current mount point "/"
+# Get boot partition from the current mount point "/"
 rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
-
-# Check if the rootfs_partition is not empty
-if [ -z "$rootfs_partition" ]; then
-    echo "Unable to determine rootfs partition"
-    exit 1
-fi
-
-# Get the rootfs disk (e.g., /dev/nvme0n1)
 rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
-
-# Find the boot partition on the same disk
-boot_partition=$(lsblk -o NAME,MOUNTPOINT | grep "$rootfs_disk" | grep "/boot" | awk '{print $1}')
+boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
 
 # Check if the boot_partition is not empty
 if [ -z "$boot_partition" ]; then
@@ -113,7 +103,7 @@ fi
 
 # Install sudo
 echo "Installing sudo"
-pacman -S sudo --no-confirm
+pacman -Sy sudo --noconfirm
 
 echo "Done, you may login to your newly created user account $new_username after the reboot."
 
