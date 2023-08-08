@@ -97,6 +97,7 @@ passwd
 # Get boot partition from the current mount point "/"
 rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
+rootfs_disk="${rootfs_disk%p*}"
 boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
 
 # Check if the boot_partition is not empty
