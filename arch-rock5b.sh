@@ -187,12 +187,29 @@ echo "Root partition UUID: $root_uuid"
 echo "Root partition PARTUUID: $root_part_uuid"
 
 # Change UUID for extlinux.conf
+echo "Updating UUID for extlinux.conf ..."
 sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+
+# Download rootfs-patch
+curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/rootfs-patch-arch-rkbsp-latest.tar.gz
+
+# Extract and copy rootfs-patch to rootfs
+rootfs_patch_tar_dir=$(mktemp -d)
+sudo tar -xf "rootfs-patch-arch-rkbsp-latest.tar.gz" -C "$rootfs_patch_tar_dir"
+sudo cp -r "$rootfs_patch_tar_dir"/* "$root_mount_dir"
+
+# Remove the temporary directory
+sudo rm -rf "$rootfs_patch_tar_dir"
+
+# Download and copy firstbootsetup.sh to root
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/firstbootsetup.sh
+sudo chmod +x firstbootsetup.sh
+sudo cp -r "firstbootsetup.sh" "$root_mount_dir/root/firstbootsetup.sh"
 
 # Unmount the boot and root partitions
 sudo umount $boot_mount_dir $root_mount_dir
 
 # Clean up
-sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz boot-arch-rkbsp-latest.tar.gz
+sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz boot-arch-rkbsp-latest.tar.gz rootfs-patch-arch-rkbsp-latest.tar.gz firstbootsetup.sh
 
-echo "Process completed successfully"
+echo "Process completed successfully, you may now boot to your Arch Linux system, Enjoy!"
