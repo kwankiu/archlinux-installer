@@ -34,6 +34,13 @@ useradd -m -G wheel -s /bin/bash "$new_username"
 # Check if the useradd command was successful
 if [ $? -eq 0 ]; then
     echo "User $new_username created successfully"
+    # Remove the default "alarm" account
+    userdel -r alarm
+    if [ $? -eq 0 ]; then
+        echo "Default 'alarm' account removed successfully"
+    else
+        echo "Error removing default 'alarm' account"
+    fi
 else
     echo "Error creating user $new_username"
     exit 1
@@ -61,6 +68,10 @@ else
     echo "Error adding user $new_username to sudoers"
 fi
 
+# Prompt user to change the root password
+echo "Please set a root password : "
+passwd
+
 # Get the rootfs partition from the current mount point "/"
 rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
@@ -70,15 +81,48 @@ if [ -z "$rootfs_partition" ]; then
     exit 1
 fi
 
-# Add the line to /etc/fstab
-new_line="$rootfs_partition /boot vfat dmask=000,fmask=0111,user 0 0"
-echo "$new_line" >> /etc/fstab
+# Get the rootfs disk (e.g., /dev/nvme0n1)
+rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
 
-# Check if the addition was successful
-if [ $? -eq 0 ]; then
-    echo "Line added to /etc/fstab successfully"
-else
-    echo "Error adding line to /etc/fstab"
+# Find the boot partition on the same disk
+boot_partition=$(lsblk -o NAME,MOUNTPOINT | grep "$rootfs_disk" | grep "/boot" | awk '{print $1}')
+
+# Check if the boot_partition is not empty
+if [ -z "$boot_partition" ]; then
+    echo "Unable to determine boot partition on $rootfs_disk"
+    exit 1
 fi
 
-echo "done, you may now logout and login to your newly created user account $new_username."
+# Add the line to /etc/fstab
+new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
+
+# Check if the line already exists in /etc/fstab
+if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+    echo "boot partition seems already configured in /etc/fstab to manage by system."
+else
+    # Add the line to /etc/fstab
+    echo "$new_line" >> /etc/fstab
+    # Check if the addition was successful
+    if [ $? -eq 0 ]; then
+        cat /etc/fstab
+        echo "Line added to /etc/fstab successfully"
+    else
+        echo "Error adding line to /etc/fstab"
+    fi
+fi
+
+# Install sudo
+echo "Installing sudo"
+pacman -S sudo --no-confirm
+
+echo "Done, you may login to your newly created user account $new_username after the reboot."
+
+# Prompt user if they want to reboot
+read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+    echo "You can manually reboot later to apply the changes."
+else
+    echo "Rebooting..."
+    reboot
+fi
