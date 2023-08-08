@@ -27,8 +27,9 @@ install_rkbsp5_git() {
 install_midstream() {    
     echo "Installing linux-rk3588-midstream ..."
     git clone https://github.com/hbiyik/hw_necromancer.git
-    cd rock5b/linux-rk3588-midstream
+    cd hw_necromancer/rock5b/linux-rk3588-midstream
     makepkg -si
+    cd ..
     cd ..
     cd ..
 }
@@ -48,6 +49,9 @@ read -p "Enter the number of your choice: " choice
 # Install required package
 sudo pacman -S git --noconfirm
 sudo pacman -S --needed base-devel --noconfirm
+
+# create a directory
+cd ~/
 mkdir $kernel_repo_dir
 cd $kernel_repo_dir
 
@@ -77,6 +81,6 @@ read answer
 if [ "$answer" = "y" ]; then
     echo "Installation files are not removed. You may remove them manually."
 else 
-    sudo rm -rf $kernel_repo_dir
+    sudo rm -rf ~/$kernel_repo_dir
     echo "Cleaned up installation files"
 fi
