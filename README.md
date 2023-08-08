@@ -83,13 +83,13 @@ You can pass both parameters which you can use your own boot partition file path
 Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and the boot partition from github release to the disk): 
 
 ```
-./arch-rock5b.sh /dev/sdb
+curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh | bash -s /dev/sdb
 ```
 
 Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format the disk in /dev/nvme0n1, then download arch linux roofs and use your own boot.img as boot partition to the disk): 
 
 ```
-./arch-rock5b.sh /dev/nvme0n1 boot.img
+curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh | bash -s /dev/nvme0n1 boot.img
 ```
 
 # WIP / TODO List / Known Issues
