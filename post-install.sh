@@ -32,6 +32,12 @@ sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git
 # Install Bluetooth
 sudo pacman -Sy bluez
 
+# Network Manager
+echo "Installing network manager ..."
+sudo pacman -S networkmanager --noconfirm
+sudo systemctl enable NetworkManager.service
+sudo systemctl start NetworkManager.service
+
 # RK3588 Profile
 # Define the alias lines
 performance_alias="alias performance=\"echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor\""
@@ -128,8 +134,8 @@ sudo rm -rf ~/$tmp_repo_dir
 
 # Install desktop environment
 if [ "$de_options" = 1 ]; then
-    # Install Gnome
-    sudo pacman -Sy gnome
+    # Install Gnome and perform a full upgrade
+    sudo pacman -Syyu gnome
     sudo systemctl enable gdm
 fi
 

@@ -12,6 +12,16 @@ install_rkbsp5_bin() {
     echo "Downloading linux-radxa-rkbsp5-bin ..."
     git clone https://aur.archlinux.org/linux-radxa-rkbsp5-bin.git
     cd linux-radxa-rkbsp5-bin
+
+    # remove old kernel files, else the package will not install.
+    mkdir old-kernel-files
+    sudo mv /usr/bin/libmali ~/$kernel_repo_dir/old-kernel-files/libmali
+    sudo mv /usr/bin/libmaliw ~/$kernel_repo_dir/old-kernel-files/libmaliw
+    sudo mv /usr/lib/libmali ~/$kernel_repo_dir/old-kernel-files/libmali_folder
+    sudo mv /usr/lib/modules ~/$kernel_repo_dir/old-kernel-files/modules
+    sudo mv /usr/lib/firmware/mali_csffw.bin ~/$kernel_repo_dir/old-kernel-files/mali_csffw.bin
+    sudo mv /boot/dtbs ~/$kernel_repo_dir/old-kernel-files/dtbs
+
     makepkg -si
     cd ..
     echo "Installed linux-radxa-rkbsp5"
@@ -114,4 +124,14 @@ if [ "$answer" = "y" ]; then
 else 
     sudo rm -rf ~/$kernel_repo_dir
     echo "Cleaned up installation files"
+fi
+
+# Prompt user if they want to reboot
+read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+    echo "You can manually reboot later to apply the changes."
+else
+    echo "Done. Rebooting..."
+    sudo reboot
 fi
