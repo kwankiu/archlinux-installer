@@ -17,17 +17,13 @@ This will get you a bootable Arch Linux on your Disk. The default login is alarm
 ## First Boot
 Note : If you have installed your copy of Arch Linux using the script above, there is a `firstbootsetup.sh` script already added to your root directory. 
 
-IF ONLY YOU DONT ALREADY HAVE THE SCRIPT, you may download it using (skip this unless you do not have it):
- ```bash
- /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/firstbootsetup.sh)"
-```
-
 1. Login as root/root
 2. Now run the script
 ```
 ./firstbootsetup.sh
 ```
-3. Once it's done, the script should automatically reboot your system. Now, login to your newly created user account and enjoy!
+3. Once it's done, the script should automatically reboot your system.
+4. Now, login to your newly created user account and enjoy!
 
 ## The tools folder
 Note : If you come from the above step, `firstbootsetup.sh` should have added a `tools` folder in your user home directory. 
