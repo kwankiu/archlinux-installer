@@ -50,8 +50,15 @@ echo "$powersave_alias" >> sudo tee ~/.bash_aliases
 source ~/.bash_aliases
 echo "SoC Performance Profile Added. You may change your SoC Performance Profile by running performance, ondemand or powersave."
 
-# TODO: Add support for pwm fan control?
-# echo "Do you want to install and enable pwm fan control?"
+# TODO: Add support for pwm fan control
+sudo pacman -S dtc --noconfirm
+echo "Getting PWM Fan Control DTS File"
+curl -LJO https://raw.githubusercontent.com/amazingfate/radxa-rock5b-overlays/main/pwm-fan.dts
+echo "Compiling pwm-fan.dts to rock5b-pwm-fan.dtb"
+dtc -O dtb -o "rock5b-pwm-fan.dtb" "pwm-fan.dts"
+sudo mv rock5b-pwm-fan.dtb /boot/dtbs/rockchip/rock5b-pwm-fan.dtb
+sudo rm -rf pwm-fan.dts
+
 
 # Install Mesa and Desktop Environment
 echo "---------------------------------------------------------------------"
