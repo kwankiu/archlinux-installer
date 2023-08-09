@@ -34,14 +34,16 @@ Note : If you come from the above step, `firstbootsetup.sh` should have added a 
 
 ## Installing / Reinstalling Kernel
 
-To Run the script
+Currently, using the above script to install Arch Linux, the Kernel is not maintained by Arch Linux. Therefore a full system upgrade like `pacman -Syyu` may break the system from booting.
+
+You can use this script (`install-kernel.sh`) to install/re-install the linux kernel which will be maintained by Arch Linux. There are three options to install `linux-radxa-rkbsp5-bin`, `linux-radxa-rkbsp5-git`, and `linux-rk3588-midstream`.
 ```
 ./tools/install-kernel.sh
 ```
 
 ## Post Installation 
 
-### This will Fix Bluetooth, AX210 driver, Add SoC performance profile, Installing Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
+This will Fix Bluetooth, AX210 driver, Add SoC performance profile, Installing Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
 
 To Run the script
 ```
