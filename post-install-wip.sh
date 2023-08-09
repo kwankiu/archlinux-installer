@@ -12,22 +12,22 @@ echo "---------------------------------------------------------------------"
 echo "Starting post installation ..."
 
 # The fix for some Bluetooth Modules (A8, AX210, etc.)
-# echo "Applying bluetooth fix for some Bluetooth Modules (A8, AX210, etc.) ..."
-# echo "blacklist pgdrv" >> sudo tee /etc/modprobe.d/blacklist.conf
-# echo "blacklist btusb" >> sudo tee /etc/modprobe.d/blacklist.conf
-# echo "blacklist btrtl" >> sudo tee /etc/modprobe.d/blacklist.conf
-# echo "blacklist btbcm" >> sudo tee /etc/modprobe.d/blacklist.conf
-# echo "#blacklist btintel" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "Applying bluetooth fix for some Bluetooth Modules (A8, AX210, etc.) ..."
+echo "blacklist pgdrv" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "blacklist btusb" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "blacklist btrtl" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "blacklist btbcm" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "#blacklist btintel" >> sudo tee /etc/modprobe.d/blacklist.conf
 
 #For AX210 Wifi and BT to Work
-# sudo pacman -Sy wget --noconfirm
-# echo "Installing WiFi driver for AX210 ..."
-# sudo wget -P /lib/firmware https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-ty-a0-gf-a0-59.ucode
-# sudo mv /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm.bak
+sudo pacman -Sy wget --noconfirm
+echo "Installing WiFi driver for AX210 ..."
+sudo wget -P /lib/firmware https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-ty-a0-gf-a0-59.ucode
+sudo mv /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm.bak
 
-#echo "Installing Bluetooth driver for AX210 ..."
-#sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.sfi
-#sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.ddc
+echo "Installing Bluetooth driver for AX210 ..."
+sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.sfi
+sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.ddc
 
 # Network Manager, WiFi, Bluetooth
 echo "Installing network manager ..."
@@ -37,18 +37,18 @@ sudo systemctl start NetworkManager.service
 
 # RK3588 Profile
 # Define the alias lines
-#performance_alias="alias performance=\"echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor\""
-#ondemand_alias="alias ondemand=\"echo ondemand | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor && echo dmc_ondemand | sudo tee /sys/class/devfreq/dmc/governor && echo simple_ondemand | sudo tee /sys/class/devfreq/fb000000.gpu/governor\""
-#powersave_alias="alias powersave=\"echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor\""
+performance_alias="alias performance=\"echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor\""
+ondemand_alias="alias ondemand=\"echo ondemand | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor && echo dmc_ondemand | sudo tee /sys/class/devfreq/dmc/governor && echo simple_ondemand | sudo tee /sys/class/devfreq/fb000000.gpu/governor\""
+powersave_alias="alias powersave=\"echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor\""
 
 # Append alias lines to ~/.bash_aliases
-#echo "$performance_alias" >> sudo tee ~/.bash_aliases
-#echo "$ondemand_alias" >> sudo tee  ~/.bash_aliases
-#echo "$powersave_alias" >> sudo tee ~/.bash_aliases
+echo "$performance_alias" >> sudo tee ~/.bash_aliases
+echo "$ondemand_alias" >> sudo tee  ~/.bash_aliases
+echo "$powersave_alias" >> sudo tee ~/.bash_aliases
 
 # Source the updated ~/.bash_aliases
-#source ~/.bash_aliases
-#echo "SoC Performance Profile Added. You may change your SoC Performance Profile by running performance, ondemand or powersave."
+source ~/.bash_aliases
+echo "SoC Performance Profile Added. You may change your SoC Performance Profile by running performance, ondemand or powersave."
 
 # TODO: Add support for pwm fan control?
 # echo "Do you want to install and enable pwm fan control?"
