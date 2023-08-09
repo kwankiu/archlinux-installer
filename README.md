@@ -14,6 +14,7 @@ This will get you a bootable Arch Linux on your Disk. The default login is alarm
 
 # First Boot Setup / Post Install
 
+## First Boot
 Note : If you have installed your copy of Arch Linux using the script above, there is a `firstbootsetup.sh` script already added to your root directory. 
 
 IF ONLY YOU DONT ALREADY HAVE THE SCRIPT, you may download it using (skip this unless you do not have it):
@@ -28,10 +29,28 @@ IF ONLY YOU DONT ALREADY HAVE THE SCRIPT, you may download it using (skip this u
 ```
 3. Once it's done, the script should automatically reboot your system. Now, login to your newly created user account and enjoy!
 
-# Installing Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
+## The tools folder
+Note : If you come from the above step, `firstbootsetup.sh` should have added a `tools` folder in your user home directory. 
 
-To be updated.
-Read [https://forum.radxa.com/t/archlinux-on-rock5b/13851](https://forum.radxa.com/t/archlinux-on-rock5b/13851) for reference.
+`install-kernel.sh` - Install / Re-install Kernel that is maintained by Arch Linux.
+
+`post-install.sh`   - Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc.
+
+## Installing / Reinstalling Kernel
+
+To Run the script
+```
+./tools/install-kernel.sh
+```
+
+## Post Installation 
+
+### This will Fix Bluetooth, AX210 driver, Add SoC performance profile, Installing Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
+
+To Run the script
+```
+./tools/post-install.sh
+```
 
 # Usage
 
