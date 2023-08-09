@@ -192,6 +192,10 @@ makepkg -si
 cd ..
 echo "Installed kodi-stable-mpp-git"
 
+# Add user to video group
+current_user=$(whoami)
+sudo usermod -A -g video $current_user
+
 # Remove temp dir folder
 echo "Installed successfully. Cleaning up installation files ..."
 sudo rm -rf ~/$tmp_repo_dir
@@ -211,6 +215,7 @@ echo "Pick an option (Enter 'done' when you finish) :"
 echo "This feature is not implemented / WIP, skipping ..."
 
 echo "Setting up Browser Acceleration"
+
 echo "This feature is not implemented / WIP, skipping ..."
 
 # Prompt user if they want to reboot
