@@ -31,7 +31,7 @@ sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git
 
 # Network Manager, WiFi, Bluetooth
 echo "Installing network manager ..."
-sudo pacman -S networkmanager iw bluez --noconfirm
+sudo pacman -S networkmanager iw --noconfirm
 sudo systemctl enable NetworkManager.service
 sudo systemctl start NetworkManager.service
 
@@ -59,7 +59,6 @@ dtc -O dtb -o "rock5b-pwm-fan.dtb" "pwm-fan.dts"
 sudo mv rock5b-pwm-fan.dtb /boot/dtbs/rockchip/rock5b-pwm-fan.dtb
 sudo rm -rf pwm-fan.dts
 
-
 # Install Mesa and Desktop Environment
 echo "---------------------------------------------------------------------"
 echo "Install desktop environment"
@@ -67,10 +66,8 @@ echo "---------------------------------------------------------------------"
 echo ""
 echo "Select a desktop environment to install :"
 echo "1. Gnome"
-
-# TODO
-#echo "2. KDE Plasma" 
-#echo "3. Budgie"
+echo "2. KDE Plasma" 
+echo "3. Budgie"
 #echo "4. XFCE"
 #echo "5. LXQt"
 #echo "6. Cinnamon"
@@ -78,8 +75,9 @@ echo "1. Gnome"
 #echo "8. Deepin"
 #echo "9. MATE"
 #echo "10. Sway"
+# TO BE ADDED
 
-echo "2. Install GPU acceleration only"
+echo "Input anything else to Install GPU acceleration only"
 echo ""
 echo "Pick an option to install :"
 read de_options
@@ -89,8 +87,8 @@ echo "Install Mesa / GPU acceleration"
 echo "---------------------------------------------------------------------"
 echo ""
 echo "Select a package to install :"
-echo "1. mesa-panfork-git - for Radxa BSP Kernel (rkbsp5) (linux 5.10.x)"
-echo "2. mesa-pancsf-git - for Googulator's Midstream kernel (linux-rk3588-midstream) (linux 6.2.x)"
+echo "1. mesa-panfork-git - Panfork Mesa driver for Radxa BSP Kernel (rkbsp5) (linux 5.10.x)"
+echo "2. mesa-pancsf-git - Pancsf Mesa driver for Googulator's Midstream kernel (linux-rk3588-midstream) (linux 6.2.x)"
 echo ""
 echo "Pick an option to install :"
 read answer
@@ -141,7 +139,62 @@ if [ "$de_options" = 1 ]; then
     # Install Gnome and perform a full upgrade
     sudo pacman -Syyu gnome
     sudo systemctl enable gdm
+elif [ "$de_options" = 2 ]; then
+    # Install KDE Plasma and perform a full upgrade
+    sudo pacman -Syyu plasma-desktop lightdm
+    sudo systemctl enable lightdm.service
+elif [ "$de_options" = 3 ]; then
+    # Install KDE Plasma and perform a full upgrade
+    sudo pacman -Syyu budgie-desktop gdm gnome-control-center gnome-terminal gnome-tweak-tool nautilus
+    sudo systemctl enable gdm
 fi
+
+echo "---------------------------------------------------------------------"
+echo "Install Video Accelaration"
+echo "---------------------------------------------------------------------"
+
+# tmp dir folder name
+tmp_repo_dir="tmp-repo-dir"
+
+# create and cd to a directory
+cd ~/
+mkdir $tmp_repo_dir
+cd $tmp_repo_dir
+
+# install from AUR
+echo "Getting ffmpeg, rkmpp, and kodi from AUR ..."
+
+# setup mpp-git
+git clone https://aur.archlinux.org/mpp-git.git
+cd mpp-git
+makepkg -si
+cd ..
+echo "Installed mpp-git"
+
+# setup ffmpeg4.4-mpp
+git clone https://aur.archlinux.org/ffmpeg4.4-mpp.git
+cd ffmpeg4.4-mpp
+makepkg -si
+cd ..
+echo "Installed ffmpeg4.4-mpp"
+
+# setup ffmpeg-mpp
+git clone https://aur.archlinux.org/ffmpeg-mpp.git
+cd ffmpeg-mpp
+makepkg -si
+cd ..
+echo "Installed ffmpeg-mpp"
+
+# setup kodi-stable-mpp-git
+git clone https://aur.archlinux.org/kodi-stable-mpp-git.git
+cd kodi-stable-mpp-git
+makepkg -si
+cd ..
+echo "Installed kodi-stable-mpp-git"
+
+# Remove temp dir folder
+echo "Installed successfully. Cleaning up installation files ..."
+sudo rm -rf ~/$tmp_repo_dir
 
 echo "---------------------------------------------------------------------"
 echo "Install additional packages"
@@ -155,9 +208,6 @@ echo "4. Others"
 echo ""
 echo "Pick an option (Enter 'done' when you finish) :"
 #read answer
-echo "This feature is not implemented / WIP, skipping ..."
-
-echo "Setting up Video Decoder Accelaration with FFMpeg & RKMPP ..."
 echo "This feature is not implemented / WIP, skipping ..."
 
 echo "Setting up Browser Acceleration"
