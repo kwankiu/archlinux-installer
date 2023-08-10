@@ -134,12 +134,12 @@ mkdir tools
 cd tools
 
 # For main branch
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-kernel.sh
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/post-install.sh
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-kernel.sh
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/post-install.sh
 
 # For dev branch
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/install-kernel.sh
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/post-install.sh
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/install-kernel.sh
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/post-install.sh
 
 chmod +x install-kernel.sh
 chmod +x post-install.sh
