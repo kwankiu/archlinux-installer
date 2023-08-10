@@ -188,6 +188,13 @@ makepkg -si
 cd ..
 echo "Installed mpp-git"
 
+# setup librga-multi
+git clone https://aur.archlinux.org/librga-multi.git
+cd librga-multi
+makepkg -si
+cd ..
+echo "Installed librga-multi"
+
 # setup ffmpeg4.4-mpp
 git clone https://aur.archlinux.org/ffmpeg4.4-mpp.git
 cd ffmpeg4.4-mpp
@@ -202,12 +209,12 @@ makepkg -si
 cd ..
 echo "Installed ffmpeg-mpp"
 
-# setup kodi-stable-mpp-git
-git clone https://aur.archlinux.org/kodi-stable-mpp-git.git
-cd kodi-stable-mpp-git
+# setup kodi-nexus-mpp-git
+git clone https://aur.archlinux.org/kodi-nexus-mpp-git.git
+cd kodi-nexus-mpp-git
 makepkg -si
 cd ..
-echo "Installed kodi-stable-mpp-git"
+echo "Installed kodi-nexus-mpp-git"
 
 # Add user to video group
 current_user=$(whoami)
