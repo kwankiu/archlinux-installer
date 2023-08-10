@@ -31,6 +31,16 @@ install_rkbsp5_git() {
     echo "Downloading linux-radxa-rkbsp5-git ..."
     git clone https://aur.archlinux.org/linux-radxa-rkbsp5-git.git
     cd linux-radxa-rkbsp5-git
+
+    # remove old kernel files, else the package will not install.
+    mkdir old-kernel-files
+    sudo mv /usr/bin/libmali ~/$kernel_repo_dir/old-kernel-files/libmali
+    sudo mv /usr/bin/libmaliw ~/$kernel_repo_dir/old-kernel-files/libmaliw
+    sudo mv /usr/lib/libmali ~/$kernel_repo_dir/old-kernel-files/libmali_folder
+    sudo mv /usr/lib/modules ~/$kernel_repo_dir/old-kernel-files/modules
+    sudo mv /usr/lib/firmware/mali_csffw.bin ~/$kernel_repo_dir/old-kernel-files/mali_csffw.bin
+    sudo mv /boot/dtbs ~/$kernel_repo_dir/old-kernel-files/dtbs
+
     makepkg -si
     cd ..
     echo "Installed linux-radxa-rkbsp5"
@@ -40,6 +50,13 @@ install_midstream() {
     echo "Downloading linux-rk3588-midstream ..."
     git clone https://github.com/hbiyik/hw_necromancer.git
     cd hw_necromancer/rock5b/linux-rk3588-midstream
+
+    # remove old kernel files, this helps avoiding errors.
+    mkdir old-kernel-files
+    sudo mv /usr/lib/modules ~/$kernel_repo_dir/old-kernel-files/modules
+    sudo mv /usr/lib/firmware/mali_csffw.bin ~/$kernel_repo_dir/old-kernel-files/mali_csffw.bin
+    sudo mv /boot/dtbs ~/$kernel_repo_dir/old-kernel-files/dtbs
+
     makepkg -si
     cd ..
     cd ..
@@ -47,7 +64,7 @@ install_midstream() {
     echo "Installed linux-rk3588-midstream"
 
     # apply new extlinux.conf
-    sudo mv /boot/extlinux/extlinux.conf /boot/extlinux/arch.extlinux.old
+    sudo mv /boot/extlinux/extlinux.conf ~/$kernel_repo_dir/old-kernel-files/extlinux.conf
     sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
 
     # Find the UUIDs of the root partition
@@ -59,16 +76,12 @@ install_midstream() {
     sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
     sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
 
-    # Removing old RKBSP (WIP)
-    # echo "Do you want to remove old rkbsp kernel files (y/n)?"
-    # read answer
-
     # Remove libmali
     sudo rm -rf /usr/lib/libmali
     sudo rm -rf /usr/bin/libmali
     sudo rm -rf /usr/bin/libmaliw
 
-    # Install / Replace mali_csffw.bin
+    # Install mali_csffw.bin
     sudo pacman -Sy wget --noconfirm
     sudo wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
 
