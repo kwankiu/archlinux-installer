@@ -14,7 +14,7 @@ install_rkbsp5_bin() {
     cd linux-radxa-rkbsp5-bin
 
     # remove old kernel files, else the package will not install.
-    mkdir old-kernel-files
+    mkdir ~/$kernel_repo_dir/old-kernel-files
     sudo mv /usr/bin/libmali ~/$kernel_repo_dir/old-kernel-files/libmali
     sudo mv /usr/bin/libmaliw ~/$kernel_repo_dir/old-kernel-files/libmaliw
     sudo mv /usr/lib/libmali ~/$kernel_repo_dir/old-kernel-files/libmali_folder
@@ -33,7 +33,7 @@ install_rkbsp5_git() {
     cd linux-radxa-rkbsp5-git
 
     # remove old kernel files, else the package will not install.
-    mkdir old-kernel-files
+    mkdir ~/$kernel_repo_dir/old-kernel-files
     sudo mv /usr/bin/libmali ~/$kernel_repo_dir/old-kernel-files/libmali
     sudo mv /usr/bin/libmaliw ~/$kernel_repo_dir/old-kernel-files/libmaliw
     sudo mv /usr/lib/libmali ~/$kernel_repo_dir/old-kernel-files/libmali_folder
@@ -52,7 +52,7 @@ install_midstream() {
     cd hw_necromancer/rock5b/linux-rk3588-midstream
 
     # remove old kernel files, this helps avoiding errors.
-    mkdir old-kernel-files
+    mkdir ~/$kernel_repo_dir/old-kernel-files/
     sudo mv /usr/lib/modules ~/$kernel_repo_dir/old-kernel-files/modules
     sudo mv /usr/lib/firmware/mali_csffw.bin ~/$kernel_repo_dir/old-kernel-files/mali_csffw.bin
     sudo mv /boot/dtbs ~/$kernel_repo_dir/old-kernel-files/dtbs
