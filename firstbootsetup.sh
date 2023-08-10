@@ -14,7 +14,7 @@ fi
 
 # Check internet connection
 echo "Checking internet connection..."
-servers=("8.8.8.8" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile (for China users)
+servers=("google.com" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile (for China users)
 internet_available=false
 
 for server in "${servers[@]}"; do
@@ -132,8 +132,15 @@ pacman -Sy sudo --noconfirm
 cd /home/$new_username/
 mkdir tools
 cd tools
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-kernel.sh
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/post-install.sh
+
+# For main branch
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-kernel.sh
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/post-install.sh
+
+# For dev branch
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/install-kernel.sh
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/post-install.sh
+
 chmod +x install-kernel.sh
 chmod +x post-install.sh
 
