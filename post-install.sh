@@ -13,21 +13,21 @@ echo "Starting post installation ..."
 
 # The fix for some Bluetooth Modules (A8, AX210, etc.)
 echo "Applying bluetooth fix for some Bluetooth Modules (A8, AX210, etc.) ..."
-echo "blacklist pgdrv" >> sudo tee /etc/modprobe.d/blacklist.conf
-echo "blacklist btusb" >> sudo tee /etc/modprobe.d/blacklist.conf
-echo "blacklist btrtl" >> sudo tee /etc/modprobe.d/blacklist.conf
-echo "blacklist btbcm" >> sudo tee /etc/modprobe.d/blacklist.conf
-echo "#blacklist btintel" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "blacklist pgdrv" >> sudo tee -a /etc/modprobe.d/blacklist.conf
+echo "blacklist btusb" >> sudo tee -a /etc/modprobe.d/blacklist.conf
+echo "blacklist btrtl" >> sudo tee -a /etc/modprobe.d/blacklist.conf
+echo "blacklist btbcm" >> sudo tee -a /etc/modprobe.d/blacklist.conf
+echo "#blacklist btintel" >> sudo tee -a /etc/modprobe.d/blacklist.conf
 
-#For AX210 Wifi and BT to Work
-sudo pacman -Sy wget --noconfirm
-echo "Installing WiFi driver for AX210 ..."
-sudo wget -P /lib/firmware https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-ty-a0-gf-a0-59.ucode
-sudo mv /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm.bak
+#For AX210 Wifi and BT to Work (Not sure if this will conflict with Realtek Module, lets comment this out temporarily)
+#sudo pacman -Sy wget --noconfirm
+#echo "Installing WiFi driver for AX210 ..."
+#sudo wget -P /lib/firmware https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-ty-a0-gf-a0-59.ucode
+#sudo mv /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm.bak
 
-echo "Installing Bluetooth driver for AX210 ..."
-sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.sfi
-sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.ddc
+#echo "Installing Bluetooth driver for AX210 ..."
+#sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.sfi
+#sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.ddc
 
 # Network Manager, WiFi, Bluetooth
 echo "Installing network manager ..."
@@ -42,21 +42,33 @@ ondemand_alias="alias ondemand=\"echo ondemand | sudo tee /sys/bus/cpu/devices/c
 powersave_alias="alias powersave=\"echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor\""
 
 # Append alias lines to ~/.bash_aliases
-echo "$performance_alias" >> sudo tee ~/.bash_aliases
-echo "$ondemand_alias" >> sudo tee  ~/.bash_aliases
-echo "$powersave_alias" >> sudo tee ~/.bash_aliases
+echo "$performance_alias" >> sudo tee -a ~/.bash_aliases
+echo "$ondemand_alias" >> sudo tee  -a ~/.bash_aliases
+echo "$powersave_alias" >> sudo tee -a ~/.bash_aliases
 
 # Source the updated ~/.bash_aliases
 source ~/.bash_aliases
 echo "SoC Performance Profile Added. You may change your SoC Performance Profile by running performance, ondemand or powersave."
 
-# TODO: Add support for pwm fan control
+# Add support for pwm fan control
 sudo pacman -S dtc --noconfirm
 echo "Getting PWM Fan Control DTS File"
 curl -LJO https://raw.githubusercontent.com/amazingfate/radxa-rock5b-overlays/main/pwm-fan.dts
 echo "Compiling pwm-fan.dts to rock5b-pwm-fan.dtb"
 dtc -O dtb -o "rock5b-pwm-fan.dtb" "pwm-fan.dts"
-sudo mv rock5b-pwm-fan.dtb /boot/dtbs/rockchip/rock5b-pwm-fan.dtb
+
+# Look for rkbsp5 DTB path
+if sudo ls "/boot/dtbs/linux-radxa-rkbsp5/rockchip/" &>/dev/null; then
+    sudo mv "rock5b-pwm-fan.dtb" "/boot/dtbs/linux-radxa-rkbsp5/rockchip/"
+# Look for midstream DTB path
+elif sudo ls "/boot/dtbs/linux-rk3588-midstream/rockchip/" &>/dev/null; then
+    sudo mv "rock5b-pwm-fan.dtb" "/boot/dtbs/linux-rk3588-midstream/rockchip/"
+else
+    sudo mv rock5b-pwm-fan.dtb /boot/rock5b-pwm-fan.dtb
+    echo "Error: Unable to locate appropriate DTB path."
+    echo "Notes: We have put the dtb in /boot/rock5b-pwm-fan.dtb, make sure to move it to the correct path."
+fi
+# Clean up
 sudo rm -rf pwm-fan.dts
 
 # Install Mesa and Desktop Environment
