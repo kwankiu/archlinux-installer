@@ -67,8 +67,11 @@ install_midstream() {
     sudo mv /boot/extlinux/extlinux.conf ~/$kernel_repo_dir/old-kernel-files/extlinux.conf
     sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
 
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
     # Find the UUIDs of the root partition
-    root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
+    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
     echo "Root partition UUID: $root_uuid"
 
     # Change UUID for extlinux.conf

@@ -41,6 +41,11 @@ performance_alias="alias performance=\"echo performance | sudo tee /sys/bus/cpu/
 ondemand_alias="alias ondemand=\"echo ondemand | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor && echo dmc_ondemand | sudo tee /sys/class/devfreq/dmc/governor && echo simple_ondemand | sudo tee /sys/class/devfreq/fb000000.gpu/governor\""
 powersave_alias="alias powersave=\"echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor\""
 
+# Check if .bash_aliases exists, and create it if not
+if [ ! -e ~/.bash_aliases ]; then
+    touch ~/.bash_aliases
+fi
+
 # Append alias lines to ~/.bash_aliases
 echo "$performance_alias" >> sudo tee -a ~/.bash_aliases
 echo "$ondemand_alias" >> sudo tee  -a ~/.bash_aliases
