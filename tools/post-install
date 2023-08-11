@@ -50,26 +50,26 @@ echo "$powersave_alias" >> sudo tee -a ~/.bashrc
 source ~/.bashrc
 echo "SoC Performance Profile Added. You may change your SoC Performance Profile by running performance, ondemand or powersave."
 
-# Add support for pwm fan control
-sudo pacman -S dtc --noconfirm
-echo "Getting PWM Fan Control DTS File"
-curl -LJO https://raw.githubusercontent.com/amazingfate/radxa-rock5b-overlays/main/pwm-fan.dts
-echo "Compiling pwm-fan.dts to rock5b-pwm-fan.dtb"
-dtc -O dtb -o "rock5b-pwm-fan.dtb" "pwm-fan.dts"
+# Add support for pwm fan control (somehow this does not work, so leave it first)
+#sudo pacman -S dtc --noconfirm
+#echo "Getting PWM Fan Control DTS File"
+#curl -LJO https://raw.githubusercontent.com/amazingfate/radxa-rock5b-overlays/main/pwm-fan.dts
+#echo "Compiling pwm-fan.dts to rock5b-pwm-fan.dtb"
+#dtc -O dtb -o "rock5b-pwm-fan.dtb" "pwm-fan.dts"
 
 # Look for rkbsp5 DTB path
-if sudo ls "/boot/dtbs/linux-radxa-rkbsp5/rockchip/" &>/dev/null; then
-    sudo mv "rock5b-pwm-fan.dtb" "/boot/dtbs/linux-radxa-rkbsp5/rockchip/"
+#if sudo ls "/boot/dtbs/linux-radxa-rkbsp5/rockchip/" &>/dev/null; then
+#    sudo mv "rock5b-pwm-fan.dtb" "/boot/dtbs/linux-radxa-rkbsp5/rockchip/"
 # Look for midstream DTB path
-elif sudo ls "/boot/dtbs/linux-rk3588-midstream/rockchip/" &>/dev/null; then
-    sudo mv "rock5b-pwm-fan.dtb" "/boot/dtbs/linux-rk3588-midstream/rockchip/"
-else
-    sudo mv rock5b-pwm-fan.dtb /boot/rock5b-pwm-fan.dtb
-    echo "Error: Unable to locate appropriate DTB path."
-    echo "Notes: We have put the dtb in /boot/rock5b-pwm-fan.dtb, make sure to move it to the correct path."
-fi
+#elif sudo ls "/boot/dtbs/linux-rk3588-midstream/rockchip/" &>/dev/null; then
+#    sudo mv "rock5b-pwm-fan.dtb" "/boot/dtbs/linux-rk3588-midstream/rockchip/"
+#else
+#    sudo mv rock5b-pwm-fan.dtb /boot/rock5b-pwm-fan.dtb
+#    echo "Error: Unable to locate appropriate DTB path."
+#    echo "Notes: We have put the dtb in /boot/rock5b-pwm-fan.dtb, make sure to move it to the correct path."
+#fi
 # Clean up
-sudo rm -rf pwm-fan.dts
+#sudo rm -rf pwm-fan.dts
 
 echo "Finished post installation ..."
 clear
