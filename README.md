@@ -31,7 +31,7 @@ first-boot-setup
 
 ## Installing / Reinstalling Kernel
 
-Currently, using the above script to install Arch Linux, the Kernel is not maintained by Arch Linux. Therefore a full system upgrade `pacman -Syyu` is likely to break the system from booting. Therefore, it is recommended to re-install the linux kernel which will be maintained by Arch Linux. 
+Currently, using the above script to install Arch Linux, the Kernel is not maintained by Arch Linux. A full system upgrade such as `pacman -Syyu` is likely to break the system from booting. Therefore, it is recommended to re-install the linux kernel which will be maintained by Arch Linux. 
 
 Available kernel options to install : 
 | Kernel Package  | Linux Kernel | Notes |
