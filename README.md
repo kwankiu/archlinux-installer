@@ -9,8 +9,6 @@ This is an installation script that gets you through an installation of Arch Lin
 
 # How to Install / Get Started?
 
-Note: Currently, only installation to a disk (directly on a Rock 5B or any Linux system with the targetted disk to install) is supported. Functionality to create an .img image is still work-in-progress.
-
 Download and run the script below:
  ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
@@ -89,9 +87,8 @@ Currently available tool scripts are :
 | post-install | Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc. |
 
 # WIP / TODO List / Known Issues
-1. Use the script to automatically build image so that can flash using your desired image tool and use multiple times without needing to plug in the nvme drive to a linux pc or the rock 5B to use this script
-2. Create image is not yet working
-3. When choosing a disk, on some system, the path may not be read properly (/dev/nvme0n1 1024G may become /dev/1024G, temp solution is to manually enter the disk path)
-4. post-install is still work-in-progress, not everything is working.
+1. Functionality to create an .img image is still work-in-progress.
+2. When choosing a disk, on some system, the path may not be read properly (/dev/nvme0n1 1024G may become /dev/1024G, temp solution is to manually enter the disk path)
+3. post-install is still work-in-progress, not everything is working.
 
 
