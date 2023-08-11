@@ -42,16 +42,17 @@ Available kernel options to install :
 
 To run this :
 ```
-./tools/install-kernel
+arch-rock-config install-kernel
 ```
 
 ## Post Installation 
+Note that this Post Installation Tools is work-in-progress.
 
-This will Fix Bluetooth, AX210 driver, Add SoC performance profile, Installing Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
+This tool is intended to apply patches such as bluetooth fix, AX210 driver, add SoC performance profile, Then install Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
 
 To Run this :
 ```
-./tools/post-install
+arch-rock-config post-install
 ```
 
 # Usage
@@ -78,11 +79,15 @@ Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format 
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 boot.img
 ```
 
-## The tools folder
-Currently available tool scripts are :
+## The `arch-rock-config` Configuration Utility
+We have created a configuration utility just like `armbian-config` or `raspi-config` but for Arch Linux running on Rock 5B / RK3588.
+Note that this configuration utility is work-in-progress.
+Available tool scripts are in the tool folder.
 
 | Script | Description |
 | ------------- | ------------- |
+| arch-rock-config | Arch Linux Configuration Utility for Rock 5B / RK3588. |
+| first-boot-setup | Apply necessary configuration for first-time boot. |
 | install-kernel | Install / Re-install Kernel that is maintained by Arch Linux. |
 | post-install | Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc. |
 
