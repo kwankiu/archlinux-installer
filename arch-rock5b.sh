@@ -1,10 +1,11 @@
 ################################################################
 #                                                              #
-#  Arch Linux image / disk creation tool for Rock 5B / RK3588  #
+#          Arch Linux Installer for Rock 5B / RK3588           #
 #                                                              #
 ################################################################
 
-# The install script is now moved to archlinux-installer
+# GitHub Repository : https://github.com/kwankiu/archlinux-installer-rock5
+# This install script has been renamed to archlinux-installer
 
-echo "Getting the latest install script ..."
+echo "Getting the latest installation script ..."
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-archlinux)

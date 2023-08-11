@@ -2,7 +2,7 @@
 
 ################################################################
 #                                                              #
-#    Arch Linux first boot setup tool for Rock 5B / RK3588     #
+#    Arch Linux First Boot Setup Tool for Rock 5B / RK3588     #
 #                                                              #
 ################################################################
 
@@ -11,6 +11,10 @@ if [[ $EUID -ne 0 ]]; then
     echo "This script must be run as root" >&2
     exit 1
 fi
+
+echo "---------------------------------------------------------------------"
+echo "Welcome to Arch Linux, starting first boot setup ..."
+echo "---------------------------------------------------------------------"
 
 # Check internet connection
 echo "Checking internet connection..."

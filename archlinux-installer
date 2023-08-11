@@ -2,7 +2,7 @@
 
 ################################################################
 #                                                              #
-#  Arch Linux image / disk creation tool for Rock 5B / RK3588  #
+#          Arch Linux Installer for Rock 5B / RK3588           #
 #                                                              #
 ################################################################
 
@@ -44,7 +44,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   exit 1
 else
   echo "---------------------------------------------------------------------"
-  echo "Welcome to Arch Linux image / disk creation tool for Rock 5B / RK3588"
+  echo "Welcome to Arch Linux Installer for Rock 5B / RK3588"
   echo "---------------------------------------------------------------------"
   drive=$1
 fi
@@ -217,4 +217,6 @@ sudo umount $boot_mount_dir $root_mount_dir
 # Clean up
 sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz boot-arch-rkbsp-latest.tar.gz rootfs-patch-arch-rkbsp-latest.tar.gz first-boot-setup
 
-echo "Process completed successfully, you may now boot to your Arch Linux system, Enjoy!"
+echo "Files copied successfully, you may now boot to your Arch Linux system, the default login is alarm/alarm and root login is root/root."
+echo "Tips : When you boot to your Arch Linux system, you may want to login to root/root and run first-boot-setup."
+echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."

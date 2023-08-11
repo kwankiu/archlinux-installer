@@ -2,7 +2,7 @@
 
 ################################################################
 #                                                              #
-#   Arch Linux kernel installation tool for Rock 5B / RK3588   #
+#   Arch Linux Kernel Installation Tool for Rock 5B / RK3588   #
 #                                                              #
 ################################################################
 
@@ -96,9 +96,9 @@ echo "Install / Reinstall Linux kernel for Rock 5B / RK3588"
 echo "---------------------------------------------------------------------"
 echo ""
 echo "Select a kernel package to install:"
-echo "1. linux-radxa-rkbsp5-bin - Install Radxa BSP Kernel (recommended, but may not be up-to-date)"
-echo "2. linux-radxa-rkbsp5-git - Install Radxa BSP Kernel from source (more up-to-date, but take a few hours)" 
-echo "3. linux-rk3588-midstream - Install Googulator's Midstream kernel (Linux 6.2, but not everything works)"
+echo "1. linux-radxa-rkbsp5-bin - Install Radxa BSP Kernel from Binary Package (fastest, but may not be up-to-date)"
+echo "2. linux-radxa-rkbsp5-git - Install Radxa BSP Kernel from Source Code (latest, but takes a few hours)" 
+echo "3. linux-rk3588-midstream - Install Googulator's Midstream kernel from Source Code (not everything works, takes a few hours)"
 echo ""
 # Get choice
 read -p "Enter the number of your choice: " choice
