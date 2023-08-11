@@ -7,7 +7,7 @@ Note: Currently, only installation to a disk (directly on a Rock 5B or any Linux
 
 Download and run the script below:
  ```bash
- /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh)"
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
 This will get you a bootable Arch Linux on your Disk. The default login is alarm/alarm and root login is root/root.
@@ -53,7 +53,7 @@ To Run the script
 # Usage
 
 ```
-./arch-rock5b.sh <disk_path> <boot_img_path>
+./install-archlinux.sh <disk_path> <boot_img_path>
 ```
 
 You can simply run the script without any parameters, the script will prompt and ask you.
@@ -67,13 +67,13 @@ You can pass both parameters which you can use your own boot partition file path
 Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and the boot partition from github release to the disk): 
 
 ```
-curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh | bash -s /dev/sdb
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
 ```
 
 Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format the disk in /dev/nvme0n1, then download arch linux roofs and use your own boot.img as boot partition to the disk): 
 
 ```
-curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/arch-rock5b.sh | bash -s /dev/nvme0n1 boot.img
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 boot.img
 ```
 
 # WIP / TODO List / Known Issues

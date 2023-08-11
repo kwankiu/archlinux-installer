@@ -134,15 +134,15 @@ mkdir tools
 cd tools
 
 # For main branch
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-kernel.sh
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/post-install.sh
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-kernel
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/post-install
 
 # For dev branch
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/install-kernel.sh
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/post-install.sh
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/install-kernel
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/post-install
 
-chmod +x install-kernel.sh
-chmod +x post-install.sh
+chmod +x install-kernel
+chmod +x post-install
 
 echo "Done, you may login to your newly created user account $new_username after the reboot."
 
@@ -153,7 +153,7 @@ if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
     echo "You can manually reboot later to apply the changes."
 else
     echo "Removing this script ..."
-    rm -rf /root/firstbootsetup.sh
+    rm -rf /root/first-boot-setup
     echo "Done. Rebooting..."
     reboot
 fi
