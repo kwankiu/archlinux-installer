@@ -3,7 +3,7 @@
 
 This is an installation script that gets you through an installation of Arch Linux on Rockchip RK3588 SoC.
 
-Currently works with Radxa Rock 5B only.
+### Currently only works with Radxa Rock 5B.
 
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
 
