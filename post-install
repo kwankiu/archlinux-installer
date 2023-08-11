@@ -190,13 +190,6 @@ makepkg -si
 cd ..
 echo "Installed librga-multi"
 
-# setup ffmpeg4.4-mpp
-git clone https://aur.archlinux.org/ffmpeg4.4-mpp.git
-cd ffmpeg4.4-mpp
-makepkg -si
-cd ..
-echo "Installed ffmpeg4.4-mpp"
-
 # setup librist
 git clone https://aur.archlinux.org/librist.git
 cd librist
@@ -204,6 +197,13 @@ sudo sed -i "s|arch=\('x86_64'\)|arch=\('aarch64'\)|" PKGBUILD
 makepkg -si
 cd ..
 echo "Installed librist"
+
+# setup ffmpeg4.4-mpp
+git clone https://aur.archlinux.org/ffmpeg4.4-mpp.git
+cd ffmpeg4.4-mpp
+makepkg -si
+cd ..
+echo "Installed ffmpeg4.4-mpp"
 
 # setup ffmpeg-mpp
 git clone https://aur.archlinux.org/ffmpeg-mpp.git
