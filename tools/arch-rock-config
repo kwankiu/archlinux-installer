@@ -1,0 +1,60 @@
+#!/bin/bash
+
+################################################################
+#                                                              #
+#    Arch Linux Configuration Utility for Rock 5B / RK3588     #
+#                                                              #
+################################################################
+
+#  This is like armbian-config or raspi-config but for Arch Linux running on Rock 5B / RK3588
+
+config_options() {
+    clear
+    echo "---------------------------------------------------------------------"
+    echo "Arch Linux Configuration Utility for Rock 5B / RK3588"
+    echo "---------------------------------------------------------------------"
+    echo "1. Install / Re-install Kernel - Install or Replace Linux Kernel"
+    echo "2. Post Installation - Setup patches, install drivers, desktop environment, packages, etc." 
+    echo "3. Install / Move Arch Linux - Install or migrate Arch Linux to another disk."
+    echo "4. Performance & Overclocking - Change SoC Performance Settings or Overclocking the SoC"
+    echo "5. Misc / Tools - Anything else"
+    echo "6. About - Infomation about this configuration utility"
+    echo "---------------------------------------------------------------------"
+    echo "Enter an option to continue : "
+    read choice
+
+    # Choice
+    case $choice in
+        1)
+            install_kernel
+            ;;
+        2)
+            post_install
+            ;;
+        *)
+            echo "Invalid choice / Not implemented. Exiting."
+            exit 1
+            ;;
+    esac
+
+}
+
+install_kernel() {
+    /usr/bin/lib-arch-rock-config/install-kernel
+}
+
+post_install() {
+    /usr/bin/lib-arch-rock-config/post-install
+}
+
+# read arguments
+if [ "$1" = "install-kernel" ]; then
+    install_kernel
+elif [ "$1" = "post-install" ]; then
+    post_install
+elif [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage : To be written"
+    exit 1
+else
+    config_options
+fi

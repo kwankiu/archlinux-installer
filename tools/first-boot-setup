@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
 ################################################################
 #                                                              #
-#    Arch Linux first boot setup tool for Rock 5B / RK3588     #
+#    Arch Linux First Boot Setup Tool for Rock 5B / RK3588     #
 #                                                              #
 ################################################################
 
@@ -11,6 +11,10 @@ if [[ $EUID -ne 0 ]]; then
     echo "This script must be run as root" >&2
     exit 1
 fi
+
+echo "---------------------------------------------------------------------"
+echo "Welcome to Arch Linux, starting first boot setup ..."
+echo "---------------------------------------------------------------------"
 
 # Check internet connection
 echo "Checking internet connection..."
@@ -128,21 +132,30 @@ fi
 echo "Installing sudo"
 pacman -Sy sudo --noconfirm
 
-# Download postinstall scripts to user home directory
-cd /home/$new_username/
-mkdir tools
-cd tools
+# Download and install arch-rock-config
+cd /usr/bin
 
 # For main branch
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/install-kernel.sh
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/post-install.sh
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-config
 
 # For dev branch
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/install-kernel.sh
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/post-install.sh
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-config
 
-chmod +x install-kernel.sh
-chmod +x post-install.sh
+chmod +x arch-rock-config
+
+mkdir lib-arch-rock-config
+cd lib-arch-rock-config
+
+# For main branch
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/install-kernel
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/post-install
+
+# For dev branch
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/install-kernel
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/post-install
+
+chmod +x install-kernel
+chmod +x post-install
 
 echo "Done, you may login to your newly created user account $new_username after the reboot."
 
@@ -153,7 +166,7 @@ if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
     echo "You can manually reboot later to apply the changes."
 else
     echo "Removing this script ..."
-    rm -rf /root/firstbootsetup.sh
+    rm -rf /root/first-boot-setup
     echo "Done. Rebooting..."
     reboot
 fi
