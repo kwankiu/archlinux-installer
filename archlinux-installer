@@ -209,10 +209,10 @@ curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/de
 
 # Copy first-boot-setup
 sudo chmod +x first-boot-setup
-sudo cp -r "first-boot-setup" "$root_mount_dir/root/first-boot-setup"
+sudo cp -r "first-boot-setup" "$root_mount_dir/usr/bin/first-boot-setup"
 
 # Let system run first-boot-setup at bootup
-echo "/root/first-boot-setup" | sudo tee -a /etc/rc.local
+echo "/usr/bin/first-boot-setup" | sudo tee -a $root_mount_dir/etc/rc.local
 
 # Unmount the boot and root partitions
 sudo umount $boot_mount_dir $root_mount_dir
