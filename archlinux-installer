@@ -203,9 +203,9 @@ sudo rm -rf "$rootfs_patch_tar_dir"
 
 # Download first-boot-setup
 # For main branch
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/first-boot-setup
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/first-boot-setup
 # For dev branch
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/first-boot-setup
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/first-boot-setup
 
 # Copy first-boot-setup
 sudo chmod +x first-boot-setup

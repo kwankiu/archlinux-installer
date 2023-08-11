@@ -5,7 +5,7 @@
 #    Arch Linux Post Installation Tool for Rock 5B / RK3588    #
 #                                                              #
 ################################################################
-
+clear
 echo "---------------------------------------------------------------------"
 echo "Arch Linux Post Install for Rock 5B / RK3588"
 echo "---------------------------------------------------------------------"
@@ -71,6 +71,9 @@ fi
 # Clean up
 sudo rm -rf pwm-fan.dts
 
+echo "Finished post installation ..."
+clear
+
 # Install Mesa and Desktop Environment
 echo "---------------------------------------------------------------------"
 echo "Install desktop environment"
@@ -93,6 +96,8 @@ echo "Input anything else to Install GPU acceleration only"
 echo ""
 echo "Pick an option to install :"
 read de_options
+
+clear
 
 echo "---------------------------------------------------------------------"
 echo "Install Mesa / GPU acceleration"
@@ -161,6 +166,8 @@ elif [ "$de_options" = 3 ]; then
     sudo systemctl enable gdm
 fi
 
+clear
+
 echo "---------------------------------------------------------------------"
 echo "Install Video Accelaration"
 echo "---------------------------------------------------------------------"
@@ -226,6 +233,8 @@ sudo usermod -aG video $current_user
 # Remove temp dir folder
 echo "Installed successfully. Cleaning up installation files ..."
 sudo rm -rf ~/$tmp_repo_dir
+
+clear 
 
 echo "---------------------------------------------------------------------"
 echo "Install additional packages"
