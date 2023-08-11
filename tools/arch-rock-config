@@ -40,11 +40,11 @@ config_options() {
 }
 
 install_kernel() {
-    ./usr/bin/install-kernel
+    ./usr/bin/lib-arch-rock-config/install-kernel
 }
 
 post_install() {
-    ./usr/bin/post-install
+    ./usr/bin/lib-arch-rock-config/post-install
 }
 
 # read arguments
