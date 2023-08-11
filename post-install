@@ -221,7 +221,7 @@ echo "Installed kodi-nexus-mpp-git"
 
 # Add user to video group
 current_user=$(whoami)
-sudo usermod -A -g video $current_user
+sudo usermod -aG video $current_user
 
 # Remove temp dir folder
 echo "Installed successfully. Cleaning up installation files ..."
