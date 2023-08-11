@@ -211,21 +211,6 @@ curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/de
 sudo chmod +x first-boot-setup
 sudo cp -r "first-boot-setup" "$root_mount_dir/usr/bin/first-boot-setup"
 
-# Let system run first-boot-setup at bootup
-#echo "/usr/bin/first-boot-setup" | sudo tee -a $root_mount_dir/etc/rc.local
-
-# Create the systemd service unit file
-echo "[Unit]" > sudo tee $root_mount_dir/etc/systemd/system/firstboot.service
-echo "Description=First Boot Setup" >> sudo tee -a $root_mount_dir/etc/systemd/system/firstboot.service
-echo "" >> sudo tee -a $root_mount_dir/etc/systemd/system/firstboot.service
-echo "[Service]" >> sudo tee -a $root_mount_dir/etc/systemd/system/firstboot.service
-echo "ExecStart=/usr/bin/first-boot-setup" >> sudo tee -a $root_mount_dir/etc/systemd/system/firstboot.service
-echo "" >> sudo tee -a $root_mount_dir/etc/systemd/system/firstboot.service
-echo "[Install]" >> sudo tee -a $root_mount_dir/etc/systemd/system/firstboot.service
-echo "WantedBy=multi-user.target" >> sudo tee -a $root_mount_dir/etc/systemd/system/firstboot.service
-
-ln -s $root_mount_dir/etc/systemd/system/firstboot.service $root_mount_dir/etc/systemd/system/multi-user.target.wants/firstboot.service
-
 # Unmount the boot and root partitions
 sudo umount $boot_mount_dir $root_mount_dir
 
