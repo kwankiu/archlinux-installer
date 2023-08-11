@@ -1,7 +1,13 @@
-# Arch Linux image / disk creation tool for Rock 5B / RK3588
-This is a script / packages that setup archlinux, currently target for Radxa Rock 5B only.It automatically format,download, and flash an Arch Linux system.
+# Arch Linux Installer for Rock 5B / RK3588
+![alt archlinux logo](https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Archlinux-logo-inverted-version.png/500px-Archlinux-logo-inverted-version.png)
 
-# How to install / get started?
+This is an installation script that gets you through an installation of Arch Linux on Rockchip RK3588 SoC.
+
+Currently works with Radxa Rock 5B only.
+
+![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
+
+# How to Install / Get Started?
 
 Note: Currently, only installation to a disk (directly on a Rock 5B or any Linux system with the targetted disk to install) is supported. Functionality to create an .img image is still work-in-progress.
 
@@ -27,9 +33,14 @@ first-boot-setup
 
 ## Installing / Reinstalling Kernel
 
-Currently, using the above script to install Arch Linux, the Kernel is not maintained by Arch Linux. Therefore a full system upgrade like `pacman -Syyu` may break the system from booting. Therefore, it is recommended to re-install the linux kernel which will be maintained by Arch Linux. 
+Currently, using the above script to install Arch Linux, the Kernel is not maintained by Arch Linux. Therefore a full system upgrade `pacman -Syyu` is likely to break the system from booting. Therefore, it is recommended to re-install the linux kernel which will be maintained by Arch Linux. 
 
-Available kernel options to install are `linux-radxa-rkbsp5-bin`, `linux-radxa-rkbsp5-git`, and `linux-rk3588-midstream`.
+Available kernel options to install : 
+| Kernel Package  | Linux Kernel | Notes |
+| ------------- | ------------- | ------------- |
+| linux-radxa-rkbsp5-bin | Radxa's Rockchip BSP (Linux-5.10.x) | Install Radxa BSP Kernel from Binary Package (fastest, but may not be up-to-date) |
+| linux-radxa-rkbsp5-git | Radxa's Rockchip BSP (Linux-5.10.x) | Install Radxa BSP Kernel from Source Code (latest, but takes a few hours) |
+| linux-rk3588-midstream | Googulator's 'Midstream' (Linux-6.2.x) | Install Linux Midstream Kernel from Source Code (based on linux mainline 6.2, not everything works, takes a few hours) |
 
 To run this :
 ```
@@ -57,8 +68,6 @@ You can pass only the first parameter <disk_path> (e.g. /dev/nvme0n1 for Rock 5B
 
 You can pass both parameters which you can use your own boot partition file path (which can be .img or .tar.gz).
 
-
-
 Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and the boot partition from github release to the disk): 
 
 ```
@@ -72,11 +81,12 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-
 ```
 
 ## The tools folder
-Currently available tool scripts are:
+Currently available tool scripts are :
 
-`install-kernel` - Install / Re-install Kernel that is maintained by Arch Linux.
-
-`post-install`   - Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc.
+| Script | Description |
+| ------------- | ------------- |
+| install-kernel | Install / Re-install Kernel that is maintained by Arch Linux. |
+| post-install | Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc. |
 
 # WIP / TODO List / Known Issues
 1. Use the script to automatically build image so that can flash using your desired image tool and use multiple times without needing to plug in the nvme drive to a linux pc or the rock 5B to use this script
