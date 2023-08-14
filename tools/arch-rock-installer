@@ -77,6 +77,7 @@ echo "Running Post Installation ..."
 
 # The fix for some Bluetooth Modules (A8, AX210, etc.)
 echo "Applying Bluetooth Fix ..."
+touch /etc/modprobe.d/blacklist.conf
 echo "blacklist pgdrv" >> /etc/modprobe.d/blacklist.conf
 echo "blacklist btusb" >> /etc/modprobe.d/blacklist.conf
 echo "blacklist btrtl" >> /etc/modprobe.d/blacklist.conf
