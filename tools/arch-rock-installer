@@ -1,0 +1,133 @@
+#!/bin/bash
+
+################################################################
+#                                                              #
+#           Arch Linux Installer for Rock 5B / RK3588          #
+#                                                              #
+################################################################
+
+compiled_pkg_folder="/usr/lib/compiled-packages"
+
+echo "---------------------------------------------------------------------"
+echo "Arch Linux Installer for Rock 5B / RK3588"
+echo "---------------------------------------------------------------------"
+echo "Running First Boot Setup ..."
+first-boot-setup --no-reboot
+clear
+echo "---------------------------------------------------------------------"
+if [ -z $compiled_pkg_folder ]; then
+    chmod -R 755 $compiled_pkg_folder/*
+fi
+echo "Installing Linux Kernel ..."
+if [ -z "$compiled_pkg_folder/Kernel" ]; then
+    echo "Error : No pre-compiled Packages found."
+    exit 1
+    #echo "No pre-compiled Packages found. Would you like to build linux kernel from AUR / source (y/n)?"
+    #read answer
+    #if [ "$answer" = "y" ]; then
+    #arch-rock-config install-kernel --no-reboot
+    #fi
+else
+    pacman -U $compiled_pkg_folder/Kernel/*/*.pkg.tar.xz --noconfirm
+    # TODO replace extlinux.conf for midstream
+fi
+clear
+echo "---------------------------------------------------------------------"
+echo "Installing Mesa and GPU drivers ..."
+if [ -z "$compiled_pkg_folder/GPU" ]; then
+    echo "Error : No pre-compiled Packages found."
+    exit 1
+    #echo "No pre-compiled Packages found. Would you like to build from AUR / source (y/n)?"
+    #read answer
+    #if [ "$answer" = "y" ]; then
+    #arch-rock-config install-gpu
+    #fi
+else
+    pacman -U $compiled_pkg_folder/GPU/*/*.pkg.tar.xz --noconfirm
+    if [ -z "$compiled_pkg_folder/GPU/add-ons" ]; then
+        pacman -U $compiled_pkg_folder/GPU/add-ons/*/*.pkg.tar.xz --noconfirm
+    fi
+fi
+clear
+echo "---------------------------------------------------------------------"
+echo "Installing Video Acceleration ..."
+if [ -z "$compiled_pkg_folder/Video" ]; then
+    echo "Error : No pre-compiled Packages found."
+    exit 1
+    #echo "No pre-compiled Packages found. Would you like to build from AUR / source (y/n)?"
+    #read answer
+    #if [ "$answer" = "y" ]; then
+    #arch-rock-config install-vpu
+    #fi
+else
+    pacman -U $compiled_pkg_folder/Video/*/*.pkg.tar.xz --noconfirm
+fi
+clear
+echo "---------------------------------------------------------------------"
+echo "Running Post Installation ..."
+
+# The fix for some Bluetooth Modules (A8, AX210, etc.)
+echo "Applying Bluetooth Fix ..."
+echo "blacklist pgdrv" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist btusb" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist btrtl" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist btbcm" >> /etc/modprobe.d/blacklist.conf
+echo "#blacklist btintel" >> etc/modprobe.d/blacklist.conf
+
+# Network Manager, WiFi, Bluetooth
+echo "Installing network manager ..."
+pacman -S networkmanager iw --noconfirm
+systemctl enable NetworkManager.service
+systemctl start NetworkManager.service
+
+clear
+echo "---------------------------------------------------------------------"
+echo "Install desktop environment"
+echo "---------------------------------------------------------------------"
+echo ""
+echo "Select a desktop environment to install :"
+echo "1. Gnome"
+echo "2. KDE Plasma" 
+echo "3. Budgie"
+#echo "4. XFCE"
+#echo "5. LXQt"
+#echo "6. Cinnamon"
+#echo "7. Cutefish"
+#echo "8. Deepin"
+#echo "9. MATE"
+#echo "10. Sway"
+# TO BE ADDED
+
+echo "Input anything else to skip installing desktop environment"
+echo ""
+echo "Pick an option to install :"
+read de_options
+
+clear
+echo "---------------------------------------------------------------------"
+echo "Installing Desktop Environment ..."
+# Install desktop environment
+if [ "$de_options" = 1 ]; then
+    # Install Gnome
+    pacman -Sy gnome
+    systemctl enable gdm
+elif [ "$de_options" = 2 ]; then
+    # Install KDE Plasma
+    pacman -Sy plasma-desktop lightdm
+    systemctl enable lightdm.service
+elif [ "$de_options" = 3 ]; then
+    # Install Budgie
+    pacman -Sy budgie-desktop gdm gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    systemctl enable gdm
+fi
+
+clear
+# Prompt user if they want to reboot
+read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+    echo "You can manually reboot later to apply the changes."
+else
+    echo "Done. Rebooting..."
+    sudo reboot
+fi
