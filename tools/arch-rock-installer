@@ -119,15 +119,15 @@ echo "Installing Desktop Environment ..."
 # Install desktop environment
 if [ "$de_options" = 1 ]; then
     # Install Gnome
-    pacman -Sy gnome
+    pacman -Syyu gnome
     systemctl enable gdm
 elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
-    pacman -Sy plasma-desktop lightdm
+    pacman -Syyu plasma-desktop lightdm
     systemctl enable lightdm.service
 elif [ "$de_options" = 3 ]; then
     # Install Budgie
-    pacman -Sy budgie-desktop gdm gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    pacman -Syyu budgie-desktop gdm gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
     systemctl enable gdm
 fi
 
