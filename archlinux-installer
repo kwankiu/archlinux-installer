@@ -63,7 +63,7 @@ if ! [ -x "$(command -v parted)" ]; then
     sudo yum install -y parted libarchive-tools
   elif [ -f /etc/arch-release ]; then
     # Arch Linux
-    sudo pacman -S parted --noconfirm
+    sudo pacman -S parted dosfstools --noconfirm
   elif [ -x "$(command -v apk)" ]; then
     # Alphine-based
     apk add parted libarchive-tools
