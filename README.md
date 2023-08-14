@@ -7,53 +7,26 @@ This is an installation script that gets you through an installation of Arch Lin
 
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
 
-# How to Install / Get Started?
+## Warning : This is a dev branch, they are not being tested and may not work.
 
+# How to install?
 Download and run the script below:
  ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer)
 ```
 
-This will get you a bootable Arch Linux on your Disk. The default login is alarm/alarm and root login is root/root.
+This will get you a bootable Arch Linux rootfs on your Disk. The default login is alarm/alarm and root login is root/root.
 
-# First Boot Setup / Post Install
+# Installation
 
-## First Boot
-Note : If you have installed your copy of Arch Linux using the script above, there is a `first-boot-setup` command already added to your /usr/bin. 
-
-1. Login as root/root
-2. Now run the command
+1. To continue our installation, now boot to Arch Linux and login as root/root
+2. Run the command
 ```
-first-boot-setup
+arch-rock-installer
 ```
-3. Once it's done, the script should automatically reboot your system.
-4. Now, login to your newly created user account and enjoy!
-
-## Installing / Reinstalling Kernel
-
-Currently, using the above script to install Arch Linux, the Kernel is not maintained by Arch Linux. A full system upgrade such as `pacman -Syyu` is likely to break the system from booting. Therefore, it is recommended to re-install the linux kernel which will be maintained by Arch Linux. 
-
-Available kernel options to install : 
-| Kernel Package  | Linux Kernel | Notes |
-| ------------- | ------------- | ------------- |
-| linux-radxa-rkbsp5-bin | Radxa's Rockchip BSP (Linux-5.10.x) | Install Radxa BSP Kernel from Binary Package (fastest, but may not be up-to-date) |
-| linux-radxa-rkbsp5-git | Radxa's Rockchip BSP (Linux-5.10.x) | Install Radxa BSP Kernel from Source Code (latest, but takes a few hours) |
-| linux-rk3588-midstream | Googulator's 'Midstream' (Linux-6.2.x) | Install Linux Midstream Kernel from Source Code (based on linux mainline 6.2, not everything works, takes a few hours) |
-
-To run this :
-```
-arch-rock-config install-kernel
-```
-
-## Post Installation 
-Note that this Post Installation Tools is work-in-progress.
-
-This tool is intended to apply patches such as bluetooth fix, AX210 driver, add SoC performance profile, Then install Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
-
-To Run this :
-```
-arch-rock-config post-install
-```
+3. When it saids the linux package have a conflict, this is normal, let the script replace the kernel.
+4. If you want a Desktop Environment, pick a Desktop Environment to install.
+5. Once it's done, the script should automatically reboot your system. Enjoy!
 
 # Usage
 
@@ -79,6 +52,8 @@ Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format 
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 boot.img
 ```
 
+# More Info
+
 ## The `arch-rock-config` Configuration Utility
 We have created a configuration utility just like `armbian-config` or `raspi-config` but for Arch Linux running on Rock 5B / RK3588.
 Note that this configuration utility is work-in-progress.
@@ -90,6 +65,30 @@ Available tool scripts are in the tool folder.
 | first-boot-setup | Apply necessary configuration for first-time boot. |
 | install-kernel | Install / Re-install Kernel that is maintained by Arch Linux. |
 | post-install | Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc. |
+
+## Installing / Reinstalling Kernel
+
+Available kernel options to install : 
+| Kernel Package  | Linux Kernel | Notes |
+| ------------- | ------------- | ------------- |
+| linux-radxa-rkbsp5-bin | Radxa's Rockchip BSP (Linux-5.10.x) | Install Radxa BSP Kernel from Binary Package (fastest, but may not be up-to-date) |
+| linux-radxa-rkbsp5-git | Radxa's Rockchip BSP (Linux-5.10.x) | Install Radxa BSP Kernel from Source Code (latest, but takes a few hours) |
+| linux-rk3588-midstream | Googulator's 'Midstream' (Linux-6.2.x) | Install Linux Midstream Kernel from Source Code (based on linux mainline 6.2, not everything works, takes a few hours) |
+
+To run this :
+```
+arch-rock-config install-kernel
+```
+
+## Post Installation 
+Note that this Post Installation Tools is work-in-progress.
+
+This tool is intended to apply patches such as bluetooth fix, AX210 driver, add SoC performance profile, Then install Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
+
+To Run this :
+```
+arch-rock-config post-install
+```
 
 # WIP / TODO List / Known Issues
 1. Functionality to create an .img image is still work-in-progress.
