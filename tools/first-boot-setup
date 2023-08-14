@@ -148,10 +148,10 @@ pacman -Sy sudo --noconfirm
 cd /usr/bin
 
 # For main branch
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-config
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-config
 
 # For dev branch
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-config
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-config
 
 chmod +x arch-rock-config
 
@@ -159,12 +159,12 @@ mkdir lib-arch-rock-config
 cd lib-arch-rock-config
 
 # For main branch
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/install-kernel
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/post-install
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/install-kernel
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/post-install
 
 # For dev branch
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/install-kernel
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/post-install
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/install-kernel
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/post-install
 
 chmod +x install-kernel
 chmod +x post-install
