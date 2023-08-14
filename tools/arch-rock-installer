@@ -28,7 +28,16 @@ if [ -z "$compiled_pkg_folder/Kernel" ]; then
     #arch-rock-config install-kernel --no-reboot
     #fi
 else
-    pacman -U $compiled_pkg_folder/Kernel/*/*.pkg.tar.xz --noconfirm
+
+    # remove old kernel files, else the package will not install.
+    rm -rf /usr/bin/libmali
+    rm -rf /usr/bin/libmaliw
+    rm -rf /usr/lib/libmali
+    rm -rf /usr/lib/modules
+    rm -rf /usr/lib/firmware/mali_csffw.bin
+    rm -rf /boot/dtbs
+
+    pacman -U $compiled_pkg_folder/Kernel/*/*.pkg.tar.xz
     # TODO replace extlinux.conf for midstream
 fi
 clear
