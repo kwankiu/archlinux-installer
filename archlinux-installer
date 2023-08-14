@@ -222,16 +222,19 @@ sudo chmod +x arch-rock-installer
 sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/arch-rock-installer"
 
 # Extract and copy pre-compiled packages
-pkg_tmp_tar_dir=$(mktemp -d)
-sudo tar -xf "compiled-pkg-for-rkbsp5.tar.xz" -C "$pkg_tmp_tar_dir"
+pkg_tar_dir=$(mktemp -d)
+sudo tar -xf "compiled-pkg-for-rkbsp5.tar.xz" -C "$pkg_tar_dir"
 sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
-sudo cp -r "$rootfs_patch_tar_dir"/* "$root_mount_dir/usr/lib/compiled-packages/"
+sudo cp -r "$pkg_tar_dir"/* "$root_mount_dir/usr/lib/compiled-packages/"
+
+# Remove the temporary directory
+sudo rm -rf "$pkg_tar_dir"
 
 # Unmount the boot and root partitions
 sudo umount $boot_mount_dir $root_mount_dir
 
 # Clean up
-sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz boot-arch-rkbsp-latest.tar.gz rootfs-patch-arch-rkbsp-latest.tar.gz first-boot-setup
+sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz boot-arch-rkbsp-latest.tar.gz rootfs-patch-arch-rkbsp-latest.tar.gz first-boot-setup arch-rock-installer compiled-pkg-for-rkbsp5.tar.xz
 
 echo "Files copied successfully, you may now boot to your Arch Linux system, the default login is alarm/alarm and root login is root/root."
 echo "Tips : When you boot to your Arch Linux system, you may want to login to root/root and run first-boot-setup."
