@@ -136,6 +136,33 @@ confirm_disk() {
     fi
 }
 
+install_rkbsp() {
+  colorecho "$GREEN" "Downloading pre-compiled packages ..."
+  # Download pre-compiled packages
+  curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz
+
+  # Extract pre-compiled packages
+  colorecho "$GREEN" "Extracting pre-compiled packages ..."
+  pkg_tar_dir=$(mktemp -d)
+  sudo tar -xf "compiled-pkg-rkbsp-latest.tar.xz" -C "$pkg_tar_dir"
+  
+  # Extract kernel from pre-compiled packages
+  colorecho "$GREEN" "Extracting kernel ..."
+  sudo mkdir $pkg_tar_dir/Kernel/linux
+  sudo mkdir $pkg_tar_dir/Kernel/linux/boot
+  sudo cp -r $pkg_tar_dir/Kernel/*/initramfs*.img $pkg_tar_dir/Kernel/linux/boot/
+  sudo cp -r $pkg_tar_dir/Kernel/*/vmlinuz* $pkg_tar_dir/Kernel/linux/boot/
+  sudo tar -xf $pkg_tar_dir/Kernel/*/linux-radxa-rkbsp5-git-5*.*.pkg.tar.xz -C "$pkg_tar_dir/Kernel/linux/"
+  sudo tar -xf $pkg_tar_dir/Kernel/*/linux-radxa-rkbsp5-git-headers-*.*.pkg.tar.xz -C "$pkg_tar_dir/Kernel/linux/"
+
+  boot_image=$pkg_tar_dir/Kernel/linux/boot
+}
+
+install_midstream() {
+        curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/boot-arch-midstream-latest.tar.gz
+      boot_image="boot-arch-midstream-latest.tar.gz"
+}
+
 # Sees if it is a help command or normal command with parameters
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   echo "Usage : To be written"
@@ -196,7 +223,7 @@ if [ -z $drive ]; then
   fi
 fi
 
-# boot partition image if not specified
+# Install boot partition and kernel
 boot_image=$2
 
 if [ -z $boot_image ]; then
@@ -208,11 +235,9 @@ if [ -z $boot_image ]; then
     answer=$?
 
     if [ "$answer" = 0 ]; then
-      curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/boot-arch-rkbsp-latest.tar.gz
-      boot_image="boot-arch-rkbsp-latest.tar.gz"
+      install_rkbsp
     elif [ "$answer" = 1 ]; then
-      curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/boot-arch-midstream-latest.tar.gz
-      boot_image="boot-arch-midstream-latest.tar.gz"
+      install_midstream
     else
       echo "Enter the path for custom kernel (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
       read answer
@@ -282,39 +307,36 @@ elif [ ${boot_image: -7} == ".tar.gz" ]; then
   # Remove the temporary directory
   sudo rm -rf "$boot_tar_dir"
 else
-  echo "Unsupported file format. Exiting."
-  exit 1
+  # Copy contents to boot partition
+  sudo cp -r "$boot_image"/* "$boot_mount_dir"
 fi
 
-colorecho "$GREEN" "Updating Boot Partition UUID ..."
+colorecho "$GREEN" "Updating extlinux.conf ..."
 # Find the UUIDs of the root partition
 root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
 root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
 
-# Change UUID for extlinux.conf
-echo "Updating UUID for extlinux.conf ..."
-if cat $boot_mount_dir/extlinux/extlinux.conf | grep "**CHANGEME**"; then 
-  sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
-elif cat $boot_mount_dir/extlinux/extlinux.conf | grep "CHANGEME"; then 
-  sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
-else
-  colorecho "$RED" "Error : Can not update UUID for extlinux.conf. Please update it manually."
-  echo "Info : Root partition UUID: $root_uuid"
-  echo "Info : Root partition PARTUUID: $root_part_uuid"
+# Copy extlinux template
+if [ ! -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
+  sudo cp -r $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
 fi
 
+# Change UUID for extlinux.conf
+echo "Updating UUID for extlinux.conf ..."
+sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+
+echo "Info : Root partition UUID: $root_uuid"
+echo "Info : Root partition PARTUUID: $root_part_uuid"
+
 title
-# Download rootfs-patch
-curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/rootfs-patch-arch-rkbsp-latest.tar.gz
+# Copy kernel files
+colorecho "$GREEN" "Copying Kernel Files ..."
+sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
+sudo rm -rf $root_mount_dir/boot/*
+sudo rm -rf $pkg_tar_dir/Kernel/linux $pkg_tar_dir/Kernel/*/initramfs* $pkg_tar_dir/Kernel/*/vmlinuz*
 
-# Extract and copy rootfs-patch to rootfs
-rootfs_patch_tar_dir=$(mktemp -d)
-sudo tar -xf "rootfs-patch-arch-rkbsp-latest.tar.gz" -C "$rootfs_patch_tar_dir"
-sudo cp -r "$rootfs_patch_tar_dir"/* "$root_mount_dir"
-
-# Remove the temporary directory
-sudo rm -rf "$rootfs_patch_tar_dir"
-
+colorecho "$GREEN" "Copying Installer and Tools ..."
 # Download first-boot-setup
 # For main branch
 #curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/first-boot-setup
@@ -324,9 +346,6 @@ sudo rm -rf "$rootfs_patch_tar_dir"
 curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/first-boot-setup
 curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-installer
 
-# Download pre-compiled packages
-curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz
-
 # Copy first-boot-setup
 sudo chmod +x first-boot-setup
 sudo cp -r "first-boot-setup" "$root_mount_dir/usr/bin/first-boot-setup"
@@ -335,9 +354,7 @@ sudo cp -r "first-boot-setup" "$root_mount_dir/usr/bin/first-boot-setup"
 sudo chmod +x arch-rock-installer
 sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/arch-rock-installer"
 
-# Extract and copy pre-compiled packages
-pkg_tar_dir=$(mktemp -d)
-sudo tar -xf "compiled-pkg-rkbsp-latest.tar.xz" -C "$pkg_tar_dir"
+# Copy pre-compiled packages
 sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
 sudo cp -r "$pkg_tar_dir"/* "$root_mount_dir/usr/lib/compiled-packages/"
 
@@ -349,7 +366,7 @@ sudo umount $boot_mount_dir $root_mount_dir
 
 # Clean up
 colorecho "$YELLOW" "Cleaning up temporary files ..."
-sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz boot-arch-rkbsp-latest.tar.gz rootfs-patch-arch-rkbsp-latest.tar.gz first-boot-setup arch-rock-installer compiled-pkg-for-rkbsp5.tar.xz
+sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz boot-arch-rkbsp-latest.tar.gz rootfs-patch-arch-rkbsp-latest.tar.gz first-boot-setup arch-rock-installer compiled-pkg-rkbsp-latest.tar.xz
 
 title
 colorecho "$YELLOW" "Created Arch Linux Installer, the default login is alarm/alarm and root login is root/root."
