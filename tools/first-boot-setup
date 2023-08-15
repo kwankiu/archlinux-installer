@@ -173,7 +173,7 @@ echo "Done, you may login to your newly created user account $new_username after
 
 if [ "$1" = "--no-reboot" ]; then
         echo "Done. Cleaning up First Boot Setup ..."
-        rm -rf /root/first-boot-setup
+        rm -rf /usr/bin/first-boot-setup
 else
     # Prompt user if they want to reboot
     read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
@@ -182,7 +182,7 @@ else
         echo "You can manually reboot later to apply the changes."
     else
         echo "Removing this script ..."
-        rm -rf /root/first-boot-setup
+        rm -rf /usr/bin/first-boot-setup
         echo "Done. Rebooting..."
         reboot
     fi
