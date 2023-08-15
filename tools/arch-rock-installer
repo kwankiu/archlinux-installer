@@ -11,8 +11,10 @@ compiled_pkg_folder="/usr/lib/compiled-packages"
 echo "---------------------------------------------------------------------"
 echo "Arch Linux Installer for Rock 5B / RK3588"
 echo "---------------------------------------------------------------------"
-echo "Running First Boot Setup ..."
-first-boot-setup --no-reboot
+if [ ! -e "/usr/bin/first-boot-setup" ]; then
+    echo "Running First Boot Setup ..."
+    first-boot-setup
+fi
 clear
 echo "---------------------------------------------------------------------"
 if [ -z $compiled_pkg_folder ]; then
@@ -35,10 +37,32 @@ else
     rm -rf /usr/lib/libmali
     rm -rf /usr/lib/modules
     rm -rf /usr/lib/firmware/mali_csffw.bin
-    rm -rf /boot/dtbs
+    rm -rf /usr/src/linux-*
+    rm -rf /boot/*
 
     pacman -U $compiled_pkg_folder/Kernel/*/*.pkg.tar.xz
-    # TODO replace extlinux.conf for midstream
+
+    # for midstream
+    if [ -e /boot/vmlinuz-linux-rk3588-midstream ]; then
+        # apply new extlinux.conf
+        mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+
+        # Get rootfs partition from the current mount point "/"
+        rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+        # Find the UUIDs of the root partition
+        root_uuid=$(blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+        echo "Root partition UUID: $root_uuid"
+
+        # Change UUID for extlinux.conf
+        echo "Updating UUID for extlinux.conf ..."
+        sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+        sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+        # Install mali_csffw.bin
+        pacman -Sy wget --noconfirm
+        wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
+    fi
 fi
 clear
 echo "---------------------------------------------------------------------"
