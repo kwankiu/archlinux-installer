@@ -2,7 +2,7 @@
 
 ################################################################
 #                                                              #
-#          Arch Linux Installer for Rock 5B / RK3588           #
+#      Arch Linux Installation Tool for Rock 5B / RK3588       #
 #                                                              #
 ################################################################
 
@@ -77,36 +77,63 @@ colorecho() {
     echo -e "${color}${text}${NC}"
 }
 
+title() {
+  clear
+  echo "---------------------------------------------------------------------"
+  colorecho "$BLUE" "Welcome to Arch Linux Installation Tool for Rock 5B / RK3588"
+  echo "---------------------------------------------------------------------"
+}
+
 # Function to display a list of available disks
 list_disks() {
-  echo "Available disks:"
+  options=()
   disks=($(lsblk -rdno NAME,SIZE,MODEL))
   for ((i=0; i<${#disks[@]}; i+=3)); do
     model=${disks[i+2]//\\x20/ }  # Replace escaped spaces with actual spaces
-    echo "$((i/3+1))) /dev/${disks[i]} - $model (${disks[i+1]})"
+    options+=("$((i/3+1))) /dev/${disks[i]} - $model (${disks[i+1]})")
   done
-  echo "$((i/3+1))) Create an (.img) image"
-  echo "$((i/3+2))) Enter disk path manually"
-}
+  options+=("$((i/3+1))) Create an (.img) image")
+  options+=("$((i/3+2))) Enter disk path manually")
 
-# Function to prompt user for disk selection
-select_disk() {
-  read -p "Select a disk or enter path: " choice
+  select_option "${options[@]}"
+  choice=$?
+  choice=$((choice+1))
+
   if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le $((i/3+2)) ]]; then
     if [[ $choice -le $((i/3)) ]]; then
       selected_disk="/dev/${disks[((choice-1)*3)]}"
-      echo "Selected disk $selected_disk."
     elif [[ $choice -eq $((i/3+1)) ]]; then
       selected_disk="/out/archlinux.img"
-      echo "Creating an (.img) image at $selected_disk."
+      colorecho "$GREEN" "Creating an (.img) image at $selected_disk."
     else
       read -p "Enter the disk path: " selected_disk
-      echo "Manually entered disk path $selected_disk."
+      colorecho "$YELLOW" "Manually entered disk path $selected_disk."
     fi
   else
-    echo "Invalid choice. Please select a valid option."
-    select_disk
+    colorecho "$RED" "Invalid choice $choice. Please select a valid option."
   fi
+}
+
+confirm_disk() {
+    drive=$selected_disk
+    colorecho "$GREEN" "Selected disk $drive."
+    colorecho "$YELLOW" "Confirm to install Arch Linux on $drive ?"
+    colorecho "$RED" "WARNING : all data on the disk will be deleted"
+
+    options=("Confirm" "Select another disk" "Exit Installer")
+    select_option "${options[@]}"
+    answer=$?
+
+    if [ "$answer" = 1 ]; then
+      title
+      colorecho "$GREEN" "Select a disk to install or create an image:"
+      list_disks
+      title
+      confirm_disk
+    elif [ "$answer" = 2 ]; then
+      echo "Aborted. Exiting ..."
+      exit 1
+    fi
 }
 
 # Sees if it is a help command or normal command with parameters
@@ -114,16 +141,14 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   echo "Usage : To be written"
   exit 1
 else
-  colorecho "$BLUE" "---------------------------------------------------------------------"
-  colorecho "$BLUE" "Welcome to Arch Linux Installer for Rock 5B / RK3588"
-  colorecho "$BLUE" "---------------------------------------------------------------------"
+  title
   drive=$1
 fi
 
 # Check if parted is installed
 if ! [ -x "$(command -v parted)" ]; then
   # Check Linux distribution
-  echo "Parted is not found, trying to install..."
+  colorecho "$YELLOW" "Parted is not found, trying to install..."
   if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
     # Debian/Ubuntu-based
     sudo apt-get update
@@ -139,17 +164,17 @@ if ! [ -x "$(command -v parted)" ]; then
     # Alphine-based
     apk add parted libarchive-tools
   else
-    echo "Error : We cant find or install parted on your system. Exiting..."
+    colorecho "$RED" "Error : We cant find or install parted on your system. Exiting..."
     exit 1
   fi
 
 # Verify if it is installed
 echo "---------------------------------------------------------------------"
 if [ -x "$(command -v parted)" ]; then
-  echo "Package installed, continuing..."
+  colorecho "$GREEN" "Package installed, continuing..."
   echo "---------------------------------------------------------------------"
 else
-  echo "Error : Package not installed, please check your package manager / internet connection / system. Exiting..."
+  colorecho "$RED" "Error : Package not installed, please check your package manager / internet connection / system. Exiting..."
   exit 1
 fi
 fi
@@ -157,9 +182,9 @@ fi
 # This runs when there is no parameters specified
 # Choose drive to install / create .img image
 if [ -z $drive ]; then
-  echo "Choose drive to install or create an image:"
+  colorecho "$GREEN" "Select a disk to install or create an image:"
   list_disks
-  select_disk
+  title
   if [ $selected_disk == "/out/archlinux.img" ]; then
     if [ ! -d "./out" ]; then
       sudo mkdir ./out
@@ -167,13 +192,7 @@ if [ -z $drive ]; then
     drive=./out/archlinux.img
     sudo dd if=/dev/zero of=$drive bs=1M count=4096
   else
-    drive=$selected_disk
-    echo "Are you sure to set up disk $selected_disk (WARNING : all data of the disk will be deleted) ? (y/n)"
-    read answer
-    if [ $answer = "n" ]; then
-      echo "Aborted. Exiting ..."
-      exit 1
-    fi
+    confirm_disk
   fi
 fi
 
@@ -182,25 +201,33 @@ boot_image=$2
 
 if [ -z $boot_image ]; then
   if [ -z $2 ]; then
-    echo "Do you want to download the required boot partition image? (Leave empty or enter "y" to download automatically or Enter the path if you have your own boot image instead (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
-    read answer
-    if [ "$answer" = "y" ] || [ "$answer" = "yes" ] || [ "$answer" = "" ] || [ ! "$answer" ]; then
+    title
+    colorecho "$GREEN" "Select a kernel to install:"
+    options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(Experimental) Googulator Midstream Kernel (Linux 6.2)" "Install a Custom Kernel from file")
+    select_option "${options[@]}"
+    answer=$?
+
+    if [ "$answer" = 0 ]; then
       curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/boot-arch-rkbsp-latest.tar.gz
       boot_image="boot-arch-rkbsp-latest.tar.gz"
+    elif [ "$answer" = 1 ]; then
+      curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/boot-arch-midstream-latest.tar.gz
+      boot_image="boot-arch-midstream-latest.tar.gz"
     else
+      echo "Enter the path for custom kernel (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
+      read answer
       boot_image=answer
     fi
-   else
-    echo "Please specify a boot image (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
-    exit 1
-   fi
+  fi
 fi
 
+title
 root_mount_dir=$(mktemp -d)
 boot_mount_dir=$(mktemp -d)
 boot_img_mount_dir=$(mktemp -d)
 
 # Unmount all partitions of the specified drive
+colorecho "$GREEN" "Unmounting disk ..."
 partitions=$(ls ${drive}* 2>/dev/null)
 if [ "$partitions" ]; then
   for partition in $partitions; do
@@ -209,7 +236,8 @@ if [ "$partitions" ]; then
 fi
 
 # Create GPT table and partitions
-sudo parted $drive mklabel gpt
+colorecho "$GREEN" "Formatting and partitioning disk ..."
+echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
 sudo parted $drive mkpart primary fat32 0% 500MB
 sudo parted $drive mkpart primary ext4 500MB 100%
 
@@ -218,18 +246,26 @@ root_partition=$drive"2"
 boot_partition=$drive"1"
 
 # Format the partitions
-sudo mkfs.ext4 $root_partition
+echo -e 'y' |sudo mkfs.ext4 $root_partition 
 sudo mkfs.fat -F32 $boot_partition
 
+title
+
 # Mount the partitions
+colorecho "$GREEN" "Mounting partition for install ..."
 sudo mount $root_partition $root_mount_dir
 sudo mount $boot_partition $boot_mount_dir
 
 # Download and extract the latest ArchLinux tarball
+colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
 curl -LJO http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
+
+colorecho "$GREEN" "Copying Arch Linux rootfs ..."
 sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
 
+title
 # Extract the boot image
+colorecho "$GREEN" "Copying Boot Partition ..."
 if [ ${boot_image: -4} == ".img" ]; then
   sudo mount $boot_image $boot_img_mount_dir
   sudo cp -R $boot_img_mount_dir/* $boot_mount_dir
@@ -250,17 +286,24 @@ else
   exit 1
 fi
 
+colorecho "$GREEN" "Updating Boot Partition UUID ..."
 # Find the UUIDs of the root partition
 root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
 root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
 
-echo "Root partition UUID: $root_uuid"
-echo "Root partition PARTUUID: $root_part_uuid"
-
 # Change UUID for extlinux.conf
 echo "Updating UUID for extlinux.conf ..."
-sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+if cat $boot_mount_dir/extlinux/extlinux.conf | grep "**CHANGEME**"; then 
+  sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+elif cat $boot_mount_dir/extlinux/extlinux.conf | grep "CHANGEME"; then 
+  sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+else
+  colorecho "$RED" "Error : Can not update UUID for extlinux.conf. Please update it manually."
+  echo "Info : Root partition UUID: $root_uuid"
+  echo "Info : Root partition PARTUUID: $root_part_uuid"
+fi
 
+title
 # Download rootfs-patch
 curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/rootfs-patch-arch-rkbsp-latest.tar.gz
 
@@ -282,7 +325,7 @@ curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/de
 curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-installer
 
 # Download pre-compiled packages
-curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-for-rkbsp5.tar.xz
+curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz
 
 # Copy first-boot-setup
 sudo chmod +x first-boot-setup
@@ -294,7 +337,7 @@ sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/arch-rock-installer"
 
 # Extract and copy pre-compiled packages
 pkg_tar_dir=$(mktemp -d)
-sudo tar -xf "compiled-pkg-for-rkbsp5.tar.xz" -C "$pkg_tar_dir"
+sudo tar -xf "compiled-pkg-rkbsp-latest.tar.xz" -C "$pkg_tar_dir"
 sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
 sudo cp -r "$pkg_tar_dir"/* "$root_mount_dir/usr/lib/compiled-packages/"
 
@@ -305,8 +348,10 @@ sudo rm -rf "$pkg_tar_dir"
 sudo umount $boot_mount_dir $root_mount_dir
 
 # Clean up
+colorecho "$YELLOW" "Cleaning up temporary files ..."
 sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz boot-arch-rkbsp-latest.tar.gz rootfs-patch-arch-rkbsp-latest.tar.gz first-boot-setup arch-rock-installer compiled-pkg-for-rkbsp5.tar.xz
 
-echo "Files copied successfully, you may now boot to your Arch Linux system, the default login is alarm/alarm and root login is root/root."
-echo "Tips : When you boot to your Arch Linux system, you may want to login to root/root and run first-boot-setup."
+title
+colorecho "$YELLOW" "Created Arch Linux Installer, the default login is alarm/alarm and root login is root/root."
+colorecho "$GREEN" "You may now unmount your install disk."
 echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
