@@ -47,7 +47,9 @@ archlinux-installer <disk_path> <kernel>
 
 ## Examples
 
-1. You can simply run the script without any arguments (Same as the "How to install?" section above), the script will prompt for picking installation options.
+1. You can simply run the script without any arguments, the script will prompt for picking installation options.
+
+(Same as the "How to install?" section above)
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
