@@ -169,8 +169,6 @@ curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/de
 chmod +x install-kernel
 chmod +x post-install
 
-echo "Done, you may login to your newly created user account $new_username after the reboot."
-
 if [ "$1" = "--no-reboot" ]; then
         echo "Done. Cleaning up First Boot Setup ..."
         rm -rf /usr/bin/first-boot-setup
