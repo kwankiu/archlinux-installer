@@ -47,21 +47,25 @@ archlinux-installer <disk_path> <kernel>
 
 ## Examples
 
-1. (Same as the "How to install?" section above)
+1. Run without any arguments (Same as the "How to install?" section above)
 
-You can simply run the script without any arguments, the script will prompt for picking installation options.
+The script will prompt for picking installation options.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
-2. You can pass only the first argument <disk_path> (e.g. /dev/sdb), the script will let you pick a kernel and install Arch Linux to your disk path.
+2. Passing only the first argument <disk_path> (e.g. /dev/sdb)
+
+The script will let you pick a kernel and install Arch Linux to your disk path.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
 ```
 
-3. You can pass both argument <disk_path> <kernel> (e.g. /dev/nvme0n1 for <disk_path> and rkbsp for <kernel>), the script will install Arch Linux with Radxa BSP Kernel to your disk path.
+3. Passing both argument <disk_path> <kernel> (e.g. /dev/nvme0n1 for <disk_path> and rkbsp for <kernel>)
+
+The script will install Arch Linux with Radxa BSP Kernel to your disk path.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 rkbsp
