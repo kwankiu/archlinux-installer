@@ -34,33 +34,35 @@ arch-rock-installer
 
 # Usage
 
+## Optional arguments
+
 ```
 archlinux-installer <disk_path> <kernel>
 ```
-
-### 1. You can simply run the script without any arguments (Same as the "How to install?" section above), the script will prompt for picking installation options.
-```
-bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
-```
-
-### 2. You can pass only the first argument <disk_path> (e.g. /dev/sdb), the script will let you pick a kernel and install Arch Linux to your disk path.
-
-```
-bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
-```
-
-### 3. You can pass both argument <disk_path> <kernel> (e.g. /dev/nvme0n1 for <disk_path> and rkbsp for <kernel>), the script will install Arch Linux with Radxa BSP Kernel to your disk path.
-
-```
-bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 rkbsp
-```
-
-### 4. Advanced usage
 
 | Argument | Description |
 | ------------- | ------------- |
 | `<disk_path>` | Specify the installation path, this should be a disk path not a partition path. On the Rock 5B, it is /dev/nvme0n1 for NVMe SSD, /dev/mmcblk0 for uSD Card, and /dev/mmcblk1 for eMMC. For SATA or External disk, they are usually on /dev/sdX, which X is usually starting from a-z. |
 | `<kernel>` | Currently available options for kernel are `rkbsp` and `midstream`. You may optionally specifiy a custom kernel by specifying the path to the file. This can be a tar (.tar.gz or .tar.xz) or image (.img). |
+
+## Examples
+
+1. You can simply run the script without any arguments (Same as the "How to install?" section above), the script will prompt for picking installation options.
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
+```
+
+2. You can pass only the first argument <disk_path> (e.g. /dev/sdb), the script will let you pick a kernel and install Arch Linux to your disk path.
+
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
+```
+
+3. You can pass both argument <disk_path> <kernel> (e.g. /dev/nvme0n1 for <disk_path> and rkbsp for <kernel>), the script will install Arch Linux with Radxa BSP Kernel to your disk path.
+
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 rkbsp
+```
 
 # More Info
 
