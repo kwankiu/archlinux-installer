@@ -186,7 +186,6 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   exit 1
 else
   title
-  drive=$1
 fi
 
 # Check if parted is installed
@@ -225,7 +224,7 @@ fi
 
 # This runs when there is no parameters specified
 # Choose drive to install / create .img image
-if [ -z $drive ]; then
+if [ -z $1 ]; then
   colorecho "$GREEN" "Select a disk to install or create an image:"
   list_disks
   title
@@ -238,13 +237,12 @@ if [ -z $drive ]; then
   else
     confirm_disk
   fi
+else 
+  drive=$1
 fi
 
 # Install boot partition and kernel
-boot_image=$2
-
-if [ -z $boot_image ]; then
-  if [ -z $2 ]; then
+if [ -z $2 ]; then
     title
     colorecho "$GREEN" "Select a kernel to install:"
     options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(Experimental) Googulator Midstream Kernel (Linux 6.2)" "Install a Custom Kernel from file")
@@ -260,6 +258,13 @@ if [ -z $boot_image ]; then
       read answer
       boot_image=answer
     fi
+else 
+  if [ "$2" = "rkbsp" ]; then
+    install_rkbsp
+  elif [ "$2" = "midstream" ]; then
+    install_midstream
+  else
+    boot_image=$2
   fi
 fi
 

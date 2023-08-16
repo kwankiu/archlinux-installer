@@ -24,37 +24,47 @@ This will get you a bootable Arch Linux rootfs on your Disk. The default login i
 ```
 arch-rock-installer
 ```
-3. When it saids the linux package have a conflict, this is normal, let the script replace the kernel.
-4. If you want a Desktop Environment, pick a Desktop Environment to install.
-5. Once it's done, the script should automatically reboot your system. Enjoy!
+3. The script may reboot after creating a user account and updating a root password, you may need to log back to root/root and run the script again
+```
+arch-rock-installer
+```
+4. When it saids the linux package have a conflict, this is normal, confirm and let the script install the kernel.
+5. If you want a Desktop Environment, pick a Desktop Environment to install.
+6. Once it's done, the script should automatically reboot your system. Enjoy!
 
 # Usage
 
 ```
-archlinux-installer <disk_path> <boot_img_path>
+archlinux-installer <disk_path> <kernel>
 ```
 
-You can simply run the script without any parameters, the script will prompt and ask you.
+## 1. You can simply run the script without any arguments (Same as the "How to install?" section above), the script will prompt for picking installation options.
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
+```
 
-You can pass only the first parameter <disk_path> (e.g. /dev/nvme0n1 for Rock 5B's NVme Slot), this will install Arch Linux to your disk path using the boot partition file from github release.
-
-You can pass both parameters which you can use your own boot partition file path (which can be .img or .tar.gz).
-
-Example 1 : on a Linux PC/VM, flash to external disk (this will format the disk in /dev/sdb, then download arch linux roofs and the boot partition from github release to the disk): 
+## 2. You can pass only the first argument <disk_path> (e.g. /dev/sdb), the script will let you pick a kernel and install Arch Linux to your disk path.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
 ```
 
-Example 2 : on Rock 5B booted on SD card, flash to NVMe Drive (this will format the disk in /dev/nvme0n1, then download arch linux roofs and use your own boot.img as boot partition to the disk): 
+## 3. You can pass both argument <disk_path> <kernel> (e.g. /dev/nvme0n1 for <disk_path> and rkbsp for <kernel>), the script will install Arch Linux with Radxa BSP Kernel to your disk path.
 
 ```
-bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 boot.img
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 rkbsp
 ```
+
+## 4. Advanced usage
+
+| Argument | Description |
+| ------------- | ------------- |
+| <disk_path> | Specify the installation path, this should be a disk path not a partition path. On the Rock 5B, it is /dev/nvme0n1 for NVMe SSD, /dev/mmcblk0 for uSD Card, and /dev/mmcblk1 for eMMC. For SATA or External disk, they are usually on /dev/sdX, which X is usually starting from a-z. |
+| <kernel> | Currently available options for kernel are `rkbsp` and `midstream`. You may optionally specifiy a custom kernel by specifying the path to the file. This can be a tar (.tar.gz or .tar.xz) or image (.img). |
 
 # More Info
 
-## The `arch-rock-config` Configuration Utility
+## The `arch-rock-config` Configuration Utility (experimental)
 We have created a configuration utility just like `armbian-config` or `raspi-config` but for Arch Linux running on Rock 5B / RK3588.
 Note that this configuration utility is work-in-progress.
 Available tool scripts are in the tool folder.
@@ -62,6 +72,7 @@ Available tool scripts are in the tool folder.
 | Script | Description |
 | ------------- | ------------- |
 | arch-rock-config | Arch Linux Configuration Utility for Rock 5B / RK3588. |
+| arch-rock-installer | Arch Linux Installer for Rock 5B / RK3588 (for first-time booting). |
 | first-boot-setup | Apply necessary configuration for first-time boot. |
 | install-kernel | Install / Re-install Kernel that is maintained by Arch Linux. |
 | post-install | Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc. |
