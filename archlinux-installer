@@ -383,7 +383,7 @@ sudo umount $boot_mount_dir $root_mount_dir
 
 # Clean up
 colorecho "$YELLOW" "Cleaning up temporary files ..."
-sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz first-boot-setup arch-rock-installer compiled-pkg-rkbsp-latest.tar.xz compiled-pkg-midstream-latest.tar.xz
+sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz first-boot-setup arch-rock-installer compiled-pkg-*.tar.xz
 
 title
 colorecho "$YELLOW" "Created Arch Linux Installer, the default login is alarm/alarm and root login is root/root."
