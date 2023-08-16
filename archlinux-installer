@@ -361,12 +361,12 @@ sudo rm -rf $pkg_tar_dir/Kernel/linux $pkg_tar_dir/Kernel/*/initramfs* $pkg_tar_
 colorecho "$GREEN" "Copying Installer and Tools ..."
 # Download first-boot-setup
 # For main branch
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/first-boot-setup
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-installer
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/first-boot-setup
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-installer
 
 # For dev branch
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/first-boot-setup
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-installer
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/first-boot-setup
+#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-installer
 
 # Copy first-boot-setup
 sudo chmod +x first-boot-setup

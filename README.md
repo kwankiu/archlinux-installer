@@ -7,12 +7,10 @@ This is an installation script that gets you through an installation of Arch Lin
 
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
 
-## Warning : This is a dev branch, they are not being tested and may not work.
-
 # How to install?
 Download and run the script below:
  ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer)
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
 This will get you a bootable Arch Linux rootfs on your Disk. The default login is alarm/alarm and root login is root/root.
