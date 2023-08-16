@@ -1,0 +1,244 @@
+#!/bin/bash
+
+################################################################
+#                                                              #
+#           Arch Linux Installer for Rock 5B / RK3588          #
+#                                                              #
+################################################################
+
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[1;34m'
+NC='\033[0m' # No Color
+
+function select_option {
+
+    # little helpers for terminal print control and key input
+    ESC=$( printf "\033")
+    cursor_blink_on()  { printf "$ESC[?25h"; }
+    cursor_blink_off() { printf "$ESC[?25l"; }
+    cursor_to()        { printf "$ESC[$1;${2:-1}H"; }
+    print_option()     { printf "   $1 "; }
+    print_selected()   { printf "  $ESC[7m $1 $ESC[27m"; }
+    get_cursor_row()   { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
+    key_input()        { read -s -n3 key 2>/dev/null >&2
+                         if [[ $key = $ESC[A ]]; then echo up;    fi
+                         if [[ $key = $ESC[B ]]; then echo down;  fi
+                         if [[ $key = ""     ]]; then echo enter; fi; }
+
+    # initially print empty new lines (scroll down if at bottom of screen)
+    for opt; do printf "\n"; done
+
+    # determine current screen position for overwriting the options
+    local lastrow=`get_cursor_row`
+    local startrow=$(($lastrow - $#))
+
+    # ensure cursor and input echoing back on upon a ctrl+c during read -s
+    trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
+    cursor_blink_off
+
+    local selected=0
+    while true; do
+        # print options by overwriting the last lines
+        local idx=0
+        for opt; do
+            cursor_to $(($startrow + $idx))
+            if [ $idx -eq $selected ]; then
+                print_selected "$opt"
+            else
+                print_option "$opt"
+            fi
+            ((idx++))
+        done
+
+        # user key control
+        case `key_input` in
+            enter) break;;
+            up)    ((selected--));
+                   if [ $selected -lt 0 ]; then selected=$(($# - 1)); fi;;
+            down)  ((selected++));
+                   if [ $selected -ge $# ]; then selected=0; fi;;
+        esac
+    done
+
+    # cursor position back to normal
+    cursor_to $lastrow
+    printf "\n"
+    cursor_blink_on
+
+    return $selected
+}
+
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+
+title() {
+  clear
+  text="$1"
+  echo "---------------------------------------------------------------------"
+  colorecho "$BLUE" "${text}"
+  echo "---------------------------------------------------------------------"
+}
+
+compiled_pkg_folder="/usr/lib/compiled-packages"
+
+title "Welcome to Arch Linux Installer for Rock 5B / RK3588"
+if [ -e "/usr/bin/first-boot-setup" ]; then
+    colorecho "$GREEN" "Running First Boot Setup ..."
+    first-boot-setup
+fi
+
+if [ -z $compiled_pkg_folder ]; then
+    chmod -R 755 $compiled_pkg_folder/*
+fi
+
+title "Install Linux Kernel"
+if [ -z "$compiled_pkg_folder/Kernel" ]; then
+    colorecho "$RED" "Error : No pre-compiled Packages found."
+    exit 1
+    #echo "No pre-compiled Packages found. Would you like to build linux kernel from AUR / source (y/n)?"
+    #read answer
+    #if [ "$answer" = "y" ]; then
+    #arch-rock-config install-kernel --no-reboot
+    #fi
+else
+
+    # remove old kernel files, else the package will not install.
+    colorecho "$YELLOW" "Removing existing kernel files ..."
+    rm -rf /usr/bin/libmali
+    rm -rf /usr/bin/libmaliw
+    rm -rf /usr/lib/libmali
+    rm -rf /usr/lib/modules
+    rm -rf /usr/lib/firmware/mali_csffw.bin
+    rm -rf /usr/src/linux-*
+    rm -rf /boot/*
+
+    colorecho "$GREEN" "Installing Linux Kernel ..."
+    pacman -U $compiled_pkg_folder/Kernel/*/*.pkg.tar.xz
+
+    colorecho "$YELLOW" "Updating extlinux.conf ..."
+    # apply new extlinux.conf
+    mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Find the UUIDs of the root partition
+    root_uuid=$(blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    echo "Root partition UUID: $root_uuid"
+
+    # Change UUID for extlinux.conf
+    echo "Updating UUID for extlinux.conf ..."
+    sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+    # for midstream
+    if [ -e /boot/vmlinuz-linux-rk3588-midstream ]; then
+        colorecho "$YELLOW" "Installing mali_csffw.bin ..."
+        # Install mali_csffw.bin
+        pacman -Sy wget --noconfirm
+        wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
+    fi
+fi
+
+title "Install Mesa and GPU drivers"
+if [ -z "$compiled_pkg_folder/GPU" ]; then
+    colorecho "$RED" "Error : No pre-compiled Packages found."
+    exit 1
+    #echo "No pre-compiled Packages found. Would you like to build from AUR / source (y/n)?"
+    #read answer
+    #if [ "$answer" = "y" ]; then
+    #arch-rock-config install-gpu
+    #fi
+else
+    colorecho "$GREEN" "Installing Mesa ..."
+    pacman -U $compiled_pkg_folder/GPU/*/*.pkg.tar.xz --noconfirm
+    if [ -z "$compiled_pkg_folder/GPU/add-ons" ]; then
+        colorecho "$GREEN" "Installing other GPU drivers ..."
+        pacman -U $compiled_pkg_folder/GPU/add-ons/*/*.pkg.tar.xz --noconfirm
+    fi
+fi
+
+title "Install Video Acceleration"
+if [ -z "$compiled_pkg_folder/Video" ]; then
+    colorecho "$RED" "Error : No pre-compiled Packages found."
+    exit 1
+    #echo "No pre-compiled Packages found. Would you like to build from AUR / source (y/n)?"
+    #read answer
+    #if [ "$answer" = "y" ]; then
+    #arch-rock-config install-vpu
+    #fi
+else
+    colorecho "$GREEN" "Installing Video Acceleration ..."
+    pacman -U $compiled_pkg_folder/Video/*/*.pkg.tar.xz --noconfirm
+fi
+
+title "Post Installation"
+
+# The fix for some Bluetooth Modules (A8, AX210, etc.)
+colorecho "$GREEN" "Applying Bluetooth Fix ..."
+echo "blacklist pgdrv" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist btusb" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist btrtl" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist btbcm" >> /etc/modprobe.d/blacklist.conf
+echo "#blacklist btintel" >> /etc/modprobe.d/blacklist.conf
+
+# Network Manager, WiFi, Bluetooth
+colorecho "$GREEN" "Installing network manager ..."
+pacman -S networkmanager iw --noconfirm
+systemctl enable NetworkManager.service
+systemctl start NetworkManager.service
+
+
+title "Install desktop environment"
+colorecho "$GREEN" "Select a desktop environment to install :"
+
+options=("Gnome" "KDE Plasma" "Budgie")
+
+# TO BE ADDED
+# options+=("XFCE" "LXQt" "Cinnamon" "Cutefish" "Deepin" "MATE" "Sway")
+
+options+=("Skip")
+
+select_option "${options[@]}"
+de_options=$?
+
+title "Install desktop environment"
+
+# Install desktop environment
+if [ "$de_options" = 0 ]; then
+    # Install Gnome
+    colorecho "$GREEN" "Installing Gnome ..."
+    pacman -Syyu gnome
+    systemctl enable gdm
+elif [ "$de_options" = 1 ]; then
+    # Install KDE Plasma
+    colorecho "$GREEN" "Installing KDE Plasma ..."
+    pacman -Syyu plasma-desktop sddm
+    systemctl enable sddm
+elif [ "$de_options" = 2 ]; then
+    # Install Budgie
+    colorecho "$GREEN" "Installing Budgie ..."
+    pacman -Syyu budgie-desktop gdm gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    systemctl enable gdm
+else
+    colorecho "$YELLOW" "Skipping install desktop environment ..."
+fi
+
+title "Installation Finished"
+# Prompt user if they want to reboot
+read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+    echo "You can manually reboot later to apply the changes."
+else
+    colorecho "$GREEN" "Cleaning up installations ..."
+    rm -rf $compiled_pkg_folder /usr/bin/arch-rock-installer
+    colorecho "$GREEN" "Rebooting system ..."
+    reboot
+fi

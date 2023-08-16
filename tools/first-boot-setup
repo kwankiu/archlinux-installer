@@ -87,6 +87,18 @@ fi
 # Add the user to the sudoers group using usermod
 usermod -aG wheel "$new_username"
 
+# Add the user to other groups
+usermod -aG video "$new_username"
+usermod -aG audio "$new_username"
+usermod -aG games "$new_username"
+usermod -aG log "$new_username"
+usermod -aG lp "$new_username"
+usermod -aG optical "$new_username"
+usermod -aG power "$new_username"
+usermod -aG scanner "$new_username"
+usermod -aG storage "$new_username"
+
+
 # Check if the usermod command was successful
 if [ $? -eq 0 ]; then
     echo "User $new_username added to sudoers successfully"
@@ -157,16 +169,21 @@ curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/ma
 chmod +x install-kernel
 chmod +x post-install
 
-echo "Done, you may login to your newly created user account $new_username after the reboot."
-
-# Prompt user if they want to reboot
-read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
-
-if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
-    echo "You can manually reboot later to apply the changes."
+if [ "$1" = "--no-reboot" ]; then
+        echo "Done. Cleaning up First Boot Setup ..."
+        rm -rf /usr/bin/first-boot-setup
 else
-    echo "Removing this script ..."
-    rm -rf /root/first-boot-setup
-    echo "Done. Rebooting..."
-    reboot
+    # Prompt user if they want to reboot
+    read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+    if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+        echo "You can manually reboot later to apply the changes."
+    else
+        echo "Removing this script ..."
+        rm -rf /usr/bin/first-boot-setup
+        echo "Done. Rebooting..."
+        reboot
+    fi
 fi
+
+
