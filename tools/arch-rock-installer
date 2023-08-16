@@ -121,25 +121,24 @@ else
     colorecho "$GREEN" "Installing Linux Kernel ..."
     pacman -U $compiled_pkg_folder/Kernel/*/*.pkg.tar.xz
 
+    colorecho "$YELLOW" "Updating extlinux.conf ..."
+    # apply new extlinux.conf
+    mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Find the UUIDs of the root partition
+    root_uuid=$(blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    echo "Root partition UUID: $root_uuid"
+
+    # Change UUID for extlinux.conf
+    echo "Updating UUID for extlinux.conf ..."
+    sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
     # for midstream
     if [ -e /boot/vmlinuz-linux-rk3588-midstream ]; then
-
-        colorecho "$YELLOW" "Updating extlinux.conf ..."
-        # apply new extlinux.conf
-        mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
-
-        # Get rootfs partition from the current mount point "/"
-        rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
-
-        # Find the UUIDs of the root partition
-        root_uuid=$(blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
-        echo "Root partition UUID: $root_uuid"
-
-        # Change UUID for extlinux.conf
-        echo "Updating UUID for extlinux.conf ..."
-        sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
-        sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
-
         colorecho "$YELLOW" "Installing mali_csffw.bin ..."
         # Install mali_csffw.bin
         pacman -Sy wget --noconfirm
@@ -190,7 +189,7 @@ echo "blacklist btbcm" >> /etc/modprobe.d/blacklist.conf
 echo "#blacklist btintel" >> /etc/modprobe.d/blacklist.conf
 
 # Network Manager, WiFi, Bluetooth
-colorecho "$GREEN" echo "Installing network manager ..."
+colorecho "$GREEN" "Installing network manager ..."
 pacman -S networkmanager iw --noconfirm
 systemctl enable NetworkManager.service
 systemctl start NetworkManager.service
@@ -220,8 +219,8 @@ if [ "$de_options" = 0 ]; then
 elif [ "$de_options" = 1 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma ..."
-    pacman -Syyu plasma-desktop lightdm
-    systemctl enable lightdm.service
+    pacman -Syyu plasma-desktop sddm
+    systemctl enable sddm
 elif [ "$de_options" = 2 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie ..."
