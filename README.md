@@ -55,7 +55,7 @@ The script will prompt for picking installation options.
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
-2. Passing only the first argument <disk_path> (e.g. /dev/sdb)
+2. Passing only the first argument `<disk_path>` (e.g. /dev/sdb)
 
 The script will let you pick a kernel and install Arch Linux to your disk path.
 
@@ -63,7 +63,7 @@ The script will let you pick a kernel and install Arch Linux to your disk path.
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
 ```
 
-3. Passing both argument <disk_path> <kernel> (e.g. /dev/nvme0n1 for <disk_path> and rkbsp for <kernel>)
+3. Passing both argument `<disk_path>` `<kernel>` (e.g. /dev/nvme0n1 for `<disk_path>` and rkbsp for `<kernel>`)
 
 The script will install Arch Linux with Radxa BSP Kernel to your disk path.
 
@@ -76,17 +76,26 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-
 ## The `arch-rock-config` Configuration Utility (experimental)
 We have created a configuration utility just like `armbian-config` or `raspi-config` but for Arch Linux running on Rock 5B / RK3588.
 Note that this configuration utility is work-in-progress.
+
+To run this :
+```
+arch-rock-config
+```
+
+
+## The tools folder
+
 Available tool scripts are in the tool folder.
 
 | Script | Description |
 | ------------- | ------------- |
+| arch-rock-installer | Arch Linux Installer for Rock 5B / RK3588. |
+| first-boot-setup | Apply necessary configuration for first-time boot, used by arch-rock-installer. |
 | arch-rock-config | Arch Linux Configuration Utility for Rock 5B / RK3588. |
-| arch-rock-installer | Arch Linux Installer for Rock 5B / RK3588 (for first-time booting). |
-| first-boot-setup | Apply necessary configuration for first-time boot. |
 | install-kernel | Install / Re-install Kernel that is maintained by Arch Linux. |
 | post-install | Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc. |
 
-## Installing / Reinstalling Kernel
+## Reinstalling Kernel
 
 Available kernel options to install : 
 | Kernel Package  | Linux Kernel | Notes |
@@ -101,9 +110,9 @@ arch-rock-config install-kernel
 ```
 
 ## Post Installation 
-Note that this Post Installation Tools is work-in-progress.
 
-This tool is intended to apply patches such as bluetooth fix, AX210 driver, add SoC performance profile, Then install Graphics driver, Desktop Environment, Video Decoder Accelaration, etc.
+If you have installed your system with `arch-rock-installer`, it is not required to run post-install again
+This Post Installation Tools is work-in-progress. 
 
 To Run this :
 ```
@@ -113,6 +122,5 @@ arch-rock-config post-install
 # WIP / TODO List / Known Issues
 1. Functionality to create an .img image is still work-in-progress.
 2. When choosing a disk, on some system, the path may not be read properly (/dev/nvme0n1 1024G may become /dev/1024G, temp solution is to manually enter the disk path)
-3. post-install is still work-in-progress, not everything is working.
 
 
