@@ -24,11 +24,11 @@ This will get you a bootable Arch Linux rootfs on your Disk. The default login i
 ```
 arch-rock-installer
 ```
-3. The script may reboot after creating a user account and updating a root password, you may need to log back to root/root and run the script again
+3. The script will reboot after creating a user account and updating a root password. To continue the installation, you may need to log back to root/root and re-run the command
 ```
 arch-rock-installer
 ```
-4. When it saids the linux package have a conflict, this is normal, confirm and let the script install the kernel.
+4. If it saids the linux package have a conflict, this is normal, confirm and let the script install the kernel.
 5. If you want a Desktop Environment, pick a Desktop Environment to install.
 6. Once it's done, the script should automatically reboot your system. Enjoy!
 
