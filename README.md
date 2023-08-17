@@ -119,6 +119,5 @@ arch-rock-config post-install
 
 # WIP / TODO List / Known Issues
 1. Functionality to create an .img image is still work-in-progress.
-2. When choosing a disk, on some system, the path may not be read properly (/dev/nvme0n1 1024G may become /dev/1024G, temp solution is to manually enter the disk path)
 
 

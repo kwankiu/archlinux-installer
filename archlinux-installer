@@ -87,7 +87,7 @@ title() {
 # Function to display a list of available disks
 list_disks() {
   options=()
-  disks=($(lsblk -rdno NAME,SIZE,MODEL))
+  disks=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
   for ((i=0; i<${#disks[@]}; i+=3)); do
     model=${disks[i+2]//\\x20/ }  # Replace escaped spaces with actual spaces
     options+=("$((i/3+1))) /dev/${disks[i]} - $model (${disks[i+1]})")
@@ -289,8 +289,13 @@ sudo parted $drive mkpart primary fat32 0% 500MB
 sudo parted $drive mkpart primary ext4 500MB 100%
 
 # Find the partitions
-root_partition=$drive"2"
-boot_partition=$drive"1"
+if [ -e $drive"1" ]; then
+	root_partition=$drive"2"
+	boot_partition=$drive"1"
+else
+	root_partition=$drive"p2"
+	boot_partition=$drive"p1"	
+fi
 
 # Format the partitions
 echo -e 'y' |sudo mkfs.ext4 $root_partition 
