@@ -87,13 +87,29 @@ title() {
   echo "---------------------------------------------------------------------"
 }
 
+update_util() {
+    title "Arch Rock Configuration Utility"
+    colorecho "$GREEN" "Installing / Updating Arch Rock Configuration Utility ..."
+    if ! [ -x "$(command -v wget)" ]; then
+        sudo pacman -Sy wget --noconfirm
+    fi
+
+    # main
+    #sudo wget -P /usr/bin https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-config
+    # dev
+    sudo wget -P /usr/bin https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-config
+
+    sudo chmod +x /usr/bin/arch-rock-config
+    arch-rock-config
+}
+
 config_options() {
     title "Arch Rock Configuration Utility"
     options=("System Maintenance - Managing Updates, Bootloader, System, Linux Kernel, etc.")
     options+=("Manage Packages - Install, Update or Downgrade Software Packages.")
     options+=("Performance & Features - Tweak SoC Performance Settings, Enable PWM Fan, Overclocking, etc.")
     options+=("User & Localization - Manage user accounts, Generating Locale, changing Timezone, etc.")
-    options+=("About - Information about this configuration utility")
+    options+=("Update Configuration Utility to latest version")
     options+=("Exit Configuration Utility")
     select_option "${options[@]}"
     choice=$?
@@ -113,7 +129,7 @@ config_options() {
             user_localization
             ;;
         4)
-            about
+            update_util
             ;;
     esac
 
@@ -248,7 +264,9 @@ overlays() {
 }
 
 # read arguments
-if [ "$1" = "install-kernel" ]; then
+if [ ! -e "/usr/bin/arch-rock-config" ]; then
+    update_util
+elif [ "$1" = "install-kernel" ]; then
     install_kernel
 elif [ "$1" = "post-install" ]; then
     post_install
