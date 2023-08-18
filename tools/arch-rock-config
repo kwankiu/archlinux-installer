@@ -6,7 +6,12 @@
 #                                                              #
 ################################################################
 
-#  This is like armbian-config or raspi-config or rsetup but for Arch Linux running on Rock 5B / RK3588
+# This is like armbian-config or raspi-config or rsetup but for Arch Linux running on Rock 5B / RK3588
+
+# Version of this script 
+# (For developer : Update whenever there is a change in this file or its related files)
+# format of Version Number is YYMMDDN which N is 1 unless there is more than one update on the same day)
+utilver=2308181
 
 # Define terminal color codes
 RED='\033[0;31m'
@@ -85,6 +90,14 @@ title() {
   echo "---------------------------------------------------------------------"
   colorecho "$BLUE" "${text}"
   echo "---------------------------------------------------------------------"
+}
+
+check_util_updates() {
+    remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
+    echo $remote_utilver
+    if [ "$remote_utilver" -gt "$utilver" ]; then
+        echo "Remote utilver is greater. Update needed."
+    fi
 }
 
 update_util() {
@@ -274,5 +287,6 @@ elif [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage : To be written"
     exit 1
 else
+    check_util_updates
     config_options
 fi
