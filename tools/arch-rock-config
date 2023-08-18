@@ -11,7 +11,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1 unless there is more than one update on the same day)
-utilver=2308181
+utilver=2308171
 
 # define main / dev branch
 branch=dev
@@ -106,14 +106,14 @@ check_util_updates() {
 }
 
 update_util() {
-    if [ "$update_available" = true ]; then 
+    if [ "$update_available" = true ] || [ "$1" = "--install" ]; then 
         title "Arch Rock Configuration Utility"
         colorecho "$GREEN" "Installing / Updating Arch Rock Configuration Utility ..."
         if ! [ -x "$(command -v wget)" ]; then
             sudo pacman -Sy wget --noconfirm
         fi
 
-        sudo wget -P /usr/bin https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        sudo wget -N -P /usr/bin/ https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
         sudo chmod +x /usr/bin/arch-rock-config
         arch-rock-config
     fi
@@ -285,7 +285,7 @@ overlays() {
 
 # read arguments
 if [ ! -e "/usr/bin/arch-rock-config" ]; then
-    update_util
+    update_util --install
 elif [ "$1" = "install-kernel" ]; then
     install_kernel
 elif [ "$1" = "post-install" ]; then
