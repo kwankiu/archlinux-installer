@@ -89,7 +89,6 @@ compiled_pkg_folder="/usr/lib/compiled-packages"
 
 title "Welcome to Arch Linux Installer for Rock 5B / RK3588"
 if [ -e "/usr/bin/first-boot-setup" ]; then
-    colorecho "$GREEN" "Running First Boot Setup ..."
     first-boot-setup
 fi
 

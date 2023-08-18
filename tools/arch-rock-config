@@ -2,49 +2,249 @@
 
 ################################################################
 #                                                              #
-#    Arch Linux Configuration Utility for Rock 5B / RK3588     #
+#     Arch Rock Configuration Utility for Rock 5B / RK3588     #
 #                                                              #
 ################################################################
 
-#  This is like armbian-config or raspi-config but for Arch Linux running on Rock 5B / RK3588
+#  This is like armbian-config or raspi-config or rsetup but for Arch Linux running on Rock 5B / RK3588
+
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[1;34m'
+NC='\033[0m' # No Color
+
+function select_option {
+
+    # little helpers for terminal print control and key input
+    ESC=$( printf "\033")
+    cursor_blink_on()  { printf "$ESC[?25h"; }
+    cursor_blink_off() { printf "$ESC[?25l"; }
+    cursor_to()        { printf "$ESC[$1;${2:-1}H"; }
+    print_option()     { printf "   $1 "; }
+    print_selected()   { printf "  $ESC[7m $1 $ESC[27m"; }
+    get_cursor_row()   { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
+    key_input()        { read -s -n3 key 2>/dev/null >&2
+                         if [[ $key = $ESC[A ]]; then echo up;    fi
+                         if [[ $key = $ESC[B ]]; then echo down;  fi
+                         if [[ $key = ""     ]]; then echo enter; fi; }
+
+    # initially print empty new lines (scroll down if at bottom of screen)
+    for opt; do printf "\n"; done
+
+    # determine current screen position for overwriting the options
+    local lastrow=`get_cursor_row`
+    local startrow=$(($lastrow - $#))
+
+    # ensure cursor and input echoing back on upon a ctrl+c during read -s
+    trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
+    cursor_blink_off
+
+    local selected=0
+    while true; do
+        # print options by overwriting the last lines
+        local idx=0
+        for opt; do
+            cursor_to $(($startrow + $idx))
+            if [ $idx -eq $selected ]; then
+                print_selected "$opt"
+            else
+                print_option "$opt"
+            fi
+            ((idx++))
+        done
+
+        # user key control
+        case `key_input` in
+            enter) break;;
+            up)    ((selected--));
+                   if [ $selected -lt 0 ]; then selected=$(($# - 1)); fi;;
+            down)  ((selected++));
+                   if [ $selected -ge $# ]; then selected=0; fi;;
+        esac
+    done
+
+    # cursor position back to normal
+    cursor_to $lastrow
+    printf "\n"
+    cursor_blink_on
+
+    return $selected
+}
+
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+
+title() {
+  clear
+  text="$1"
+  echo "---------------------------------------------------------------------"
+  colorecho "$BLUE" "${text}"
+  echo "---------------------------------------------------------------------"
+}
 
 config_options() {
-    clear
-    echo "---------------------------------------------------------------------"
-    echo "Arch Linux Configuration Utility for Rock 5B / RK3588"
-    echo "---------------------------------------------------------------------"
-    echo "1. Install / Re-install Kernel - Install or Replace Linux Kernel"
-    echo "2. Post Installation - Setup patches, install drivers, desktop environment, packages, etc." 
-    echo "3. Install / Move Arch Linux - Install or migrate Arch Linux to another disk."
-    echo "4. Performance & Overclocking - Change SoC Performance Settings or Overclocking the SoC"
-    echo "5. Misc / Tools - Anything else"
-    echo "6. About - Infomation about this configuration utility"
-    echo "---------------------------------------------------------------------"
-    echo "Enter an option to continue : "
-    read choice
+    title "Arch Rock Configuration Utility"
+    options=("System Maintenance - Managing Updates, Bootloader, System, Linux Kernel, etc.")
+    options+=("Manage Packages - Install, Update or Downgrade Software Packages.")
+    options+=("Performance & Features - Tweak SoC Performance Settings, Enable PWM Fan, Overclocking, etc.")
+    options+=("User & Localization - Manage user accounts, Generating Locale, changing Timezone, etc.")
+    options+=("About - Information about this configuration utility")
+    options+=("Exit Configuration Utility")
+    select_option "${options[@]}"
+    choice=$?
 
     # Choice
     case $choice in
+        0)
+            system_maintenance
+            ;;
         1)
-            install_kernel
+            manage_packages
             ;;
         2)
-            post_install
+            performance_features
             ;;
-        *)
-            echo "Invalid choice / Not implemented. Exiting."
-            exit 1
+        3)
+            user_localization
+            ;;
+        4)
+            about
             ;;
     esac
 
+}
+
+# System Maintenance
+system_maintenance() {
+    title "Arch Rock Configuration Utility - System Maintenance"
+    options=("System Update - Check & Perform Selective / Full System Upgrade")
+    options+=("Update SPI Bootloader - Flash Latest Radxa U-Boot")
+    options+=("Re-install Kernel - Re-install / Replace Linux Kernel")
+    options+=("Move Arch Linux - Copy Arch Linux to another disk.")
+    options+=("Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            system_update
+            ;;
+        1)
+            flash_uboot
+            ;;
+        2)
+            install_kernel
+            ;;
+        3)
+            move_system
+            ;;
+        *)
+            config_options
+            ;;
+    esac
+
+}
+
+system_update() {
+    sudo pacman -Syyu
+}
+
+flash_uboot() {
+    echo "Not implemented"
 }
 
 install_kernel() {
     /usr/bin/lib-arch-rock-config/install-kernel
 }
 
-post_install() {
-    /usr/bin/lib-arch-rock-config/post-install
+move_system() {
+    echo "Not implemented"
+}
+
+# Manage Packages
+manage_packages() {
+    title "Arch Rock Configuration Utility - Manage Packages"
+    options=("Install / Update Packages - Install Basic Software / RK3588 Specified / Customized Packages")
+    options+=("Downgrade Packages - Reinstall / Downgrade any Arch Linux Packages from Archive")
+    options+=("Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            install_packages
+            ;;
+        1)
+            downgrade_packages
+            ;;
+        *)
+            config_options
+            ;;
+    esac
+
+}
+
+install_packages() {
+    echo "Not implemented"
+}
+
+downgrade_packages() {
+    echo "Not implemented"
+}
+
+# Performance & Features
+performance_features() {
+    title "Arch Rock Configuration Utility - Performance & Features"
+    options=("SoC Performance Profile - Available options are performance, ondemand and powersave")
+    options+=("PWM Fan Control - Configure PWM Fan-control service")
+    options+=("Overclocking - Configure rk3588-unlock-opps overlay which increases CPU supply & CPU VDD supply")
+    options+=("Overlay - Configure Device Tree Overlay")
+    options+=("Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            soc_profile
+            ;;
+        1)
+            fan_control
+            ;;
+        2)
+            overclocking
+            ;;
+        3)
+            overlays
+            ;;
+        *)
+            config_options
+            ;;
+    esac
+
+}
+
+soc_profile() {
+    echo "Not implemented"
+}
+
+fan_control() {
+    echo "Not implemented"
+}
+
+overclocking() {
+    echo "Not implemented"
+}
+
+overlays() {
+    echo "Not implemented"
 }
 
 # read arguments

@@ -6,87 +6,189 @@
 #                                                              #
 ################################################################
 
-# Check if the script is being run with root privileges
-if [[ $EUID -ne 0 ]]; then
-    echo "This script must be run as root" >&2
-    exit 1
-fi
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[1;34m'
+NC='\033[0m' # No Color
 
-echo "---------------------------------------------------------------------"
-echo "Welcome to Arch Linux, starting first boot setup ..."
-echo "---------------------------------------------------------------------"
+function select_option {
 
-# Check internet connection
-echo "Checking internet connection..."
+    # little helpers for terminal print control and key input
+    ESC=$( printf "\033")
+    cursor_blink_on()  { printf "$ESC[?25h"; }
+    cursor_blink_off() { printf "$ESC[?25l"; }
+    cursor_to()        { printf "$ESC[$1;${2:-1}H"; }
+    print_option()     { printf "   $1 "; }
+    print_selected()   { printf "  $ESC[7m $1 $ESC[27m"; }
+    get_cursor_row()   { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
+    key_input()        { read -s -n3 key 2>/dev/null >&2
+                         if [[ $key = $ESC[A ]]; then echo up;    fi
+                         if [[ $key = $ESC[B ]]; then echo down;  fi
+                         if [[ $key = ""     ]]; then echo enter; fi; }
+
+    # initially print empty new lines (scroll down if at bottom of screen)
+    for opt; do printf "\n"; done
+
+    # determine current screen position for overwriting the options
+    local lastrow=`get_cursor_row`
+    local startrow=$(($lastrow - $#))
+
+    # ensure cursor and input echoing back on upon a ctrl+c during read -s
+    trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
+    cursor_blink_off
+
+    local selected=0
+    while true; do
+        # print options by overwriting the last lines
+        local idx=0
+        for opt; do
+            cursor_to $(($startrow + $idx))
+            if [ $idx -eq $selected ]; then
+                print_selected "$opt"
+            else
+                print_option "$opt"
+            fi
+            ((idx++))
+        done
+
+        # user key control
+        case `key_input` in
+            enter) break;;
+            up)    ((selected--));
+                   if [ $selected -lt 0 ]; then selected=$(($# - 1)); fi;;
+            down)  ((selected++));
+                   if [ $selected -ge $# ]; then selected=0; fi;;
+        esac
+    done
+
+    # cursor position back to normal
+    cursor_to $lastrow
+    printf "\n"
+    cursor_blink_on
+
+    return $selected
+}
+
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+
+title() {
+  clear
+  text="$1"
+  echo "---------------------------------------------------------------------"
+  colorecho "$BLUE" "${text}"
+  echo "---------------------------------------------------------------------"
+}
+
+check_internet() {
+colorecho "$YELLOW" "Checking internet connection..."
 servers=("google.com" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile (for China users)
 internet_available=false
 
 for server in "${servers[@]}"; do
     if ping -q -c 3 "$server" >/dev/null; then
-        echo "Internet is available via $server."
+        colorecho "$GREEN" "Internet is available via $server."
         internet_available=true
         break
     fi
 done
 
 if ! "$internet_available"; then
-    echo "No internet connection. We might not be able to set you up if you dont have internet connection. Are you sure to continue (y/n)?"
-    read answer
-    if [ "$answer" = "n" ]; then
+    colorecho "$RED" "Your system does not appear to have internet connection."
+    colorecho "$YELLOW" "We might not be able to set you up without internet connection. Do you want to continue anyway?"
+    options=("Continue Anyway" "Try Again" "Exit Setup")
+    select_option "${options[@]}"
+    answer=$?
+    if [ "$answer" = 1 ]; then
+        check_internet
+    elif [ "$answer" = 2 ]; then
         echo "Aborted because no internet connection. Exiting ..."
         exit 1
     fi
 fi
+}
 
+# Check if the script is being run with root privileges
+if [[ $EUID -ne 0 ]]; then
+    colorecho "$RED" "This script must be run as root"
+    exit 1
+fi
+
+colorecho "$GREEN" "Running First Boot Setup ..."
+# Check internet connection
+check_internet
+
+colorecho "$GREEN" "Setting up pacman ..."
 #initialize the pacman keyring and populate the Arch Linux ARM package signing keys
 pacman-key --init
 pacman-key --populate archlinuxarm
 
 #wheel group
+colorecho "$GREEN" "Allowing wheel group in sudoers ..."
 echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 
+title "Create User Account"
 # Prompt user to enter a new username
-read -p "Enter a new username : " new_username
+read -p "Enter a new username (default=rock): " new_username
 
 # Check if the username is not empty
 if [ -z "$new_username" ]; then
-    echo "Username cannot be empty"
-    exit 1
+    new_username="rock"
 fi
+
+colorecho "$YELLOW" "Creating user account $new_username."
 
 # Create the user account
 useradd -m -G wheel -s /bin/bash "$new_username"
 
 # Check if the useradd command was successful
 if [ $? -eq 0 ]; then
-    echo "User $new_username created successfully"
+    colorecho "$GREEN" "User $new_username created successfully"
+
     # Remove the default "alarm" account
-    userdel -r alarm
-    if [ $? -eq 0 ]; then
-        echo "Default 'alarm' account removed successfully"
-    else
-        echo "Error removing default 'alarm' account"
+    if [ ! "$new_username" = "alarm" ]; then
+        userdel -r alarm
+        if [ $? -eq 0 ]; then
+            echo "Default 'alarm' account removed successfully"
+        else
+            echo "Error removing default 'alarm' account"
+        fi
     fi
+
 else
-    echo "Error creating user $new_username"
+    colorecho "$RED" "Error creating user $new_username"
     exit 1
 fi
 
 # Prompt user to set a password for the new user
-echo "Set a password for user $new_username"
+colorecho "$GREEN" "Create new password for $new_username :"
 passwd "$new_username"
 
 # Check if the passwd command was successful
 if [ $? -eq 0 ]; then
-    echo "Password set for user $new_username"
+    colorecho "$GREEN" "Password set for user $new_username"
 else
-    echo "Error setting password for user $new_username"
+    colorecho "$RED" "Error setting password for user $new_username"
     exit 1
 fi
 
+colorecho "$GREEN" "Adding $new_username to wheel ..."
 # Add the user to the sudoers group using usermod
 usermod -aG wheel "$new_username"
 
+# Check if the usermod command was successful
+if [ $? -eq 0 ]; then
+    colorecho "$GREEN" "$new_username added to sudoers successfully"
+else
+    colorecho "$RED" "Error adding user $new_username to sudoers"
+fi
+
+colorecho "$GREEN" "Adding $new_username to other groups ..."
 # Add the user to other groups
 usermod -aG video "$new_username"
 usermod -aG audio "$new_username"
@@ -98,18 +200,25 @@ usermod -aG power "$new_username"
 usermod -aG scanner "$new_username"
 usermod -aG storage "$new_username"
 
-
-# Check if the usermod command was successful
-if [ $? -eq 0 ]; then
-    echo "User $new_username added to sudoers successfully"
-else
-    echo "Error adding user $new_username to sudoers"
-fi
+# Install sudo
+colorecho "$GREEN" "Installing sudo"
+pacman -Sy sudo --noconfirm
 
 # Prompt user to change the root password
-echo "Please set a root password : "
-passwd
+title "Root account options"
+colorecho "$GREEN" "Do you want to change the root password?"
+options=("Do not change root password" "Change root password" "Turn off root account")
+select_option "${options[@]}"
+answer=$?
 
+if [ "$answer" = 1 ]; then
+    colorecho "$GREEN" "Set new root password : "
+    passwd
+elif [ "$answer" = 2 ]; then
+    passwd -l root
+fi
+
+title "Updating fstab ..."
 # Get boot partition from the current mount point "/"
 rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
@@ -140,10 +249,7 @@ else
     fi
 fi
 
-# Install sudo
-echo "Installing sudo"
-pacman -Sy sudo --noconfirm
-
+title "Installing Configuration Utility (arch-rock-config) ..."
 # Download and install arch-rock-config
 cd /usr/bin
 
@@ -170,18 +276,18 @@ chmod +x install-kernel
 chmod +x post-install
 
 if [ "$1" = "--no-reboot" ]; then
-        echo "Done. Cleaning up First Boot Setup ..."
+        colorecho "$GREEN" "Cleaning up First Boot Setup ..."
         rm -rf /usr/bin/first-boot-setup
 else
     # Prompt user if they want to reboot
     read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
 
     if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
-        echo "You can manually reboot later to apply the changes."
+        colorecho "$YELLOW" "You can manually reboot later to apply the changes."
     else
-        echo "Removing this script ..."
+        colorecho "$GREEN" "Cleaning up First Boot Setup ..."
         rm -rf /usr/bin/first-boot-setup
-        echo "Done. Rebooting..."
+        colorecho "$GREEN" "Rebooting..."
         reboot
     fi
 fi
