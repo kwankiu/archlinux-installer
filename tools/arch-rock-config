@@ -13,6 +13,12 @@
 # format of Version Number is YYMMDDN which N is 1 unless there is more than one update on the same day)
 utilver=2308181
 
+# define main / dev branch
+branch=dev
+
+# initialize variables
+update_available=false
+
 # Define terminal color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -93,27 +99,24 @@ title() {
 }
 
 check_util_updates() {
-    remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
-    echo $remote_utilver
+    remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
     if [ "$remote_utilver" -gt "$utilver" ]; then
-        echo "Remote utilver is greater. Update needed."
+        update_available=true
     fi
 }
 
 update_util() {
-    title "Arch Rock Configuration Utility"
-    colorecho "$GREEN" "Installing / Updating Arch Rock Configuration Utility ..."
-    if ! [ -x "$(command -v wget)" ]; then
-        sudo pacman -Sy wget --noconfirm
+    if [ "$update_available" = true ]; then 
+        title "Arch Rock Configuration Utility"
+        colorecho "$GREEN" "Installing / Updating Arch Rock Configuration Utility ..."
+        if ! [ -x "$(command -v wget)" ]; then
+            sudo pacman -Sy wget --noconfirm
+        fi
+
+        sudo wget -P /usr/bin https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        sudo chmod +x /usr/bin/arch-rock-config
+        arch-rock-config
     fi
-
-    # main
-    #sudo wget -P /usr/bin https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-config
-    # dev
-    sudo wget -P /usr/bin https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-config
-
-    sudo chmod +x /usr/bin/arch-rock-config
-    arch-rock-config
 }
 
 config_options() {
@@ -122,7 +125,11 @@ config_options() {
     options+=("Manage Packages - Install, Update or Downgrade Software Packages.")
     options+=("Performance & Features - Tweak SoC Performance Settings, Enable PWM Fan, Overclocking, etc.")
     options+=("User & Localization - Manage user accounts, Generating Locale, changing Timezone, etc.")
-    options+=("Update Configuration Utility to latest version")
+
+    if [ "$update_available" = true ]; then 
+        options+=("Update Configuration Utility to latest version $GREEN(Updates available)$NC")
+    fi
+    
     options+=("Exit Configuration Utility")
     select_option "${options[@]}"
     choice=$?
