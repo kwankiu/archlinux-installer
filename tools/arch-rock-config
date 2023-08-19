@@ -216,7 +216,27 @@ system_update() {
 
 # Update SPI Bootloader
 flash_uboot() {
-    echo "Not implemented"
+    colorecho "$GREEN" "Installing bootloader to the SPI NOR flash ..."
+
+    curl -LJO https://dl.radxa.com/rock5/sw/images/others/zero.img.gz
+
+    if ! [ -x "$(command -v gzip)" ]; then
+        sudo pacman -Sy gzip --noconfirm
+    fi
+    gzip -d zero.img.gz
+
+    if [ -e /dev/mtdblock0 ]; then
+        sudo dd if=zero.img of=/dev/mtdblock0
+    else
+        colorecho "$RED" "Error : SPI Flash not found"
+    fi
+
+    curl -LJO https://dl.radxa.com/rock5/sw/images/loader/rock-5b/release/rock-5b-spi-image-gbf47e81-20230607.img
+
+    sudo dd if=spi-rock-5b-spi-image-gbf47e81-20230607.img of=/dev/mtdblock0
+    sync
+
+    colorecho "$GREEN" "Installed bootloader to the SPI NOR flash"
 }
 
 # Re-install Kernel
