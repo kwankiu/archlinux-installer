@@ -2,22 +2,26 @@
 
 ################################################################
 #                                                              #
-#     Arch Rock Configuration Utility for Rock 5B / RK3588     #
+#                Arch Rock Configuration Utility               #
 #                                                              #
 ################################################################
-
 # This is like armbian-config or raspi-config or rsetup but for Arch Linux running on Rock 5B / RK3588
+################################################################
+# Define variables
 
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1 unless there is more than one update on the same day)
-utilver=2308181
+utilver=2308182
 
-# define main / dev branch
+# Define main / dev branch
 branch=dev
 
-# initialize variables
+# Initialize variables
 update_available=false
+
+################################################################
+# Tools for formatting / styling
 
 # Define terminal color codes
 RED='\033[0;31m'
@@ -26,6 +30,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[1;34m'
 NC='\033[0m' # No Color
 
+# Option Picker
 function select_option {
 
     # little helpers for terminal print control and key input
@@ -84,12 +89,14 @@ function select_option {
     return $selected
 }
 
+# Echo with colors
 colorecho() {
     color="$1"
     text="$2"
     echo -e "${color}${text}${NC}"
 }
 
+# Title / Heading
 title() {
   clear
   text="$1"
@@ -98,6 +105,10 @@ title() {
   echo "---------------------------------------------------------------------"
 }
 
+################################################################
+# Version updates handling
+
+# Check updates
 check_util_updates() {
     remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
     if [ "$remote_utilver" -gt "$utilver" ]; then
@@ -105,6 +116,7 @@ check_util_updates() {
     fi
 }
 
+# Install / Update Utility to PATH
 update_util() {
     if [ "$update_available" = true ] || [ "$1" = "--install" ]; then 
         title "Arch Rock Configuration Utility"
@@ -118,6 +130,9 @@ update_util() {
         arch-rock-config
     fi
 }
+
+################################################################
+# Utility Main Menu
 
 config_options() {
     title "Arch Rock Configuration Utility"
@@ -158,7 +173,10 @@ config_options() {
 
 }
 
+################################################################
 # System Maintenance
+
+# System Maintenance Main Menu
 system_maintenance() {
     title "Arch Rock Configuration Utility - System Maintenance"
     options=("System Update - Check & Perform Selective / Full System Upgrade")
@@ -190,27 +208,34 @@ system_maintenance() {
 
 }
 
+# System Update
 system_update() {
     sudo pacman -Syyu
 }
 
+# Update SPI Bootloader
 flash_uboot() {
     echo "Not implemented"
 }
 
+# Re-install Kernel
 install_kernel() {
     /usr/bin/lib-arch-rock-config/install-kernel
 }
 
+# Move Arch Linux
 move_system() {
     echo "Not implemented"
 }
 
+################################################################
 # Manage Packages
+
+# Manage Packages Main Menu
 manage_packages() {
     title "Arch Rock Configuration Utility - Manage Packages"
     options=("Install / Update Packages - Install Basic Software / RK3588 Specified / Customized Packages")
-    options+=("Downgrade Packages - Reinstall / Downgrade any Arch Linux Packages from Archive")
+    options+=("Downgrade Packages - Install / Downgrade any Arch Linux Packages from Archive")
     options+=("Return to Main Menu")
     select_option "${options[@]}"
     choice=$?
@@ -230,15 +255,20 @@ manage_packages() {
 
 }
 
+# Install Packages
 install_packages() {
     echo "Not implemented"
 }
 
+# Install Packages from Archive
 downgrade_packages() {
     echo "Not implemented"
 }
 
+################################################################
 # Performance & Features
+
+# Performance & Features Main Menu
 performance_features() {
     title "Arch Rock Configuration Utility - Performance & Features"
     options=("SoC Performance Profile - Available options are performance, ondemand and powersave")
@@ -270,24 +300,92 @@ performance_features() {
 
 }
 
+# SoC Performance Profile
 soc_profile() {
     echo "Not implemented"
+    echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
+    echo ondemand | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor && echo dmc_ondemand | sudo tee /sys/class/devfreq/dmc/governor && echo simple_ondemand | sudo tee /sys/class/devfreq/fb000000.gpu/governor
+    echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
 }
 
+# PWM Fan Control
 fan_control() {
     echo "Not implemented"
+
+    if ! [ -x "$(command -v dpkg)" ]; then
+        sudo pacman -Sy dpkg --noconfirm
+    fi
+
+    git clone https://github.com/lukaszsobala/fan-control-rock5b.git
+    cd fan-control-rock5b
+    make package
+    sudo dpkg -i fan-control*.deb
+    sudo systemctl enable fan-control
+    systemctl start fan-control
+
 }
 
+# Overclocking
 overclocking() {
     echo "Not implemented"
 }
 
+# Device Tree Overlay
 overlays() {
     echo "Not implemented"
 }
 
-# read arguments
-if [ "$1" = "--skip-install" ]; then
+################################################################
+# User & Localization
+
+# User & Localization Main Menu
+user_localization() {
+    title "Arch Rock Configuration Utility - User & Localization"
+    options=("Manage User - Add, Remove and Change User Account Settings")
+    options+=("Locale - Generate Locale Settings")
+    options+=("Fonts - Install Fonts, TTF, Non-English Characters, Special Characters / Emoji")
+    options+=("Time - Change Time Zone, Current Date and Time")
+    options+=("Keyboard Layout - Change Keyboard Layout")
+    options+=("WiFi Country - Change WiFi Country Settings")
+    options+=("Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            manage_user
+            ;;
+        1)
+            locale
+            ;;
+        2)
+            fonts
+            ;;
+        3)
+            timezone
+            ;;
+        4)
+            wifi_country
+            ;;
+        *)
+            config_options
+            ;;
+    esac
+
+}
+
+disable_sudopw() {
+    #%wheel ALL=(ALL) NOPASSWD: ALL'
+    echo ""
+}
+
+################################################################
+# Main Program
+
+# Read arguments
+if [ "$1" = "--run-only" ]; then
+    # This argument skip the below options / arguments, equivalent to `else`.
     check_util_updates
     config_options
 elif [ ! -e "/usr/bin/arch-rock-config" ]; then
@@ -303,3 +401,5 @@ else
     check_util_updates
     config_options
 fi
+
+################################################################

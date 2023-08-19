@@ -2,9 +2,19 @@
 
 ################################################################
 #                                                              #
-#           Arch Linux Installer for Rock 5B / RK3588          #
+#                     Arch Rock Installer                      #
 #                                                              #
 ################################################################
+# Define variables
+
+# Compiled Packages folder path
+compiled_pkg_folder="/usr/lib/compiled-packages"
+
+# Define main / dev branch
+branch=dev
+
+################################################################
+# Tools for formatting / styling
 
 # Define terminal color codes
 RED='\033[0;31m'
@@ -13,6 +23,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[1;34m'
 NC='\033[0m' # No Color
 
+# Option Picker
 function select_option {
 
     # little helpers for terminal print control and key input
@@ -71,12 +82,14 @@ function select_option {
     return $selected
 }
 
+# Echo with colors
 colorecho() {
     color="$1"
     text="$2"
     echo -e "${color}${text}${NC}"
 }
 
+# Title / Heading
 title() {
   clear
   text="$1"
@@ -85,18 +98,231 @@ title() {
   echo "---------------------------------------------------------------------"
 }
 
-compiled_pkg_folder="/usr/lib/compiled-packages"
+################################################################
+# Internet Connection Check
 
-title "Welcome to Arch Linux Installer for Rock 5B / RK3588"
-if [ -e "/usr/bin/first-boot-setup" ]; then
-    first-boot-setup
+check_internet() {
+    colorecho "$YELLOW" "Checking internet connection..."
+    servers=("google.com" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile DNS (for China users)
+    internet_available=false
+
+    for server in "${servers[@]}"; do
+        if ping -q -c 3 "$server" >/dev/null; then
+            colorecho "$GREEN" "Internet is available via $server."
+            internet_available=true
+            break
+        fi
+    done
+
+    if ! "$internet_available"; then
+        colorecho "$RED" "Your system does not appear to have internet connection."
+        colorecho "$YELLOW" "We might not be able to set you up without internet connection. Do you want to continue anyway?"
+        options=("Continue Anyway" "Try Again" "Exit Setup")
+        select_option "${options[@]}"
+        answer=$?
+        if [ "$answer" = 1 ]; then
+            check_internet
+        elif [ "$answer" = 2 ]; then
+            echo "Aborted. Exiting ..."
+            exit 1
+        fi
+    fi
+}
+
+################################################################
+# First Boot Setup
+
+first_boot_setup() {
+
+    colorecho "$GREEN" "Running First Boot Setup ..."
+    
+    #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+    colorecho "$GREEN" "Setting up pacman ..."
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+
+    # Allow wheel group in sudoers
+    colorecho "$GREEN" "Allowing wheel group in sudoers ..."
+    echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+    
+    # Prompt user to enter a new username
+    title "Create User Account"
+    read -p "Enter a new username (default=rock): " new_username
+
+    # Check if the username is not empty
+    if [ -z "$new_username" ]; then
+        new_username="rock"
+    fi
+
+    # Create the user account
+    colorecho "$YELLOW" "Creating user account $new_username."
+    useradd -m -G wheel -s /bin/bash "$new_username"
+
+    # Check if the useradd command was successful
+    if [ $? -eq 0 ]; then
+        colorecho "$GREEN" "User $new_username created successfully"
+
+        # Remove the default "alarm" account
+        if [ ! "$new_username" = "alarm" ]; then
+            userdel -r alarm
+            if [ $? -eq 0 ]; then
+                echo "Default 'alarm' account removed successfully"
+            else
+                echo "Error removing default 'alarm' account"
+            fi
+        fi
+
+    else
+        colorecho "$RED" "Error creating user $new_username"
+        exit 1
+    fi
+
+    # Prompt user to set a password for the new user
+    colorecho "$GREEN" "Create new password for $new_username :"
+    passwd "$new_username"
+
+    # Check if the passwd command was successful
+    if [ $? -eq 0 ]; then
+        colorecho "$GREEN" "Password set for user $new_username"
+    else
+        colorecho "$RED" "Error setting password for user $new_username"
+        exit 1
+    fi
+
+    # Add the user to the sudoers group using usermod
+    colorecho "$GREEN" "Adding $new_username to wheel ..."
+    usermod -aG wheel "$new_username"
+
+    # Check if the usermod command was successful
+    if [ $? -eq 0 ]; then
+        colorecho "$GREEN" "$new_username added to sudoers successfully"
+    else
+        colorecho "$RED" "Error adding user $new_username to sudoers"
+    fi
+
+    # Add the user to other groups
+    colorecho "$GREEN" "Adding $new_username to other groups ..."
+    usermod -aG video "$new_username"
+    usermod -aG audio "$new_username"
+    usermod -aG games "$new_username"
+    usermod -aG log "$new_username"
+    usermod -aG lp "$new_username"
+    usermod -aG optical "$new_username"
+    usermod -aG power "$new_username"
+    usermod -aG scanner "$new_username"
+    usermod -aG storage "$new_username"
+
+    # Install sudo
+    colorecho "$GREEN" "Installing sudo"
+    pacman -Sy sudo --noconfirm
+
+    # Prompt user to change the root password
+    title "Root account options"
+    colorecho "$GREEN" "Do you want to change the root password?"
+    options=("Do not change root password" "Change root password" "Turn off root account")
+    select_option "${options[@]}"
+    answer=$?
+
+    if [ "$answer" = 1 ]; then
+        colorecho "$GREEN" "Set new root password : "
+        passwd
+    elif [ "$answer" = 2 ]; then
+        passwd -l root
+    fi
+    
+    # Get boot partition from the current mount point "/"
+    title "Updating fstab ..."
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+    rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
+    rootfs_disk="${rootfs_disk%p*}"
+    boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
+
+    # Check if the boot_partition is not empty
+    if [ -z "$boot_partition" ]; then
+        echo "Unable to determine boot partition on $rootfs_disk"
+        exit 1
+    fi
+
+    # Add the line to /etc/fstab
+    new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
+
+    # Check if the line already exists in /etc/fstab
+    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+        echo "boot partition seems already configured in /etc/fstab to manage by system."
+    else
+        # Add the line to /etc/fstab
+        echo "$new_line" >> /etc/fstab
+        # Check if the addition was successful
+        if [ $? -eq 0 ]; then
+            cat /etc/fstab
+            echo "Line added to /etc/fstab successfully"
+        else
+            echo "Error adding line to /etc/fstab"
+        fi
+    fi
+
+    # Download and install arch-rock-config
+    title "Installing Configuration Utility (arch-rock-config) ..."
+    cd /usr/bin
+
+    # Install arch-rock-config
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+    chmod +x arch-rock-config
+
+    # Prompt user if they want to reboot
+    title "First Boot Setup"
+    read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+    if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+        colorecho "$YELLOW" "You can manually reboot later to apply the changes."
+    else
+        colorecho "$GREEN" "Rebooting..."
+        reboot
+    fi
+}
+
+################################################################
+# About this Installer
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    colorecho "$BLUE" "Arch Rock Installer - Arch Linux Installer for Rock 5B / RK3588"
+    echo "Usage: arch-rock-installer <optional_argument>"
+    echo "-h / --help : usage and infomation of this installer"
+    echo "--skip-first-boot-setup : skip running first boot setup (use only if the corresponding setup has been done)"
+    exit 1
 fi
 
+################################################################
+# Installer Setup
+
+title "Welcome to Arch Rock Installer"
+
+# Check if the script is being run with root privileges
+if [[ $EUID -ne 0 ]]; then
+    colorecho "$RED" "Error : This script must be run as root"
+    exit 1
+fi
+
+# Check internet connection
+check_internet
+
+# Run first boot setup if not yet done
+if [ ! -e "/usr/bin/arch-rock-config" ]; then 
+    if [ ! "$1" = "--skip-first-boot-setup" ]; then
+        first_boot_setup
+    fi
+fi
+
+# Ensure compiled packages permission
 if [ -z $compiled_pkg_folder ]; then
     chmod -R 755 $compiled_pkg_folder/*
 fi
 
+################################################################
+# Install Linux Kernel
+
 title "Install Linux Kernel"
+
 if [ -z "$compiled_pkg_folder/Kernel" ]; then
     colorecho "$RED" "Error : No pre-compiled Packages found."
     exit 1
@@ -106,7 +332,6 @@ if [ -z "$compiled_pkg_folder/Kernel" ]; then
     #arch-rock-config install-kernel --no-reboot
     #fi
 else
-
     # remove old kernel files, else the package will not install.
     colorecho "$YELLOW" "Removing existing kernel files ..."
     rm -rf /usr/bin/libmali
@@ -145,7 +370,11 @@ else
     fi
 fi
 
+################################################################
+# Install Mesa and GPU drivers
+
 title "Install Mesa and GPU drivers"
+
 if [ -z "$compiled_pkg_folder/GPU" ]; then
     colorecho "$RED" "Error : No pre-compiled Packages found."
     exit 1
@@ -163,7 +392,11 @@ else
     fi
 fi
 
+################################################################
+# Install Video Acceleration
+
 title "Install Video Acceleration"
+
 if [ -z "$compiled_pkg_folder/Video" ]; then
     colorecho "$RED" "Error : No pre-compiled Packages found."
     exit 1
@@ -177,6 +410,9 @@ else
     pacman -U $compiled_pkg_folder/Video/*/*.pkg.tar.xz --noconfirm
 fi
 
+################################################################
+# Post Installation
+
 title "Post Installation"
 
 # The fix for some Bluetooth Modules (A8, AX210, etc.)
@@ -188,13 +424,19 @@ echo "blacklist btbcm" >> /etc/modprobe.d/blacklist.conf
 echo "#blacklist btintel" >> /etc/modprobe.d/blacklist.conf
 
 # Network Manager, WiFi, Bluetooth
-colorecho "$GREEN" "Installing network manager ..."
-pacman -S networkmanager iw --noconfirm
+colorecho "$GREEN" "Installing network manager and bluetooth ..."
+pacman -S networkmanager iw bluez --noconfirm
+
+colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
 systemctl enable NetworkManager.service
 systemctl start NetworkManager.service
+systemctl enable bluetooth.service
+systemctl start bluetooth.service
 
+################################################################
+# Select desktop environment
 
-title "Install desktop environment"
+title "Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 
 options=("Gnome" "KDE Plasma" "Budgie")
@@ -207,18 +449,21 @@ options+=("Skip")
 select_option "${options[@]}"
 de_options=$?
 
+################################################################
+# Install desktop environment
+
 title "Install desktop environment"
 
 # Install desktop environment
 if [ "$de_options" = 0 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome ..."
-    pacman -Syyu gnome
+    pacman -Syyu gnome --noconfirm
     systemctl enable gdm
 elif [ "$de_options" = 1 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma ..."
-    pacman -Syyu plasma-desktop sddm
+    pacman -Syyu plasma-desktop sddm --noconfirm
     systemctl enable sddm
 elif [ "$de_options" = 2 ]; then
     # Install Budgie
@@ -229,7 +474,11 @@ else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
 fi
 
+################################################################
+# Installation clean up
+
 title "Installation Finished"
+
 # Prompt user if they want to reboot
 read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
 
@@ -241,3 +490,5 @@ else
     colorecho "$GREEN" "Rebooting system ..."
     reboot
 fi
+
+################################################################
