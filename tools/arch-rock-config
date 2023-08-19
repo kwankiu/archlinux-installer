@@ -125,6 +125,7 @@ update_util() {
             sudo pacman -Sy wget --noconfirm
         fi
 
+        sudo rm -rf /usr/bin/arch-rock-config
         sudo wget -N -P /usr/bin/ https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
         sudo chmod +x /usr/bin/arch-rock-config
         arch-rock-config
