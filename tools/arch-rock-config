@@ -151,6 +151,9 @@ config_options() {
         4)
             update_util
             ;;
+        *)
+            exit 1
+            ;;
     esac
 
 }
@@ -284,7 +287,10 @@ overlays() {
 }
 
 # read arguments
-if [ ! -e "/usr/bin/arch-rock-config" ]; then
+if [ "$1" = "--skip-install" ]; then
+    check_util_updates
+    config_options
+elif [ ! -e "/usr/bin/arch-rock-config" ]; then
     update_util --install
 elif [ "$1" = "install-kernel" ]; then
     install_kernel
