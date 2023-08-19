@@ -20,6 +20,12 @@ branch=dev
 # Initialize variables
 update_available=false
 
+# URL of the directory containing u-boot images
+uboot_url="https://dl.radxa.com/rock5/sw/images/loader/rock-5b/release/"
+uboot_debug_url="https://dl.radxa.com/rock5/sw/images/loader/rock-5b/debug/"
+edk2_url="https://api.github.com/repos/edk2-porting/edk2-rk3588/releases/latest"
+zero_url="https://dl.radxa.com/rock5/sw/images/others/zero.img.gz"
+
 ################################################################
 # Tools for formatting / styling
 
@@ -216,27 +222,94 @@ system_update() {
 
 # Update SPI Bootloader
 flash_uboot() {
-    colorecho "$GREEN" "Installing bootloader to the SPI NOR flash ..."
 
-    curl -LJO https://dl.radxa.com/rock5/sw/images/others/zero.img.gz
+    if [ ! -e /dev/mtdblock0 ]; then
+        colorecho "$RED" "Error : SPI Flash not found"
+        sleep 1
+        exit 1
+    else
+        title "Arch Rock Configuration Utility - Update SPI Bootloader"
+        colorecho "$GREEN" "Select an option to confirm"
+        colorecho "$RED" "Warning : The SPI NOR flash will be cleared."
+        echo ""
+        options=("Install Radxa U-Boot" "Install Radxa U-Boot (Debug Version)" "Install EDK2 Bootloader for Rock 5A (UEFI)" "Install EDK2 Bootloader for Rock 5B (UEFI)" "Exit")
+        select_option "${options[@]}"
+        choice=$?
+
+        # Choice
+        case $choice in
+            0)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$uboot_url
+                colorecho "$GREEN" "Fetching latest Radxa U-Boot Image ..."
+                latest_image=$(curl -s "$which_url" | grep -o 'rock-5b-spi-image-[a-z0-9-]*\.img' | head -n 1)
+                ;;
+            1)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$uboot_debug_url
+                colorecho "$GREEN" "Fetching latest Radxa U-Boot (Debug Version) Image ..."
+                latest_image=$(curl -s "$which_url" | grep -o 'rock-5b-spi-image-[a-z0-9-]*\-debug.img' | head -n 1)
+                ;;
+            2)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$edk2_url
+                colorecho "$GREEN" "Fetching EDK2 Bootloader (UEFI) ..."
+                latest_image=$(curl -s "$which_url" | grep -wo "https.*rock-5a.*\.img" | head -n 1)
+                which_url="$(dirname "$latest_image")/"
+                latest_image=$(basename "$latest_image")
+                ;;
+            3)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$edk2_url
+                colorecho "$GREEN" "Fetching EDK2 Bootloader (UEFI) ..."
+                latest_image=$(curl -s "$which_url" | grep -wo "https.*rock-5b.*\.img" | head -n 1)
+                which_url="$(dirname "$latest_image")/"
+                latest_image=$(basename "$latest_image")
+                ;;
+            *)
+                exit 1
+                ;;
+        esac
+    fi
+
+    ###
+    colorecho "$GREEN" "Install bootloader to the SPI NOR flash ..."
+
+
+    colorecho "$GREEN" "Downloading Zero Image ..."
+    curl -LJO ${zero_url}
 
     if ! [ -x "$(command -v gzip)" ]; then
         sudo pacman -Sy gzip --noconfirm
     fi
+
+    colorecho "$GREEN" "Extracting Zero Image ..."
     gzip -d zero.img.gz
 
-    if [ -e /dev/mtdblock0 ]; then
-        sudo dd if=zero.img of=/dev/mtdblock0
+    colorecho "$GREEN" "Flashing Zero Image to SPI NOR flash ..."
+    sudo dd if=zero.img of=/dev/mtdblock0
+
+    # Remove zero.img
+    sudo rm -rf zero.img
+
+    if [ -n "$latest_image" ]; then
+        # Download the latest image using wget
+        colorecho "$GREEN" "Downloading SPI U-Boot Image from ${which_url}${latest_image} ..."
+        curl -LJO ${which_url}${latest_image}
     else
-        colorecho "$RED" "Error : SPI Flash not found"
+        colorecho "$RED" "Fetch Error : No image found."
+        sleep 1
+        exit 1
     fi
-
-    curl -LJO https://dl.radxa.com/rock5/sw/images/loader/rock-5b/release/rock-5b-spi-image-gbf47e81-20230607.img
-
-    sudo dd if=spi-rock-5b-spi-image-gbf47e81-20230607.img of=/dev/mtdblock0
+    
+    colorecho "$GREEN" "Flashing SPI U-Boot Image ${latest_image} to SPI NOR flash ..."
+    sudo dd if=${latest_image} of=/dev/mtdblock0
     sync
+    colorecho "$GREEN" "Installed bootloader to SPI NOR flash"
 
-    colorecho "$GREEN" "Installed bootloader to the SPI NOR flash"
+    # Remove u-boot image file
+    sudo rm -rf ${latest_image}
+
 }
 
 # Re-install Kernel
