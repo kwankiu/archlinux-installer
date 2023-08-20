@@ -382,7 +382,7 @@ system_update() {
         else
             sudo pacman -Syyu
         fi
-    elif [ "$choice" = "3" ] || [ "$choice" = "4" ] || [ "$choice" = "5" ] || [ "$choice" = "6" ] || [ "$choice" = "7" ] ; then
+    elif [ "$choice" = "3" ] || [ "$choice" = "4" ] || [ "$choice" = "5" ] || [ "$choice" = "6" ] || [ "$choice" = "7" ]; then
         system_update
     else
         system_update
