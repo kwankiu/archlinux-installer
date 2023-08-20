@@ -11,7 +11,7 @@
 
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
-# format of Version Number is YYMMDDN which N is 1 unless there is more than one update on the same day)
+# format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
 utilver=2308191
 
 # Define main / dev branch
@@ -322,7 +322,7 @@ config_options() {
 # System Maintenance Main Menu
 system_maintenance() {
     title "Arch Rock Configuration Utility - System Maintenance"
-    options=("System Update - Check & Perform Selective / Full System Upgrade")
+    options=("Package Updates - Check & Perform Selective / Full System Upgrade")
     options+=("Update SPI Bootloader - Flash Latest Radxa U-Boot")
     options+=("Re-install Kernel - Re-install / Replace Linux Kernel")
     options+=("Move Arch Linux - Copy Arch Linux to another disk.")
@@ -353,7 +353,18 @@ system_maintenance() {
 
 # System Update
 system_update() {
-    sudo pacman -Syyu
+
+    title "Arch Rock Configuration Utility - Package Updates"
+    options=("Back to Main Menu" "Upgrade All")
+    update_list=($(pacman -Qu))
+  for ((i=0; i<${#update_list[@]}; i+=3)); do
+    options+=("${update_list[i]}")
+  done
+
+  select_option "${options[@]}"
+  choice=$?
+
+  sudo pacman -Syyu
 }
 
 # Update SPI Bootloader
