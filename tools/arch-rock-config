@@ -355,7 +355,7 @@ system_maintenance() {
 system_update() {
 
     title "Arch Rock Configuration Utility - Package Updates"
-    options=("Back to Main Menu" "Upgrade All Packages")
+    options=("Back to Main Menu" "Upgrade All Packages" "Upgrade Selected Packages")
 
     options+=("$GREEN" "----------------------------------------------------" "Upgradable Packages (Press enter to select): " "----------------------------------------------------" "$NC")
 
@@ -373,10 +373,7 @@ system_update() {
 
     select_option "${options[@]}"
     choice=$?
-    system_update_choice
-}
 
-system_update_choice() {
     if [ "$choice" = "0" ]; then
         config_options
     elif [ "$choice" = "1" ]; then
@@ -385,10 +382,10 @@ system_update_choice() {
         else
             sudo pacman -Syyu
         fi
-    elif [ "$choice" = "2" ] || [ "$choice" = "3" ] || [ "$choice" = "4" ] || [ "$choice" = "5" ] || [ "$choice" = "6" ] ; then
-        system_update_choice
+    elif [ "$choice" = "3" ] || [ "$choice" = "4" ] || [ "$choice" = "5" ] || [ "$choice" = "6" ] || [ "$choice" = "7" ] ; then
+        system_update
     else
-        system_update_choice
+        system_update
     fi
 }
 
