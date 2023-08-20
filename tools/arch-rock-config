@@ -26,6 +26,9 @@ uboot_debug_url="https://dl.radxa.com/rock5/sw/images/loader/rock-5b/debug/"
 edk2_url="https://api.github.com/repos/edk2-porting/edk2-rk3588/releases/latest"
 zero_url="https://dl.radxa.com/rock5/sw/images/others/zero.img.gz"
 
+# Directory for storing source files
+source_repo_dir="source-repo-dir"
+
 ################################################################
 # Tools for formatting / styling
 
@@ -136,6 +139,139 @@ update_util() {
         sudo chmod +x /usr/bin/arch-rock-config
         arch-rock-config
     fi
+}
+
+################################################################
+# Packages Install Tools
+
+install_from_source() {
+
+    cpwd=$(pwd)
+    # Install required package
+    if ! [ -x "$(command -v git)" ]; then
+        sudo pacman -S git --noconfirm
+    fi
+    
+    sudo pacman -S --needed base-devel --noconfirm
+
+    # Ensure folder doesn't exist
+    sudo rm -rf ~/$source_repo_dir
+
+    # clone repo
+    colorecho "$GREEN" "Cloning Package from source ..."
+    cd ~/
+    git clone $1 $source_repo_dir
+
+    # Compile & Install
+    cd $source_repo_dir
+
+    if [ ! -z $2 ]; then
+        cd $2
+    fi
+
+    colorecho "$GREEN" "Compiling & Installing Package from source ..."
+    makepkg -si
+
+    # Clean Up
+    cd $cpwd
+    sudo rm -rf ~/$source_repo_dir
+
+}
+
+
+################################################################
+# Functions for Install Kernel
+
+install_rkbsp5_bin() {
+
+    # Install required package
+    if ! [ -x "$(command -v yay)" ]; then
+        colorecho "$RED" "Package yay not installed."
+        install_from_source "https://aur.archlinux.org/yay-git.git"
+    fi
+
+    title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-bin"
+
+    # remove old kernel files, else the package may not install.
+    sudo rm -rf /usr/bin/libmali
+    sudo rm -rf /usr/bin/libmaliw
+    sudo rm -rf /usr/lib/libmali
+    sudo rm -rf /usr/lib/modules
+    sudo rm -rf /usr/lib/firmware/mali_csffw.bin
+    sudo rm -rf /usr/src/linux-*
+
+    yay -S linux-radxa-rkbsp5-bin
+    colorecho "$GREEN" "Installed linux-radxa-rkbsp5"
+
+}
+
+install_rkbsp5_git() {
+
+    # Install required package
+    if ! [ -x "$(command -v yay)" ]; then
+        colorecho "$RED" "Package yay not installed."
+        install_from_source "https://aur.archlinux.org/yay-git.git"
+    fi
+
+    title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-git"
+
+    # remove old kernel files, else the package may not install.
+    sudo rm -rf /usr/bin/libmali
+    sudo rm -rf /usr/bin/libmaliw
+    sudo rm -rf /usr/lib/libmali
+    sudo rm -rf /usr/lib/modules
+    sudo rm -rf /usr/lib/firmware/mali_csffw.bin
+    sudo rm -rf /usr/src/linux-*
+
+    yay -S linux-radxa-rkbsp5-git
+    colorecho "$GREEN" "Installed linux-radxa-rkbsp5"
+
+}
+
+install_midstream() {    
+
+    # Install required package
+    if ! [ -x "$(command -v yay)" ]; then
+        colorecho "$RED" "Package yay not installed."
+        install_from_source "https://aur.archlinux.org/yay-git.git"
+    fi
+
+    title "Arch Rock Configuration Utility - Install linux-rk3588-midstream"
+
+    # remove old kernel files, else the package may not install.
+    sudo rm -rf /usr/bin/libmali
+    sudo rm -rf /usr/bin/libmaliw
+    sudo rm -rf /usr/lib/libmali
+    sudo rm -rf /usr/lib/modules
+    sudo rm -rf /usr/lib/firmware/mali_csffw.bin
+    sudo rm -rf /usr/src/linux-*
+    sudo rm -rf /boot/*
+
+    install_from_source "https://github.com/hbiyik/hw_necromancer.git" "rock5b/linux-rk3588-midstream"
+    colorecho "$GREEN" "Installed linux-rk3588-midstream"
+
+    # apply new extlinux.conf
+    colorecho "$GREEN" "Updating extlinux.conf ..."
+    sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Find the UUIDs of the root partition
+    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    echo "Root partition UUID: $root_uuid"
+
+    # Change UUID for extlinux.conf
+    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+    # Install mali_csffw.bin
+    colorecho "$GREEN" "Installing mali_csffw.bin ..."
+    if ! [ -x "$(command -v wget)" ]; then
+        sudo pacman -Sy wget --noconfirm
+    fi
+    sudo wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
+
 }
 
 ################################################################
@@ -314,7 +450,45 @@ flash_uboot() {
 
 # Re-install Kernel
 install_kernel() {
-    /usr/bin/lib-arch-rock-config/install-kernel
+
+    title "Arch Rock Configuration Utility - Re-install Kernel"
+    colorecho "$GREEN" "Select a kernel package to install:"
+    echo ""
+    options=("linux-radxa-rkbsp5-bin (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Binary Package")
+    options+=("linux-radxa-rkbsp5-git (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Source Code")
+    options+=("linux-rk3588-midstream (GitHub) - Install Googulator's Experimental Midstream kernel (Linux 6.2) from Source Code")
+    #options+=("linux-rk3588-collabora (GitHub) - Install Collabora's Experimental Upstream kernel (Linux 6.5) from Source Code")
+    options+=("Exit")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            install_rkbsp5_bin
+            ;;
+        1)
+            install_rkbsp5_git
+            ;;
+        2)
+            install_midstream
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
+
+    colorecho "$GREEN" "Installation completed."
+
+    # Prompt user if they want to reboot
+    read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+    if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+        echo "You can manually reboot later to apply the changes."
+    else
+        echo "Rebooting..."
+        sudo reboot
+    fi
 }
 
 # Move Arch Linux
@@ -496,4 +670,3 @@ else
     config_options
 fi
 
-################################################################
