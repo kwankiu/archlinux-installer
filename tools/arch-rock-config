@@ -356,7 +356,6 @@ system_update() {
 
     title "Arch Rock Configuration Utility - Package Updates"
     options=("Back to Main Menu" "Upgrade All Packages" "Upgrade Selected Packages")
-
     options+=("$GREEN" "----------------------------------------------------" "Upgradable Packages (Press enter to select): " "----------------------------------------------------" "$NC")
 
     if [ -x "$(command -v yay)" ]; then
