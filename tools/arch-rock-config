@@ -368,16 +368,21 @@ system_update() {
         fi
     else
         selection=()
-        options=("Back to Main Menu" "Upgrade All Packages" "Upgrade Selected Packages")
-        options+=("$GREEN----------------------------------------------------" "$GREEN Upgradable Packages (Press enter to select): " "$GREEN----------------------------------------------------" "Refresh / Reset $NC")
+        options=("Return to Main Menu" "Upgrade All Packages" "Upgrade Selected Packages")
+        options+=("$GREEN----------------------------------------------------" "$GREEN Upgradable Packages (Press enter to select/deselect): " "$GREEN----------------------------------------------------" "Refresh / Reset $NC")
         poptions=("${options[@]}")
 
         if [ -x "$(command -v yay)" ]; then
             update_list=($(yay -Qu))
+            if [ -z "$update_list" ]; then
+                options[6]="Refresh / Reset $NC (All packages are up-to-date)"
+            else
                 for ((i=0; i<${#update_list[@]}; i+=4)); do
                     options+=("[ ] ${update_list[i]}")
                     poptions+=("${update_list[i]}")
                 done
+                options[6]="Refresh / Reset $NC (Using yay)"
+            fi
         else
             update_list=($(pacman -Qu | awk -F' ' '{ if (NF == 4) { $5 = "[]" } }1'))
             if [ -z "$update_list" ]; then
@@ -387,6 +392,7 @@ system_update() {
                     options+=("[ ] ${update_list[i]}")
                     poptions+=("${update_list[i]}")
                 done
+                options[6]="Refresh / Reset $NC (Using pacman)"
             fi
         fi
     fi
