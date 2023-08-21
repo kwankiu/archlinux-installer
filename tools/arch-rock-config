@@ -202,6 +202,7 @@ install_rkbsp5_bin() {
 
     yay -S linux-radxa-rkbsp5-bin
     colorecho "$GREEN" "Installed linux-radxa-rkbsp5"
+    install_completed_reboot
 
 }
 
@@ -225,6 +226,7 @@ install_rkbsp5_git() {
 
     yay -S linux-radxa-rkbsp5-git
     colorecho "$GREEN" "Installed linux-radxa-rkbsp5"
+    install_completed_reboot
 
 }
 
@@ -248,7 +250,6 @@ install_midstream() {
     sudo rm -rf /boot/*
 
     install_from_source "https://github.com/hbiyik/hw_necromancer.git" "rock5b/linux-rk3588-midstream"
-    colorecho "$GREEN" "Installed linux-rk3588-midstream"
 
     # apply new extlinux.conf
     colorecho "$GREEN" "Updating extlinux.conf ..."
@@ -271,7 +272,23 @@ install_midstream() {
         sudo pacman -Sy wget --noconfirm
     fi
     sudo wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
+    colorecho "$GREEN" "Installed linux-rk3588-midstream"
+    install_completed_reboot
 
+}
+
+install_completed_reboot() {
+    colorecho "$GREEN" "Installation completed."
+
+    # Prompt user if they want to reboot
+    read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+    if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+        echo "You can manually reboot later to apply the changes."
+    else
+        echo "Rebooting..."
+        sudo reboot
+    fi
 }
 
 ################################################################
@@ -517,42 +534,28 @@ flash_uboot() {
 install_kernel() {
 
     title "Arch Rock Configuration Utility - Re-install Kernel"
-    colorecho "$GREEN" "Select a kernel package to install:"
-    echo ""
-    options=("linux-radxa-rkbsp5-bin (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Binary Package")
-    options+=("linux-radxa-rkbsp5-git (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Source Code")
-    options+=("linux-rk3588-midstream (GitHub) - Install Googulator's Experimental Midstream kernel (Linux 6.2) from Source Code")
-    #options+=("linux-rk3588-collabora (GitHub) - Install Collabora's Experimental Upstream kernel (Linux 6.5) from Source Code")
-    options+=("Exit")
-    select_option "${options[@]}"
-    choice=$?
+
+    if [ -z "$1" ]; then
+        colorecho "$GREEN" "Select a kernel package to install:"
+        echo ""
+        options=("linux-radxa-rkbsp5-bin (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Binary Package")
+        options+=("linux-radxa-rkbsp5-git (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Source Code")
+        options+=("linux-rk3588-midstream (GitHub) - Install Googulator's Experimental Midstream kernel (Linux 6.2) from Source Code")
+        #options+=("linux-rk3588-collabora (GitHub) - Install Collabora's Experimental Upstream kernel (Linux 6.5) from Source Code")
+        options+=("Return to Main Menu")
+        select_option "${options[@]}"
+        choice=$?
+    fi
 
     # Choice
-    case $choice in
-        0)
-            install_rkbsp5_bin
-            ;;
-        1)
-            install_rkbsp5_git
-            ;;
-        2)
-            install_midstream
-            ;;
-        *)
-            exit 1
-            ;;
-    esac
-
-    colorecho "$GREEN" "Installation completed."
-
-    # Prompt user if they want to reboot
-    read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
-
-    if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
-        echo "You can manually reboot later to apply the changes."
+    if [ "$choice" = 0 ] || [ "$1" = "rkbsp" ]; then
+        install_rkbsp5_bin
+    elif [ "$choice" = 1 ] || [ "$1" = "rkbsp-git" ]; then
+        install_rkbsp5_git
+    elif [ "$choice" = 2 ] || [ "$1" = "midstream" ]; then
+        install_midstream
     else
-        echo "Rebooting..."
-        sudo reboot
+        config_options
     fi
 }
 
@@ -721,17 +724,23 @@ if [ "$1" = "--run-only" ]; then
     # This argument skip the below options / arguments, equivalent to `else`.
     check_util_updates
     config_options
-elif [ ! -e "/usr/bin/arch-rock-config" ]; then
+elif [ ! -e "/usr/bin/arch-rock-config" ] || [ "$1" = "--update-now" ]; then
     update_util --install
 elif [ "$1" = "install-kernel" ]; then
-    install_kernel
-elif [ "$1" = "post-install" ]; then
-    post_install
+    install_kernel "$2"
 elif [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage : To be written"
+    colorecho "$BLUE" "Arch Rock Configuration Utility (BUILD $utilver)"
+    echo "Usage: arch-rock-config <optional_argument>"
+    colorecho "$GREEN" "Options"
+    echo "-h / --help : usage and infomation of this installer"
+    echo "--run-only : skip installing the script to PATH (/usr/bin)"
+    echo "--update-now : install latest version immediately without checking"
+    colorecho "$GREEN" "Features"
+    echo "install-kernel <kernel> : Re-install Kernel - Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream."
     exit 1
 else
     check_util_updates
     config_options
 fi
 
+################################################################
