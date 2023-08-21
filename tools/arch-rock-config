@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2308193
+utilver=2308194
 
 # Define main / dev branch
 branch=dev
