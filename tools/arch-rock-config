@@ -358,21 +358,25 @@ system_update() {
 
     if [ "$1" = "--select" ]; then
         options[$2]="[x] ${options[$2]}"
-        selection+=(${options[$2]})
+        selection+=(${poptions[$2]})
     else
         options=("Back to Main Menu" "Upgrade All Packages" "Upgrade Selected Packages")
         options+=("$GREEN----------------------------------------------------" "$GREEN Upgradable Packages (Press enter to select): " "$GREEN----------------------------------------------------" "Refresh / Reset $NC")
-        selection=()
+
+        poptions=("Back to Main Menu" "Upgrade All Packages" "Upgrade Selected Packages")
+        poptions+=("$GREEN----------------------------------------------------" "$GREEN Upgradable Packages (Press enter to select): " "$GREEN----------------------------------------------------" "Refresh / Reset $NC")
 
         if [ -x "$(command -v yay)" ]; then
             update_list=($(yay -Qu))
                 for ((i=0; i<${#update_list[@]}; i+=4)); do
-                    options+=("[] ${update_list[i]}")
+                    options+=("[ ] ${update_list[i]}")
+                    poptions+=("${update_list[i]}")
                 done
         else
             update_list=($(pacman -Qu | awk -F' ' '{ if (NF == 4) { $5 = "[]" } }1'))
             for ((i=0; i<${#update_list[@]}; i+=5)); do
-                options+=("${update_list[i]}")
+                options+=("[ ] ${update_list[i]}")
+                poptions+=("${update_list[i]}")
             done
         fi
     fi
