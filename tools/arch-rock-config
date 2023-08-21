@@ -178,7 +178,6 @@ install_from_source() {
 
 }
 
-
 ################################################################
 # Functions for Install Kernel
 
