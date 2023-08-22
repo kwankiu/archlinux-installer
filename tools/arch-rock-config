@@ -731,16 +731,23 @@ fan_control() {
 
     temp_cmd=($(cat /sys/class/thermal/thermal_zone*/temp))
     temp_type_cmd=($(cat /sys/class/thermal/thermal_zone*/type))
+    cpu_freq_cmd=($(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq))
     temp_list=()
     temp_type_list=()
+    cpu_freq_list=()
 
     for ((i=0; i<${#temp_cmd[@]}; i++)); do
         temp_list+=("$((temp_cmd[i] / 1000))")
         temp_type_list+=("${temp_type_cmd[i]%-thermal}")
     done
-    
-    colorecho "$GREEN" "Max Clock Speed (Performance Core): 2404MHz"
-    colorecho "$GREEN" "Max Clock Speed (Efficient Core): 1800MHz"
+
+    for ((i=0; i<${#cpu_freq_cmd[@]}; i++)); do
+        cpu_freq_list+=("$((cpu_freq_cmd[i] / 1000))")
+    done
+
+    colorecho "$GREEN" "Max Clock Speed (Performance Core 0): ${temp_list[4]}MHz"
+    colorecho "$GREEN" "Max Clock Speed (Performance Core 1): ${temp_list[6]}MHz"
+    colorecho "$GREEN" "Max Clock Speed (Efficient Core): ${temp_list[0]}MHz"
     colorecho "$GREEN" "SoC Temp (${temp_type_list[0]}): ${temp_list[0]}C"
     colorecho "$GREEN" "CPU Temp (${temp_type_list[1]}): ${temp_list[1]}C"
     colorecho "$GREEN" "CPU Temp (${temp_type_list[2]}): ${temp_list[2]}C"
