@@ -691,26 +691,83 @@ performance_features() {
 
 # SoC Performance Profile
 soc_profile() {
-    echo "Not implemented"
-    echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
-    echo ondemand | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor && echo dmc_ondemand | sudo tee /sys/class/devfreq/dmc/governor && echo simple_ondemand | sudo tee /sys/class/devfreq/fb000000.gpu/governor
-    echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
+
+    title "Arch Rock Configuration Utility - SoC Performance Profile"
+    colorecho "$GREEN" "Current Profile: Performance"
+    echo ""
+    options=("Performance - Run SoC at full performance" "Ondemand - Run SoC on CPU usage demand" "Powersave - Run SoC on Power Saving Mode" "Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = "0" ]; then
+        echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
+    elif [ "$choice" = "1" ]; then
+        echo ondemand | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor && echo dmc_ondemand | sudo tee /sys/class/devfreq/dmc/governor && echo simple_ondemand | sudo tee /sys/class/devfreq/fb000000.gpu/governor
+    elif [ "$choice" = "2" ]; then
+        echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
+    else
+        config_options
+    fi
+
 }
 
 # PWM Fan Control
 fan_control() {
-    echo "Not implemented"
+    
+    title "Arch Rock Configuration Utility - PWM Fan Control"
 
-    if ! [ -x "$(command -v dpkg)" ]; then
-        sudo pacman -Sy dpkg --noconfirm
+    if systemctl is-active --quiet fan-control; then
+        fanstatus=1
+    else
+        fanstatus=0
     fi
 
-    git clone https://github.com/lukaszsobala/fan-control-rock5b.git
-    cd fan-control-rock5b
-    make package
-    sudo dpkg -i fan-control*.deb
-    sudo systemctl enable fan-control
-    systemctl start fan-control
+    if [ "$fanstatus" = 1 ]; then
+        colorecho "$GREEN" "Fan Control Status: Enabled"
+    else
+        colorecho "$GREEN" "Fan Control Status: Disabled"
+    fi
+
+    colorecho "$GREEN" "PWM Fan Speed: 50%"
+    colorecho "$GREEN" "Max Clock Speed (Performance Core): 2404MHz"
+    colorecho "$GREEN" "Max Clock Speed (Efficient Core): 1800MHz"
+    colorecho "$GREEN" "SoC Temp: 60C"
+    colorecho "$GREEN" "CPU Temp: 60C"
+    colorecho "$GREEN" "GPU Temp: 60C"
+    echo ""
+    
+    options=("Return to Main Menu")
+
+    if [[ -e "/lib/systemd/system/fan-control.service" ]]; then
+
+        if [ "$fanstatus" = 1 ]; then
+            options+=("Disable PWM Fan Control")
+        else
+            options+=("Enable PWM Fan Control")
+        fi
+
+        options+=("Configure Fan Profile")
+    else
+        options+=("Install PWM Fan Control")
+    fi
+
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = "1" ]; then
+        if ! [ -x "$(command -v dpkg)" ]; then
+            sudo pacman -Sy dpkg --noconfirm
+        fi
+
+        git clone https://github.com/lukaszsobala/fan-control-rock5b.git
+        cd fan-control-rock5b
+        make package
+        sudo dpkg -i fan-control*.deb
+        sudo systemctl enable fan-control
+        systemctl start fan-control
+    else
+        config_options
+    fi
 
 }
 
