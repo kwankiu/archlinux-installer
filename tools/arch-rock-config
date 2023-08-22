@@ -724,16 +724,30 @@ fan_control() {
 
     if [ "$fanstatus" = 1 ]; then
         colorecho "$GREEN" "Fan Control Status: Enabled"
+        colorecho "$GREEN" "PWM Fan Speed: 50%"
     else
         colorecho "$GREEN" "Fan Control Status: Disabled"
     fi
 
-    colorecho "$GREEN" "PWM Fan Speed: 50%"
+    temp_cmd=($(cat /sys/class/thermal/thermal_zone*/temp))
+    temp_type_cmd=($(cat /sys/class/thermal/thermal_zone*/type))
+    temp_list=()
+    temp_type_list=()
+
+    for ((i=0; i<${#update_list[@]}; i++)); do
+        temp_list+=("$((temp_cmd[i] / 1000))")
+        temp_type_list+=("${temp_type_cmd[i]%-thermal}")
+    done
+    
     colorecho "$GREEN" "Max Clock Speed (Performance Core): 2404MHz"
     colorecho "$GREEN" "Max Clock Speed (Efficient Core): 1800MHz"
-    colorecho "$GREEN" "SoC Temp: 60C"
-    colorecho "$GREEN" "CPU Temp: 60C"
-    colorecho "$GREEN" "GPU Temp: 60C"
+    colorecho "$GREEN" "SoC Temp (${temp_type_list[i]}): ${temp_list[i]}C"
+    colorecho "$GREEN" "CPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
+    colorecho "$GREEN" "CPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
+    colorecho "$GREEN" "CPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
+    colorecho "$GREEN" "SoC Temp (${temp_type_list[i]}): ${temp_list[i]}C"
+    colorecho "$GREEN" "GPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
+    colorecho "$GREEN" "NPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
     echo ""
     
     options=("Return to Main Menu")
@@ -756,14 +770,24 @@ fan_control() {
 
     if [ "$choice" = "1" ]; then
         if ! [ -x "$(command -v dpkg)" ]; then
+            colorecho "$GREEN" "Package dpkg not found. Installing ..."
             sudo pacman -Sy dpkg --noconfirm
         fi
 
+        colorecho "$GREEN" "Cloning fan-control-rock5b ..."
         git clone https://github.com/lukaszsobala/fan-control-rock5b.git
         cd fan-control-rock5b
+
+        colorecho "$GREEN" "Compiling fan-control-rock5b ..."
         make package
+
+        colorecho "$GREEN" "Installing fan-control-rock5b ..."
         sudo dpkg -i fan-control*.deb
+
+        colorecho "$GREEN" "Enabling fan-control.service ..."
         sudo systemctl enable fan-control
+
+        colorecho "$GREEN" "Starting fan-control.service ..."
         systemctl start fan-control
     else
         config_options
