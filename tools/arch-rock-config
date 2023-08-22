@@ -734,7 +734,7 @@ fan_control() {
     temp_list=()
     temp_type_list=()
 
-    for ((i=0; i<${#update_list[@]}; i++)); do
+    for ((i=0; i<${#temp_cmd[@]}; i++)); do
         temp_list+=("$((temp_cmd[i] / 1000))")
         temp_type_list+=("${temp_type_cmd[i]%-thermal}")
     done
