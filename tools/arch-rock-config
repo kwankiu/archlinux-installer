@@ -340,8 +340,8 @@ system_maintenance() {
     title "Arch Rock Configuration Utility - System Maintenance"
     options=("Package Updates - Check & Perform Selective / Full System Upgrade")
     options+=("Update SPI Bootloader - Flash Latest Radxa U-Boot")
-    options+=("Re-install Kernel - Re-install / Replace Linux Kernel")
-    options+=("Move Arch Linux - Copy Arch Linux to another disk.")
+    options+=("Install Kernel - Re-install / Replace Linux Kernel")
+    #options+=("Move Arch Linux - Copy Arch Linux to another disk.")
     options+=("Return to Main Menu")
     select_option "${options[@]}"
     choice=$?
@@ -357,9 +357,9 @@ system_maintenance() {
         2)
             install_kernel
             ;;
-        3)
-            move_system
-            ;;
+        #3)
+            #move_system
+            #;;
         *)
             config_options
             ;;
@@ -435,6 +435,7 @@ system_update() {
     else
         system_update --select $choice
     fi
+
 }
 
 # Update SPI Bootloader
@@ -592,7 +593,60 @@ manage_packages() {
 
 # Install Packages
 install_packages() {
-    echo "Not implemented"
+
+    title "Arch Rock Configuration Utility - Install / Update Software"
+
+    if [ "$1" = "--select" ]; then
+        local selected_option="${poptions[$2]}"
+
+        if [[ " ${selection[*]} " == *" $selected_option "* ]]; then
+            options[$2]="[ ] ${selected_option}"
+            selection=("${selection[@]/$selected_option}")
+        else
+            options[$2]="[x] ${selected_option}"
+            selection+=("$selected_option")
+        fi
+    elif [ "$1" = "--category" ]; then
+        software_web=("firefox" "chromium" "ssh" "nodejs")
+        software_comm=()
+        software_suites=()
+        software_gaming=()
+        software_devtools=()
+        software_misc=("intel-ax210-fw" "pip")
+        #software_de=("gnome" "plasma" "budgie" "sway") 
+        #software_description=()
+            
+        for ((i=0; i<${#update_list[@]}; i++)); do
+            options+=("[ ] ${update_list[i]}")
+            poptions+=("${update_list[i]}")
+        done
+    else
+        selection=()
+        category=("Web - Surf the Internet" "Communication - Connect with friends, family, teams" "Suites - Office & Productivity Software" "Multimedia - Audio, Video, Graphics Software" "Gaming / Emulation / Virtualization Software" "Development Tools - Editors, IDEs, Build Tools" "Misc - Firmware Driver, other Tools and Software")
+        current_tree=()
+        options=("Return to Main Menu" "Install Selected Software")
+        options+=("$GREEN----------------------------------------------------" "$GREEN Install / Update Software (Press enter to select/deselect): " "$GREEN----------------------------------------------------$YELLOW" "Minimize All Category / Clear Selection $GREEN")
+        options+=("${category[@]}$NC")
+        poptions=("${options[@]}")
+    fi
+
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = "0" ]; then
+        config_options
+    elif [ "$choice" = "1" ]; then
+        if [ -x "$(command -v yay)" ]; then
+            yay -S ${selection[*]}
+        else
+            sudo pacman -S ${selection[*]}
+        fi
+    elif [ "$choice" = "2" ] || [ "$choice" = "3" ] || [ "$choice" = "4" ] || [ "$choice" = "5" ]; then
+        install_packages
+    else
+        install_packages --select $choice
+    fi
+
 }
 
 # Install Packages from Archive
@@ -735,7 +789,7 @@ elif [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "--run-only : skip installing the script to PATH (/usr/bin)"
     echo "--update-now : install latest version immediately without checking"
     colorecho "$GREEN" "Features"
-    echo "install-kernel <kernel> : Re-install Kernel - Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream."
+    echo "install-kernel <kernel> : Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream."
     exit 1
 else
     check_util_updates
