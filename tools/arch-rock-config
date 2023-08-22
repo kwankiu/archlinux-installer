@@ -741,13 +741,13 @@ fan_control() {
     
     colorecho "$GREEN" "Max Clock Speed (Performance Core): 2404MHz"
     colorecho "$GREEN" "Max Clock Speed (Efficient Core): 1800MHz"
-    colorecho "$GREEN" "SoC Temp (${temp_type_list[i]}): ${temp_list[i]}C"
-    colorecho "$GREEN" "CPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
-    colorecho "$GREEN" "CPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
-    colorecho "$GREEN" "CPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
-    colorecho "$GREEN" "SoC Temp (${temp_type_list[i]}): ${temp_list[i]}C"
-    colorecho "$GREEN" "GPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
-    colorecho "$GREEN" "NPU Temp (${temp_type_list[i]}): ${temp_list[i]}C"
+    colorecho "$GREEN" "SoC Temp (${temp_type_list[0]}): ${temp_list[0]}C"
+    colorecho "$GREEN" "CPU Temp (${temp_type_list[1]}): ${temp_list[1]}C"
+    colorecho "$GREEN" "CPU Temp (${temp_type_list[2]}): ${temp_list[2]}C"
+    colorecho "$GREEN" "CPU Temp (${temp_type_list[3]}): ${temp_list[3]}C"
+    colorecho "$GREEN" "SoC Temp (${temp_type_list[4]}): ${temp_list[4]}C"
+    colorecho "$GREEN" "GPU Temp (${temp_type_list[5]}): ${temp_list[5]}C"
+    colorecho "$GREEN" "NPU Temp (${temp_type_list[6]}): ${temp_list[6]}C"
     echo ""
     
     options=("Return to Main Menu")
