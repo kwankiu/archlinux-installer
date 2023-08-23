@@ -25,6 +25,7 @@ uboot_url="https://dl.radxa.com/rock5/sw/images/loader/rock-5b/release/"
 uboot_debug_url="https://dl.radxa.com/rock5/sw/images/loader/rock-5b/debug/"
 edk2_url="https://api.github.com/repos/edk2-porting/edk2-rk3588/releases/latest"
 zero_url="https://dl.radxa.com/rock5/sw/images/others/zero.img.gz"
+armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_loader.img"
 
 # Directory for storing source files
 source_repo_dir="source-repo-dir"
@@ -450,7 +451,7 @@ flash_uboot() {
         colorecho "$GREEN" "Select an option to confirm"
         colorecho "$RED" "Warning : The SPI NOR flash will be cleared."
         echo ""
-        options=("Install Radxa U-Boot" "Install Radxa U-Boot (Debug Version)" "Install EDK2 Bootloader for Rock 5A (UEFI)" "Install EDK2 Bootloader for Rock 5B (UEFI)" "Exit")
+        options=("Install Radxa U-Boot" "Install Radxa U-Boot (Debug Version)" "Install EDK2 Bootloader for Rock 5A (UEFI)" "Install EDK2 Bootloader for Rock 5B (UEFI)" "Armbian Bootloader" "Exit")
         select_option "${options[@]}"
         choice=$?
 
@@ -483,6 +484,13 @@ flash_uboot() {
                 latest_image=$(curl -s "$which_url" | grep -wo "https.*rock-5b.*\.img" | head -n 1)
                 which_url="$(dirname "$latest_image")/"
                 latest_image=$(basename "$latest_image")
+                ;;
+            4)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$armbian_url
+                colorecho "$GREEN" "Fetching Armbian Bootloader ..."
+                latest_image=$(basename "$which_url")
+                which_url="$(dirname "$which_url")/"
                 ;;
             *)
                 exit 1
@@ -724,14 +732,14 @@ fan_control() {
 
     if [ "$fanstatus" = 1 ]; then
         colorecho "$GREEN" "Fan Control Status: Enabled"
-        colorecho "$GREEN" "PWM Fan Speed: 50%"
+        #colorecho "$GREEN" "PWM Fan Speed: 50%"
     else
         colorecho "$GREEN" "Fan Control Status: Disabled"
     fi
 
     temp_cmd=($(cat /sys/class/thermal/thermal_zone*/temp))
     temp_type_cmd=($(cat /sys/class/thermal/thermal_zone*/type))
-    cpu_freq_cmd=($(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq))
+    cpu_freq_cmd=($(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq))
     temp_list=()
     temp_type_list=()
     cpu_freq_list=()
@@ -745,9 +753,9 @@ fan_control() {
         cpu_freq_list+=("$((cpu_freq_cmd[i] / 1000))")
     done
 
-    colorecho "$GREEN" "Max Clock Speed (Performance Core 0): ${temp_list[4]}MHz"
-    colorecho "$GREEN" "Max Clock Speed (Performance Core 1): ${temp_list[6]}MHz"
-    colorecho "$GREEN" "Max Clock Speed (Efficient Core): ${temp_list[0]}MHz"
+    colorecho "$GREEN" "Clock Speed (Performance Core 0): ${temp_list[4]}MHz"
+    colorecho "$GREEN" "Clock Speed (Performance Core 1): ${temp_list[6]}MHz"
+    colorecho "$GREEN" "Clock Speed (Efficient Core): ${temp_list[0]}MHz"
     colorecho "$GREEN" "SoC Temp (${temp_type_list[0]}): ${temp_list[0]}C"
     colorecho "$GREEN" "CPU Temp (${temp_type_list[1]}): ${temp_list[1]}C"
     colorecho "$GREEN" "CPU Temp (${temp_type_list[2]}): ${temp_list[2]}C"
@@ -776,26 +784,38 @@ fan_control() {
     choice=$?
 
     if [ "$choice" = "1" ]; then
-        if ! [ -x "$(command -v dpkg)" ]; then
-            colorecho "$GREEN" "Package dpkg not found. Installing ..."
-            sudo pacman -Sy dpkg --noconfirm
+        if [[ -e "/lib/systemd/system/fan-control.service" ]]; then
+            if [ "$fanstatus" = 1 ]; then
+                colorecho "$GREEN" "Disabling PWM Fan Control ..."
+                sudo systemctl stop fan-control
+                sudo systemctl disable fan-control
+            else
+                colorecho "$GREEN" "Enabling PWM Fan Control ..."
+                sudo systemctl enable fan-control
+                systemctl start fan-control
+            fi
+        else
+            if ! [ -x "$(command -v dpkg)" ]; then
+                colorecho "$GREEN" "Package dpkg not found. Installing ..."
+                sudo pacman -Sy dpkg --noconfirm
+            fi
+
+            colorecho "$GREEN" "Cloning fan-control-rock5b ..."
+            git clone https://github.com/lukaszsobala/fan-control-rock5b.git
+            cd fan-control-rock5b
+
+            colorecho "$GREEN" "Compiling fan-control-rock5b ..."
+            make package
+
+            colorecho "$GREEN" "Installing fan-control-rock5b ..."
+            sudo dpkg -i fan-control*.deb
+
+            colorecho "$GREEN" "Enabling fan-control.service ..."
+            sudo systemctl enable fan-control
+
+            colorecho "$GREEN" "Starting fan-control.service ..."
+            systemctl start fan-control
         fi
-
-        colorecho "$GREEN" "Cloning fan-control-rock5b ..."
-        git clone https://github.com/lukaszsobala/fan-control-rock5b.git
-        cd fan-control-rock5b
-
-        colorecho "$GREEN" "Compiling fan-control-rock5b ..."
-        make package
-
-        colorecho "$GREEN" "Installing fan-control-rock5b ..."
-        sudo dpkg -i fan-control*.deb
-
-        colorecho "$GREEN" "Enabling fan-control.service ..."
-        sudo systemctl enable fan-control
-
-        colorecho "$GREEN" "Starting fan-control.service ..."
-        systemctl start fan-control
     else
         config_options
     fi
