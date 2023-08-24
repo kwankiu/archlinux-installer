@@ -2,9 +2,21 @@
 
 ################################################################
 #                                                              #
-#      Arch Linux Installation Tool for Rock 5B / RK3588       #
+#       Arch Linux Installation Tool for Rock 5 / RK3588       #
 #                                                              #
 ################################################################
+# Define variables
+
+# Define main / dev branch
+branch=dev
+
+# URL for creating the System
+rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz"
+midstream_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-midstream-latest.tar.xz"
+rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
+
+################################################################
+# Tools for formatting / styling
 
 # Define terminal color codes
 RED='\033[0;31m'
@@ -13,6 +25,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[1;34m'
 NC='\033[0m' # No Color
 
+# Option Picker
 function select_option {
 
     # little helpers for terminal print control and key input
@@ -71,19 +84,22 @@ function select_option {
     return $selected
 }
 
+# Echo with colors
 colorecho() {
     color="$1"
     text="$2"
     echo -e "${color}${text}${NC}"
 }
 
+# Title / Heading
 title() {
   clear
   echo "---------------------------------------------------------------------"
-  colorecho "$BLUE" "Welcome to Arch Linux Installation Tool for Rock 5B / RK3588"
+  colorecho "$BLUE" "Welcome to Arch Linux Installation Tool for Rock 5 / RK3588"
   echo "---------------------------------------------------------------------"
 }
 
+################################################################
 # Function to display a list of available disks
 list_disks() {
   options=()
@@ -136,10 +152,12 @@ confirm_disk() {
     fi
 }
 
+################################################################
+# Compiled Packages
 install_rkbsp() {
   colorecho "$GREEN" "Downloading pre-compiled packages ..."
   # Download pre-compiled packages
-  curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz
+  curl -LJO $rkbsp_url
 
   # Extract pre-compiled packages
   colorecho "$GREEN" "Extracting pre-compiled packages ..."
@@ -161,7 +179,7 @@ install_rkbsp() {
 install_midstream() {
   colorecho "$GREEN" "Downloading pre-compiled packages ..."
   # Download pre-compiled packages
-  curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-midstream-latest.tar.xz
+  curl -LJO $midstream_url
 
   # Extract pre-compiled packages
   colorecho "$GREEN" "Extracting pre-compiled packages ..."
@@ -180,6 +198,7 @@ install_midstream() {
   boot_image=$pkg_tar_dir/Kernel/linux/boot
 }
 
+################################################################
 # Sees if it is a help command or normal command with parameters
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   echo "Usage : To be written"
@@ -187,6 +206,9 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 else
   title
 fi
+
+################################################################
+# Install required packages
 
 # Check if parted is installed
 if ! [ -x "$(command -v parted)" ]; then
@@ -222,7 +244,9 @@ else
 fi
 fi
 
+################################################################
 # This runs when there is no parameters specified
+
 # Choose drive to install / create .img image
 if [ -z $1 ]; then
   colorecho "$GREEN" "Select a disk to install or create an image:"
@@ -268,6 +292,9 @@ else
   fi
 fi
 
+################################################################
+# Main Program
+
 title
 root_mount_dir=$(mktemp -d)
 boot_mount_dir=$(mktemp -d)
@@ -310,7 +337,7 @@ sudo mount $boot_partition $boot_mount_dir
 
 # Download and extract the latest ArchLinux tarball
 colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
-curl -LJO http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
+curl -LJO $rootfs_url
 
 colorecho "$GREEN" "Copying Arch Linux rootfs ..."
 sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
@@ -363,19 +390,10 @@ sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
 sudo rm -rf $root_mount_dir/boot/*
 sudo rm -rf $pkg_tar_dir/Kernel/linux $pkg_tar_dir/Kernel/*/initramfs* $pkg_tar_dir/Kernel/*/vmlinuz*
 
-colorecho "$GREEN" "Copying Installer and Tools ..."
-# Download first-boot-setup
-# For main branch
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/first-boot-setup
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-installer
+colorecho "$GREEN" "Copying Installer ..."
 
-# For dev branch
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/first-boot-setup
-#curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/tools/arch-rock-installer
-
-# Copy first-boot-setup
-sudo chmod +x first-boot-setup
-sudo cp -r "first-boot-setup" "$root_mount_dir/usr/bin/first-boot-setup"
+# Download Installer
+curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer
 
 # Copy arch-rock-installer
 sudo chmod +x arch-rock-installer
@@ -393,9 +411,12 @@ sudo umount $boot_mount_dir $root_mount_dir
 
 # Clean up
 colorecho "$YELLOW" "Cleaning up temporary files ..."
-sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz first-boot-setup arch-rock-installer compiled-pkg-*.tar.xz
+sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer compiled-pkg-*.tar.xz
 
 title
-colorecho "$YELLOW" "Created Arch Linux Installer, the default login is alarm/alarm and root login is root/root."
-colorecho "$GREEN" "You may now unmount your install disk."
+colorecho "$GREEN" "Created Arch Linux Installer to $drive."
+colorecho "$GREEN" "You may now unmount $drive and boot into the system for installation."
+colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run arch-rock-installer."
 echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
+
+################################################################
