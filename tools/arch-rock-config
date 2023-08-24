@@ -447,13 +447,37 @@ flash_uboot() {
         sleep 1
         exit 1
     else
-        title "Arch Rock Configuration Utility - Update SPI Bootloader"
-        colorecho "$GREEN" "Select an option to confirm"
-        colorecho "$RED" "Warning : The SPI NOR flash will be cleared."
-        echo ""
-        options=("Install Radxa U-Boot" "Install Radxa U-Boot (Debug Version)" "Install EDK2 Bootloader for Rock 5A (UEFI)" "Install EDK2 Bootloader for Rock 5B (UEFI)" "Armbian Bootloader" "Exit")
-        select_option "${options[@]}"
-        choice=$?
+        if [ -z "$1" ]; then
+            title "Arch Rock Configuration Utility - Update SPI Bootloader"
+            colorecho "$GREEN" "Select an option to confirm"
+            colorecho "$RED" "Warning : The SPI NOR flash will be cleared."
+            echo ""
+            options=("Install Radxa U-Boot" "Install Radxa U-Boot (Debug Version)" "Install EDK2 Bootloader for Rock 5A (UEFI)" "Install EDK2 Bootloader for Rock 5B (UEFI)" "Install Armbian Bootloader" "Exit")
+            select_option "${options[@]}"
+            choice=$?
+        else
+            case $1 in
+                "radxa")
+                    choice=0
+                    ;;
+                "radxa-debug")
+                    choice=1
+                    ;;
+                "edk2-rock5a")
+                    choice=2
+                    ;;
+                "edk2-rock5b")
+                    choice=3
+                    ;;
+                "armbian")
+                    choice=4
+                    ;;
+                *)
+                    colorecho "$RED" "Invalid Option, Exiting ..."
+                    exit 1
+                    ;;
+            esac
+        fi
 
         # Choice
         case $choice in
@@ -578,7 +602,7 @@ move_system() {
 # Manage Packages Main Menu
 manage_packages() {
     title "Arch Rock Configuration Utility - Manage Packages"
-    options=("Install / Update Packages - Install Basic Software / RK3588 Specified / Customized Packages")
+    options=("Install / Update Software - Install Basic Software / RK3588 Specified / Customized Packages")
     options+=("Downgrade Packages - Install / Downgrade any Arch Linux Packages from Archive")
     options+=("Return to Main Menu")
     select_option "${options[@]}"
@@ -700,15 +724,42 @@ performance_features() {
 # SoC Performance Profile
 soc_profile() {
 
-    title "Arch Rock Configuration Utility - SoC Performance Profile"
-    colorecho "$GREEN" "Current Profile: "
-    colorecho "$BLUE" "$(cat /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor)"
-    colorecho "$BLUE" "$(cat /sys/class/devfreq/dmc/governor)"
-    colorecho "$BLUE" "$(cat /sys/class/devfreq/fb000000.gpu/governor)"
-    echo ""
-    options=("Performance - Run SoC at full performance" "On Demand - Run SoC on CPU usage demand" "Power Save - Run SoC on Power Saving Mode" "Return to Main Menu")
-    select_option "${options[@]}"
-    choice=$?
+    if [ -z "$1" ] || [ "$1" = "status" ]; then
+        if [ -z "$1" ]; then
+            title "Arch Rock Configuration Utility - SoC Performance Profile"
+        else
+            title "Arch Rock Configuration Utility - SoC Monitor"
+        fi
+        colorecho "$BLUE" "CPU Profile: $(cat /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor)"
+        colorecho "$BLUE" "Memory Profile: $(cat /sys/class/devfreq/dmc/governor)"
+        colorecho "$BLUE" "GPU Profile: $(cat /sys/class/devfreq/fb000000.gpu/governor)"
+    fi
+
+    if [ -z "$1" ]; then
+        echo ""
+        options=("Performance - Run SoC at full performance" "On Demand - Run SoC on CPU usage demand" "Power Save - Run SoC on Power Saving Mode" "Return to Main Menu")
+        select_option "${options[@]}"
+        choice=$?
+    else
+        case $1 in
+                "performance")
+                    choice=0
+                    ;;
+                "ondemand")
+                    choice=1
+                    ;;
+                "powersave")
+                    choice=2
+                    ;;
+                "status")
+                    choice=99
+                    ;;
+                *)
+                    colorecho "$RED" "Invalid Option, Exiting ..."
+                    exit 1
+                    ;;
+        esac
+    fi
 
     if [ "$choice" = "0" ]; then
         echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
@@ -719,6 +770,8 @@ soc_profile() {
     elif [ "$choice" = "2" ]; then
         echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
         colorecho "$GREEN" "Profile set to Power Save"
+    elif [ "$choice" = "99" ]; then
+        fan_control status --soc-monitor
     else
         config_options
     fi
@@ -728,66 +781,101 @@ soc_profile() {
 # PWM Fan Control
 fan_control() {
     
-    title "Arch Rock Configuration Utility - PWM Fan Control"
+    if [ -z "$1" ] || [ "$1" = "status" ]; then
 
-    if systemctl is-active --quiet fan-control; then
-        fanstatus=1
-    else
-        fanstatus=0
-    fi
+        if [ -z "$2" ]; then
+            title "Arch Rock Configuration Utility - PWM Fan Control"            
 
-    if [ "$fanstatus" = 1 ]; then
-        colorecho "$GREEN" "Fan Control Status: Enabled"
-        #colorecho "$GREEN" "PWM Fan Speed: 50%"
-    else
-        colorecho "$GREEN" "Fan Control Status: Disabled"
-    fi
+            if systemctl is-active --quiet fan-control; then
+                fanstatus=1
+            else
+                fanstatus=0
+            fi
 
-    temp_cmd=($(cat /sys/class/thermal/thermal_zone*/temp))
-    temp_type_cmd=($(cat /sys/class/thermal/thermal_zone*/type))
-    cpu_freq_cmd=($(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq))
-    temp_list=()
-    temp_type_list=()
-    cpu_freq_list=()
+            if [ "$fanstatus" = 1 ]; then
+                colorecho "$GREEN" "Fan Control Status: Enabled"
+                #colorecho "$GREEN" "PWM Fan Speed: 50%"
+            else
+                colorecho "$GREEN" "Fan Control Status: Disabled"
+            fi
 
-    for ((i=0; i<${#temp_cmd[@]}; i++)); do
-        temp_list+=("$((temp_cmd[i] / 1000))")
-        temp_type_list+=("${temp_type_cmd[i]%-thermal}")
-    done
-
-    for ((i=0; i<${#cpu_freq_cmd[@]}; i++)); do
-        cpu_freq_list+=("$((cpu_freq_cmd[i] / 1000))")
-    done
-
-    colorecho "$GREEN" "Clock Speed (Performance Core 0): ${cpu_freq_list[4]}MHz"
-    colorecho "$GREEN" "Clock Speed (Performance Core 1): ${cpu_freq_list[6]}MHz"
-    colorecho "$GREEN" "Clock Speed (Efficient Core): ${cpu_freq_list[0]}MHz"
-    colorecho "$GREEN" "SoC Temp (${temp_type_list[0]}): ${temp_list[0]}C"
-    colorecho "$GREEN" "CPU Temp (${temp_type_list[1]}): ${temp_list[1]}C"
-    colorecho "$GREEN" "CPU Temp (${temp_type_list[2]}): ${temp_list[2]}C"
-    colorecho "$GREEN" "CPU Temp (${temp_type_list[3]}): ${temp_list[3]}C"
-    colorecho "$GREEN" "SoC Temp (${temp_type_list[4]}): ${temp_list[4]}C"
-    colorecho "$GREEN" "GPU Temp (${temp_type_list[5]}): ${temp_list[5]}C"
-    colorecho "$GREEN" "NPU Temp (${temp_type_list[6]}): ${temp_list[6]}C"
-    echo ""
-    
-    options=("Return to Main Menu")
-
-    if [[ -e "/lib/systemd/system/fan-control.service" ]]; then
-
-        if [ "$fanstatus" = 1 ]; then
-            options+=("Disable PWM Fan Control")
-        else
-            options+=("Enable PWM Fan Control")
         fi
 
-        #options+=("Configure Fan Profile")
-    else
-        options+=("Install PWM Fan Control")
+        temp_cmd=($(cat /sys/class/thermal/thermal_zone*/temp))
+        temp_type_cmd=($(cat /sys/class/thermal/thermal_zone*/type))
+        cpu_freq_cmd=($(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq))
+        temp_list=()
+        temp_type_list=()
+        cpu_freq_list=()
+
+        for ((i=0; i<${#temp_cmd[@]}; i++)); do
+            temp_list+=("$((temp_cmd[i] / 1000))")
+            temp_type_list+=("${temp_type_cmd[i]%-thermal}")
+        done
+
+        for ((i=0; i<${#cpu_freq_cmd[@]}; i++)); do
+            cpu_freq_list+=("$((cpu_freq_cmd[i] / 1000))")
+        done
+
+        if [ -z "$2" ]; then
+            colorecho "$GREEN" "Clock Speed (Efficient Core): ${cpu_freq_list[0]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 0): ${cpu_freq_list[4]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 1): ${cpu_freq_list[6]}MHz"
+        elif [ "$2" = "--soc-monitor" ]; then
+            colorecho "$GREEN" "Clock Speed (Efficient Core 0): ${cpu_freq_list[0]}MHz"
+            colorecho "$GREEN" "Clock Speed (Efficient Core 1): ${cpu_freq_list[1]}MHz"
+            colorecho "$GREEN" "Clock Speed (Efficient Core 2): ${cpu_freq_list[2]}MHz"
+            colorecho "$GREEN" "Clock Speed (Efficient Core 3): ${cpu_freq_list[3]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 0): ${cpu_freq_list[4]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 1): ${cpu_freq_list[5]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 2): ${cpu_freq_list[6]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 3): ${cpu_freq_list[7]}MHz"
+        fi
+
+        colorecho "$GREEN" "SoC Temp (${temp_type_list[0]}): ${temp_list[0]}C"
+        colorecho "$GREEN" "CPU Temp (${temp_type_list[1]}): ${temp_list[1]}C"
+        colorecho "$GREEN" "CPU Temp (${temp_type_list[2]}): ${temp_list[2]}C"
+        colorecho "$GREEN" "CPU Temp (${temp_type_list[3]}): ${temp_list[3]}C"
+        colorecho "$GREEN" "SoC Temp (${temp_type_list[4]}): ${temp_list[4]}C"
+        colorecho "$GREEN" "GPU Temp (${temp_type_list[5]}): ${temp_list[5]}C"
+        colorecho "$GREEN" "NPU Temp (${temp_type_list[6]}): ${temp_list[6]}C"
+        echo ""
+        
+        options=("Return to Main Menu")
     fi
 
-    select_option "${options[@]}"
-    choice=$?
+    if [ -z "$1" ]; then
+        if [[ -e "/lib/systemd/system/fan-control.service" ]]; then
+
+            if [ "$fanstatus" = 1 ]; then
+                options+=("Disable PWM Fan Control")
+            else
+                options+=("Enable PWM Fan Control")
+            fi
+
+            #options+=("Configure Fan Profile")
+        else
+            options+=("Install PWM Fan Control")
+        fi
+    fi
+
+    if [ -z "$1" ] || [ "$1" = "status" ]; then
+        select_option "${options[@]}"
+        choice=$?
+    else
+        case $1 in
+                "enable"|"disable"|"install")
+                    choice=1
+                    ;;
+                #"config")
+                    #choice=2
+                    #;;
+                *)
+                    colorecho "$RED" "Invalid Option, Exiting ..."
+                    exit 1
+                    ;;
+        esac
+    fi
 
     if [ "$choice" = "1" ]; then
         if [[ -e "/lib/systemd/system/fan-control.service" ]]; then
@@ -900,25 +988,63 @@ disable_sudopw() {
 ################################################################
 # Main Program
 
-# Read arguments
-if [ "$1" = "--run-only" ]; then
+### Options ###
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    colorecho "$BLUE" "Arch Rock Configuration Utility (BUILD $utilver)"
+    echo "Usage: arch-rock-config <optional_argument>"
+
+    colorecho "$GREEN" "Options"
+    echo "-h / --help : Usage and Infomation of this configuration utility."
+    echo "--run-only : Skip installing this configuration utility to PATH (/usr/bin)."
+    echo "--update-now : Install latest version of configuration utility immediately without checking updates."
+
+    colorecho "$GREEN" "Features"
+    colorecho "$YELLOW" "System Maintenance"
+    echo "package-updates : Check & Perform Selective / Full System Upgrade."
+    echo "install-kernel <kernel> : Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream."
+    echo "flash-bootloader <bootloader> : Flash Latest SPI Bootloader. <bootloader> options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian."
+    
+    colorecho "$YELLOW" "Manage Packages"
+    echo "install-software <package> : Install Basic Software / RK3588 Specified / Customized Packages."
+    echo "downgrade <package> : Install / Downgrade any Arch Linux Packages from Archive."
+
+    colorecho "$YELLOW" "Performance & Features"
+    echo "soc <option> : Manage SoC Settings. <options> are performance, ondemand, powersave (and status for SoC Monitor)."
+    echo "fan <option> : Configure PWM Fan-control. <options> are install, enable, disable and status."
+    exit 1
+
+elif [ "$1" = "--run-only" ]; then
     # This argument skip the below options / arguments, equivalent to `else`.
     check_util_updates
     config_options
 elif [ ! -e "/usr/bin/arch-rock-config" ] || [ "$1" = "--update-now" ]; then
     update_util --install
+
+### Features - System Maintenance ###
+elif [ "$1" = "package-updates" ]; then
+    system_update
+
+elif [ "$1" = "flash-bootloader" ]; then
+    flash_uboot "$2"
+
 elif [ "$1" = "install-kernel" ]; then
     install_kernel "$2"
-elif [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    colorecho "$BLUE" "Arch Rock Configuration Utility (BUILD $utilver)"
-    echo "Usage: arch-rock-config <optional_argument>"
-    colorecho "$GREEN" "Options"
-    echo "-h / --help : usage and infomation of this installer"
-    echo "--run-only : skip installing the script to PATH (/usr/bin)"
-    echo "--update-now : install latest version immediately without checking"
-    colorecho "$GREEN" "Features"
-    echo "install-kernel <kernel> : Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream."
-    exit 1
+
+### Features - Manage Packages ###
+elif [ "$1" = "install-software" ]; then
+    install_packages "$2"
+
+elif [ "$1" = "downgrade" ]; then
+    downgrade_packages "$2"
+
+### Features - Performance & Features ###
+elif [ "$1" = "soc" ]; then
+    soc_profile "$2"
+
+elif [ "$1" = "fan" ]; then
+    fan_control "$2"
+
+### Main Menu ###
 else
     check_util_updates
     config_options
