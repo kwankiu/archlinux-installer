@@ -36,12 +36,18 @@ If you want a Desktop Environment, pick a Desktop Environment to install.
 
 # Usage
 
-## Optional arguments
-
 ```
-archlinux-installer <disk_path> <kernel>
+archlinux-installer <options/disk_path> <kernel>
 ```
 
+### Options
+
+| Options | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `-h` or `--help` | N/A | Usage and Infomation of this installer. |
+| `-d` or `--dev` | N/A | Use latest dev installation script. |
+
+### Optional arguments
 | Argument | Description |
 | ------------- | ------------- |
 | `<disk_path>` | Specify the installation path, this should be a disk path not a partition path. On the Rock 5B, it is /dev/nvme0n1 for NVMe SSD, /dev/mmcblk0 for uSD Card, and /dev/mmcblk1 for eMMC. For SATA or External disk, they are usually on /dev/sdX, which X is usually starting from a-z. |
@@ -49,28 +55,39 @@ archlinux-installer <disk_path> <kernel>
 
 ## Examples
 
-1. Run without any arguments (Same as the "How to install?" section above)
+#### Typical Usage (Same as [How to install?](https://github.com/kwankiu/archlinux-installer-rock5#how-to-install) section)
 
-The script will prompt for picking installation options.
+This command will prompt for picking installation options.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
-2. Passing only the first argument `<disk_path>` (e.g. /dev/sdb)
+#### Using  `<disk_path>`
+#### (e.g. /dev/sdb)
 
-The script will let you pick a kernel and install Arch Linux to your disk path.
+This command will let you pick a kernel and install Arch Linux to your disk path.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
 ```
 
-3. Passing both argument `<disk_path>` `<kernel>` (e.g. /dev/nvme0n1 for `<disk_path>` and rkbsp for `<kernel>`)
+#### Using both `<disk_path>` and`<kernel>`
+#### (e.g. /dev/nvme0n1 for `<disk_path>` and rkbsp for `<kernel>`)
 
-The script will install Arch Linux with Radxa BSP Kernel to your disk path.
+This command will install Arch Linux with Radxa BSP Kernel to your disk path.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 rkbsp
+```
+
+#### Using dev branch version
+#### (WARNING: dev branch are not tested and may be broken.)
+
+This command will use the script from dev branch and prompt for picking installation options.
+
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --dev
 ```
 
 # Arch Rock Configuration Utility (experimental)
