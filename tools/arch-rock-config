@@ -5,14 +5,14 @@
 #                Arch Rock Configuration Utility               #
 #                                                              #
 ################################################################
-# This is like armbian-config or raspi-config or rsetup but for Arch Linux running on Rock 5B / RK3588
+# This is like armbian-config or raspi-config or rsetup but for Arch Linux running on Rock 5 / RK3588
 ################################################################
 # Define variables
 
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2308231
+utilver=2308241
 
 # Define main / dev branch
 branch=dev
@@ -917,10 +917,10 @@ fan_control() {
             sudo systemctl start fan-control
 
             if [ -z $rock5a ]; then
+                colorecho "$GREEN" "Installed PWM Fan Control."
+            else
                 echo step_wise | sudo tee /sys/class/thermal/thermal_zone0/policy
                 colorecho "$GREEN" "Installed PWM Fan Control, a reboot maybe required to take effect."
-            else
-                colorecho "$GREEN" "Installed PWM Fan Control."
             fi
 
         fi
@@ -990,13 +990,13 @@ disable_sudopw() {
 
 ### Options ###
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    colorecho "$BLUE" "Arch Rock Configuration Utility (BUILD $utilver)"
+    colorecho "$BLUE" "Arch Rock Configuration Utility (BUILD $utilver-$branch)"
     echo "Usage: arch-rock-config <optional_argument>"
 
     colorecho "$GREEN" "Options"
     echo "-h / --help : Usage and Infomation of this configuration utility."
-    echo "--run-only : Skip installing this configuration utility to PATH (/usr/bin)."
-    echo "--update-now : Install latest version of configuration utility immediately without checking updates."
+    echo "-r / --run : Run without installing this configuration utility to PATH (/usr/bin)."
+    echo "-u / --update <channel> : Install latest configuration utility without checking updates. <channel> options: main, dev."
 
     colorecho "$GREEN" "Features"
     colorecho "$YELLOW" "System Maintenance"
@@ -1009,15 +1009,20 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "downgrade <package> : Install / Downgrade any Arch Linux Packages from Archive."
 
     colorecho "$YELLOW" "Performance & Features"
-    echo "soc <option> : Manage SoC Settings. <options> are performance, ondemand, powersave (and status for SoC Monitor)."
-    echo "fan <option> : Configure PWM Fan-control. <options> are install, enable, disable and status."
+    echo "soc <option> : Manage SoC Settings. options: performance, ondemand, powersave (and status for SoC Monitor)."
+    echo "fan <option> : Configure PWM Fan-control. options: install, enable, disable and status."
     exit 1
 
-elif [ "$1" = "--run-only" ]; then
+elif [ "$1" = "-r" ] || [ "$1" = "--run" ]; then
     # This argument skip the below options / arguments, equivalent to `else`.
     check_util_updates
     config_options
-elif [ ! -e "/usr/bin/arch-rock-config" ] || [ "$1" = "--update-now" ]; then
+elif [ ! -e "/usr/bin/arch-rock-config" ] || [ "$1" = "-u" ] || [ "$1" = "--update" ]; then
+    if [ "$2" = "main" ]; then
+        branch=main
+    elif [ "$2" = "dev" ]; then
+        branch=dev
+    fi
     update_util --install
 
 ### Features - System Maintenance ###
