@@ -826,6 +826,14 @@ fan_control() {
 
             colorecho "$GREEN" "Starting fan-control.service ..."
             sudo systemctl start fan-control
+
+            if [ -z $rock5a ]; then
+                echo step_wise | sudo tee /sys/class/thermal/thermal_zone0/policy
+                colorecho "$GREEN" "Installed PWM Fan Control, a reboot maybe required to take effect."
+            else
+                colorecho "$GREEN" "Installed PWM Fan Control."
+            fi
+
         fi
     else
         config_options
