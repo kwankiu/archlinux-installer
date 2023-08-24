@@ -76,7 +76,9 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-
 # Arch Rock Configuration Utility (experimental)
 We have created a configuration utility `arch-rock-config` just like [armbian-config](https://github.com/armbian/config), [rsetup](https://docs.radxa.com/en/radxa-os/rsetup/rsetup-tool), or [raspi-config](https://www.raspberrypi.com/documentation/computers/configuration.html) but for Arch Linux running on Rock 5 / RK3588.
 
-Note that this configuration utility is work-in-progress.
+![alt Arch Rock Configuration Utility](https://i.imgur.com/bccc10d.png)
+
+### Note that this configuration utility is work-in-progress.
 
 ## Installation
 
@@ -105,14 +107,29 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 | Options | Description |
 | ------------- | ------------- |
 | `-h` or `--help` |  Usage and Infomation of this configuration utility. |
-| `--run-only` | Skip installing the configuration utility to PATH (/usr/bin). |
+| `--run-only` | Skip installing this configuration utility to PATH (/usr/bin). |
 | `--update-now` | Install latest version of configuration utility immediately without checking updates. |
 
 ### Features
 
+#### System Maintenance
 | Features | Additional Arguments | Description |
 | ------------- | ------------- | ------------- |
-| `install-kernel` |  `<kernel>` |  Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream. |
+| `package-updates` |  N/A |  Check & Perform Selective / Full System Upgrade. |
+| `install-kernel` |  `<kernel>` |  Re-install / Replace Linux Kernel. kernel options: rkbsp, rkbsp-git, midstream. |
+| `flash-bootloader` |  `<bootloader>` |  Flash Latest SPI Bootloader. bootloader options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian. |
+
+#### Manage Packages
+| Features | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `install-software` |  `<package>` |  Install Basic Software / RK3588 Specified / Customized Packages. |
+| `install-kernel` |  `<package>` |  Install / Downgrade any Arch Linux Packages from Archive. |
+
+#### Performance & Features
+| Features | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `soc` |  `<option>` | Manage SoC Settings. options: `performance`, `ondemand`, `powersave` (and `status` for SoC Monitor). |
+| `fan` |  `<option>` |  Configure PWM Fan-control. options: `install`, `enable`, `disable` and `status`. |
 
 
 # More Information
