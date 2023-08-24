@@ -287,8 +287,10 @@ first_boot_setup() {
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     colorecho "$BLUE" "Arch Rock Installer - Arch Linux Installer for Rock 5B / RK3588"
     echo "Usage: arch-rock-installer <optional_argument>"
-    echo "-h / --help : usage and infomation of this installer"
-    echo "--skip-first-boot-setup : skip running first boot setup (use only if the corresponding setup has been done)"
+
+    colorecho "$GREEN" "Options"
+    echo "-h / --help : Usage and Infomation of this installer"
+    echo "--skip-first-boot-setup : Skip first boot setup (use only if the corresponding setup has been done)"
     exit 1
 fi
 

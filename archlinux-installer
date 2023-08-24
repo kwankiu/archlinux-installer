@@ -201,222 +201,231 @@ install_midstream() {
 ################################################################
 # Sees if it is a help command or normal command with parameters
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-  echo "Usage : To be written"
-  exit 1
-else
-  title
-fi
+  colorecho "$BLUE" "Arch Linux Installation Tool for Rock 5 / RK3588 ($branch)"
+  echo "Usage: archlinux-installer <optional_argument>"
 
-################################################################
+  colorecho "$GREEN" "Options"
+  echo "-h / --help : Usage and Infomation of this installer."
+  echo "-d / --dev : Use latest dev installation script."
+  exit 1
+elif [ "$1" = "-d" ] || [ "$1" = "--dev" ]; then
+  echo "Getting the latest installation script from dev ..."
+  bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) $2 $3
+else
+  ################################################################
+  # Main Program
+  title
+
 # Install required packages
 
-# Check if parted is installed
-if ! [ -x "$(command -v parted)" ]; then
-  # Check Linux distribution
-  colorecho "$YELLOW" "Parted is not found, trying to install..."
-  if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
-    # Debian/Ubuntu-based
-    sudo apt-get update
-    sudo apt-get install -y parted libarchive-tools
-  elif [ -f /etc/redhat-release ]; then
-    # Red Hat-based
-    sudo yum update
-    sudo yum install -y parted libarchive-tools
-  elif [ -f /etc/arch-release ]; then
-    # Arch Linux
-    sudo pacman -S parted dosfstools --noconfirm
-  elif [ -x "$(command -v apk)" ]; then
-    # Alphine-based
-    apk add parted libarchive-tools
+  # Check if parted is installed
+  if ! [ -x "$(command -v parted)" ]; then
+    # Check Linux distribution
+    colorecho "$YELLOW" "Parted is not found, trying to install..."
+    if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+      # Debian/Ubuntu-based
+      sudo apt-get update
+      sudo apt-get install -y parted libarchive-tools
+    elif [ -f /etc/redhat-release ]; then
+      # Red Hat-based
+      sudo yum update
+      sudo yum install -y parted libarchive-tools
+    elif [ -f /etc/arch-release ]; then
+      # Arch Linux
+      sudo pacman -S parted dosfstools --noconfirm
+    elif [ -x "$(command -v apk)" ]; then
+      # Alphine-based
+      apk add parted libarchive-tools
+    else
+      colorecho "$RED" "Error : We cant find or install parted on your system. Exiting..."
+      exit 1
+    fi
+
+  # Verify if it is installed
+  if [ -x "$(command -v parted)" ]; then
+    colorecho "$GREEN" "Package installed, continuing..."
+    title
   else
-    colorecho "$RED" "Error : We cant find or install parted on your system. Exiting..."
+    colorecho "$RED" "Error : Package not installed, please check your package manager / internet connection / system. Exiting..."
     exit 1
   fi
-
-# Verify if it is installed
-echo "---------------------------------------------------------------------"
-if [ -x "$(command -v parted)" ]; then
-  colorecho "$GREEN" "Package installed, continuing..."
-  echo "---------------------------------------------------------------------"
-else
-  colorecho "$RED" "Error : Package not installed, please check your package manager / internet connection / system. Exiting..."
-  exit 1
-fi
-fi
-
-################################################################
-# This runs when there is no parameters specified
-
-# Choose drive to install / create .img image
-if [ -z $1 ]; then
-  colorecho "$GREEN" "Select a disk to install or create an image:"
-  list_disks
-  title
-  if [ $selected_disk == "/out/archlinux.img" ]; then
-    if [ ! -d "./out" ]; then
-      sudo mkdir ./out
-    fi
-    drive=./out/archlinux.img
-    sudo dd if=/dev/zero of=$drive bs=1M count=4096
-  else
-    confirm_disk
   fi
-else 
-  drive=$1
-fi
 
-# Install boot partition and kernel
-if [ -z $2 ]; then
+  ################################################################
+  # This runs when there is no parameters specified
+
+  # Choose drive to install / create .img image
+  if [ -z $1 ]; then
+    colorecho "$GREEN" "Select a disk to install or create an image:"
+    list_disks
     title
-    colorecho "$GREEN" "Select a kernel to install:"
-    options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(Experimental) Googulator Midstream Kernel (Linux 6.2)" "Install a Custom Kernel from file")
-    select_option "${options[@]}"
-    answer=$?
+    if [ $selected_disk == "/out/archlinux.img" ]; then
+      if [ ! -d "./out" ]; then
+        sudo mkdir ./out
+      fi
+      drive=./out/archlinux.img
+      sudo dd if=/dev/zero of=$drive bs=1M count=4096
+    else
+      confirm_disk
+    fi
+  else 
+    drive=$1
+  fi
 
-    if [ "$answer" = 0 ]; then
+  # Install boot partition and kernel
+  if [ -z $2 ]; then
+      title
+      colorecho "$GREEN" "Select a kernel to install:"
+      options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(Experimental) Googulator Midstream Kernel (Linux 6.2)" "Install a Custom Kernel from file")
+      select_option "${options[@]}"
+      answer=$?
+
+      if [ "$answer" = 0 ]; then
+        install_rkbsp
+      elif [ "$answer" = 1 ]; then
+        install_midstream
+      else
+        echo "Enter the path for custom kernel (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
+        read answer
+        boot_image=answer
+      fi
+  else 
+    if [ "$2" = "rkbsp" ]; then
       install_rkbsp
-    elif [ "$answer" = 1 ]; then
+    elif [ "$2" = "midstream" ]; then
       install_midstream
     else
-      echo "Enter the path for custom kernel (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
-      read answer
-      boot_image=answer
+      boot_image=$2
     fi
-else 
-  if [ "$2" = "rkbsp" ]; then
-    install_rkbsp
-  elif [ "$2" = "midstream" ]; then
-    install_midstream
-  else
-    boot_image=$2
   fi
-fi
 
-################################################################
-# Main Program
+  ################################################################
+  # Main Setup
 
-title
-root_mount_dir=$(mktemp -d)
-boot_mount_dir=$(mktemp -d)
-boot_img_mount_dir=$(mktemp -d)
+  title
+  root_mount_dir=$(mktemp -d)
+  boot_mount_dir=$(mktemp -d)
+  boot_img_mount_dir=$(mktemp -d)
 
-# Unmount all partitions of the specified drive
-colorecho "$GREEN" "Unmounting disk ..."
-partitions=$(ls ${drive}* 2>/dev/null)
-if [ "$partitions" ]; then
-  for partition in $partitions; do
-    sudo umount $partition 2>/dev/null || true
-  done
-fi
+  # Unmount all partitions of the specified drive
+  colorecho "$GREEN" "Unmounting disk ..."
+  partitions=$(ls ${drive}* 2>/dev/null)
+  if [ "$partitions" ]; then
+    for partition in $partitions; do
+      sudo umount $partition 2>/dev/null || true
+    done
+  fi
 
-# Create GPT table and partitions
-colorecho "$GREEN" "Formatting and partitioning disk ..."
-echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
-sudo parted $drive mkpart primary fat32 0% 500MB
-sudo parted $drive mkpart primary ext4 500MB 100%
+  # Create GPT table and partitions
+  colorecho "$GREEN" "Formatting and partitioning disk ..."
+  echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
+  sudo parted $drive mkpart primary fat32 0% 500MB
+  sudo parted $drive mkpart primary ext4 500MB 100%
 
-# Find the partitions
-if [ -e $drive"1" ]; then
-	root_partition=$drive"2"
-	boot_partition=$drive"1"
-else
-	root_partition=$drive"p2"
-	boot_partition=$drive"p1"	
-fi
+  # Find the partitions
+  if [ -e $drive"1" ]; then
+    root_partition=$drive"2"
+    boot_partition=$drive"1"
+  else
+    root_partition=$drive"p2"
+    boot_partition=$drive"p1"	
+  fi
 
-# Format the partitions
-echo -e 'y' |sudo mkfs.ext4 $root_partition 
-sudo mkfs.fat -F32 $boot_partition
+  # Format the partitions
+  echo -e 'y' |sudo mkfs.ext4 $root_partition 
+  sudo mkfs.fat -F32 $boot_partition
 
-title
+  title
 
-# Mount the partitions
-colorecho "$GREEN" "Mounting partition for install ..."
-sudo mount $root_partition $root_mount_dir
-sudo mount $boot_partition $boot_mount_dir
+  # Mount the partitions
+  colorecho "$GREEN" "Mounting partition for install ..."
+  sudo mount $root_partition $root_mount_dir
+  sudo mount $boot_partition $boot_mount_dir
 
-# Download and extract the latest ArchLinux tarball
-colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
-curl -LJO $rootfs_url
+  # Download and extract the latest ArchLinux tarball
+  colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
+  curl -LJO $rootfs_url
 
-colorecho "$GREEN" "Copying Arch Linux rootfs ..."
-sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
+  colorecho "$GREEN" "Copying Arch Linux rootfs ..."
+  sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
 
-title
-# Extract the boot image
-colorecho "$GREEN" "Copying Boot Partition ..."
-if [ ${boot_image: -4} == ".img" ]; then
-  sudo mount $boot_image $boot_img_mount_dir
-  sudo cp -R $boot_img_mount_dir/* $boot_mount_dir
-  sudo umount $boot_img_mount_dir
-  rm -rf $boot_img_mount_dir
-elif [ ${boot_image: -7} == ".tar.gz" ]; then
-  # Extract the .tar.gz file to a temporary directory
-  boot_tar_dir=$(mktemp -d)
-  sudo tar -xf "$boot_image" -C "$boot_tar_dir"
+  title
+  # Extract the boot image
+  colorecho "$GREEN" "Copying Boot Partition ..."
+  if [ ${boot_image: -4} == ".img" ]; then
+    sudo mount $boot_image $boot_img_mount_dir
+    sudo cp -R $boot_img_mount_dir/* $boot_mount_dir
+    sudo umount $boot_img_mount_dir
+    rm -rf $boot_img_mount_dir
+  elif [ ${boot_image: -7} == ".tar.gz" ]; then
+    # Extract the .tar.gz file to a temporary directory
+    boot_tar_dir=$(mktemp -d)
+    sudo tar -xf "$boot_image" -C "$boot_tar_dir"
 
-  # Copy contents to boot partition
-  sudo cp -r "$boot_tar_dir"/* "$boot_mount_dir"
+    # Copy contents to boot partition
+    sudo cp -r "$boot_tar_dir"/* "$boot_mount_dir"
+
+    # Remove the temporary directory
+    sudo rm -rf "$boot_tar_dir"
+  else
+    # Copy contents to boot partition
+    sudo cp -r "$boot_image"/* "$boot_mount_dir"
+  fi
+
+  colorecho "$GREEN" "Updating extlinux.conf ..."
+  # Find the UUIDs of the root partition
+  root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
+  root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
+
+  # Copy extlinux template
+  if [ ! -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
+    sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
+  fi
+
+  # Change UUID for extlinux.conf
+  echo "Updating UUID for extlinux.conf ..."
+  sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+  sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+
+  echo "Info : Root partition UUID: $root_uuid"
+  echo "Info : Root partition PARTUUID: $root_part_uuid"
+
+  title
+  # Copy kernel files
+  colorecho "$GREEN" "Copying Kernel Files ..."
+  sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
+  sudo rm -rf $root_mount_dir/boot/*
+  sudo rm -rf $pkg_tar_dir/Kernel/linux $pkg_tar_dir/Kernel/*/initramfs* $pkg_tar_dir/Kernel/*/vmlinuz*
+
+  colorecho "$GREEN" "Copying Installer ..."
+
+  # Download Installer
+  curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer
+
+  # Copy arch-rock-installer
+  sudo chmod +x arch-rock-installer
+  sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/arch-rock-installer"
+
+  # Copy pre-compiled packages
+  sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
+  sudo cp -r "$pkg_tar_dir"/* "$root_mount_dir/usr/lib/compiled-packages/"
 
   # Remove the temporary directory
-  sudo rm -rf "$boot_tar_dir"
-else
-  # Copy contents to boot partition
-  sudo cp -r "$boot_image"/* "$boot_mount_dir"
+  sudo rm -rf "$pkg_tar_dir"
+
+  # Unmount the boot and root partitions
+  sudo umount $boot_mount_dir $root_mount_dir
+
+  # Clean up
+  colorecho "$YELLOW" "Cleaning up temporary files ..."
+  sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer compiled-pkg-*.tar.xz
+
+  title
+  colorecho "$GREEN" "Created Arch Linux Installer to $drive."
+  colorecho "$GREEN" "You may now unmount $drive and boot into the system for installation."
+  colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run arch-rock-installer."
+  echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
+
 fi
-
-colorecho "$GREEN" "Updating extlinux.conf ..."
-# Find the UUIDs of the root partition
-root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
-root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
-
-# Copy extlinux template
-if [ ! -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
-  sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
-fi
-
-# Change UUID for extlinux.conf
-echo "Updating UUID for extlinux.conf ..."
-sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
-sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
-
-echo "Info : Root partition UUID: $root_uuid"
-echo "Info : Root partition PARTUUID: $root_part_uuid"
-
-title
-# Copy kernel files
-colorecho "$GREEN" "Copying Kernel Files ..."
-sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
-sudo rm -rf $root_mount_dir/boot/*
-sudo rm -rf $pkg_tar_dir/Kernel/linux $pkg_tar_dir/Kernel/*/initramfs* $pkg_tar_dir/Kernel/*/vmlinuz*
-
-colorecho "$GREEN" "Copying Installer ..."
-
-# Download Installer
-curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer
-
-# Copy arch-rock-installer
-sudo chmod +x arch-rock-installer
-sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/arch-rock-installer"
-
-# Copy pre-compiled packages
-sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
-sudo cp -r "$pkg_tar_dir"/* "$root_mount_dir/usr/lib/compiled-packages/"
-
-# Remove the temporary directory
-sudo rm -rf "$pkg_tar_dir"
-
-# Unmount the boot and root partitions
-sudo umount $boot_mount_dir $root_mount_dir
-
-# Clean up
-colorecho "$YELLOW" "Cleaning up temporary files ..."
-sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer compiled-pkg-*.tar.xz
-
-title
-colorecho "$GREEN" "Created Arch Linux Installer to $drive."
-colorecho "$GREEN" "You may now unmount $drive and boot into the system for installation."
-colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run arch-rock-installer."
-echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
 
 ################################################################
