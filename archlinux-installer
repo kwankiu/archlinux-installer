@@ -238,6 +238,7 @@ else
       fi
     else
       colorecho "$RED" "Error: Only Debian / Ubuntu Based Distro on WSL2 are supported."
+      exit 1
     fi
   fi
 
