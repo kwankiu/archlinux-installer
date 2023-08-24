@@ -104,11 +104,11 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 
 ### Options
 
-| Options | Description |
-| ------------- | ------------- |
-| `-h` or `--help` |  Usage and Infomation of this configuration utility. |
-| `--run-only` | Skip installing this configuration utility to PATH (/usr/bin). |
-| `--update-now` | Install latest version of configuration utility immediately without checking updates. |
+| Options | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `-h` or `--help` | N/A | Usage and Infomation of this configuration utility. |
+| `-r` or `--run` | N/A | Run without installing this configuration utility to PATH (/usr/bin). |
+| `-u` or `--update` | `<channel>` | Install latest configuration utility without checking updates. channel options: main, dev. |
 
 ### Features
 
