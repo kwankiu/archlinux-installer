@@ -701,18 +701,24 @@ performance_features() {
 soc_profile() {
 
     title "Arch Rock Configuration Utility - SoC Performance Profile"
-    colorecho "$GREEN" "Current Profile: Performance"
+    colorecho "$GREEN" "Current Profile: "
+    colorecho "$BLUE" "$(cat /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor)"
+    colorecho "$BLUE" "$(cat /sys/class/devfreq/dmc/governor)"
+    colorecho "$BLUE" "$(cat /sys/class/devfreq/fb000000.gpu/governor)"
     echo ""
-    options=("Performance - Run SoC at full performance" "Ondemand - Run SoC on CPU usage demand" "Powersave - Run SoC on Power Saving Mode" "Return to Main Menu")
+    options=("Performance - Run SoC at full performance" "On Demand - Run SoC on CPU usage demand" "Power Save - Run SoC on Power Saving Mode" "Return to Main Menu")
     select_option "${options[@]}"
     choice=$?
 
     if [ "$choice" = "0" ]; then
         echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
+         colorecho "$GREEN" "Profile set to Performance"
     elif [ "$choice" = "1" ]; then
         echo ondemand | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor && echo dmc_ondemand | sudo tee /sys/class/devfreq/dmc/governor && echo simple_ondemand | sudo tee /sys/class/devfreq/fb000000.gpu/governor
+        colorecho "$GREEN" "Profile set to On Demand"
     elif [ "$choice" = "2" ]; then
         echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
+        colorecho "$GREEN" "Profile set to Power Save"
     else
         config_options
     fi
@@ -753,9 +759,9 @@ fan_control() {
         cpu_freq_list+=("$((cpu_freq_cmd[i] / 1000))")
     done
 
-    colorecho "$GREEN" "Clock Speed (Performance Core 0): ${temp_list[4]}MHz"
-    colorecho "$GREEN" "Clock Speed (Performance Core 1): ${temp_list[6]}MHz"
-    colorecho "$GREEN" "Clock Speed (Efficient Core): ${temp_list[0]}MHz"
+    colorecho "$GREEN" "Clock Speed (Performance Core 0): ${cpu_freq_list[4]}MHz"
+    colorecho "$GREEN" "Clock Speed (Performance Core 1): ${cpu_freq_list[6]}MHz"
+    colorecho "$GREEN" "Clock Speed (Efficient Core): ${cpu_freq_list[0]}MHz"
     colorecho "$GREEN" "SoC Temp (${temp_type_list[0]}): ${temp_list[0]}C"
     colorecho "$GREEN" "CPU Temp (${temp_type_list[1]}): ${temp_list[1]}C"
     colorecho "$GREEN" "CPU Temp (${temp_type_list[2]}): ${temp_list[2]}C"
@@ -786,13 +792,18 @@ fan_control() {
     if [ "$choice" = "1" ]; then
         if [[ -e "/lib/systemd/system/fan-control.service" ]]; then
             if [ "$fanstatus" = 1 ]; then
-                colorecho "$GREEN" "Disabling PWM Fan Control ..."
+                colorecho "$GREEN" "Stopping PWM Fan Control ..."
                 sudo systemctl stop fan-control
+                sleep 2
+                colorecho "$GREEN" "Disabling PWM Fan Control ..."
                 sudo systemctl disable fan-control
+                colorecho "$GREEN" "Disabled PWM Fan Control, a reboot maybe required to take effect."
             else
                 colorecho "$GREEN" "Enabling PWM Fan Control ..."
                 sudo systemctl enable fan-control
-                systemctl start fan-control
+                sleep 2
+                colorecho "$GREEN" "Starting PWM Fan Control ..."
+                sudo systemctl start fan-control
             fi
         else
             if ! [ -x "$(command -v dpkg)" ]; then
@@ -814,7 +825,7 @@ fan_control() {
             sudo systemctl enable fan-control
 
             colorecho "$GREEN" "Starting fan-control.service ..."
-            systemctl start fan-control
+            sudo systemctl start fan-control
         fi
     else
         config_options
