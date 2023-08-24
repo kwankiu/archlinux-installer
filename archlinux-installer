@@ -230,7 +230,7 @@ else
   if [ ! -z "$WSL_DISTRO_NAME" ]; then
     colorecho "$YELLOW" "Warning: Running on WSL2 is experimental. Only USB Devices are supported."
     if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ] || [ -x "$(command -v apt)" ]; then
-      if ! [ -x "$(command -v usbip)" ]
+      if ! [ -x "$(command -v usbip)" ]; then
         colorecho "$GREEN" "Installing USB Tools for WSL2"
         winget.exe install usbipd
         sudo apt install linux-tools-virtual hwdata -y
