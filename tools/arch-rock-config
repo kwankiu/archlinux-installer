@@ -670,8 +670,8 @@ performance_features() {
     title "Arch Rock Configuration Utility - Performance & Features"
     options=("SoC Performance Profile - Available options are performance, ondemand and powersave")
     options+=("PWM Fan Control - Configure PWM Fan-control service")
-    options+=("Overclocking - Configure rk3588-unlock-opps overlay which increases CPU supply & CPU VDD supply")
-    options+=("Overlay - Configure Device Tree Overlay")
+    #options+=("Overclocking - Configure rk3588-unlock-opps overlay which increases CPU supply & CPU VDD supply")
+    #options+=("Overlay - Configure Device Tree Overlay")
     options+=("Return to Main Menu")
     select_option "${options[@]}"
     choice=$?
@@ -684,12 +684,12 @@ performance_features() {
         1)
             fan_control
             ;;
-        2)
-            overclocking
-            ;;
-        3)
-            overlays
-            ;;
+        #2)
+            #overclocking
+            #;;
+        #3)
+            #overlays
+            #;;
         *)
             config_options
             ;;
@@ -781,7 +781,7 @@ fan_control() {
             options+=("Enable PWM Fan Control")
         fi
 
-        options+=("Configure Fan Profile")
+        #options+=("Configure Fan Profile")
     else
         options+=("Install PWM Fan Control")
     fi
@@ -794,14 +794,15 @@ fan_control() {
             if [ "$fanstatus" = 1 ]; then
                 colorecho "$GREEN" "Stopping PWM Fan Control ..."
                 sudo systemctl stop fan-control
-                sleep 2
+
                 colorecho "$GREEN" "Disabling PWM Fan Control ..."
                 sudo systemctl disable fan-control
+
                 colorecho "$GREEN" "Disabled PWM Fan Control, a reboot maybe required to take effect."
             else
                 colorecho "$GREEN" "Enabling PWM Fan Control ..."
                 sudo systemctl enable fan-control
-                sleep 2
+
                 colorecho "$GREEN" "Starting PWM Fan Control ..."
                 sudo systemctl start fan-control
             fi
