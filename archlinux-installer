@@ -103,11 +103,19 @@ title() {
 # Function to display a list of available disks
 list_disks() {
   options=()
-  disks=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
-  for ((i=0; i<${#disks[@]}; i+=3)); do
-    model=${disks[i+2]//\\x20/ }  # Replace escaped spaces with actual spaces
-    options+=("$((i/3+1))) /dev/${disks[i]} - $model (${disks[i+1]})")
-  done
+
+  # For WSL
+  if [ ! -z "$WSL_DISTRO_NAME" ]; then
+    disks=($(powershell.exe 'if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) { Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; } usbipd wsl list'))
+    options+=("WSL2 WIP")
+  else
+    disks=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
+    for ((i=0; i<${#disks[@]}; i+=3)); do
+      model=${disks[i+2]//\\x20/ }  # Replace escaped spaces with actual spaces
+      options+=("$((i/3+1))) /dev/${disks[i]} - $model (${disks[i+1]})")
+    done
+  fi
+
   options+=("$((i/3+1))) Create an (.img) image")
   options+=("$((i/3+2))) Enter disk path manually")
 
@@ -220,10 +228,13 @@ else
 
   # For WSL
   if [ ! -z "$WSL_DISTRO_NAME" ]; then
-    winget.exe install usbipd
-    sudo apt install linux-tools-virtual hwdata
-    sudo update-alternatives --install /usr/local/bin/usbip usbip `ls /usr/lib/linux-tools/*/usbip | tail -n1` 20
-    exit 1
+    colorecho "$YELLOW" "Warning: Running on WSL is experimental. Only USB Devices are supported."
+    if [ ! -e "/usr/lib/linux-tools/*/usbip" ]; then
+      colorecho "$GREEN" "Installing USB Tools for WSL2"
+      winget.exe install usbipd
+      sudo apt install linux-tools-virtual hwdata -y
+      sudo update-alternatives --install /usr/local/bin/usbip usbip `ls /usr/lib/linux-tools/*/usbip | tail -n1` 20
+    fi
   fi
 
   # Check if parted is installed
