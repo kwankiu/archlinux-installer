@@ -218,6 +218,14 @@ else
 
 # Install required packages
 
+  # For WSL
+  if [ ! -z "$WSL_DISTRO_NAME" ]; then
+    winget.exe install usbipd
+    sudo apt install linux-tools-virtual hwdata
+    sudo update-alternatives --install /usr/local/bin/usbip usbip `ls /usr/lib/linux-tools/*/usbip | tail -n1` 20
+    exit 1
+  fi
+
   # Check if parted is installed
   if ! [ -x "$(command -v parted)" ]; then
     # Check Linux distribution
