@@ -101,13 +101,45 @@ title() {
 
 ################################################################
 # Function to display a list of available disks
-list_disks() {
+
+wsl_disks() {
+    local i
+    k=1
+    wsl_drive=()
+    for i in "${output[@]}"; do
+        # Split the data
+        IFS=" " read -r part1 part2 part3 <<< "$i"
+        
+        # Calculate storage size in GB
+        part2="$((part2 / 1024 / 1024 / 1024)) GB"
+        
+        # Trim leading and trailing whitespace from part3
+        part3=$(echo "$part3" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        
+        # Construct the option string
+        option="${part1} - ${part3} (${part2})"
+
+        # Add to Drive List
+        wsl_drive+=("${part1}")
+        
+        # Add the option to the options array
+        options+=("${k}) $option")
+        k=$((k+1))
+    done
+}
+
+list_wsl() {
   options=()
 
   # For WSL
   if [ ! -z "$WSL_DISTRO_NAME" ]; then
-    disks=($(powershell.exe 'if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) { Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; } usbipd wsl list'))
-    options+=("WSL2 WIP")
+    # Get USB Device List from PowerShell
+    IFS=$'\n' read -d '' -ra output <<< "$(powershell.exe 'GET-CimInstance -query "SELECT MODEL,SIZE from Win32_DiskDrive"')"
+    output=("${output[@]:3:${#output[@]}-5}")
+
+    wsl_disks   
+    # set i to k and adjust i to match below
+    i=$((k*3-1))
   else
     disks=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
     for ((i=0; i<${#disks[@]}; i+=3)); do
@@ -116,6 +148,31 @@ list_disks() {
     done
   fi
 
+  select_option "${options[@]}"
+  choice=$?
+  choice=$((choice+1))
+
+  if [[ $choice =~ ^[0-99]+$ && $choice -ge 1 && $choice -le $((i/3+2)) ]]; then
+    if [[ $choice -le $((i/3)) ]]; then
+      # For WSL
+      if [ ! -z "$WSL_DISTRO_NAME" ]; then
+       colorecho "$GREEN" "Selected $((choice-1)) Disk ${wsl_drive[(choice-1)]}"
+       powershell.exe 'if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) { Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; } wsl --mount '${wsl_drive[(choice-1)]}
+      fi
+      selected_disk="/dev/${disks[((choice-1)*3)]}"
+    fi
+  else
+    colorecho "$RED" "Invalid choice $choice. Please select a valid option."
+  fi
+}
+
+list_disks() {
+  options=()
+  disks=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
+  for ((i=0; i<${#disks[@]}; i+=3)); do
+    model=${disks[i+2]//\\x20/ }  # Replace escaped spaces with actual spaces
+    options+=("$((i/3+1))) /dev/${disks[i]} - $model (${disks[i+1]})")
+  done
   options+=("$((i/3+1))) Create an (.img) image")
   options+=("$((i/3+2))) Enter disk path manually")
 
@@ -137,6 +194,7 @@ list_disks() {
     colorecho "$RED" "Invalid choice $choice. Please select a valid option."
   fi
 }
+
 
 confirm_disk() {
     drive=$selected_disk
@@ -228,14 +286,9 @@ else
 
   # For WSL
   if [ ! -z "$WSL_DISTRO_NAME" ]; then
-    colorecho "$YELLOW" "Warning: Running on WSL2 is experimental. Only USB Devices are supported."
+    colorecho "$YELLOW" "Warning: Running on WSL2 is experimental."
     if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ] || [ -x "$(command -v apt)" ]; then
-      if ! [ -x "$(command -v usbip)" ]; then
-        colorecho "$GREEN" "Installing USB Tools for WSL2"
-        winget.exe install usbipd
-        sudo apt install linux-tools-virtual hwdata -y
-        sudo update-alternatives --install /usr/local/bin/usbip usbip `ls /usr/lib/linux-tools/*/usbip | tail -n1` 20
-      fi
+      colorecho "$YELLOW" "Make sure this is your default WSL distro, else it wont works."
     else
       colorecho "$RED" "Error: Only Debian / Ubuntu Based Distro on WSL2 are supported."
       exit 1
@@ -280,8 +333,17 @@ else
 
   # Choose drive to install / create .img image
   if [ -z $1 ]; then
-    colorecho "$GREEN" "Select a disk to install or create an image:"
-    list_disks
+    if [ ! -z "$WSL_DISTRO_NAME" ]; then
+      colorecho "$GREEN" "Mount a Disk to Continue:"
+      list_wsl
+      colorecho "$GREEN" "If you sees an error, it is normal when your disk doesnt have a windows supported partiton."
+      colorecho "$GREEN" "Just Pick the disk that we just mounted."
+      colorecho "$GREEN" "Select a disk to install or create an image:"
+      list_disks
+    else
+      colorecho "$GREEN" "Select a disk to install or create an image:"
+      list_disks
+    fi
     title
     if [ $selected_disk == "/out/archlinux.img" ]; then
       if [ ! -d "./out" ]; then
