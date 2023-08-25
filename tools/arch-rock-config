@@ -971,6 +971,9 @@ user_localization() {
             timezone
             ;;
         4)
+            keyboard
+            ;;
+        5)
             wifi_country
             ;;
         *)
@@ -980,9 +983,190 @@ user_localization() {
 
 }
 
-disable_sudopw() {
-    #%wheel ALL=(ALL) NOPASSWD: ALL'
+# Function to manage user accounts
+manage_user() {
+    title "Arch Rock Configuration Utility - Manage User"
+    
+    # List all user accounts
+    real_users=($(getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 {print $1}'))
+
+    # Prompt to add a new user
+    select_options=("Return to User & Localization Menu" "Add User")
+    select_options+=("${real_users[@]}")
+    
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            user_localization
+            ;;
+        1)
+            title "Arch Rock Configuration Utility - Add New User"
+            read -p "Enter username for the new user: " new_user
+            sudo useradd -m "$new_user"
+            sudo passwd "$new_user"
+            sudo usermod -aG wheel "$new_user"
+            sudo usermod -aG video "$new_user"
+            sudo usermod -aG audio "$new_user"
+            sudo usermod -aG games "$new_user"
+            sudo usermod -aG log "$new_user"
+            sudo usermod -aG lp "$new_user"
+            sudo usermod -aG optical "$new_user"
+            sudo usermod -aG power "$new_user"
+            sudo usermod -aG scanner "$new_user"
+            sudo usermod -aG storage "$new_user"
+            ;;
+        *)
+            selected_user=${real_users[$((choice - 2))]}
+            title "Arch Rock Configuration Utility - Manage $selected_user"
+            colorecho "$GREEN" "User: $selected_user"
+            echo ""
+
+            # Perform actions for the selected user (if needed)
+            options=("Return to Manage User Menu" "Change User Password")
+            sudoers_file="/etc/sudoers.d/99_nopasswd_$selected_user"
+            if sudo [ -e "$sudoers_file" ]; then
+                options+=("Enable Sudo Password")
+            else
+                options+=("Disable Sudo Password")
+            fi
+            select_option "${options[@]}"
+            choice=$?
+            case $choice in
+                0)
+                    manage_user
+                    ;;
+                1)
+                    sudo passwd "$selected_user"
+                    ;;
+                2)  
+                    if sudo [ -e "$sudoers_file" ]; then
+                    sudo rm -rf $sudoers_file
+                    colorecho "$GREEN" "Enabled Sudo Password for $selected_user"
+                    else
+                        sudo sh -c "echo '$selected_user ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99_nopasswd_$selected_user"
+                        colorecho "$GREEN" "Disabled Sudo Password for $selected_user"
+                    fi
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+# Function to select and generate locale
+locale() {
+    title "Arch Rock Configuration Utility - Locale"
+    
+    # List available locales
+    colorecho "$GREEN" "Generated Locales:"
+    localectl list-locales
     echo ""
+
+    # Prompt to select and generate locale
+    select_options=("List All Supported Locales" "Return to User & Localization Menu")
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            # Read available locales from file and add numbers
+            locales=($(cat /usr/share/i18n/SUPPORTED))
+            numbered_locales=()
+            for ((i = 0; i < ${#locales[@]}; i++)); do
+                echo "$((i + 1))) ${locales[$i]}"
+            done
+    
+            # Display numbered locales
+            printf '%s\n' "${numbered_locales[@]}"
+            read -p "Enter the number of the locale to generate: " chosen_number
+            chosen_locale=${locales[$((chosen_number - 1))]}
+            sudo localectl set-locale "$chosen_locale"
+            sudo locale-gen
+            ;;
+        *)
+            user_localization
+            ;;
+    esac
+}
+
+# Function to manage fonts
+fonts() {
+    title "Arch Rock Configuration Utility - Fonts"
+    
+    # Prompt to install fonts
+    select_options=("Install Noto Fonts (including CJK and Emoji) - Support Asian Characters" "Install TTF Fonts from File" "Return to User & Localization Menu")
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
+            ;;
+        1)
+            read -p "Enter the path to the TTF font file: " font_path
+            sudo cp "$font_path" /usr/share/fonts/TTF/
+            sudo fc-cache -f -v
+            ;;
+        *)
+            user_localization
+            ;;
+    esac
+}
+
+# Function to change time zone and date/time
+timezone() {
+    title "Arch Rock Configuration Utility - Time Zone"
+
+    # Get current time zone and network time zone
+    current_timezone=$(timedatectl show --property=Timezone --value)
+    network_timezone=$(timedatectl show-timesync --property=NTP --value)
+    
+    echo "Current Time Zone: $current_timezone"
+    echo "Network Time Zone: $network_timezone"
+
+    select_options=("Return to User & Localization Menu" "Change Time Zone" "Set Time Manually")
+
+    if [ "$current_timezone" != "$network_timezone" ]; then
+        select_options+=("Synchronize Time Zone with Network")
+    fi
+
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            user_localization
+            ;;
+        1)
+            echo "Current Time Zone: $current_timezone"
+            read -p "Enter new time zone (e.g., Asia/Tokyo): " new_timezone
+            sudo timedatectl set-timezone "$new_timezone"
+            echo "Time Zone updated to $new_timezone"
+            sudo timedatectl set-ntp true
+            ;;
+        2)
+            read -p "Enter the new date and time in format 'YYYY-MM-DD HH:MM:SS': " new_datetime
+            sudo timedatectl set-time "$new_datetime"
+            ;;
+        *)
+            sudo timedatectl set-timezone "$network_timezone"
+            echo "Time Zone synchronized with network: $network_timezone"
+            sudo timedatectl set-ntp true
+            ;;
+    esac
+}
+
+# Function to select WiFi country
+wifi_country() {
+    title "Arch Rock Configuration Utility - WiFi Country"
+    
+    # Prompt to select WiFi country
+    read -p "Enter the WiFi country code (e.g., US): " wifi_country_code
+    sudo iw reg set "$wifi_country_code"
+    sudo systemctl restart NetworkManager
+    echo "WiFi country code set to $wifi_country_code"
+    sleep 2
 }
 
 ################################################################
