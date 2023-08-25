@@ -132,22 +132,31 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 #### System Maintenance
 | Features | Additional Arguments | Description |
 | ------------- | ------------- | ------------- |
-| `package-updates` |  N/A |  Check & Perform Selective / Full System Upgrade. |
-| `install-kernel` |  `<kernel>` |  Re-install / Replace Linux Kernel. kernel options: rkbsp, rkbsp-git, midstream. |
-| `flash-bootloader` |  `<bootloader>` |  Flash Latest SPI Bootloader. bootloader options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian. |
+| `upgrade` |  N/A | Check & Perform Selective / Full System Upgrade. |
+| `install-kernel` |  `<kernel>` | Re-install / Replace Linux Kernel. kernel options: rkbsp, rkbsp-git, midstream. |
+| `flash-bootloader` |  `<bootloader>` | Flash Latest SPI Bootloader. bootloader options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian. |
 
 #### Manage Packages
 | Features | Additional Arguments | Description |
 | ------------- | ------------- | ------------- |
-| `install-software` |  `<package>` |  Install Basic Software / RK3588 Specified / Customized Packages. |
-| `install-kernel` |  `<package>` |  Install / Downgrade any Arch Linux Packages from Archive. |
+| `install` |  `<package>` | Install Basic Software / RK3588 Specified / Customized Packages. |
+| `install-kernel` |  `<package>` | Install / Downgrade any Arch Linux Packages from Archive. |
 
 #### Performance & Features
 | Features | Additional Arguments | Description |
 | ------------- | ------------- | ------------- |
 | `soc` |  `<option>` | Manage SoC Settings. options: `performance`, `ondemand`, `powersave` (and `status` for SoC Monitor). |
-| `fan` |  `<option>` |  Configure PWM Fan-control. options: `install`, `enable`, `disable` and `status`. |
+| `fan` |  `<option>` | Configure PWM Fan-control. options: `install`, `enable`, `disable` and `status`. |
 
+#### User & Localization
+| Features | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `user` |  N/A | Add, Remove and Change User Account Settings. |
+| `locale` |  N/A | Generate Locale Settings. |
+| `font` |  N/A | Install Fonts, TTF, Non-English Characters, Special Characters / Emoji. |
+| `time` |  N/A | Change Time Zone, Current Date and Time. |
+| `keyboard` |  N/A | Change Keyboard Layout. |
+| `wifi` |  N/A | Change WiFi Country Settings. |
 
 # More Information
 ## Linux Kernel
