@@ -27,6 +27,9 @@ edk2_url="https://api.github.com/repos/edk2-porting/edk2-rk3588/releases/latest"
 zero_url="https://dl.radxa.com/rock5/sw/images/others/zero.img.gz"
 armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_loader.img"
 
+# URL of Arch Linux ARM Archive
+alaa_url="https://alaa.ad24.cz/"
+
 # Directory for storing source files
 source_repo_dir="source-repo-dir"
 
@@ -683,7 +686,37 @@ install_packages() {
 
 # Install Packages from Archive
 downgrade_packages() {
-    echo "Not implemented"
+    title "Arch Rock Configuration Utility - Downgrade Packages"
+
+    if [ -z "$1" ]; then
+        read -p "Enter package to downgrade: " dgpkg
+    else
+        dgpkg=$1
+    fi
+
+    if [ -z "$2" ]; then
+        nopkg=15
+    else
+        nopkg=$2
+    fi
+    
+
+    dgpkgfb=$(echo $dgpkg | cut -b 1)
+    which_url="${alaa_url}packages/${dgpkgfb}/${dgpkg}/"
+    colorecho "$GREEN" "Fetching $which_url ..."
+    #latest_image=$(curl -s "$which_url" | grep -o '*-aarch64.pkg.tar.xz' | head -n 1)
+    dgpkg_list=$(curl -s "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o ${dgpkg}.*-aarch64.pkg.tar.xz)
+    dgpkg_date=$(curl -s "$which_url" | grep -v '.sig' | grep -o "${dgpkg}.*-aarch64.pkg.tar.xz.*<td class=\"date\">.*</td>" | grep -o "<td class=\"date\">.*</td>" | awk -F'<td class="date">|</td>' '{print $2}')
+
+    #paste -d ' ' <(echo "$dgpkg_list") <(echo "$dgpkg_date") | sort -k 2,2 -r
+    dgpkg_list=($(paste -d ' ' <(echo "$dgpkg_list") <(echo "$dgpkg_date") | sort -k 2,2 -r | awk '{print $1}' | head -n $nopkg))
+    select_option "${dgpkg_list[@]}"
+    choice=$?
+    colorecho "$GREEN" "Downloading package ${dgpkg_list[choice]} ..."
+    curl -LJO ${which_url}${dgpkg_list[choice]}
+    colorecho "$GREEN" "Installing package ${dgpkg_list[choice]} ..."
+    sudo pacman -U ${dgpkg_list[choice]}
+    rm -rf ${dgpkg_list[choice]}
 }
 
 ################################################################
@@ -1267,7 +1300,7 @@ elif [ "$1" = "install" ]; then
     install_packages "$2"
 
 elif [ "$1" = "downgrade" ]; then
-    downgrade_packages "$2"
+    downgrade_packages "$2" "$3"
 
 ### Features - Performance & Features ###
 elif [ "$1" = "soc" ]; then
