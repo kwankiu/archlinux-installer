@@ -182,6 +182,15 @@ install_from_source() {
 
 }
 
+install_pkg_from_url() {
+    colorecho "$GREEN" "Downloading package from $1 ..."
+    curl -LJO $1
+    ipkgname=$(basename $1)
+    colorecho "$GREEN" "Installing package $ipkgname ..."
+    sudo pacman -U $ipkgname
+    rm -rf $ipkgname
+}
+
 ################################################################
 # Functions for Install Kernel
 
@@ -631,6 +640,26 @@ install_packages() {
 
     title "Arch Rock Configuration Utility - Install / Update Software"
 
+    category=("Web - Surf the Internet" "Communication - Connect with friends, family, teams" "Suites - Office & Productivity Software" "Multimedia - Audio, Video, Graphics Software" "Gaming / Emulation / Virtualization Software" "Development Tools - Editors, IDEs, Build Tools" "Misc - Firmware Driver, other Tools and Software")
+    options=("Return to Main Menu")
+    options+=("$GREEN----------------------------------------------------" "$GREEN Install / Update Software (Press enter to select/deselect): " "$GREEN----------------------------------------------------$GREEN")
+    options+=("${category[@]}$NC")
+    
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = "0" ]; then
+        config_options
+    elif [ "$choice" = "1" ] || [ "$choice" = "2" ] || [ "$choice" = "3" ]; then
+        install_packages
+    else
+        install_pkg_category $choice
+    fi
+
+}
+
+install_pkg_category() {
+
     if [ "$1" = "--select" ]; then
         local selected_option="${poptions[$2]}"
 
@@ -641,47 +670,133 @@ install_packages() {
             options[$2]="[x] ${selected_option}"
             selection+=("$selected_option")
         fi
-    elif [ "$1" = "--category" ]; then
-        software_web=("firefox" "chromium" "ssh" "nodejs")
-        software_comm=()
-        software_suites=()
-        software_gaming=()
-        software_devtools=()
-        software_misc=("intel-ax210-fw" "pip")
-        #software_de=("gnome" "plasma" "budgie" "sway") 
-        #software_description=()
-            
+    else
+        selection=()
+        options=("Return to Category" "Install Selected Packages")
+        options+=("$GREEN Deselect All $NC")
+        poptions=("${options[@]}")
+
+        case $1 in
+            4)
+                categorytitle="Arch Rock Configuration Utility - Install Web"
+                update_list=("firefox" "chromium" "openssh" "nodejs")
+                ;;
+            5)
+                categorytitle="Arch Rock Configuration Utility - Install Communication"
+                update_list=("zoom" "teams" "telegram" "discord" "signal" "skype" "slack")
+                ;;
+            6)
+                categorytitle="Arch Rock Configuration Utility - Install Suites"
+                update_list=("libre-office" "wps-office" "only-office" "gnome-office")
+                ;;
+            7)
+                categorytitle="Arch Rock Configuration Utility - Install Multimedia"
+                update_list=("kodi" "vlc-player" "gimp" "inkscape" "audacity")
+                ;;
+            8)
+                categorytitle="Arch Rock Configuration Utility - Install Gaming / Emulation / Virtualization"
+                update_list=("box64" "box86" "steam" "malior-droid" "qemu-kvm")
+                ;;
+            9)
+                categorytitle="Arch Rock Configuration Utility - Install Development Tools"
+                update_list=("code" "atom" "sublime-text" "gnome-terminal" "konsole" "xterm" "git" "python-pipx" "python2") 
+                ;;
+            10)
+                categorytitle="Arch Rock Configuration Utility - Install Misc"
+                update_list=("intel-ax210-fw" "yay" "neofetch")
+                ;;
+        esac
+ 
         for ((i=0; i<${#update_list[@]}; i++)); do
             options+=("[ ] ${update_list[i]}")
             poptions+=("${update_list[i]}")
         done
-    else
-        selection=()
-        category=("Web - Surf the Internet" "Communication - Connect with friends, family, teams" "Suites - Office & Productivity Software" "Multimedia - Audio, Video, Graphics Software" "Gaming / Emulation / Virtualization Software" "Development Tools - Editors, IDEs, Build Tools" "Misc - Firmware Driver, other Tools and Software")
-        current_tree=()
-        options=("Return to Main Menu" "Install Selected Software")
-        options+=("$GREEN----------------------------------------------------" "$GREEN Install / Update Software (Press enter to select/deselect): " "$GREEN----------------------------------------------------$YELLOW" "Minimize All Category / Clear Selection $GREEN")
-        options+=("${category[@]}$NC")
-        poptions=("${options[@]}")
     fi
+
+    title "$categorytitle"
 
     select_option "${options[@]}"
     choice=$?
 
     if [ "$choice" = "0" ]; then
-        config_options
-    elif [ "$choice" = "1" ]; then
-        if [ -x "$(command -v yay)" ]; then
-            yay -S ${selection[*]}
-        else
-            sudo pacman -S ${selection[*]}
-        fi
-    elif [ "$choice" = "2" ] || [ "$choice" = "3" ] || [ "$choice" = "4" ] || [ "$choice" = "5" ]; then
         install_packages
+    elif [ "$choice" = "1" ]; then
+        install_selected_pkg
+    elif [ "$choice" = "2" ]; then
+        install_pkg_category
     else
-        install_packages --select $choice
+        install_pkg_category --select $choice
     fi
 
+}
+
+install_selected_pkg() {
+
+    for ((i=0; i<${#selection[@]}; i++)); do
+        echo " Install ${selection[i]}"
+        case ${selection[i]} in
+            "chromium")
+                install_pkg_from_url "https://github.com/kwankiu/archlinux-installer-rock5/releases/download/chromium/re2-1-20230301-1-aarch64.pkg.tar.xz"
+                install_pkg_from_url "https://github.com/kwankiu/archlinux-installer-rock5/releases/download/chromium/chromium-114.0.5735.198-1-aarch64.pkg.tar.xz"
+                ;;
+            "zoom")
+                colorecho "$RED" "Package not available"
+                ;;
+            "teams")
+                colorecho "$RED" "Package not available"
+                ;;
+            "telegram")
+                colorecho "$RED" "Package not available"
+                ;;
+            "discord")
+                colorecho "$RED" "Package not available"
+                ;;
+            "signal")
+                colorecho "$RED" "Package not available"
+                ;;
+            "skype")
+                colorecho "$RED" "Package not available"
+                ;;
+            "slack")
+                colorecho "$RED" "Package not available"
+                ;;
+            "only-office")
+                colorecho "$RED" "Package not available"
+                ;;
+            "box64")
+                colorecho "$RED" "Package not available"
+                ;;
+            "box86")
+                colorecho "$RED" "Package not available"
+                ;;
+            "steam")
+                colorecho "$RED" "Package not available"
+                ;;
+            "malior-droid")
+                colorecho "$RED" "Package not available"
+                ;;
+            "code")
+                install_from_source "https://aur.archlinux.org/visual-studio-code-bin.git"
+                ;;
+            "python2")
+                install_from_source "https://aur.archlinux.org/python2.git"
+                ;;
+            "intel-ax210-fw")
+                #wifi
+                sudo wget -P /lib/firmware https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-ty-a0-gf-a0-59.ucode
+                sudo mv /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm.bak
+                #bt
+                sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.sfi
+                sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.ddc
+                ;;
+            "yay")
+                install_from_source "https://aur.archlinux.org/yay-git.git"
+                ;;
+            *)
+                sudo pacman -S ${update_list[i]} --noconfirm
+                ;;
+        esac
+    done
 }
 
 # Install Packages from Archive
@@ -712,11 +827,8 @@ downgrade_packages() {
     dgpkg_list=($(paste -d ' ' <(echo "$dgpkg_list") <(echo "$dgpkg_date") | sort -k 2,2 -r | awk '{print $1}' | head -n $nopkg))
     select_option "${dgpkg_list[@]}"
     choice=$?
-    colorecho "$GREEN" "Downloading package ${dgpkg_list[choice]} ..."
-    curl -LJO ${which_url}${dgpkg_list[choice]}
-    colorecho "$GREEN" "Installing package ${dgpkg_list[choice]} ..."
-    sudo pacman -U ${dgpkg_list[choice]}
-    rm -rf ${dgpkg_list[choice]}
+
+    install_pkg_from_url ${which_url}${dgpkg_list[choice]}
 }
 
 ################################################################
@@ -1258,7 +1370,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     
     colorecho "$YELLOW" "Manage Packages"
     echo "install <package> : Install Basic Software / RK3588 Specified / Customized Packages."
-    echo "downgrade <package> : Install / Downgrade any Arch Linux Packages from Archive."
+    echo "downgrade <package> <index> : Install / Downgrade any Arch Linux Packages from Archive. <package>: package name <index>: index to show, default=15."
 
     colorecho "$YELLOW" "Performance & Features"
     echo "soc <option> : Manage SoC Settings. options: performance, ondemand, powersave (and status for SoC Monitor)."
