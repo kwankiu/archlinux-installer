@@ -1128,7 +1128,7 @@ timezone() {
     select_options=("Return to User & Localization Menu" "Change Time Zone" "Set Time Manually")
 
     if [ "$current_timezone" != "$network_timezone" ]; then
-        select_options+=("Synchronize Time Zone with Network")
+        select_options+=("Synchronize Time with Network")
     fi
 
     select_option "${select_options[@]}"
@@ -1157,16 +1157,52 @@ timezone() {
     esac
 }
 
-# Function to select WiFi country
+# Function to change keyboard layout
+keyboard() {
+    title "Arch Rock Configuration Utility - Keyboard Layout"
+
+    # Get current keyboard layout
+    current_layout=$(localectl status | grep "X11 Layout" | awk '{print $3}')
+    
+    echo "Current Keyboard Layout: $current_layout"
+    
+    # Prompt to select new keyboard layout
+    select_options=("Change Keyboard Layout" "Return to User & Localization Menu")
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            read -p "Enter new keyboard layout (e.g., us, de): " new_layout
+            sudo localectl set-x11-keymap "$new_layout"
+            echo "Keyboard Layout updated to $new_layout"
+            ;;
+        *)
+            user_localization
+            ;;
+    esac
+}
+
+
+# Function to change WiFi country
 wifi_country() {
     title "Arch Rock Configuration Utility - WiFi Country"
+
+    # Get available WiFi countries
+    wifi_countries=("Return to User & Localization Menu")
+    wifi_countries+=($(iw reg get | grep -o -E '^[A-Z]{2}'))
     
-    # Prompt to select WiFi country
-    read -p "Enter the WiFi country code (e.g., US): " wifi_country_code
-    sudo iw reg set "$wifi_country_code"
-    sudo systemctl restart NetworkManager
-    echo "WiFi country code set to $wifi_country_code"
-    sleep 2
+    # Display available WiFi countries and prompt to select
+    select_option "${wifi_countries[@]}"
+    choice=$?
+    
+    if [ "$choice" -ge 1 ] && [ "$choice" -le "${#wifi_countries[@]}" ]; then
+        selected_country=${wifi_countries[$((choice))]}
+        sudo iw reg set "$selected_country"
+        echo "WiFi Country updated to $selected_country"
+    else
+        user_localization
+    fi
 }
 
 ################################################################
