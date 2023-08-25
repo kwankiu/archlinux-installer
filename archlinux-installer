@@ -502,6 +502,10 @@ else
   # Unmount the boot and root partitions
   sudo umount $boot_mount_dir $root_mount_dir
 
+  if [ ! -z "$WSL_DISTRO_NAME" ]; then
+    wsl.exe --unmount \\$drive
+  fi
+
   # Clean up
   colorecho "$YELLOW" "Cleaning up temporary files ..."
   sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer compiled-pkg-*.tar.xz
