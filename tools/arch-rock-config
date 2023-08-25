@@ -1183,7 +1183,6 @@ keyboard() {
     esac
 }
 
-
 # Function to change WiFi country
 wifi_country() {
     title "Arch Rock Configuration Utility - WiFi Country"
@@ -1220,17 +1219,25 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 
     colorecho "$GREEN" "Features"
     colorecho "$YELLOW" "System Maintenance"
-    echo "package-updates : Check & Perform Selective / Full System Upgrade."
+    echo "upgrade : Check & Perform Selective / Full System Upgrade."
     echo "install-kernel <kernel> : Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream."
     echo "flash-bootloader <bootloader> : Flash Latest SPI Bootloader. <bootloader> options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian."
     
     colorecho "$YELLOW" "Manage Packages"
-    echo "install-software <package> : Install Basic Software / RK3588 Specified / Customized Packages."
+    echo "install <package> : Install Basic Software / RK3588 Specified / Customized Packages."
     echo "downgrade <package> : Install / Downgrade any Arch Linux Packages from Archive."
 
     colorecho "$YELLOW" "Performance & Features"
     echo "soc <option> : Manage SoC Settings. options: performance, ondemand, powersave (and status for SoC Monitor)."
     echo "fan <option> : Configure PWM Fan-control. options: install, enable, disable and status."
+
+    colorecho "$YELLOW" "User & Localization"
+    echo "user : Add, Remove and Change User Account Settings."
+    echo "locale : Generate Locale Settings."
+    echo "font : Install Fonts, TTF, Non-English Characters, Special Characters / Emoji."
+    echo "time : Change Time Zone, Current Date and Time."
+    echo "keyboard : Change Keyboard Layout."
+    echo "wifi : Change WiFi Country Settings."
     exit 1
 
 elif [ "$1" = "-r" ] || [ "$1" = "--run" ]; then
@@ -1246,7 +1253,7 @@ elif [ ! -e "/usr/bin/arch-rock-config" ] || [ "$1" = "-u" ] || [ "$1" = "--upda
     update_util --install
 
 ### Features - System Maintenance ###
-elif [ "$1" = "package-updates" ]; then
+elif [ "$1" = "upgrade" ]; then
     system_update
 
 elif [ "$1" = "flash-bootloader" ]; then
@@ -1256,7 +1263,7 @@ elif [ "$1" = "install-kernel" ]; then
     install_kernel "$2"
 
 ### Features - Manage Packages ###
-elif [ "$1" = "install-software" ]; then
+elif [ "$1" = "install" ]; then
     install_packages "$2"
 
 elif [ "$1" = "downgrade" ]; then
@@ -1268,6 +1275,26 @@ elif [ "$1" = "soc" ]; then
 
 elif [ "$1" = "fan" ]; then
     fan_control "$2"
+
+### Features - User & Localization ###
+
+elif [ "$1" = "user" ]; then
+    manage_user "$2"
+
+elif [ "$1" = "locale" ]; then
+    locale "$2"
+
+elif [ "$1" = "font" ]; then
+    fonts "$2"
+
+elif [ "$1" = "time" ]; then
+    timezone "$2"
+
+elif [ "$1" = "keyboard" ]; then
+    keyboard "$2"
+
+elif [ "$1" = "wifi" ]; then
+    wifi_country "$2"
 
 ### Main Menu ###
 else
