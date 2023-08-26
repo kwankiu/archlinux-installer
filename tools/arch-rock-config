@@ -683,7 +683,7 @@ install_pkg_category() {
                 ;;
             5)
                 categorytitle="Arch Rock Configuration Utility - Install Communication"
-                update_list=("teams" "telegram" "discord" "signal" "silos")
+                update_list=("teams" "telegram-desktop" "discord" "signal" "silos")
                 ;;
             6)
                 categorytitle="Arch Rock Configuration Utility - Install Suites"
@@ -745,13 +745,11 @@ install_selected_pkg() {
             "teams")
                 install_from_source "https://aur.archlinux.org/teams-for-linux.git"
                 ;;
-            "telegram")
-                install_from_source "https://aur.archlinux.org/telegram-desktop-git.git"
-                ;;
             "discord")
                 install_from_source "https://aur.archlinux.org/armcord-bin.git"
                 ;;
             "signal")
+                install_from_source "https://aur.archlinux.org/fpm.git"
                 install_from_source "https://aur.archlinux.org/signal-desktop-arm.git"
                 ;;
             "only-office")
