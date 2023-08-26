@@ -1361,7 +1361,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "flash-bootloader <bootloader> : Flash Latest SPI Bootloader. <bootloader> options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian."
     
     colorecho "$YELLOW" "Manage Packages"
-    echo "install <package> : Install Basic Software / RK3588 Specified / Customized Packages."
+    echo "install <package> : Install Software / RK3588 Specified / Customized Packages. <package>: package name."
     echo "downgrade <package> <index> : Install / Downgrade any Arch Linux Packages from Archive. <package>: package name <index>: index to show, default=15."
 
     colorecho "$YELLOW" "Performance & Features"
@@ -1401,7 +1401,12 @@ elif [ "$1" = "install-kernel" ]; then
 
 ### Features - Manage Packages ###
 elif [ "$1" = "install" ]; then
-    install_packages "$2"
+    if [ -z "$2" ]; then
+        install_packages "$2"
+    else
+        selection=("$2")
+        install_selected_pkg
+    fi
 
 elif [ "$1" = "downgrade" ]; then
     downgrade_packages "$2" "$3"
