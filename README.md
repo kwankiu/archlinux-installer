@@ -179,5 +179,5 @@ arch-rock-config install-kernel <kernel>
 
 # Known Issues / Troubleshooting
 1. Functionality to create an .img image is still work-in-progress.
-2. Installation Script is known to run on Debian / Ubuntu / Arch Linux / WSL (Experimental)
+2. Installation Script is known to run on Debian / Ubuntu / Arch Linux / WSL2 (Ubuntu/Debian) (Experimental)
 3. macOS is not supported. You may use Docker or VM and mount your disk to it.
