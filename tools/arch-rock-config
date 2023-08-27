@@ -246,7 +246,7 @@ install_rkbsp5_git() {
 
 install_rkbsp() {
 
-    title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-git"
+    title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5"
 
     colorecho "$GREEN" "Downloading pre-compiled packages ..."
     # Download pre-compiled packages
@@ -295,7 +295,7 @@ install_rkbsp() {
     sudo pacman -U $pkg_tar_dir/GPU/*/*/*.pkg.tar.xz
 
     colorecho "$GREEN" "Installed Panfork ..."
-
+    sudo rm -rf $pkg_tar_dir
     install_completed_reboot
 }
 
@@ -312,12 +312,6 @@ install_midstream() {
     pkg_tar_dir=$(mktemp -d)
     sudo tar -xf "compiled-pkg-midstream-latest.tar.xz" -C "$pkg_tar_dir"
     sudo chmod -R 755 $pkg_tar_dir/*
-
-    # remove old kernel files, else the package will not install.
-    colorecho "$YELLOW" "Removing existing kernel files ..."
-    sudo rm -rf /usr/bin/libmali
-    sudo rm -rf /usr/bin/libmaliw
-    sudo rm -rf /usr/lib/libmali
 
     colorecho "$GREEN" "Installing Linux Kernel ..."
     sudo pacman -U $pkg_tar_dir/Kernel/*/*.pkg.tar.xz
@@ -349,7 +343,7 @@ install_midstream() {
     sudo pacman -Rns mesa-panfork-git-debug
     sudo pacman -U $pkg_tar_dir/GPU/*/*.pkg.tar.xz
     colorecho "$GREEN" "Installed Pancsf ..."
-
+    sudo rm -rf $pkg_tar_dir
     install_completed_reboot
 }
 
@@ -1591,7 +1585,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "downgrade <package> <index> : Install / Downgrade any Arch Linux Packages from Archive. <package>: package name <index>: index to show, default=15."
 
     colorecho "$YELLOW" "Performance & Features"
-    echo "soc <option> : Manage SoC Settings. options: performance, ondemand, powersave (and status for SoC Monitor)."
+    echo "soc <option> : Manage SoC Settings. options: performance, ondemand, powersave (and status for SoC Monitor) and force-performance which set performance at every bootup."
     echo "fan <option> : Configure PWM Fan-control. options: install, enable, disable and status."
 
     colorecho "$YELLOW" "User & Localization"
