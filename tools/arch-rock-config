@@ -705,7 +705,8 @@ install_pkg_category() {
                 ;;
             8)
                 categorytitle="Arch Rock Configuration Utility - Install Gaming / Emulation / Virtualization"
-                update_list=("box64" "box86" "steam" "malior-droid" "qemu")
+                #update_list=("box64" "box86" "steam" "malior-droid" "qemu")
+                update_list=("box64" "qemu-full")
                 ;;
             9)
                 categorytitle="Arch Rock Configuration Utility - Install Development Tools"
@@ -763,7 +764,12 @@ install_selected_pkg() {
                 colorecho "$RED" "Warning: This is experimental."
                 installWine64
                 ;;
+            "box86")
+                colorecho "$YELLOW" "This is experimental."
+                echo "Package Not Available, try update to latest utility."
+                ;;
             "steam")
+                arch-rock-config install box86
                 colorecho "$YELLOW" "Make sure you installed box86 before installing Steam. This is experimental."
                 installSteam
                 ;;
@@ -773,6 +779,9 @@ install_selected_pkg() {
                 ;;
             "code")
                 install_from_source "aur://visual-studio-code-bin"
+                ;;
+            "kodi")
+                install_from_source "aur://kodi-nexus-mpp-git"
                 ;;
             "intel-ax210-fw")
                 #wifi
@@ -907,8 +916,11 @@ installWine64() {
 installMaliorDroid() {
 	echo "Installing Malior-Droid! Thanks to monkaBlyat and ChisBread! "
 	sudo pacman -Sy docker android-tools --noconfirm
+    sudo systemctl start docker
+
 	sudo mkdir /dev/binderfs
 	sudo mount -t binder binder /dev/binderfs
+
 	wget -O - https://github.com/ChisBread/malior/raw/main/install.sh > /tmp/malior-install.sh && bash /tmp/malior-install.sh  && rm /tmp/malior-install.sh 
 	malior update
 	malior install malior-droid
