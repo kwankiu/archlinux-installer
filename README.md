@@ -1,4 +1,4 @@
-# Arch Linux Installer for Rock 5B / RK3588
+# Arch Linux Installer for Rock 5 / RK3588
 ![alt archlinux logo](https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Archlinux-logo-inverted-version.png/500px-Archlinux-logo-inverted-version.png)
 
 This is an installation script that gets you through an installation of Arch Linux on Rockchip RK3588 SoC.
@@ -17,27 +17,37 @@ This will get you a bootable Arch Linux rootfs on your Disk. The default login i
 
 # Installation
 
-1. To continue our installation, now boot to Arch Linux and login as root/root
+1. To continue the installation, now boot to Arch Linux and login as root/root
 2. Run the command
 ```
 arch-rock-installer
 ```
-3. The script will reboot after creating a user account and updating a root password. To continue the installation, you may need to log back to root/root and re-run the command
+3. The script will reboot after creating a user account and updating a root password. 
+
+To continue the installation, log back to root/root and re-run the command
 ```
 arch-rock-installer
 ```
-4. If it saids the linux package have a conflict, this is normal, confirm and let the script install the kernel.
-5. If you want a Desktop Environment, pick a Desktop Environment to install.
-6. Once it's done, the script should automatically reboot your system. Enjoy!
+Tips :
+If it says that the linux package have a conflict, this is normal, confirm and let the script install the kernel.
+If you want a Desktop Environment, pick a Desktop Environment to install.
+
+4. Once it's done, the script should automatically reboot your system. Enjoy!
 
 # Usage
 
-## Optional arguments
-
 ```
-archlinux-installer <disk_path> <kernel>
+archlinux-installer <options/disk_path> <kernel>
 ```
 
+### Options
+
+| Options | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `-h` or `--help` | N/A | Usage and Infomation of this installer. |
+| `-d` or `--dev` | N/A | Use latest dev installation script. |
+
+### Optional arguments
 | Argument | Description |
 | ------------- | ------------- |
 | `<disk_path>` | Specify the installation path, this should be a disk path not a partition path. On the Rock 5B, it is /dev/nvme0n1 for NVMe SSD, /dev/mmcblk0 for uSD Card, and /dev/mmcblk1 for eMMC. For SATA or External disk, they are usually on /dev/sdX, which X is usually starting from a-z. |
@@ -45,79 +55,129 @@ archlinux-installer <disk_path> <kernel>
 
 ## Examples
 
-1. Run without any arguments (Same as the "How to install?" section above)
+#### Typical Usage (Same as [How to install?](https://github.com/kwankiu/archlinux-installer-rock5#how-to-install) section)
 
-The script will prompt for picking installation options.
+This command will prompt for picking installation options.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
-2. Passing only the first argument `<disk_path>` (e.g. /dev/sdb)
+#### Using  `<disk_path>`
+#### (e.g. /dev/sdb)
 
-The script will let you pick a kernel and install Arch Linux to your disk path.
+This command will let you pick a kernel and install Arch Linux to your disk path.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
 ```
 
-3. Passing both argument `<disk_path>` `<kernel>` (e.g. /dev/nvme0n1 for `<disk_path>` and rkbsp for `<kernel>`)
+#### Using both `<disk_path>` and`<kernel>`
+#### (e.g. /dev/nvme0n1 for `<disk_path>` and rkbsp for `<kernel>`)
 
-The script will install Arch Linux with Radxa BSP Kernel to your disk path.
+This command will install Arch Linux with Radxa BSP Kernel to your disk path.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 rkbsp
 ```
 
-# More Info
+#### Using dev branch version
+#### (WARNING: dev branch are not tested and may be broken.)
 
-## The `arch-rock-config` Configuration Utility (experimental)
-We have created a configuration utility just like `armbian-config` or `raspi-config` but for Arch Linux running on Rock 5B / RK3588.
-Note that this configuration utility is work-in-progress.
+This command will use the script from dev branch and prompt for picking installation options.
 
-To run this :
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --dev
+```
+
+# Arch Rock Configuration Utility (experimental)
+We have created a configuration utility `arch-rock-config` just like [armbian-config](https://github.com/armbian/config), [rsetup](https://docs.radxa.com/en/radxa-os/rsetup/rsetup-tool), or [raspi-config](https://www.raspberrypi.com/documentation/computers/configuration.html) but for Arch Linux running on Rock 5 / RK3588.
+
+![alt Arch Rock Configuration Utility](https://i.imgur.com/bccc10d.png)
+
+### Note that this configuration utility is work-in-progress.
+
+## Installation
+
+The configuration utility should be already installed during the installation using `archlinux-installer`.
+
+If you want to use this configuration utility from a copy of Arch Linux that is not installed using `archlinux-installer`, it can be installed by running :
+
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/tools/arch-rock-config)
+```
+
+## Usage
+
+To launch the configuration utility:
 ```
 arch-rock-config
 ```
+## Optional arguments
 
+```
+arch-rock-config <options/features> <additional-arguments (optional)>
+```
 
-## The tools folder
+### Options
 
-Available tool scripts are in the tool folder.
+| Options | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `-h` or `--help` | N/A | Usage and Infomation of this configuration utility. |
+| `-r` or `--run` | N/A | Run without installing this configuration utility to PATH (/usr/bin). |
+| `-u` or `--update` | `<channel>` | Install latest configuration utility without checking updates. channel options: main, dev. |
 
-| Script | Description |
-| ------------- | ------------- |
-| arch-rock-installer | Arch Linux Installer for Rock 5B / RK3588. |
-| first-boot-setup | Apply necessary configuration for first-time boot, used by arch-rock-installer. |
-| arch-rock-config | Arch Linux Configuration Utility for Rock 5B / RK3588. |
-| install-kernel | Install / Re-install Kernel that is maintained by Arch Linux. |
-| post-install | Post Install Script, fix bluetooth, ax210 driver, add soc performance profile, installing mesa, gpu accelaration, desktop environment, etc. |
+### Features
 
-## Reinstalling Kernel
+#### System Maintenance
+| Features | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `upgrade` |  N/A | Check & Perform Selective / Full System Upgrade. |
+| `install-kernel` |  `<kernel>` | Re-install / Replace Linux Kernel. kernel options: rkbsp, rkbsp-git, midstream. |
+| `flash-bootloader` |  `<bootloader>` | Flash Latest SPI Bootloader. bootloader options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian. |
 
-Available kernel options to install : 
+#### Manage Packages
+| Features | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `install` |  `<package>` | Package Manager (Install only), Includes RK3588 Specified and Customized Packages. You can use it like: `arch-rock-config install chromium neofetch git` |
+| `downgrade` |  `<package> <index>` | Install / Downgrade any Arch Linux ARM Packages from Archive (alaa). You can use it like: `arch-rock-config downgrade chromium`. By default only 15 archives shown, you may optionally add `<index>` to show more/less.  |
+
+#### Performance & Features
+| Features | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `soc` |  `<option>` | Manage SoC Settings. options: `performance`, `ondemand`, `powersave` (and `status` for SoC Monitor). |
+| `fan` |  `<option>` | Configure PWM Fan-control. options: `install`, `enable`, `disable` and `status`. |
+
+#### User & Localization
+| Features | Additional Arguments | Description |
+| ------------- | ------------- | ------------- |
+| `user` |  N/A | Add, Remove and Change User Account Settings. |
+| `locale` |  N/A | Generate Locale Settings. |
+| `font` |  N/A | Install Fonts, TTF, Non-English Characters, Special Characters / Emoji. |
+| `time` |  N/A | Change Time Zone, Current Date and Time. |
+| `keyboard` |  N/A | Change Keyboard Layout. |
+| `wifi` |  N/A | Change WiFi Country Settings. |
+
+# More Information
+## Linux Kernel
+
+Kernel package options for Rock 5 / RK3588 : 
 | Kernel Package  | Linux Kernel | Notes |
 | ------------- | ------------- | ------------- |
-| linux-radxa-rkbsp5-bin | Radxa's Rockchip BSP (Linux-5.10.x) | Install Radxa BSP Kernel from Binary Package (fastest, but may not be up-to-date) |
-| linux-radxa-rkbsp5-git | Radxa's Rockchip BSP (Linux-5.10.x) | Install Radxa BSP Kernel from Source Code (latest, but takes a few hours) |
-| linux-rk3588-midstream | Googulator's 'Midstream' (Linux-6.2.x) | Install Linux Midstream Kernel from Source Code (based on linux mainline 6.2, not everything works, takes a few hours) |
+| [linux-radxa-rkbsp5-bin](https://aur.archlinux.org/packages/linux-radxa-rkbsp5-bin) | Radxa Rockchip BSP (Linux-5.10.x) | Radxa BSP Kernel from Binary Package (fastest to install, but may not be up-to-date) |
+| [linux-radxa-rkbsp5-git](https://aur.archlinux.org/packages/linux-radxa-rkbsp5-git) | Radxa Rockchip BSP (Linux-5.10.x) | Radxa BSP Kernel from Source Code (latest, but takes a few hours to compile and install) |
+| [linux-rockchip-rk3588-bin](https://aur.archlinux.org/packages/linux-rockchip-rk3588-bin) | Armbian Rockchip BSP (Linux-5.10.x) | Armbian Kernel from Binary Package (fast to install, but may not work as well as Radxa BSP Kernel for the Rock 5) |
+| [linux-rk3588-midstream](https://github.com/hbiyik/hw_necromancer/tree/master/rock5b/linux-rk3588-midstream) | Googulator's 'Midstream' (Linux-6.2.x) (experimental) | Midstream Kernel from Source Code (based on Linux-6.2, only [basic hardware support](https://github.com/Googulator/linux-rk3588-midstream/wiki), but takes a few hours to compile and install) |
+| Unavailable / [Only on Armbian](https://monka.systemonachip.net/rock5b/edge/deb/) | Linux Mainline Kernel (Linux-6.5) (experimental) | Collabora is currently working on Linux Mainline Kernel for RK3588, [most of the stuff](https://gitlab.collabora.com/hardware-enablement/rockchip-3588/notes-for-rockchip-3588/-/blob/main/mainline-status.md) appears on Midstream is now on Mainline, but things like USB-PD, USB-C, HDMI, are still work-in-progress. |
 
-To run this :
+You can reinstall/replace the Linux Kernel using `arch-rock-config` :
 ```
-arch-rock-config install-kernel
-```
+# replace <kernel> with rkbsp, rkbsp-git or midstream
 
-## Post Installation 
-
-If you have installed your system with `arch-rock-installer`, it is not required to run post-install again
-This Post Installation Tools is work-in-progress. 
-
-To Run this :
-```
-arch-rock-config post-install
+arch-rock-config install-kernel <kernel>
 ```
 
-# WIP / TODO List / Known Issues
+# Known Issues / Troubleshooting
 1. Functionality to create an .img image is still work-in-progress.
-
-
+2. Installation Script is known to run on Debian / Ubuntu / Arch Linux / WSL (Experimental)
+3. macOS is not supported. You may use Docker or VM and mount your disk to it.

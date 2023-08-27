@@ -2,59 +2,1572 @@
 
 ################################################################
 #                                                              #
-#    Arch Linux Configuration Utility for Rock 5B / RK3588     #
+#                Arch Rock Configuration Utility               #
 #                                                              #
 ################################################################
+# This is like armbian-config or raspi-config or rsetup but for Arch Linux running on Rock 5 / RK3588
+################################################################
+# Define variables
 
-#  This is like armbian-config or raspi-config but for Arch Linux running on Rock 5B / RK3588
+# Version of this script 
+# (For developer : Update whenever there is a change in this file or its related files)
+# format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
+utilver=2308261
+
+# Define main / dev branch
+branch=main
+
+# Initialize variables
+update_available=false
+
+# URL of the directory containing u-boot images
+uboot_url="https://dl.radxa.com/rock5/sw/images/loader/rock-5b/release/"
+uboot_debug_url="https://dl.radxa.com/rock5/sw/images/loader/rock-5b/debug/"
+edk2_url="https://api.github.com/repos/edk2-porting/edk2-rk3588/releases/latest"
+zero_url="https://dl.radxa.com/rock5/sw/images/others/zero.img.gz"
+armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_loader.img"
+
+# URL of Arch Linux ARM Archive
+alaa_url="https://alaa.ad24.cz/"
+
+# Directory for storing source files
+source_repo_dir="source-repo-dir"
+
+################################################################
+# Tools for formatting / styling
+
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[1;34m'
+NC='\033[0m' # No Color
+
+# Option Picker
+function select_option {
+
+    # little helpers for terminal print control and key input
+    ESC=$( printf "\033")
+    cursor_blink_on()  { printf "$ESC[?25h"; }
+    cursor_blink_off() { printf "$ESC[?25l"; }
+    cursor_to()        { printf "$ESC[$1;${2:-1}H"; }
+    print_option()     { printf "   $1 "; }
+    print_selected()   { printf "  $ESC[7m $1 $ESC[27m"; }
+    get_cursor_row()   { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
+    key_input()        { read -s -n3 key 2>/dev/null >&2
+                         if [[ $key = $ESC[A ]]; then echo up;    fi
+                         if [[ $key = $ESC[B ]]; then echo down;  fi
+                         if [[ $key = ""     ]]; then echo enter; fi; }
+
+    # initially print empty new lines (scroll down if at bottom of screen)
+    for opt; do printf "\n"; done
+
+    # determine current screen position for overwriting the options
+    local lastrow=`get_cursor_row`
+    local startrow=$(($lastrow - $#))
+
+    # ensure cursor and input echoing back on upon a ctrl+c during read -s
+    trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
+    cursor_blink_off
+
+    local selected=0
+    while true; do
+        # print options by overwriting the last lines
+        local idx=0
+        for opt; do
+            cursor_to $(($startrow + $idx))
+            if [ $idx -eq $selected ]; then
+                print_selected "$opt"
+            else
+                print_option "$opt"
+            fi
+            ((idx++))
+        done
+
+        # user key control
+        case `key_input` in
+            enter) break;;
+            up)    ((selected--));
+                   if [ $selected -lt 0 ]; then selected=$(($# - 1)); fi;;
+            down)  ((selected++));
+                   if [ $selected -ge $# ]; then selected=0; fi;;
+        esac
+    done
+
+    # cursor position back to normal
+    cursor_to $lastrow
+    printf "\n"
+    cursor_blink_on
+
+    return $selected
+}
+
+# Echo with colors
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+
+# Title / Heading
+title() {
+  clear
+  text="$1"
+  echo "---------------------------------------------------------------------"
+  colorecho "$BLUE" "${text}"
+  echo "---------------------------------------------------------------------"
+}
+
+################################################################
+# Version updates handling
+
+# Check updates
+check_util_updates() {
+    remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
+    if [ "$remote_utilver" -gt "$utilver" ]; then
+        update_available=true
+    fi
+}
+
+# Install / Update Utility to PATH
+update_util() {
+    if [ "$update_available" = true ] || [ "$1" = "--install" ]; then 
+        title "Arch Rock Configuration Utility"
+        colorecho "$GREEN" "Installing / Updating Arch Rock Configuration Utility ..."
+        if ! [ -x "$(command -v wget)" ]; then
+            sudo pacman -Sy wget --noconfirm
+        fi
+
+        sudo rm -rf /usr/bin/arch-rock-config
+        sudo wget -N -P /usr/bin/ https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        sudo chmod +x /usr/bin/arch-rock-config
+        arch-rock-config
+    fi
+}
+
+################################################################
+# Packages Install Tools
+
+install_from_source() {
+
+    cpwd=$(pwd)
+    
+    # Install required package
+    if ! [ -x "$(command -v git)" ]; then
+        sudo pacman -S git --noconfirm
+    fi
+    
+    sudo pacman -S --needed base-devel --noconfirm
+    
+    # Ensure folder doesn't exist
+    sudo rm -rf ~/"$source_repo_dir"
+    
+    # Get the repository URL from the argument
+    repo_url="$1"
+    
+    # If the URL starts with 'aur://', modify the URL to use AUR repository
+    if [[ "$repo_url" == aur://* ]]; then
+        package_name="${repo_url#aur://}"
+        repo_url="https://aur.archlinux.org/$package_name.git"
+    fi
+    
+    # Clone repo
+    colorecho "$GREEN" "Cloning Package from source ..."
+    cd ~/
+    git clone "$repo_url" "$source_repo_dir"
+    
+    # Compile & Install
+    cd "$source_repo_dir"
+    
+    if [ ! -z "$2" ]; then
+        cd "$2"
+    fi
+    
+    colorecho "$GREEN" "Compiling & Installing Package from source ..."
+    makepkg -si
+    
+    # Clean Up
+    cd "$cpwd"
+    sudo rm -rf ~/"$source_repo_dir"
+}
+
+
+install_pkg_from_url() {
+    colorecho "$GREEN" "Downloading package from $1 ..."
+    curl -LJO $1
+    ipkgname=$(basename $1)
+    colorecho "$GREEN" "Installing package $ipkgname ..."
+    sudo pacman -U $ipkgname
+    rm -rf $ipkgname
+}
+
+################################################################
+# Functions for Install Kernel
+
+install_rkbsp5_bin() {
+
+    # Install required package
+    if ! [ -x "$(command -v yay)" ]; then
+        colorecho "$RED" "Package yay not installed."
+        install_from_source "aur://yay-git"
+    fi
+
+    title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-bin"
+
+    # remove old kernel files, else the package may not install.
+    sudo rm -rf /usr/bin/libmali
+    sudo rm -rf /usr/bin/libmaliw
+    sudo rm -rf /usr/lib/libmali
+    sudo rm -rf /usr/lib/modules
+    sudo rm -rf /usr/lib/firmware/mali_csffw.bin
+    sudo rm -rf /usr/src/linux-*
+
+    yay -S linux-radxa-rkbsp5-bin
+    colorecho "$GREEN" "Installed linux-radxa-rkbsp5"
+    install_completed_reboot
+
+}
+
+install_rkbsp5_git() {
+
+    # Install required package
+    if ! [ -x "$(command -v yay)" ]; then
+        colorecho "$RED" "Package yay not installed."
+        install_from_source "aur://yay-git"
+    fi
+
+    title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-git"
+
+    # remove old kernel files, else the package may not install.
+    sudo rm -rf /usr/bin/libmali
+    sudo rm -rf /usr/bin/libmaliw
+    sudo rm -rf /usr/lib/libmali
+    sudo rm -rf /usr/lib/modules
+    sudo rm -rf /usr/lib/firmware/mali_csffw.bin
+    sudo rm -rf /usr/src/linux-*
+
+    yay -S linux-radxa-rkbsp5-git
+    colorecho "$GREEN" "Installed linux-radxa-rkbsp5"
+    install_completed_reboot
+
+}
+
+install_midstream() {    
+
+    # Install required package
+    if ! [ -x "$(command -v yay)" ]; then
+        colorecho "$RED" "Package yay not installed."
+        install_from_source "aur://yay-git"
+    fi
+
+    title "Arch Rock Configuration Utility - Install linux-rk3588-midstream"
+
+    # remove old kernel files, else the package may not install.
+    sudo rm -rf /usr/bin/libmali
+    sudo rm -rf /usr/bin/libmaliw
+    sudo rm -rf /usr/lib/libmali
+    sudo rm -rf /usr/lib/modules
+    sudo rm -rf /usr/lib/firmware/mali_csffw.bin
+    sudo rm -rf /usr/src/linux-*
+    sudo rm -rf /boot/*
+
+    install_from_source "https://github.com/hbiyik/hw_necromancer.git" "rock5b/linux-rk3588-midstream"
+
+    # apply new extlinux.conf
+    colorecho "$GREEN" "Updating extlinux.conf ..."
+    sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Find the UUIDs of the root partition
+    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    echo "Root partition UUID: $root_uuid"
+
+    # Change UUID for extlinux.conf
+    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+    # Install mali_csffw.bin
+    colorecho "$GREEN" "Installing mali_csffw.bin ..."
+    if ! [ -x "$(command -v wget)" ]; then
+        sudo pacman -Sy wget --noconfirm
+    fi
+    sudo wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
+    colorecho "$GREEN" "Installed linux-rk3588-midstream"
+    install_completed_reboot
+
+}
+
+install_completed_reboot() {
+    colorecho "$GREEN" "Installation completed."
+
+    # Prompt user if they want to reboot
+    read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+
+    if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+        echo "You can manually reboot later to apply the changes."
+    else
+        echo "Rebooting..."
+        sudo reboot
+    fi
+}
+
+################################################################
+# Utility Main Menu
 
 config_options() {
-    clear
-    echo "---------------------------------------------------------------------"
-    echo "Arch Linux Configuration Utility for Rock 5B / RK3588"
-    echo "---------------------------------------------------------------------"
-    echo "1. Install / Re-install Kernel - Install or Replace Linux Kernel"
-    echo "2. Post Installation - Setup patches, install drivers, desktop environment, packages, etc." 
-    echo "3. Install / Move Arch Linux - Install or migrate Arch Linux to another disk."
-    echo "4. Performance & Overclocking - Change SoC Performance Settings or Overclocking the SoC"
-    echo "5. Misc / Tools - Anything else"
-    echo "6. About - Infomation about this configuration utility"
-    echo "---------------------------------------------------------------------"
-    echo "Enter an option to continue : "
-    read choice
+    title "Arch Rock Configuration Utility"
+    options=("System Maintenance - Managing Updates, Bootloader, System, Linux Kernel, etc.")
+    options+=("Manage Packages - Install, Update or Downgrade Software Packages.")
+    options+=("Performance & Features - Tweak SoC Performance Settings, Enable PWM Fan, Overclocking, etc.")
+    options+=("User & Localization - Manage user accounts, Generating Locale, changing Timezone, etc.")
+
+    if [ "$update_available" = true ]; then 
+        options+=("Update Configuration Utility to latest version $GREEN(Updates available)$NC")
+    fi
+    
+    options+=("Exit Configuration Utility")
+    select_option "${options[@]}"
+    choice=$?
 
     # Choice
     case $choice in
+        0)
+            system_maintenance
+            ;;
         1)
-            install_kernel
+            manage_packages
             ;;
         2)
-            post_install
+            performance_features
+            ;;
+        3)
+            user_localization
+            ;;
+        4)
+            update_util
             ;;
         *)
-            echo "Invalid choice / Not implemented. Exiting."
             exit 1
             ;;
     esac
 
 }
 
+################################################################
+# System Maintenance
+
+# System Maintenance Main Menu
+system_maintenance() {
+    title "Arch Rock Configuration Utility - System Maintenance"
+    options=("Package Updates - Check & Perform Selective / Full System Upgrade")
+    options+=("Update SPI Bootloader - Flash Latest Radxa U-Boot")
+    options+=("Install Kernel - Re-install / Replace Linux Kernel")
+    #options+=("Move Arch Linux - Copy Arch Linux to another disk.")
+    options+=("Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            system_update
+            ;;
+        1)
+            flash_uboot
+            ;;
+        2)
+            install_kernel
+            ;;
+        #3)
+            #move_system
+            #;;
+        *)
+            config_options
+            ;;
+    esac
+
+}
+
+# System Update
+system_update() {
+
+    title "Arch Rock Configuration Utility - Package Updates"
+
+    if [ "$1" = "--select" ]; then
+        local selected_option="${poptions[$2]}"
+
+        if [[ " ${selection[*]} " == *" $selected_option "* ]]; then
+            options[$2]="[ ] ${selected_option}"
+            selection=("${selection[@]/$selected_option}")
+        else
+            options[$2]="[x] ${selected_option}"
+            selection+=("$selected_option")
+        fi
+    else
+        selection=()
+        options=("Return to Main Menu" "Upgrade All Packages" "Upgrade Selected Packages")
+        options+=("$GREEN----------------------------------------------------" "$GREEN Upgradable Packages (Press enter to select/deselect): " "$GREEN----------------------------------------------------" "Refresh / Reset $NC")
+        poptions=("${options[@]}")
+
+        if [ -x "$(command -v yay)" ]; then
+            update_list=($(yay -Qu))
+            if [ -z "$update_list" ]; then
+                options[6]="Refresh / Reset $NC (All packages are up-to-date)"
+            else
+                for ((i=0; i<${#update_list[@]}; i+=4)); do
+                    options+=("[ ] ${update_list[i]}")
+                    poptions+=("${update_list[i]}")
+                done
+                options[6]="Refresh / Reset $NC (Using yay)"
+            fi
+        else
+            update_list=($(pacman -Qu | awk -F' ' '{ if (NF == 4) { $5 = "[]" } }1'))
+            if [ -z "$update_list" ]; then
+                options[6]="Refresh / Reset $NC (All packages are up-to-date)"
+            else
+                for ((i=0; i<${#update_list[@]}; i+=5)); do
+                    options+=("[ ] ${update_list[i]}")
+                    poptions+=("${update_list[i]}")
+                done
+                options[6]="Refresh / Reset $NC (Using pacman)"
+            fi
+        fi
+    fi
+
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = "0" ]; then
+        config_options
+    elif [ "$choice" = "1" ]; then
+        if [ -x "$(command -v yay)" ]; then
+            yay -Syyu
+        else
+            sudo pacman -Syyu
+        fi
+    elif [ "$choice" = "2" ]; then
+        if [ -x "$(command -v yay)" ]; then
+            yay -S ${selection[*]}
+        else
+            sudo pacman -S ${selection[*]}
+        fi
+    elif [ "$choice" = "3" ] || [ "$choice" = "4" ] || [ "$choice" = "5" ] || [ "$choice" = "6" ]; then
+        system_update
+    else
+        system_update --select $choice
+    fi
+
+}
+
+# Update SPI Bootloader
+flash_uboot() {
+
+    if [ ! -e /dev/mtdblock0 ]; then
+        colorecho "$RED" "Error : SPI Flash not found"
+        sleep 1
+        exit 1
+    else
+        if [ -z "$1" ]; then
+            title "Arch Rock Configuration Utility - Update SPI Bootloader"
+            colorecho "$GREEN" "Select an option to confirm"
+            colorecho "$RED" "Warning : The SPI NOR flash will be cleared."
+            echo ""
+            options=("Install Radxa U-Boot" "Install Radxa U-Boot (Debug Version)" "Install EDK2 Bootloader for Rock 5A (UEFI)" "Install EDK2 Bootloader for Rock 5B (UEFI)" "Install Armbian Bootloader" "Exit")
+            select_option "${options[@]}"
+            choice=$?
+        else
+            case $1 in
+                "radxa")
+                    choice=0
+                    ;;
+                "radxa-debug")
+                    choice=1
+                    ;;
+                "edk2-rock5a")
+                    choice=2
+                    ;;
+                "edk2-rock5b")
+                    choice=3
+                    ;;
+                "armbian")
+                    choice=4
+                    ;;
+                *)
+                    colorecho "$RED" "Invalid Option, Exiting ..."
+                    exit 1
+                    ;;
+            esac
+        fi
+
+        # Choice
+        case $choice in
+            0)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$uboot_url
+                colorecho "$GREEN" "Fetching latest Radxa U-Boot Image ..."
+                latest_image=$(curl -s "$which_url" | grep -o 'rock-5b-spi-image-[a-z0-9-]*\.img' | head -n 1)
+                ;;
+            1)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$uboot_debug_url
+                colorecho "$GREEN" "Fetching latest Radxa U-Boot (Debug Version) Image ..."
+                latest_image=$(curl -s "$which_url" | grep -o 'rock-5b-spi-image-[a-z0-9-]*\-debug.img' | head -n 1)
+                ;;
+            2)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$edk2_url
+                colorecho "$GREEN" "Fetching EDK2 Bootloader (UEFI) ..."
+                latest_image=$(curl -s "$which_url" | grep -wo "https.*rock-5a.*\.img" | head -n 1)
+                which_url="$(dirname "$latest_image")/"
+                latest_image=$(basename "$latest_image")
+                ;;
+            3)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$edk2_url
+                colorecho "$GREEN" "Fetching EDK2 Bootloader (UEFI) ..."
+                latest_image=$(curl -s "$which_url" | grep -wo "https.*rock-5b.*\.img" | head -n 1)
+                which_url="$(dirname "$latest_image")/"
+                latest_image=$(basename "$latest_image")
+                ;;
+            4)
+                # Fetch the HTML content of the URL and extract the latest image filename
+                which_url=$armbian_url
+                colorecho "$GREEN" "Fetching Armbian Bootloader ..."
+                latest_image=$(basename "$which_url")
+                which_url="$(dirname "$which_url")/"
+                ;;
+            *)
+                exit 1
+                ;;
+        esac
+    fi
+
+    ###
+    colorecho "$GREEN" "Install bootloader to the SPI NOR flash ..."
+
+
+    colorecho "$GREEN" "Downloading Zero Image ..."
+    curl -LJO ${zero_url}
+
+    if ! [ -x "$(command -v gzip)" ]; then
+        sudo pacman -Sy gzip --noconfirm
+    fi
+
+    colorecho "$GREEN" "Extracting Zero Image ..."
+    gzip -d zero.img.gz
+
+    colorecho "$GREEN" "Flashing Zero Image to SPI NOR flash ..."
+    sudo dd if=zero.img of=/dev/mtdblock0
+
+    # Remove zero.img
+    sudo rm -rf zero.img
+
+    if [ -n "$latest_image" ]; then
+        # Download the latest image using wget
+        colorecho "$GREEN" "Downloading SPI U-Boot Image from ${which_url}${latest_image} ..."
+        curl -LJO ${which_url}${latest_image}
+    else
+        colorecho "$RED" "Fetch Error : No image found."
+        sleep 1
+        exit 1
+    fi
+    
+    colorecho "$GREEN" "Flashing SPI U-Boot Image ${latest_image} to SPI NOR flash ..."
+    sudo dd if=${latest_image} of=/dev/mtdblock0
+    sync
+    colorecho "$GREEN" "Installed bootloader to SPI NOR flash"
+
+    # Remove u-boot image file
+    sudo rm -rf ${latest_image}
+
+}
+
+# Re-install Kernel
 install_kernel() {
-    /usr/bin/lib-arch-rock-config/install-kernel
+
+    title "Arch Rock Configuration Utility - Re-install Kernel"
+
+    if [ -z "$1" ]; then
+        colorecho "$GREEN" "Select a kernel package to install:"
+        echo ""
+        options=("linux-radxa-rkbsp5-bin (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Binary Package")
+        options+=("linux-radxa-rkbsp5-git (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Source Code")
+        options+=("linux-rk3588-midstream (GitHub) - Install Googulator's Experimental Midstream kernel (Linux 6.2) from Source Code")
+        #options+=("linux-rk3588-collabora (GitHub) - Install Collabora's Experimental Upstream kernel (Linux 6.5) from Source Code")
+        options+=("Return to Main Menu")
+        select_option "${options[@]}"
+        choice=$?
+    fi
+
+    # Choice
+    if [ "$choice" = 0 ] || [ "$1" = "rkbsp" ]; then
+        install_rkbsp5_bin
+    elif [ "$choice" = 1 ] || [ "$1" = "rkbsp-git" ]; then
+        install_rkbsp5_git
+    elif [ "$choice" = 2 ] || [ "$1" = "midstream" ]; then
+        install_midstream
+    else
+        config_options
+    fi
 }
 
-post_install() {
-    /usr/bin/lib-arch-rock-config/post-install
+# Move Arch Linux
+move_system() {
+    echo "Not implemented"
 }
 
-# read arguments
-if [ "$1" = "install-kernel" ]; then
-    install_kernel
-elif [ "$1" = "post-install" ]; then
-    post_install
-elif [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage : To be written"
+################################################################
+# Manage Packages
+
+# Manage Packages Main Menu
+manage_packages() {
+    title "Arch Rock Configuration Utility - Manage Packages"
+    options=("Install / Update Software - Install Basic Software / RK3588 Specified / Customized Packages")
+    options+=("Downgrade Packages - Install / Downgrade any Arch Linux Packages from Archive")
+    options+=("Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            install_packages
+            ;;
+        1)
+            downgrade_packages
+            ;;
+        *)
+            config_options
+            ;;
+    esac
+
+}
+
+# Install Packages
+install_packages() {
+
+    title "Arch Rock Configuration Utility - Install / Update Software"
+
+    category=("Web - Surf the Internet" "Communication - Connect with friends, family, teams" "Suites - Office & Productivity Software" "Multimedia - Audio, Video, Graphics Software" "Gaming / Emulation / Virtualization Software" "Development Tools - Editors, IDEs, Build Tools" "Misc - Firmware Driver, other Tools and Software")
+    options=("Return to Main Menu")
+    options+=("$GREEN----------------------------------------------------" "$GREEN Install / Update Software (Press enter to select/deselect): " "$GREEN----------------------------------------------------$GREEN")
+    options+=("${category[@]}$NC")
+    
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = "0" ]; then
+        config_options
+    elif [ "$choice" = "1" ] || [ "$choice" = "2" ] || [ "$choice" = "3" ]; then
+        install_packages
+    else
+        install_pkg_category $choice
+    fi
+
+}
+
+install_pkg_category() {
+
+    if [ "$1" = "--select" ]; then
+        local selected_option="${poptions[$2]}"
+
+        if [[ " ${selection[*]} " == *" $selected_option "* ]]; then
+            options[$2]="[ ] ${selected_option}"
+            selection=("${selection[@]/$selected_option}")
+        else
+            options[$2]="[x] ${selected_option}"
+            selection+=("$selected_option")
+        fi
+    else
+        selection=()
+        options=("Return to Category" "Install Selected Packages")
+        options+=("$GREEN Deselect All $NC")
+        poptions=("${options[@]}")
+
+        case $1 in
+            4)
+                categorytitle="Arch Rock Configuration Utility - Install Web"
+                update_list=("firefox" "chromium" "openssh" "nodejs")
+                ;;
+            5)
+                categorytitle="Arch Rock Configuration Utility - Install Communication"
+                update_list=("telegram-desktop" "teams" "discord" "signal" "silos")
+                ;;
+            6)
+                categorytitle="Arch Rock Configuration Utility - Install Suites"
+                update_list=("libreoffice" "wps-office-cn" "abiword" "gnumeric" "gnucash" "glabels" "glom" "dia")
+                ;;
+            7)
+                categorytitle="Arch Rock Configuration Utility - Install Multimedia"
+                update_list=("kodi" "vlc" "gimp" "inkscape" "audacity")
+                ;;
+            8)
+                categorytitle="Arch Rock Configuration Utility - Install Gaming / Emulation / Virtualization"
+                #update_list=("box64" "box86" "steam" "malior-droid" "qemu")
+                update_list=("box64" "qemu-full")
+                ;;
+            9)
+                categorytitle="Arch Rock Configuration Utility - Install Development Tools"
+                update_list=("code" "sublime-text-4" "gnome-terminal" "konsole" "xterm" "git" "python-pipx" "python2") 
+                ;;
+            10)
+                categorytitle="Arch Rock Configuration Utility - Install Misc"
+                update_list=("intel-ax210-fw" "yay" "neofetch")
+                ;;
+        esac
+ 
+        for ((i=0; i<${#update_list[@]}; i++)); do
+            options+=("[ ] ${update_list[i]}")
+            poptions+=("${update_list[i]}")
+        done
+    fi
+
+    title "$categorytitle"
+
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = "0" ]; then
+        install_packages
+    elif [ "$choice" = "1" ]; then
+        install_selected_pkg
+    elif [ "$choice" = "2" ]; then
+        install_pkg_category
+    else
+        install_pkg_category --select $choice
+    fi
+
+}
+
+install_selected_pkg() {
+
+    for ((i=0; i<${#selection[@]}; i++)); do
+        echo " Install ${selection[i]}"
+        case ${selection[i]} in
+            "chromium")
+                install_pkg_from_url "https://github.com/kwankiu/archlinux-installer-rock5/releases/download/chromium/re2-1-20230301-1-aarch64.pkg.tar.xz"
+                install_pkg_from_url "https://github.com/kwankiu/archlinux-installer-rock5/releases/download/chromium/chromium-114.0.5735.198-1-aarch64.pkg.tar.xz"
+                ;;
+            "teams")
+                install_from_source "aur://teams-for-linux"
+                ;;
+            "discord")
+                install_from_source "aur://armcord-bin"
+                ;;
+            "signal")
+                install_from_source "aur://fpm"
+                install_from_source "aur://signal-desktop-arm"
+                ;;
+            "wine64")
+                colorecho "$RED" "Warning: This is experimental."
+                installWine64
+                ;;
+            "box86")
+                colorecho "$YELLOW" "This is experimental."
+                echo "Package Not Available, try update to latest utility."
+                ;;
+            "steam")
+                arch-rock-config install box86
+                colorecho "$YELLOW" "Make sure you installed box86 before installing Steam. This is experimental."
+                installSteam
+                ;;
+            "malior-droid")
+                colorecho "$RED" "Warning: This is experimental."
+                installMaliorDroid
+                ;;
+            "code")
+                install_from_source "aur://visual-studio-code-bin"
+                ;;
+            "kodi")
+                install_from_source "aur://kodi-nexus-mpp-git"
+                ;;
+            "intel-ax210-fw")
+                #wifi
+                sudo wget -P /lib/firmware https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-ty-a0-gf-a0-59.ucode
+                sudo mv /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm.bak
+                #bt
+                sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.sfi
+                sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.ddc
+                ;;
+            "yay")
+                install_from_source "aur://yay-git"
+                ;;
+            *)
+                if sudo pacman -Ssy "^${selection[i]}$" &> /dev/null; then
+                    colorecho "$GREEN" "Installing ${selection[i]} with pacman ..."
+                    sudo pacman -S ${selection[i]} --noconfirm
+                else
+                    colorecho "$GREEN"  "Installing ${selection[i]} from AUR ..."
+                    install_from_source "aur://${selection[i]}"
+                fi
+                ;;
+        esac
+    done
+}
+
+# Install Packages from Archive
+downgrade_packages() {
+    title "Arch Rock Configuration Utility - Downgrade Packages"
+
+    if [ -z "$1" ]; then
+        read -p "Enter package to downgrade: " dgpkg
+    else
+        dgpkg=$1
+    fi
+
+    if [ -z "$2" ]; then
+        nopkg=15
+    else
+        nopkg=$2
+    fi
+    
+
+    dgpkgfb=$(echo $dgpkg | cut -b 1)
+    which_url="${alaa_url}packages/${dgpkgfb}/${dgpkg}/"
+    colorecho "$GREEN" "Fetching $which_url ..."
+    #latest_image=$(curl -s "$which_url" | grep -o '*-aarch64.pkg.tar.xz' | head -n 1)
+    dgpkg_list=$(curl -s "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o ${dgpkg}.*-aarch64.pkg.tar.xz)
+    dgpkg_date=$(curl -s "$which_url" | grep -v '.sig' | grep -o "${dgpkg}.*-aarch64.pkg.tar.xz.*<td class=\"date\">.*</td>" | grep -o "<td class=\"date\">.*</td>" | awk -F'<td class="date">|</td>' '{print $2}')
+
+    #paste -d ' ' <(echo "$dgpkg_list") <(echo "$dgpkg_date") | sort -k 2,2 -r
+    dgpkg_list=($(paste -d ' ' <(echo "$dgpkg_list") <(echo "$dgpkg_date") | sort -k 2,2 -r | awk '{print $1}' | head -n $nopkg))
+    select_option "${dgpkg_list[@]}"
+    choice=$?
+
+    install_pkg_from_url ${which_url}${dgpkg_list[choice]}
+}
+
+################################################################
+# Credits to NicoD https://github.com/NicoD-SBC/armbian-gaming/blob/main/armbian-gaming.sh
+
+installWinex86() {
+	
+	sudo rm /usr/local/bin/wine
+	sudo rm /usr/local/bin/wine64
+	sudo rm /usr/local/bin/wineserver
+	sudo rm /usr/local/bin/winecfg
+	sudo rm /usr/local/bin/wineboot
+	sudo rm -r ~/.wine/
+	sudo rm -r ~/wine/
+	sudo cp wine /usr/local/bin/
+	sudo chmod +x /usr/local/bin/wine
+	echo "Copied wine to /usr/local/bin/ and given rights "
+	
+	sudo cp wineserver /usr/local/bin/
+	sudo chmod +x /usr/local/bin/wineserver
+	echo "Copied wineserver to /usr/local/bin/ and given rights "
+
+	
+	sudo cp winetricks /usr/local/bin/
+	sudo chmod +x /usr/local/bin/winetricks
+	echo "Copied winetricks to /usr/local/bin/ and given rights "
+
+	cp wine-config.desktop ~/.local/share/applications/
+	cp wine-desktop.desktop ~/.local/share/applications/
+	echo "Copied wine-config.desktop and wine-desktop.desktop to ~/.local/share/applications/ "
+	echo " "
+	
+	mkdir ~/wine/
+	mkdir ~/wine/lib/
+	cp libwine.so ~/wine/lib/
+	cp libwine.so.1 ~/wine/lib/
+	echo "Created wine folder and copied libwine.so and libwine.so.1 "
+	echo " "
+	
+	cd ~/wine/
+	curl -LJO https://github.com/Kron4ek/Wine-Builds/releases/download/7.15/wine-7.15-x86.tar.xz
+	sudo apt -y install xz-utils tar
+	xz -d wine-7.15-x86.tar.xz
+	tar -xf wine-7.15-x86.tar
+	cd wine-7.15-x86/
+	cp -R * ~/wine
+	sudo ln -s ~/wine/bin/wine /usr/local/bin/wine
+	sudo ln -s ~/wine/bin/winecfg /usr/local/bin/winecfg
+	sudo ln -s ~/wine/bin/wineserver /usr/local/bin/wineserver
+
+}
+
+installWine64() {
+	sudo rm -r ~/.wine/
+	sudo rm -r ~/wine/
+	cd ~
+	curl -LJO https://www.playonlinux.com/wine/binaries/phoenicis/upstream-linux-amd64/PlayOnLinux-wine-6.0.1-upstream-linux-amd64.tar.gz
+	mkdir ~/wine
+	cd ~/wine
+	tar xf ../PlayOnLinux-wine-6.0.1-upstream-linux-amd64.tar.gz
+	sudo rm /usr/local/bin/wine
+	sudo rm /usr/local/bin/wine64
+	sudo rm /usr/local/bin/wineserver
+	sudo rm /usr/local/bin/winecfg
+	sudo rm /usr/local/bin/wineboot
+	sudo ln -s ~/wine/bin/wine /usr/local/bin/wine
+	sudo ln -s ~/wine/bin/wine64 /usr/local/bin/wine64
+	sudo ln -s ~/wine/bin/wineserver /usr/local/bin/wineserver
+	sudo ln -s ~/wine/bin/winecfg /usr/local/bin/winecfg
+	sudo ln -s ~/wine/bin/wineboot /usr/local/bin/wineboot
+	cd ..
+	sudo rm PlayOnLinux-wine-6.0.1-upstream-linux-amd64.tar.gz
+	echo "Wine installed, test with : "
+	echo "box64 wine winecfg "
+}
+
+installMaliorDroid() {
+	echo "Installing Malior-Droid! Thanks to monkaBlyat and ChisBread! "
+	sudo pacman -Sy docker android-tools --noconfirm
+    sudo systemctl start docker
+
+	sudo mkdir /dev/binderfs
+	sudo mount -t binder binder /dev/binderfs
+
+	wget -O - https://github.com/ChisBread/malior/raw/main/install.sh > /tmp/malior-install.sh && bash /tmp/malior-install.sh  && rm /tmp/malior-install.sh 
+	malior update
+	malior install malior-droid
+	malior-droid update
+
+	#install scrpy version 2.0 that is needed for audio forwarding from the android docker container
+	sudo pacman -S scrcpy --noconfirm
+	echo "To use : "
+	echo "adb connect localhost:5555 "
+	echo "scrcpy -s localhost:5555 "
+}
+
+# Credits to https://jamesachambers.com/radxa-rock-5b-steam-installation-guide-for-armbian/
+installSteam() {
+    echo 'export STEAMOS=1
+    export STEAM_RUNTIME=1
+    export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1' | sudo tee /etc/profile.d/steam.sh
+
+    #if you have a high resolution screen use this instead
+    #echo 'export GDK_SCALE=2' | sudo tee -a /etc/profile.d/steam.sh
+    source /etc/profile.d/steam.sh
+
+    cd ~/box86
+    ./install_steam.sh
+}
+
+################################################################
+# Performance & Features
+
+# Performance & Features Main Menu
+performance_features() {
+    title "Arch Rock Configuration Utility - Performance & Features"
+    options=("SoC Performance Profile - Available options are performance, ondemand and powersave")
+    options+=("PWM Fan Control - Configure PWM Fan-control service")
+    #options+=("Overclocking - Configure rk3588-unlock-opps overlay which increases CPU supply & CPU VDD supply")
+    #options+=("Overlay - Configure Device Tree Overlay")
+    options+=("Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            soc_profile
+            ;;
+        1)
+            fan_control
+            ;;
+        #2)
+            #overclocking
+            #;;
+        #3)
+            #overlays
+            #;;
+        *)
+            config_options
+            ;;
+    esac
+
+}
+
+# SoC Performance Profile
+soc_profile() {
+
+    if [ -z "$1" ] || [ "$1" = "status" ]; then
+        if [ -z "$1" ]; then
+            title "Arch Rock Configuration Utility - SoC Performance Profile"
+        else
+            title "Arch Rock Configuration Utility - SoC Monitor"
+        fi
+        colorecho "$BLUE" "CPU Profile: $(cat /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor)"
+        colorecho "$BLUE" "Memory Profile: $(cat /sys/class/devfreq/dmc/governor)"
+        colorecho "$BLUE" "GPU Profile: $(cat /sys/class/devfreq/fb000000.gpu/governor)"
+    fi
+
+    if [ -z "$1" ]; then
+        echo ""
+        options=("Performance - Run SoC at full performance" "On Demand - Run SoC on CPU usage demand" "Power Save - Run SoC on Power Saving Mode" "Return to Main Menu")
+        select_option "${options[@]}"
+        choice=$?
+    else
+        case $1 in
+                "performance")
+                    choice=0
+                    ;;
+                "ondemand")
+                    choice=1
+                    ;;
+                "powersave")
+                    choice=2
+                    ;;
+                "status")
+                    choice=99
+                    ;;
+                *)
+                    colorecho "$RED" "Invalid Option, Exiting ..."
+                    exit 1
+                    ;;
+        esac
+    fi
+
+    if [ "$choice" = "0" ]; then
+        echo performance | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
+         colorecho "$GREEN" "Profile set to Performance"
+    elif [ "$choice" = "1" ]; then
+        echo ondemand | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor && echo dmc_ondemand | sudo tee /sys/class/devfreq/dmc/governor && echo simple_ondemand | sudo tee /sys/class/devfreq/fb000000.gpu/governor
+        colorecho "$GREEN" "Profile set to On Demand"
+    elif [ "$choice" = "2" ]; then
+        echo powersave | sudo tee /sys/bus/cpu/devices/cpu[046]/cpufreq/scaling_governor /sys/class/devfreq/dmc/governor /sys/class/devfreq/fb000000.gpu/governor
+        colorecho "$GREEN" "Profile set to Power Save"
+    elif [ "$choice" = "99" ]; then
+        fan_control status --soc-monitor
+    else
+        config_options
+    fi
+
+}
+
+# PWM Fan Control
+fan_control() {
+    
+    if [ -z "$1" ] || [ "$1" = "status" ]; then
+
+        if [ -z "$2" ]; then
+            title "Arch Rock Configuration Utility - PWM Fan Control"            
+
+            if systemctl is-active --quiet fan-control; then
+                fanstatus=1
+            else
+                fanstatus=0
+            fi
+
+            if [ "$fanstatus" = 1 ]; then
+                colorecho "$GREEN" "Fan Control Status: Enabled"
+                #colorecho "$GREEN" "PWM Fan Speed: 50%"
+            else
+                colorecho "$GREEN" "Fan Control Status: Disabled"
+            fi
+
+        fi
+
+        temp_cmd=($(cat /sys/class/thermal/thermal_zone*/temp))
+        temp_type_cmd=($(cat /sys/class/thermal/thermal_zone*/type))
+        cpu_freq_cmd=($(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq))
+        temp_list=()
+        temp_type_list=()
+        cpu_freq_list=()
+
+        for ((i=0; i<${#temp_cmd[@]}; i++)); do
+            temp_list+=("$((temp_cmd[i] / 1000))")
+            temp_type_list+=("${temp_type_cmd[i]%-thermal}")
+        done
+
+        for ((i=0; i<${#cpu_freq_cmd[@]}; i++)); do
+            cpu_freq_list+=("$((cpu_freq_cmd[i] / 1000))")
+        done
+
+        if [ -z "$2" ]; then
+            colorecho "$GREEN" "Clock Speed (Efficient Core): ${cpu_freq_list[0]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 0): ${cpu_freq_list[4]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 1): ${cpu_freq_list[6]}MHz"
+        elif [ "$2" = "--soc-monitor" ]; then
+            colorecho "$GREEN" "Clock Speed (Efficient Core 0): ${cpu_freq_list[0]}MHz"
+            colorecho "$GREEN" "Clock Speed (Efficient Core 1): ${cpu_freq_list[1]}MHz"
+            colorecho "$GREEN" "Clock Speed (Efficient Core 2): ${cpu_freq_list[2]}MHz"
+            colorecho "$GREEN" "Clock Speed (Efficient Core 3): ${cpu_freq_list[3]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 0): ${cpu_freq_list[4]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 1): ${cpu_freq_list[5]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 2): ${cpu_freq_list[6]}MHz"
+            colorecho "$GREEN" "Clock Speed (Performance Core 3): ${cpu_freq_list[7]}MHz"
+        fi
+
+        colorecho "$GREEN" "SoC Temp (${temp_type_list[0]}): ${temp_list[0]}C"
+        colorecho "$GREEN" "CPU Temp (${temp_type_list[1]}): ${temp_list[1]}C"
+        colorecho "$GREEN" "CPU Temp (${temp_type_list[2]}): ${temp_list[2]}C"
+        colorecho "$GREEN" "CPU Temp (${temp_type_list[3]}): ${temp_list[3]}C"
+        colorecho "$GREEN" "SoC Temp (${temp_type_list[4]}): ${temp_list[4]}C"
+        colorecho "$GREEN" "GPU Temp (${temp_type_list[5]}): ${temp_list[5]}C"
+        colorecho "$GREEN" "NPU Temp (${temp_type_list[6]}): ${temp_list[6]}C"
+        echo ""
+        
+        options=("Return to Main Menu")
+    fi
+
+    if [ -z "$1" ]; then
+        if [[ -e "/lib/systemd/system/fan-control.service" ]]; then
+
+            if [ "$fanstatus" = 1 ]; then
+                options+=("Disable PWM Fan Control")
+            else
+                options+=("Enable PWM Fan Control")
+            fi
+
+            #options+=("Configure Fan Profile")
+        else
+            options+=("Install PWM Fan Control")
+        fi
+    fi
+
+    if [ -z "$1" ] || [ "$1" = "status" ]; then
+        select_option "${options[@]}"
+        choice=$?
+    else
+        case $1 in
+                "enable"|"disable"|"install")
+                    choice=1
+                    ;;
+                #"config")
+                    #choice=2
+                    #;;
+                *)
+                    colorecho "$RED" "Invalid Option, Exiting ..."
+                    exit 1
+                    ;;
+        esac
+    fi
+
+    if [ "$choice" = "1" ]; then
+        if [[ -e "/lib/systemd/system/fan-control.service" ]]; then
+            if [ "$fanstatus" = 1 ]; then
+                colorecho "$GREEN" "Stopping PWM Fan Control ..."
+                sudo systemctl stop fan-control
+
+                colorecho "$GREEN" "Disabling PWM Fan Control ..."
+                sudo systemctl disable fan-control
+
+                colorecho "$GREEN" "Disabled PWM Fan Control, a reboot maybe required to take effect."
+            else
+                colorecho "$GREEN" "Enabling PWM Fan Control ..."
+                sudo systemctl enable fan-control
+
+                colorecho "$GREEN" "Starting PWM Fan Control ..."
+                sudo systemctl start fan-control
+            fi
+        else
+            if ! [ -x "$(command -v dpkg)" ]; then
+                colorecho "$GREEN" "Package dpkg not found. Installing ..."
+                sudo pacman -Sy dpkg --noconfirm
+            fi
+
+            colorecho "$GREEN" "Cloning fan-control-rock5b ..."
+            git clone https://github.com/lukaszsobala/fan-control-rock5b.git
+            cd fan-control-rock5b
+
+            colorecho "$GREEN" "Compiling fan-control-rock5b ..."
+            make package
+
+            colorecho "$GREEN" "Installing fan-control-rock5b ..."
+            sudo dpkg -i fan-control*.deb
+
+            colorecho "$GREEN" "Enabling fan-control.service ..."
+            sudo systemctl enable fan-control
+
+            colorecho "$GREEN" "Starting fan-control.service ..."
+            sudo systemctl start fan-control
+
+            if [ -z $rock5a ]; then
+                colorecho "$GREEN" "Installed PWM Fan Control."
+            else
+                echo step_wise | sudo tee /sys/class/thermal/thermal_zone0/policy
+                colorecho "$GREEN" "Installed PWM Fan Control, a reboot maybe required to take effect."
+            fi
+
+        fi
+    else
+        config_options
+    fi
+
+}
+
+# Overclocking
+overclocking() {
+    echo "Not implemented"
+}
+
+# Device Tree Overlay
+overlays() {
+    echo "Not implemented"
+}
+
+################################################################
+# User & Localization
+
+# User & Localization Main Menu
+user_localization() {
+    title "Arch Rock Configuration Utility - User & Localization"
+    options=("Manage User - Add, Remove and Change User Account Settings")
+    options+=("Locale - Generate Locale Settings")
+    options+=("Fonts - Install Fonts, TTF, Non-English Characters, Special Characters / Emoji")
+    options+=("Time - Change Time Zone, Current Date and Time")
+    options+=("Keyboard Layout - Change Keyboard Layout")
+    options+=("WiFi Country - Change WiFi Country Settings")
+    options+=("Return to Main Menu")
+    select_option "${options[@]}"
+    choice=$?
+
+    # Choice
+    case $choice in
+        0)
+            manage_user
+            ;;
+        1)
+            locale
+            ;;
+        2)
+            fonts
+            ;;
+        3)
+            timezone
+            ;;
+        4)
+            keyboard
+            ;;
+        5)
+            wifi_country
+            ;;
+        *)
+            config_options
+            ;;
+    esac
+
+}
+
+# Function to manage user accounts
+manage_user() {
+    title "Arch Rock Configuration Utility - Manage User"
+    
+    # List all user accounts
+    real_users=($(getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 {print $1}'))
+
+    # Prompt to add a new user
+    select_options=("Return to User & Localization Menu" "Add User")
+    select_options+=("${real_users[@]}")
+    
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            user_localization
+            ;;
+        1)
+            title "Arch Rock Configuration Utility - Add New User"
+            read -p "Enter username for the new user: " new_user
+            sudo useradd -m "$new_user"
+            sudo passwd "$new_user"
+            sudo usermod -aG wheel "$new_user"
+            sudo usermod -aG video "$new_user"
+            sudo usermod -aG audio "$new_user"
+            sudo usermod -aG games "$new_user"
+            sudo usermod -aG log "$new_user"
+            sudo usermod -aG lp "$new_user"
+            sudo usermod -aG optical "$new_user"
+            sudo usermod -aG power "$new_user"
+            sudo usermod -aG scanner "$new_user"
+            sudo usermod -aG storage "$new_user"
+            ;;
+        *)
+            selected_user=${real_users[$((choice - 2))]}
+            title "Arch Rock Configuration Utility - Manage $selected_user"
+            colorecho "$GREEN" "User: $selected_user"
+            echo ""
+
+            # Perform actions for the selected user (if needed)
+            options=("Return to Manage User Menu" "Change User Password")
+            sudoers_file="/etc/sudoers.d/99_nopasswd_$selected_user"
+            if sudo [ -e "$sudoers_file" ]; then
+                options+=("Enable Sudo Password")
+            else
+                options+=("Disable Sudo Password")
+            fi
+            select_option "${options[@]}"
+            choice=$?
+            case $choice in
+                0)
+                    manage_user
+                    ;;
+                1)
+                    sudo passwd "$selected_user"
+                    ;;
+                2)  
+                    if sudo [ -e "$sudoers_file" ]; then
+                    sudo rm -rf $sudoers_file
+                    colorecho "$GREEN" "Enabled Sudo Password for $selected_user"
+                    else
+                        sudo sh -c "echo '$selected_user ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99_nopasswd_$selected_user"
+                        colorecho "$GREEN" "Disabled Sudo Password for $selected_user"
+                    fi
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+# Function to select and generate locale
+locale() {
+    title "Arch Rock Configuration Utility - Locale"
+    
+    # List available locales
+    colorecho "$GREEN" "Generated Locales:"
+    localectl list-locales
+    echo ""
+
+    # Prompt to select and generate locale
+    select_options=("List All Supported Locales" "Return to User & Localization Menu")
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            # Read available locales from file and add numbers
+            locales=($(cat /usr/share/i18n/SUPPORTED))
+            numbered_locales=()
+            for ((i = 0; i < ${#locales[@]}; i++)); do
+                echo "$((i + 1))) ${locales[$i]}"
+            done
+    
+            # Display numbered locales
+            printf '%s\n' "${numbered_locales[@]}"
+            read -p "Enter the number of the locale to generate: " chosen_number
+            chosen_locale=${locales[$((chosen_number - 1))]}
+            sudo localectl set-locale "$chosen_locale"
+            sudo locale-gen
+            ;;
+        *)
+            user_localization
+            ;;
+    esac
+}
+
+# Function to manage fonts
+fonts() {
+    title "Arch Rock Configuration Utility - Fonts"
+    
+    # Prompt to install fonts
+    select_options=("Install Noto Fonts (including CJK and Emoji) - Support Asian Characters" "Install TTF Fonts from File" "Return to User & Localization Menu")
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
+            ;;
+        1)
+            read -p "Enter the path to the TTF font file: " font_path
+            sudo cp "$font_path" /usr/share/fonts/TTF/
+            sudo fc-cache -f -v
+            ;;
+        *)
+            user_localization
+            ;;
+    esac
+}
+
+# Function to change time zone and date/time
+timezone() {
+    title "Arch Rock Configuration Utility - Time Zone"
+
+    # Get current time zone and network time zone
+    current_timezone=$(timedatectl show --property=Timezone --value)
+    network_timezone=$(timedatectl show-timesync --property=NTP --value)
+    
+    echo "Current Time Zone: $current_timezone"
+    echo "Network Time Zone: $network_timezone"
+
+    select_options=("Return to User & Localization Menu" "Change Time Zone" "Set Time Manually")
+
+    if [ "$current_timezone" != "$network_timezone" ]; then
+        select_options+=("Synchronize Time with Network")
+    fi
+
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            user_localization
+            ;;
+        1)
+            echo "Current Time Zone: $current_timezone"
+            read -p "Enter new time zone (e.g., Asia/Tokyo): " new_timezone
+            sudo timedatectl set-timezone "$new_timezone"
+            echo "Time Zone updated to $new_timezone"
+            sudo timedatectl set-ntp true
+            ;;
+        2)
+            read -p "Enter the new date and time in format 'YYYY-MM-DD HH:MM:SS': " new_datetime
+            sudo timedatectl set-time "$new_datetime"
+            ;;
+        *)
+            sudo timedatectl set-timezone "$network_timezone"
+            echo "Time Zone synchronized with network: $network_timezone"
+            sudo timedatectl set-ntp true
+            ;;
+    esac
+}
+
+# Function to change keyboard layout
+keyboard() {
+    title "Arch Rock Configuration Utility - Keyboard Layout"
+
+    # Get current keyboard layout
+    current_layout=$(localectl status | grep "X11 Layout" | awk '{print $3}')
+    
+    echo "Current Keyboard Layout: $current_layout"
+    
+    # Prompt to select new keyboard layout
+    select_options=("Change Keyboard Layout" "Return to User & Localization Menu")
+    select_option "${select_options[@]}"
+    choice=$?
+
+    case $choice in
+        0)
+            read -p "Enter new keyboard layout (e.g., us, de): " new_layout
+            sudo localectl set-x11-keymap "$new_layout"
+            echo "Keyboard Layout updated to $new_layout"
+            ;;
+        *)
+            user_localization
+            ;;
+    esac
+}
+
+# Function to change WiFi country
+wifi_country() {
+    title "Arch Rock Configuration Utility - WiFi Country"
+
+    # Get available WiFi countries
+    wifi_countries=("Return to User & Localization Menu")
+    wifi_countries+=($(iw reg get | grep -o -E '^[A-Z]{2}'))
+    
+    # Display available WiFi countries and prompt to select
+    select_option "${wifi_countries[@]}"
+    choice=$?
+    
+    if [ "$choice" -ge 1 ] && [ "$choice" -le "${#wifi_countries[@]}" ]; then
+        selected_country=${wifi_countries[$((choice))]}
+        sudo iw reg set "$selected_country"
+        echo "WiFi Country updated to $selected_country"
+    else
+        user_localization
+    fi
+}
+
+################################################################
+# Main Program
+
+### Options ###
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    colorecho "$BLUE" "Arch Rock Configuration Utility (BUILD $utilver-$branch)"
+    echo "Usage: arch-rock-config <optional_argument>"
+
+    colorecho "$GREEN" "Options"
+    echo "-h / --help : Usage and Infomation of this configuration utility."
+    echo "-r / --run : Run without installing this configuration utility to PATH (/usr/bin)."
+    echo "-u / --update <channel> : Install latest configuration utility without checking updates. <channel> options: main, dev."
+
+    colorecho "$GREEN" "Features"
+    colorecho "$YELLOW" "System Maintenance"
+    echo "upgrade : Check & Perform Selective / Full System Upgrade."
+    echo "install-kernel <kernel> : Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream."
+    echo "flash-bootloader <bootloader> : Flash Latest SPI Bootloader. <bootloader> options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian."
+    
+    colorecho "$YELLOW" "Manage Packages"
+    echo "install <package> : Install Software / RK3588 Specified / Customized Packages. <package>: package name."
+    echo "downgrade <package> <index> : Install / Downgrade any Arch Linux Packages from Archive. <package>: package name <index>: index to show, default=15."
+
+    colorecho "$YELLOW" "Performance & Features"
+    echo "soc <option> : Manage SoC Settings. options: performance, ondemand, powersave (and status for SoC Monitor)."
+    echo "fan <option> : Configure PWM Fan-control. options: install, enable, disable and status."
+
+    colorecho "$YELLOW" "User & Localization"
+    echo "user : Add, Remove and Change User Account Settings."
+    echo "locale : Generate Locale Settings."
+    echo "font : Install Fonts, TTF, Non-English Characters, Special Characters / Emoji."
+    echo "time : Change Time Zone, Current Date and Time."
+    echo "keyboard : Change Keyboard Layout."
+    echo "wifi : Change WiFi Country Settings."
     exit 1
+
+elif [ "$1" = "-r" ] || [ "$1" = "--run" ]; then
+    # This argument skip the below options / arguments, equivalent to `else`.
+    check_util_updates
+    config_options
+elif [ ! -e "/usr/bin/arch-rock-config" ] || [ "$1" = "-u" ] || [ "$1" = "--update" ]; then
+    if [ "$2" = "main" ]; then
+        branch=main
+    elif [ "$2" = "dev" ]; then
+        branch=dev
+    fi
+    update_util --install
+
+### Features - System Maintenance ###
+elif [ "$1" = "upgrade" ]; then
+    system_update
+
+elif [ "$1" = "flash-bootloader" ]; then
+    flash_uboot "$2"
+
+elif [ "$1" = "install-kernel" ]; then
+    install_kernel "$2"
+
+### Features - Manage Packages ###
+elif [ "$1" = "install" ]; then
+    if [ -z "$2" ]; then
+        install_packages "$2"
+    else
+        for ((i = 2; i <= $#; i++)); do
+            selection+=("${!i}")
+        done
+        install_selected_pkg
+    fi
+
+elif [ "$1" = "downgrade" ]; then
+    downgrade_packages "$2" "$3"
+
+### Features - Performance & Features ###
+elif [ "$1" = "soc" ]; then
+    soc_profile "$2"
+
+elif [ "$1" = "fan" ]; then
+    fan_control "$2"
+
+### Features - User & Localization ###
+
+elif [ "$1" = "user" ]; then
+    manage_user "$2"
+
+elif [ "$1" = "locale" ]; then
+    locale "$2"
+
+elif [ "$1" = "font" ]; then
+    fonts "$2"
+
+elif [ "$1" = "time" ]; then
+    timezone "$2"
+
+elif [ "$1" = "keyboard" ]; then
+    keyboard "$2"
+
+elif [ "$1" = "wifi" ]; then
+    wifi_country "$2"
+
+### Main Menu ###
 else
+    check_util_updates
     config_options
 fi
+
+################################################################
