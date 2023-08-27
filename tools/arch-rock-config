@@ -30,6 +30,10 @@ armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_l
 # URL of Arch Linux ARM Archive
 alaa_url="https://alaa.ad24.cz/"
 
+# Compiled Kernel Package URL
+rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz"
+midstream_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-midstream-latest.tar.xz"
+
 # Directory for storing source files
 source_repo_dir="source-repo-dir"
 
@@ -206,12 +210,6 @@ install_pkg_from_url() {
 
 install_rkbsp5_bin() {
 
-    # Install required package
-    if ! [ -x "$(command -v yay)" ]; then
-        colorecho "$RED" "Package yay not installed."
-        install_from_source "aur://yay-git"
-    fi
-
     title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-bin"
 
     # remove old kernel files, else the package may not install.
@@ -222,19 +220,13 @@ install_rkbsp5_bin() {
     sudo rm -rf /usr/lib/firmware/mali_csffw.bin
     sudo rm -rf /usr/src/linux-*
 
-    yay -S linux-radxa-rkbsp5-bin
+    install_from_source "aur://linux-radxa-rkbsp5-bin"
     colorecho "$GREEN" "Installed linux-radxa-rkbsp5"
     install_completed_reboot
 
 }
 
 install_rkbsp5_git() {
-
-    # Install required package
-    if ! [ -x "$(command -v yay)" ]; then
-        colorecho "$RED" "Package yay not installed."
-        install_from_source "aur://yay-git"
-    fi
 
     title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-git"
 
@@ -246,23 +238,28 @@ install_rkbsp5_git() {
     sudo rm -rf /usr/lib/firmware/mali_csffw.bin
     sudo rm -rf /usr/src/linux-*
 
-    yay -S linux-radxa-rkbsp5-git
+    install_from_source "aur://linux-radxa-rkbsp5-git"
     colorecho "$GREEN" "Installed linux-radxa-rkbsp5"
     install_completed_reboot
 
 }
 
-install_midstream() {    
+install_rkbsp() {
 
-    # Install required package
-    if ! [ -x "$(command -v yay)" ]; then
-        colorecho "$RED" "Package yay not installed."
-        install_from_source "aur://yay-git"
-    fi
+    title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-git"
 
-    title "Arch Rock Configuration Utility - Install linux-rk3588-midstream"
+    colorecho "$GREEN" "Downloading pre-compiled packages ..."
+    # Download pre-compiled packages
+    curl -LJO $rkbsp_url
 
-    # remove old kernel files, else the package may not install.
+    # Extract pre-compiled packages
+    colorecho "$GREEN" "Extracting pre-compiled packages ..."
+    pkg_tar_dir=$(mktemp -d)
+    sudo tar -xf "compiled-pkg-rkbsp-latest.tar.xz" -C "$pkg_tar_dir"
+    sudo chmod -R 755 $pkg_tar_dir/*
+
+    # remove old kernel files, else the package will not install.
+    colorecho "$YELLOW" "Removing existing kernel files ..."
     sudo rm -rf /usr/bin/libmali
     sudo rm -rf /usr/bin/libmaliw
     sudo rm -rf /usr/lib/libmali
@@ -270,6 +267,95 @@ install_midstream() {
     sudo rm -rf /usr/lib/firmware/mali_csffw.bin
     sudo rm -rf /usr/src/linux-*
     sudo rm -rf /boot/*
+
+    colorecho "$GREEN" "Installing Linux Kernel ..."
+    sudo pacman -U $pkg_tar_dir/Kernel/*/*.pkg.tar.xz
+
+    # apply new extlinux.conf
+    colorecho "$GREEN" "Updating extlinux.conf ..."
+    sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Find the UUIDs of the root partition
+    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    echo "Root partition UUID: $root_uuid"
+
+    # Change UUID for extlinux.conf
+    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+    colorecho "$GREEN" "Installed linux-rkbsp5-git"
+
+    colorecho "$GREEN" "Installing Panfork ..."
+
+    sudo pacman -Rns mesa-pancsf-git-debug
+    sudo pacman -U $pkg_tar_dir/GPU/*/*.pkg.tar.xz
+    sudo pacman -U $pkg_tar_dir/GPU/*/*/*.pkg.tar.xz
+
+    colorecho "$GREEN" "Installed Panfork ..."
+
+    install_completed_reboot
+}
+
+install_midstream() {
+
+    title "Arch Rock Configuration Utility - Install linux-rk3588-midstream"
+
+    colorecho "$GREEN" "Downloading pre-compiled packages ..."
+    # Download pre-compiled packages
+    curl -LJO $midstream_url
+
+    # Extract pre-compiled packages
+    colorecho "$GREEN" "Extracting pre-compiled packages ..."
+    pkg_tar_dir=$(mktemp -d)
+    sudo tar -xf "compiled-pkg-midstream-latest.tar.xz" -C "$pkg_tar_dir"
+    sudo chmod -R 755 $pkg_tar_dir/*
+
+    # remove old kernel files, else the package will not install.
+    colorecho "$YELLOW" "Removing existing kernel files ..."
+    sudo rm -rf /usr/bin/libmali
+    sudo rm -rf /usr/bin/libmaliw
+    sudo rm -rf /usr/lib/libmali
+
+    colorecho "$GREEN" "Installing Linux Kernel ..."
+    sudo pacman -U $pkg_tar_dir/Kernel/*/*.pkg.tar.xz
+
+    # apply new extlinux.conf
+    colorecho "$GREEN" "Updating extlinux.conf ..."
+    sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Find the UUIDs of the root partition
+    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    echo "Root partition UUID: $root_uuid"
+
+    # Change UUID for extlinux.conf
+    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+    # Install mali_csffw.bin
+    colorecho "$GREEN" "Installing mali_csffw.bin ..."
+    if ! [ -x "$(command -v wget)" ]; then
+        sudo pacman -Sy wget --noconfirm
+    fi
+    sudo wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
+    colorecho "$GREEN" "Installed linux-rk3588-midstream"
+    
+    colorecho "$GREEN" "Installing Pancsf ..."
+    sudo pacman -Rns mesa-panfork-git-debug
+    sudo pacman -U $pkg_tar_dir/GPU/*/*.pkg.tar.xz
+    colorecho "$GREEN" "Installed Pancsf ..."
+
+    install_completed_reboot
+}
+
+install_midstream_git() {    
+
+    title "Arch Rock Configuration Utility - Install linux-rk3588-midstream"
 
     install_from_source "https://github.com/hbiyik/hw_necromancer.git" "rock5b/linux-rk3588-midstream"
 
@@ -595,6 +681,8 @@ install_kernel() {
         options=("linux-radxa-rkbsp5-bin (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Binary Package")
         options+=("linux-radxa-rkbsp5-git (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Source Code")
         options+=("linux-rk3588-midstream (GitHub) - Install Googulator's Experimental Midstream kernel (Linux 6.2) from Source Code")
+        options+=("linux-radxa-rkbsp5-git (GitHub Release) - Install Radxa BSP Kernel (Linux 5.10) Pre-Compiled with Panfrost and Libmali")
+        options+=("linux-rk3588-midstream (GitHub Release) - Install Googulator's Experimental Midstream kernel (Linux 6.2) Pre-Compiled with Pancsf")
         #options+=("linux-rk3588-collabora (GitHub) - Install Collabora's Experimental Upstream kernel (Linux 6.5) from Source Code")
         options+=("Return to Main Menu")
         select_option "${options[@]}"
@@ -602,11 +690,15 @@ install_kernel() {
     fi
 
     # Choice
-    if [ "$choice" = 0 ] || [ "$1" = "rkbsp" ]; then
+    if [ "$choice" = 0 ] || [ "$1" = "rkbsp-bin" ]; then
         install_rkbsp5_bin
     elif [ "$choice" = 1 ] || [ "$1" = "rkbsp-git" ]; then
         install_rkbsp5_git
-    elif [ "$choice" = 2 ] || [ "$1" = "midstream" ]; then
+    elif [ "$choice" = 2 ] || [ "$1" = "midstream-git" ]; then
+        install_midstream_git
+    elif [ "$choice" = 3 ] || [ "$1" = "rkbsp" ]; then
+        install_rkbsp
+    elif [ "$choice" = 4 ] || [ "$1" = "midstream" ]; then
         install_midstream
     else
         config_options
@@ -705,8 +797,7 @@ install_pkg_category() {
                 ;;
             8)
                 categorytitle="Arch Rock Configuration Utility - Install Gaming / Emulation / Virtualization"
-                #update_list=("box64" "box86" "steam" "malior-droid" "qemu")
-                update_list=("box64" "qemu-full")
+                update_list=("box64" "box86" "steam" "malior-droid" "qemu")
                 ;;
             9)
                 categorytitle="Arch Rock Configuration Utility - Install Development Tools"
