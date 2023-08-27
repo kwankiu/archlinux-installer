@@ -24,10 +24,13 @@ arch-rock-installer
 ```
 3. The script will reboot after creating a user account and updating a root password. 
 
-To continue the installation, log back to root/root and re-run the command
+To continue the installation, re-run the command, 
+
+Tips: You can login to your newly created user account, but the installation must be continued with root, this can be done by:
 ```
-arch-rock-installer
+sudo sh arch-rock-installer
 ```
+
 Tips :
 If it says that the linux package have a conflict, this is normal, confirm and let the script install the kernel.
 If you want a Desktop Environment, pick a Desktop Environment to install.
