@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2308251
+utilver=2308261
 
 # Define main / dev branch
 branch=dev
@@ -151,36 +151,46 @@ update_util() {
 install_from_source() {
 
     cpwd=$(pwd)
+    
     # Install required package
     if ! [ -x "$(command -v git)" ]; then
         sudo pacman -S git --noconfirm
     fi
     
     sudo pacman -S --needed base-devel --noconfirm
-
+    
     # Ensure folder doesn't exist
-    sudo rm -rf ~/$source_repo_dir
-
-    # clone repo
+    sudo rm -rf ~/"$source_repo_dir"
+    
+    # Get the repository URL from the argument
+    repo_url="$1"
+    
+    # If the URL starts with 'aur://', modify the URL to use AUR repository
+    if [[ "$repo_url" == aur://* ]]; then
+        package_name="${repo_url#aur://}"
+        repo_url="https://aur.archlinux.org/$package_name.git"
+    fi
+    
+    # Clone repo
     colorecho "$GREEN" "Cloning Package from source ..."
     cd ~/
-    git clone $1 $source_repo_dir
-
+    git clone "$repo_url" "$source_repo_dir"
+    
     # Compile & Install
-    cd $source_repo_dir
-
-    if [ ! -z $2 ]; then
-        cd $2
+    cd "$source_repo_dir"
+    
+    if [ ! -z "$2" ]; then
+        cd "$2"
     fi
-
+    
     colorecho "$GREEN" "Compiling & Installing Package from source ..."
     makepkg -si
-
+    
     # Clean Up
-    cd $cpwd
-    sudo rm -rf ~/$source_repo_dir
-
+    cd "$cpwd"
+    sudo rm -rf ~/"$source_repo_dir"
 }
+
 
 install_pkg_from_url() {
     colorecho "$GREEN" "Downloading package from $1 ..."
@@ -199,7 +209,7 @@ install_rkbsp5_bin() {
     # Install required package
     if ! [ -x "$(command -v yay)" ]; then
         colorecho "$RED" "Package yay not installed."
-        install_from_source "https://aur.archlinux.org/yay-git.git"
+        install_from_source "aur://yay-git"
     fi
 
     title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-bin"
@@ -223,7 +233,7 @@ install_rkbsp5_git() {
     # Install required package
     if ! [ -x "$(command -v yay)" ]; then
         colorecho "$RED" "Package yay not installed."
-        install_from_source "https://aur.archlinux.org/yay-git.git"
+        install_from_source "aur://yay-git"
     fi
 
     title "Arch Rock Configuration Utility - Install linux-radxa-rkbsp5-git"
@@ -247,7 +257,7 @@ install_midstream() {
     # Install required package
     if ! [ -x "$(command -v yay)" ]; then
         colorecho "$RED" "Package yay not installed."
-        install_from_source "https://aur.archlinux.org/yay-git.git"
+        install_from_source "aur://yay-git"
     fi
 
     title "Arch Rock Configuration Utility - Install linux-rk3588-midstream"
@@ -683,23 +693,23 @@ install_pkg_category() {
                 ;;
             5)
                 categorytitle="Arch Rock Configuration Utility - Install Communication"
-                update_list=("teams" "telegram-desktop" "discord" "signal" "silos")
+                update_list=("telegram-desktop" "teams" "discord" "signal" "silos")
                 ;;
             6)
                 categorytitle="Arch Rock Configuration Utility - Install Suites"
-                update_list=("libre-office" "wps-office" "only-office" "gnome-office")
+                update_list=("libreoffice" "wps-office-cn" "abiword" "gnumeric" "gnucash" "glabels" "glom" "dia")
                 ;;
             7)
                 categorytitle="Arch Rock Configuration Utility - Install Multimedia"
-                update_list=("kodi" "vlc-player" "gimp" "inkscape" "audacity")
+                update_list=("kodi" "vlc" "gimp" "inkscape" "audacity")
                 ;;
             8)
                 categorytitle="Arch Rock Configuration Utility - Install Gaming / Emulation / Virtualization"
-                update_list=("box64" "box86" "steam" "malior-droid" "qemu-kvm")
+                update_list=("box64" "box86" "steam" "malior-droid" "qemu")
                 ;;
             9)
                 categorytitle="Arch Rock Configuration Utility - Install Development Tools"
-                update_list=("code" "atom" "sublime-text" "gnome-terminal" "konsole" "xterm" "git" "python-pipx" "python2") 
+                update_list=("code" "sublime-text-4" "gnome-terminal" "konsole" "xterm" "git" "python-pipx" "python2") 
                 ;;
             10)
                 categorytitle="Arch Rock Configuration Utility - Install Misc"
@@ -739,39 +749,30 @@ install_selected_pkg() {
                 install_pkg_from_url "https://github.com/kwankiu/archlinux-installer-rock5/releases/download/chromium/re2-1-20230301-1-aarch64.pkg.tar.xz"
                 install_pkg_from_url "https://github.com/kwankiu/archlinux-installer-rock5/releases/download/chromium/chromium-114.0.5735.198-1-aarch64.pkg.tar.xz"
                 ;;
-            "silos")
-                install_from_source "https://aur.archlinux.org/silos.git"
-                ;;
             "teams")
-                install_from_source "https://aur.archlinux.org/teams-for-linux.git"
+                install_from_source "aur://teams-for-linux"
                 ;;
             "discord")
-                install_from_source "https://aur.archlinux.org/armcord-bin.git"
+                install_from_source "aur://armcord-bin"
                 ;;
             "signal")
-                install_from_source "https://aur.archlinux.org/fpm.git"
-                install_from_source "https://aur.archlinux.org/signal-desktop-arm.git"
+                install_from_source "aur://fpm"
+                install_from_source "aur://signal-desktop-arm"
                 ;;
-            "only-office")
-                colorecho "$RED" "Package not available"
-                ;;
-            "box64")
-                colorecho "$RED" "Package not available"
-                ;;
-            "box86")
-                colorecho "$RED" "Package not available"
+            "wine64")
+                colorecho "$RED" "Warning: This is experimental."
+                installWine64
                 ;;
             "steam")
-                colorecho "$RED" "Package not available"
+                colorecho "$YELLOW" "Make sure you installed box86 before installing Steam. This is experimental."
+                installSteam
                 ;;
             "malior-droid")
-                colorecho "$RED" "Package not available"
+                colorecho "$RED" "Warning: This is experimental."
+                installMaliorDroid
                 ;;
             "code")
-                install_from_source "https://aur.archlinux.org/visual-studio-code-bin.git"
-                ;;
-            "python2")
-                install_from_source "https://aur.archlinux.org/python2.git"
+                install_from_source "aur://visual-studio-code-bin"
                 ;;
             "intel-ax210-fw")
                 #wifi
@@ -782,10 +783,16 @@ install_selected_pkg() {
                 sudo wget -P /lib/firmware/intel https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/intel/ibt-0041-0041.ddc
                 ;;
             "yay")
-                install_from_source "https://aur.archlinux.org/yay-git.git"
+                install_from_source "aur://yay-git"
                 ;;
             *)
-                sudo pacman -S ${selection[i]} --noconfirm
+                if sudo pacman -Ssy "^${selection[i]}$" &> /dev/null; then
+                    colorecho "$GREEN" "Installing ${selection[i]} with pacman ..."
+                    sudo pacman -S ${selection[i]} --noconfirm
+                else
+                    colorecho "$GREEN"  "Installing ${selection[i]} from AUR ..."
+                    install_from_source "aur://${selection[i]}"
+                fi
                 ;;
         esac
     done
@@ -821,6 +828,111 @@ downgrade_packages() {
     choice=$?
 
     install_pkg_from_url ${which_url}${dgpkg_list[choice]}
+}
+
+################################################################
+# Credits to NicoD https://github.com/NicoD-SBC/armbian-gaming/blob/main/armbian-gaming.sh
+
+installWinex86() {
+	
+	sudo rm /usr/local/bin/wine
+	sudo rm /usr/local/bin/wine64
+	sudo rm /usr/local/bin/wineserver
+	sudo rm /usr/local/bin/winecfg
+	sudo rm /usr/local/bin/wineboot
+	sudo rm -r ~/.wine/
+	sudo rm -r ~/wine/
+	sudo cp wine /usr/local/bin/
+	sudo chmod +x /usr/local/bin/wine
+	echo "Copied wine to /usr/local/bin/ and given rights "
+	
+	sudo cp wineserver /usr/local/bin/
+	sudo chmod +x /usr/local/bin/wineserver
+	echo "Copied wineserver to /usr/local/bin/ and given rights "
+
+	
+	sudo cp winetricks /usr/local/bin/
+	sudo chmod +x /usr/local/bin/winetricks
+	echo "Copied winetricks to /usr/local/bin/ and given rights "
+
+	cp wine-config.desktop ~/.local/share/applications/
+	cp wine-desktop.desktop ~/.local/share/applications/
+	echo "Copied wine-config.desktop and wine-desktop.desktop to ~/.local/share/applications/ "
+	echo " "
+	
+	mkdir ~/wine/
+	mkdir ~/wine/lib/
+	cp libwine.so ~/wine/lib/
+	cp libwine.so.1 ~/wine/lib/
+	echo "Created wine folder and copied libwine.so and libwine.so.1 "
+	echo " "
+	
+	cd ~/wine/
+	curl -LJO https://github.com/Kron4ek/Wine-Builds/releases/download/7.15/wine-7.15-x86.tar.xz
+	sudo apt -y install xz-utils tar
+	xz -d wine-7.15-x86.tar.xz
+	tar -xf wine-7.15-x86.tar
+	cd wine-7.15-x86/
+	cp -R * ~/wine
+	sudo ln -s ~/wine/bin/wine /usr/local/bin/wine
+	sudo ln -s ~/wine/bin/winecfg /usr/local/bin/winecfg
+	sudo ln -s ~/wine/bin/wineserver /usr/local/bin/wineserver
+
+}
+
+installWine64() {
+	sudo rm -r ~/.wine/
+	sudo rm -r ~/wine/
+	cd ~
+	curl -LJO https://www.playonlinux.com/wine/binaries/phoenicis/upstream-linux-amd64/PlayOnLinux-wine-6.0.1-upstream-linux-amd64.tar.gz
+	mkdir ~/wine
+	cd ~/wine
+	tar xf ../PlayOnLinux-wine-6.0.1-upstream-linux-amd64.tar.gz
+	sudo rm /usr/local/bin/wine
+	sudo rm /usr/local/bin/wine64
+	sudo rm /usr/local/bin/wineserver
+	sudo rm /usr/local/bin/winecfg
+	sudo rm /usr/local/bin/wineboot
+	sudo ln -s ~/wine/bin/wine /usr/local/bin/wine
+	sudo ln -s ~/wine/bin/wine64 /usr/local/bin/wine64
+	sudo ln -s ~/wine/bin/wineserver /usr/local/bin/wineserver
+	sudo ln -s ~/wine/bin/winecfg /usr/local/bin/winecfg
+	sudo ln -s ~/wine/bin/wineboot /usr/local/bin/wineboot
+	cd ..
+	sudo rm PlayOnLinux-wine-6.0.1-upstream-linux-amd64.tar.gz
+	echo "Wine installed, test with : "
+	echo "box64 wine winecfg "
+}
+
+installMaliorDroid() {
+	echo "Installing Malior-Droid! Thanks to monkaBlyat and ChisBread! "
+	sudo pacman -Sy docker android-tools --noconfirm
+	sudo mkdir /dev/binderfs
+	sudo mount -t binder binder /dev/binderfs
+	wget -O - https://github.com/ChisBread/malior/raw/main/install.sh > /tmp/malior-install.sh && bash /tmp/malior-install.sh  && rm /tmp/malior-install.sh 
+	malior update
+	malior install malior-droid
+	malior-droid update
+
+	#install scrpy version 2.0 that is needed for audio forwarding from the android docker container
+	sudo pacman -S scrcpy --noconfirm
+	echo "To use : "
+	echo "adb connect localhost:5555 "
+	echo "scrcpy -s localhost:5555 "
+}
+
+# Credits to https://jamesachambers.com/radxa-rock-5b-steam-installation-guide-for-armbian/
+installSteam() {
+    echo 'export STEAMOS=1
+    export STEAM_RUNTIME=1
+    export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1' | sudo tee /etc/profile.d/steam.sh
+
+    #if you have a high resolution screen use this instead
+    #echo 'export GDK_SCALE=2' | sudo tee -a /etc/profile.d/steam.sh
+    source /etc/profile.d/steam.sh
+
+    cd ~/box86
+    ./install_steam.sh
 }
 
 ################################################################
@@ -1404,7 +1516,9 @@ elif [ "$1" = "install" ]; then
     if [ -z "$2" ]; then
         install_packages "$2"
     else
-        selection=("$2")
+        for ((i = 2; i <= $#; i++)); do
+            selection+=("${!i}")
+        done
         install_selected_pkg
     fi
 
