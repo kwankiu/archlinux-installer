@@ -11,7 +11,7 @@
 compiled_pkg_folder="/usr/lib/compiled-packages"
 
 # Define main / dev branch
-branch=dev
+branch=main
 
 ################################################################
 # Tools for formatting / styling
