@@ -8,7 +8,7 @@
 # Define variables
 
 # Define main / dev branch
-branch=main
+branch=dev
 
 # URL for creating the System
 rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz"
