@@ -139,8 +139,8 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 #### Manage Packages
 | Features | Additional Arguments | Description |
 | ------------- | ------------- | ------------- |
-| `install` |  `<package>` | Install Basic Software / RK3588 Specified / Customized Packages. |
-| `install-kernel` |  `<package>` | Install / Downgrade any Arch Linux Packages from Archive. |
+| `install` |  `<package>` | Package Manager (Install only), Includes RK3588 Specified and Customized Packages. You can use it like: `arch-rock-config install chromium neofetch git` |
+| `downgrade` |  `<package> <index>` | Install / Downgrade any Arch Linux ARM Packages from Archive (alaa). You can use it like: `arch-rock-config downgrade chromium`. By default only 15 archives shown, you may optionally add `<index>` to show more/less.  |
 
 #### Performance & Features
 | Features | Additional Arguments | Description |
@@ -179,5 +179,5 @@ arch-rock-config install-kernel <kernel>
 
 # Known Issues / Troubleshooting
 1. Functionality to create an .img image is still work-in-progress.
-2. Installation Script is known to run on Debian / Ubuntu / Arch Linux / WSL (Experiemental)
+2. Installation Script is known to run on Debian / Ubuntu / Arch Linux / WSL (Experimental)
 3. macOS is not supported. You may use Docker or VM and mount your disk to it.
