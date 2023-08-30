@@ -405,7 +405,7 @@ else
   # Create GPT table and partitions
   colorecho "$GREEN" "Formatting and partitioning disk ..."
   echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
-  sudo parted $drive mkpart primary fat32 0% 500MB
+  sudo parted $drive mkpart primary fat32 16MB 500MB
   sudo parted $drive mkpart primary ext4 500MB 100%
 
   # Find the partitions
