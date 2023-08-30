@@ -443,6 +443,7 @@ else
   echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
   sudo parted $drive mkpart primary fat32 16MB 500MB
   sudo parted $drive mkpart primary ext4 500MB 100%
+  sudo parted $drive set 1 boot on
 
   # Find the partitions
   if [ -e $drive"1" ]; then
