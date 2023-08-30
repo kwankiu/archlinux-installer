@@ -302,30 +302,66 @@ else
     if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
       # Debian/Ubuntu-based
       sudo apt-get update
-      sudo apt-get install -y parted libarchive-tools
+      sudo apt-get install -y parted
     elif [ -f /etc/redhat-release ]; then
       # Red Hat-based
       sudo yum update
-      sudo yum install -y parted libarchive-tools
+      sudo yum install -y parted
     elif [ -f /etc/arch-release ]; then
       # Arch Linux
-      sudo pacman -S parted dosfstools --noconfirm
+      sudo pacman -S parted --noconfirm
     elif [ -x "$(command -v apk)" ]; then
       # Alphine-based
-      apk add parted libarchive-tools
+      apk add parted
     else
       colorecho "$RED" "Error : We cant find or install parted on your system. Exiting..."
       exit 1
     fi
-
-  # Verify if it is installed
-  if [ -x "$(command -v parted)" ]; then
-    colorecho "$GREEN" "Package installed, continuing..."
-    title
-  else
-    colorecho "$RED" "Error : Package not installed, please check your package manager / internet connection / system. Exiting..."
-    exit 1
   fi
+
+  # Check if parted is installed
+  if ! [ -x "$(command -v bsdtar)" ]; then
+    # Check Linux distribution
+    colorecho "$YELLOW" "bsdtar command not found, trying to install..."
+    if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+      # Debian/Ubuntu-based
+      sudo apt-get update
+      sudo apt-get install -y libarchive-tools
+    elif [ -f /etc/redhat-release ]; then
+      # Red Hat-based
+      sudo yum update
+      sudo yum install -y libarchive-tools
+    elif [ -x "$(command -v apk)" ]; then
+      # Alphine-based
+      apk add libarchive-tools
+    else
+      colorecho "$RED" "Error : We cant find or install bsdtar on your system. Exiting..."
+      exit 1
+    fi
+  fi
+
+  # Check if mkfs.vat is installed
+  if ! [ -x "$(command -v mkfs.vfat)" ]; then
+    # Check Linux distribution
+    colorecho "$YELLOW" "mkfs.vat command not found, trying to install..."
+    if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+      # Debian/Ubuntu-based
+      sudo apt-get update
+      sudo apt-get install -y dosfstools
+    elif [ -f /etc/redhat-release ]; then
+      # Red Hat-based
+      sudo yum update
+      sudo yum install -y dosfstools
+    elif [ -f /etc/arch-release ]; then
+      # Arch Linux
+      sudo pacman -S dosfstools --noconfirm
+    elif [ -x "$(command -v apk)" ]; then
+      # Alphine-based
+      apk add parted dosfstools
+    else
+      colorecho "$RED" "Error : We cant find or install dosfstools (mkfs.vfat) on your system. Exiting..."
+      exit 1
+    fi
   fi
 
   ################################################################
@@ -419,7 +455,7 @@ else
 
   # Format the partitions
   echo -e 'y' |sudo mkfs.ext4 $root_partition 
-  sudo mkfs.fat -F32 $boot_partition
+  sudo mkfs.vfat -F32 $boot_partition
 
   title
 
