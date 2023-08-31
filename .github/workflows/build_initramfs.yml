@@ -1,0 +1,35 @@
+name: Build Initramfs
+
+on:
+  push:
+    branches:
+      - main  # Change this to the appropriate branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget tar
+
+      - name: Download and extract package
+        run: |
+          wget https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz
+          tar -xvf linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz
+
+      - name: Generate initramfs
+        run: |
+          cd usr/lib/initcpio
+          ./mkinitcpio -c mkinitcpio.conf -k kernel -g initramfs.img
+
+      - name: Upload initramfs.img artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: initramfs
+          path: usr/lib/initcpio/initramfs.img
