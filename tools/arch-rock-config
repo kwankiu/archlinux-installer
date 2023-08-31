@@ -145,8 +145,28 @@ update_util() {
         sudo rm -rf /usr/bin/arch-rock-config
         sudo wget -N -P /usr/bin/ https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
         sudo chmod +x /usr/bin/arch-rock-config
+        if ! [ -x "$(command -v arcu)" ]; then
+            add_alias "arcu"
+        fi
         arch-rock-config
     fi
+}
+
+add_alias() {
+    # Path to the directory where the alias script will be created
+    ALIAS_SCRIPT_DIR="/usr/bin"
+
+    # Alias name
+    ALIAS_NAME=$1
+
+    # Command to run
+    COMMAND_TO_RUN="arch-rock-config"
+
+    # Create the alias script
+    sudo bash -c "echo '#!/bin/bash' > $ALIAS_SCRIPT_DIR/$ALIAS_NAME"
+    sudo bash -c "echo '$COMMAND_TO_RUN \"\$@\"' >> $ALIAS_SCRIPT_DIR/$ALIAS_NAME"
+    sudo chmod +x $ALIAS_SCRIPT_DIR/$ALIAS_NAME
+    colorecho "$GREEN" "Alias command '$ALIAS_NAME' has been created."
 }
 
 ################################################################
@@ -1658,6 +1678,14 @@ elif [ "$1" = "-r" ] || [ "$1" = "--run" ]; then
     # This argument skip the below options / arguments, equivalent to `else`.
     check_util_updates
     config_options
+
+elif [ "$1" = "--add-arcu" ]; then
+    add_alias "arcu"
+
+elif [ "$1" = "--remove-arcu" ]; then
+    sudo rm -rf /usr/bin/arcu
+    colorecho "$GREEN" "Alias command arcu has been removed."
+
 elif [ ! -e "/usr/bin/arch-rock-config" ] || [ "$1" = "-u" ] || [ "$1" = "--update" ]; then
     if [ "$2" = "main" ]; then
         branch=main
