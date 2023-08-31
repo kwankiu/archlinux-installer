@@ -1689,6 +1689,17 @@ elif [ "$1" = "keyboard" ]; then
 elif [ "$1" = "wifi" ]; then
     wifi_country "$2"
 
+elif [ "$1" = "add-7ji" ]; then
+    colorecho "$GREEN" "Adding 7ji arch repo ..."
+    colorecho "$GREEN" "Adding gpg keys ..."
+    sudo pacman-key --recv-keys BA27F219383BB875
+    sudo pacman-key --lsign BA27F219383BB875
+    colorecho "$GREEN" "Adding server to pacman.conf ..."
+    echo -e "[7Ji]\nServer = https://github.com/7Ji/archrepo/releases/download/\$arch" | sudo tee -a /etc/pacman.conf
+    colorecho "$GREEN" "Updating repo ..."
+    sudo pacman -Syy --noconfirm
+    colorecho "$GREEN" "Done"
+
 ### Main Menu ###
 else
     check_util_updates
