@@ -527,7 +527,7 @@ else
 
   # Copy arch-rock-installer
   sudo chmod +x arch-rock-installer
-  sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/arch-rock-installer"
+  sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/installer"
 
   # Copy pre-compiled packages
   sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
@@ -550,7 +550,7 @@ else
   title
   colorecho "$GREEN" "Created Arch Linux Installer to $drive."
   colorecho "$GREEN" "You may now unmount $drive and boot into the system for installation."
-  colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run arch-rock-installer."
+  colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run command `installer`."
   echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
 
 fi

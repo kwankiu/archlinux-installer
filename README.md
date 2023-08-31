@@ -20,7 +20,7 @@ This will get you a bootable Arch Linux rootfs on your Disk. The default login i
 1. To continue the installation, now boot to Arch Linux and login as root/root
 2. Run the command
 ```
-arch-rock-installer
+installer
 ```
 3. The script will reboot after creating a user account and updating a root password. 
 
@@ -28,7 +28,7 @@ To continue the installation, re-run the command,
 
 Tips: You can login to your newly created user account, but the installation must be continued with root, this can be done by:
 ```
-sudo sh arch-rock-installer
+sudo sh installer
 ```
 
 Tips :
@@ -154,10 +154,10 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 #### User & Localization
 | Features | Additional Arguments | Description |
 | ------------- | ------------- | ------------- |
-| `user` |  N/A | Add, Remove and Change User Account Settings. |
+| `user` | `<option>` | Add, Remove and Change User Account Settings. options: `add` `remove` `manage` |
 | `locale` |  N/A | Generate Locale Settings. |
 | `font` |  N/A | Install Fonts, TTF, Non-English Characters, Special Characters / Emoji. |
-| `time` |  N/A | Change Time Zone, Current Date and Time. |
+| `time` | `<option>` | Change Time Zone, Current Date and Time. options: `set-time-zone` `set-time-date` `network-time-zone` `system-time-zone`|
 | `keyboard` |  N/A | Change Keyboard Layout. |
 | `wifi` |  N/A | Change WiFi Country Settings. |
 

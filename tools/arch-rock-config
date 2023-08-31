@@ -1502,31 +1502,59 @@ fonts() {
 
 # Function to change time zone and date/time
 timezone() {
-    title "Arch Rock Configuration Utility - Time Zone"
-
+    
     # Get current time zone and network time zone
     current_timezone=$(timedatectl show --property=Timezone --value)
-    network_timezone=$(timedatectl show-timesync --property=NTP --value)
+    network_timezone=$(curl -s https://ipapi.co/timezone)
+
+
+    if [ -z "$1" ]; then
+
+        title "Arch Rock Configuration Utility - Time Zone"
+
+        colorecho "$GREEN" "Network Time Zone: $network_timezone"
+
+        if [ "$current_timezone" = "$network_timezone" ]; then
+            colorecho "$GREEN" "Current Time Zone: $current_timezone"
+        else
+            colorecho "$RED" "Current Time Zone: $current_timezone"
+        fi
+
+        echo ""
+        select_options=("Return to User & Localization Menu" "Set Time Zone Manually" "Set Date & Time Manually")
+
+        if [ "$current_timezone" != "$network_timezone" ]; then
+            select_options+=("Synchronize Time Zone with Network")
+        fi
+
+        select_option "${select_options[@]}"
+        choice=$?
     
-    echo "Current Time Zone: $current_timezone"
-    echo "Network Time Zone: $network_timezone"
-
-    select_options=("Return to User & Localization Menu" "Change Time Zone" "Set Time Manually")
-
-    if [ "$current_timezone" != "$network_timezone" ]; then
-        select_options+=("Synchronize Time with Network")
+    elif [ "$1" = "set-time-zone" ]; then
+        if [ -z "$2" ]; then
+            choice=1
+        elif [ "$2" = "sync" ]; then
+            choice=3
+        else
+            choice=1
+            new_timezone=$2
+        fi
+    elif [ "$1" = "set-time-date" ]; then
+        choice=2
+    elif [ "$1" = "network-time-zone" ]; then
+        echo $network_timezone
+    elif [ "$1" = "system-time-zone" ]; then
+        echo $current_timezone
     fi
-
-    select_option "${select_options[@]}"
-    choice=$?
 
     case $choice in
         0)
             user_localization
             ;;
         1)
-            echo "Current Time Zone: $current_timezone"
-            read -p "Enter new time zone (e.g., Asia/Tokyo): " new_timezone
+            if [ -z "$new_timezone" ]; then
+                read -p "Enter new time zone (e.g., Asia/Tokyo): " new_timezone
+            fi
             sudo timedatectl set-timezone "$new_timezone"
             echo "Time Zone updated to $new_timezone"
             sudo timedatectl set-ntp true
@@ -1535,10 +1563,10 @@ timezone() {
             read -p "Enter the new date and time in format 'YYYY-MM-DD HH:MM:SS': " new_datetime
             sudo timedatectl set-time "$new_datetime"
             ;;
-        *)
+        3)
             sudo timedatectl set-timezone "$network_timezone"
-            echo "Time Zone synchronized with network: $network_timezone"
             sudo timedatectl set-ntp true
+            colorecho "$GREEN" "Time Zone synchronized with network."
             ;;
     esac
 }
@@ -1681,7 +1709,7 @@ elif [ "$1" = "font" ]; then
     fonts "$2"
 
 elif [ "$1" = "time" ]; then
-    timezone "$2"
+    timezone "$2" "$3"
 
 elif [ "$1" = "keyboard" ]; then
     keyboard "$2"
