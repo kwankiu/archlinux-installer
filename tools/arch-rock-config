@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2308262
+utilver=2308301
 
 # Define main / dev branch
 branch=dev
@@ -1342,6 +1342,8 @@ user_localization() {
 
 # Function to manage user accounts
 manage_user() {
+
+    if [ -z "$1" ]; then
     title "Arch Rock Configuration Utility - Manage User"
     
     # List all user accounts
@@ -1354,13 +1356,25 @@ manage_user() {
     select_option "${select_options[@]}"
     choice=$?
 
+    elif [ "$1" = "add" ]; then
+        choice=1
+        new_user=$2
+    elif [ "$1" = "remove" ]; then
+        choice=99
+        t_user=$2
+    elif [ "$1" = "manage" ]; then
+        selected_user=$2
+    fi
+
     case $choice in
         0)
             user_localization
             ;;
         1)
-            title "Arch Rock Configuration Utility - Add New User"
-            read -p "Enter username for the new user: " new_user
+            if [ -z "$new_user" ]; then
+                title "Arch Rock Configuration Utility - Add New User"
+                read -p "Enter username for the new user: " new_user
+            fi
             sudo useradd -m "$new_user"
             sudo passwd "$new_user"
             sudo usermod -aG wheel "$new_user"
@@ -1374,8 +1388,23 @@ manage_user() {
             sudo usermod -aG scanner "$new_user"
             sudo usermod -aG storage "$new_user"
             ;;
+        99)
+            if [ -z "$t_user" ]; then
+                title "Arch Rock Configuration Utility - Remove User"
+                read -p "Enter username to remove: " t_user
+            fi            
+             # Remove  account
+            sudo userdel -r $t_user
+            if [ $? -eq 0 ]; then
+                echo "account removed successfully"
+            else
+                echo "Error removing account"
+            fi
+            ;;
         *)
-            selected_user=${real_users[$((choice - 2))]}
+            if [ -z "$selected_user" ]; then
+                selected_user=${real_users[$((choice - 2))]}
+            fi
             title "Arch Rock Configuration Utility - Manage $selected_user"
             colorecho "$GREEN" "User: $selected_user"
             echo ""
@@ -1643,7 +1672,7 @@ elif [ "$1" = "fan" ]; then
 ### Features - User & Localization ###
 
 elif [ "$1" = "user" ]; then
-    manage_user "$2"
+    manage_user "$2" "$3"
 
 elif [ "$1" = "locale" ]; then
     locale "$2"
