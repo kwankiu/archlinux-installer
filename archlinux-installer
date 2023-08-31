@@ -233,7 +233,7 @@ install_rkbsp() {
   
   # Extract kernel from pre-compiled packages
   colorecho "$GREEN" "Extracting kernel ..."
-  
+
   sudo mkdir $pkg_tar_dir/Kernel
   sudo mkdir $pkg_tar_dir/Kernel/linux
   sudo mkdir $pkg_tar_dir/Kernel/linux/boot
@@ -269,7 +269,6 @@ install_midstream() {
   boot_image=$pkg_tar_dir/Kernel/linux/boot
 }
 
-install_rkbsp
 ################################################################
 # Sees if it is a help command or normal command with parameters
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
