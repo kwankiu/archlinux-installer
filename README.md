@@ -114,7 +114,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-
 
 To launch the configuration utility:
 ```
-arch-rock-config
+arcu
+#or arch-rock-config
 ```
 ## Optional arguments
 
@@ -128,7 +129,10 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 | ------------- | ------------- | ------------- |
 | `-h` or `--help` | N/A | Usage and Infomation of this configuration utility. |
 | `-r` or `--run` | N/A | Run without installing this configuration utility to PATH (/usr/bin). |
+| `--add-arcu` | N/A | Add ailas command `arcu` to PATH (/usr/bin). |
+| `--remove-arcu` | N/A | Remove ailas command `arcu` to PATH (/usr/bin). |
 | `-u` or `--update` | `<channel>` | Install latest configuration utility without checking updates. channel options: main, dev. |
+
 
 ### Features
 
