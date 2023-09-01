@@ -830,9 +830,9 @@ install_pkg_category() {
             8)
                 categorytitle="Arch Rock Configuration Utility - Install Gaming / Emulation / Virtualization"
                 if [ "$branch" = "dev" ]; then
-                    update_list=("box64" "box86" "steam" "malior-droid" "wine64" "qemu")
+                    update_list=("box64" "box86" "steam" "malior-droid" "wine64" "qemu-full")
                 else
-                    update_list=("box64" "qemu")
+                    update_list=("box64" "qemu-full")
                 fi
                 ;;
             9)
