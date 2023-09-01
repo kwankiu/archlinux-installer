@@ -10,9 +10,11 @@
 # Define main / dev branch
 branch=dev
 
-# URL for kernel and packages
-release_tag_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/repo"
+# URL for kernel and packages repo
 svnji_url="https://api.github.com/repos/7Ji/archrepo/releases/tags/aarch64"
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/repo"
+
+# URL for Arch Linux Rootfs
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 #midstream_url="$release_tag_url/compiled-pkg-midstream-latest.tar.xz"
@@ -288,7 +290,7 @@ ghrel_packages() {
         dgpkg=$1
     fi
     
-    ghrel_url=("$svnji_url" "$release_tag_url")
+    ghrel_url=("$svnji_url" "$adrepo_url")
     dgpkg_list=()
 
     for which_url in "${ghrel_url[@]}"; do
