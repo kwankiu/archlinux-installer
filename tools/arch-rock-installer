@@ -269,6 +269,9 @@ first_boot_setup() {
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
     chmod +x arch-rock-config
 
+    title "Adding 7ji archrepo ..."
+    arch-rock-config add-7ji
+
     # Prompt user if they want to reboot
     title "First Boot Setup"
     read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
@@ -441,7 +444,7 @@ systemctl start bluetooth.service
 title "Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 
-options=("Gnome" "KDE Plasma" "Budgie")
+options=("Gnome (X only)" "Gnome (Wayland Experimental)" "KDE Plasma" "Budgie")
 
 # TO BE ADDED
 # options+=("XFCE" "LXQt" "Cinnamon" "Cutefish" "Deepin" "MATE" "Sway")
@@ -459,18 +462,30 @@ title "Install desktop environment"
 # Install desktop environment
 if [ "$de_options" = 0 ]; then
     # Install Gnome
-    colorecho "$GREEN" "Installing Gnome ..."
+    colorecho "$GREEN" "Installing Gnome (X only)..."
     pacman -Syyu gnome --noconfirm
+    GDM_CONFIG_FILE="/etc/gdm/custom.conf"
+    if [ -f "$GDM_CONFIG_FILE" ]; then
+        sudo sed -i 's/^#WaylandEnable/WaylandEnable=false/' "$GDM_CONFIG_FILE"
+        echo "Wayland has been disabled for GDM."
+    else
+        echo "GDM configuration file ($GDM_CONFIG_FILE) not found."
+    fi
     systemctl enable gdm
 elif [ "$de_options" = 1 ]; then
+    # Install Gnome
+    colorecho "$GREEN" "Installing Gnome (Wayland Experimental) ..."
+    pacman -Syyu gnome-shell gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    systemctl enable gdm
+elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma ..."
     pacman -Syyu plasma-desktop sddm --noconfirm
     systemctl enable sddm
-elif [ "$de_options" = 2 ]; then
+elif [ "$de_options" = 3 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie ..."
-    pacman -Syyu budgie-desktop gdm gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    pacman -Syyu budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
     systemctl enable gdm
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
