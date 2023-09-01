@@ -813,7 +813,7 @@ install_pkg_category() {
         case $1 in
             4)
                 categorytitle="Arch Rock Configuration Utility - Install Web"
-                update_list=("firefox" "chromium" "openssh" "nodejs")
+                update_list=("firefox" "chromium" "ungoogled-chromium" "openssh" "nodejs" "nvm")
                 ;;
             5)
                 categorytitle="Arch Rock Configuration Utility - Install Communication"
@@ -829,7 +829,11 @@ install_pkg_category() {
                 ;;
             8)
                 categorytitle="Arch Rock Configuration Utility - Install Gaming / Emulation / Virtualization"
-                update_list=("box64" "box86" "steam" "malior-droid" "qemu")
+                if [ "$branch" = "dev" ]; then
+                    update_list=("box64" "box86" "steam" "malior-droid" "wine64" "qemu")
+                else
+                    update_list=("box64" "qemu")
+                fi
                 ;;
             9)
                 categorytitle="Arch Rock Configuration Utility - Install Development Tools"
@@ -837,7 +841,7 @@ install_pkg_category() {
                 ;;
             10)
                 categorytitle="Arch Rock Configuration Utility - Install Misc"
-                update_list=("intel-ax210-fw" "yay" "neofetch")
+                update_list=("intel-ax210-fw" "yay" "neofetch" "screenfetch" "s-tui" "stress")
                 ;;
         esac
  
@@ -872,10 +876,16 @@ install_selected_pkg() {
         case ${selection[i]} in
             "chromium")
                 if sudo pacman -Ssy "^chromium-mpp$" &> /dev/null; then
-                    sudo pacman -S chromium-mpp --noconfirm
+                    sudo pacman -S libv4l-rkmpp-git v4l-utils-mpp chromium-mpp --noconfirm
                 else
                     sudo pacman -S chromium --noconfirm
                 fi
+                ;;
+            "nvm")
+                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+                export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+                source ~/.bashrc
                 ;;
             "teams")
                 install_from_source "aur://teams-for-linux"
@@ -908,7 +918,11 @@ install_selected_pkg() {
                 install_from_source "aur://visual-studio-code-bin"
                 ;;
             "kodi")
-                install_from_source "aur://kodi-nexus-mpp-git"
+                if sudo pacman -Ssy "^kodi-nexus-mpp-git$" &> /dev/null; then 
+                    sudo pacman -S kodi-nexus-mpp-git --noconfirm
+                else               
+                    install_from_source "aur://kodi-nexus-mpp-git"
+                fi
                 ;;
             "intel-ax210-fw")
                 #wifi
