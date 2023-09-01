@@ -292,14 +292,14 @@ ghrel_packages() {
     done
 
     echo ""
-    colorecho "$BLUE" "The following packages will be installed:"
+    colorecho "$BLUE" "The following packages will be downloaded:"
     echo ""
     for url in "${dgpkg_list[@]}"; do
         selection=$(basename "$url")
         echo "$selection"
     done
     echo ""
-    echo -ne $"${BLUE}Are you sure to install the packages (y/n)?${NC}"
+    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
     read answer
 
     if [ "$answer" = "y" ]; then
