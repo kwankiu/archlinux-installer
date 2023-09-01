@@ -310,7 +310,7 @@ ghrel_packages() {
     if [ "$answer" = "y" ]; then
         for url in "${dgpkg_list[@]}"; do
             selection=$(basename "$url")
-            echo "Install $selection"
+            echo "Downloading $selection"
             curl -LJO "$url"
 
             if [ ! -z "$2" ]; then
