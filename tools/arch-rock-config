@@ -1306,8 +1306,7 @@ overclocking() {
 }
 
 force_performance_at_boot() {
-    curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/force-performance.service
-    sudo mv force-performance.service /etc/systemd/system/force-performance.service
+    echo -e "[Unit]\nDescription=Set Performance Mode on Boot\nAfter=multi-user.target\n\n[Service]\nType=oneshot\nExecStart=/bin/bash -c \"echo performance > /sys/bus/cpu/devices/cpu4/cpufreq/scaling_governor; echo performance > /sys/bus/cpu/devices/cpu0/cpufreq/scaling_governor; echo performance > /sys/bus/cpu/devices/cpu6/cpufreq/scaling_governor; echo performance > /sys/class/devfreq/dmc/governor; echo performance > /sys/class/devfreq/fb000000.gpu/governor\"\n\n[Install]\nWantedBy=multi-user.target" | sudo tee /etc/systemd/system/force-performance.service > /dev/null
     sudo systemctl daemon-reload
     sudo systemctl enable force-performance.service
 }
