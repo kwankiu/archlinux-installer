@@ -11,8 +11,8 @@
 branch=dev
 
 # URL for kernel and packages
-release_tag_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest"
-ghrel_url="https://api.github.com/repos/7Ji/archrepo/releases/tags/aarch64"
+release_tag_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/latest"
+svnji_url="https://api.github.com/repos/7Ji/archrepo/releases/tags/aarch64"
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 rkbsp_url="$release_tag_url/linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
@@ -283,9 +283,14 @@ ghrel_packages() {
         dgpkg=$1
     fi
     
-    which_url=$ghrel_url
-    colorecho "$GREEN" "Fetching $which_url ..."
-    dgpkg_list=($(curl -s "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
+    ghrel_url=("$svnji_url" "$release_tag_url")
+    dgpkg_list=()
+
+    for which_url in "${ghrel_url[@]}"; do
+      colorecho "$GREEN" "Fetching $which_url ..."
+      dgpkg_list+=($(curl -s "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
+    done
+
     echo ""
     colorecho "$BLUE" "The following packages will be installed:"
     echo ""
@@ -322,7 +327,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 elif [ "$1" = "-d" ] || [ "$1" = "--dev" ]; then
   echo "Getting the latest installation script from dev ..."
   bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) $2 $3
-elif [ "$1" = "7ji" ]; then
+elif [ "$1" = "get-pkg" ]; then
     ghrel_packages "$2" "$3"
 else
   ################################################################
