@@ -35,27 +35,12 @@ jobs:
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             uname -a
-            
             kernel_name="linux-radxa-rkbsp5"
             echo -e "y" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*
             pkg_tar=($(echo -e "n" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*))
             echo -e "y" | pacman -U ${kernel_name}*.pkg.tar.* --noconfirm
             cp -r /boot/initramfs-${kernel_name}.img ${PWD}/artifacts/initramfs-${kernel_name}.img
-            echo "Produced artifact at ${PWD}/artifacts/"
-
-            kernel_name="linux-rk3588-midstream"
-            echo -e "y" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*
-            pkg_tar=($(echo -e "n" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*))
-            echo -e "y" | pacman -U ${kernel_name}*.pkg.tar.* --noconfirm
-            cp -r /boot/initramfs-${kernel_name}.img ${PWD}/artifacts/initramfs-${kernel_name}.img
-            echo "Produced artifact at ${PWD}/artifacts/"
-
-            kernel_name="linux-rockchip-rk3588"
-            echo -e "y" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*
-            pkg_tar=($(echo -e "n" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*))
-            echo -e "y" | pacman -U ${kernel_name}*.pkg.tar.* --noconfirm
-            cp -r /boot/initramfs-${kernel_name}.img ${PWD}/artifacts/initramfs-${kernel_name}.img
-            echo "Produced artifact at ${PWD}/artifacts/"
+            echo "Produced initramfs at ${PWD}/artifacts/initramfs-${kernel_name}.img"
 
       - name: Show the artifact
         # Items placed in /artifacts in the container will be in
