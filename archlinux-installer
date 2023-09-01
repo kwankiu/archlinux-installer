@@ -15,10 +15,6 @@ release_tag_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/
 svnji_url="https://api.github.com/repos/7Ji/archrepo/releases/tags/aarch64"
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
-rkbsp_url="$release_tag_url/linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
-headers_rkbsp_url="$release_tag_url/linux-radxa-rkbsp5-git-headers-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
-initrd_rkbsp_url="$release_tag_url/initramfs-linux-radxa-rkbsp5.img"
-
 #midstream_url="$release_tag_url/compiled-pkg-midstream-latest.tar.xz"
 #initrd_midstream_url="$release_tag_url/initramfs-linux-rk3588-midstream.img"
 
@@ -228,27 +224,36 @@ confirm_disk() {
 ################################################################
 # Compiled Packages
 install_rkbsp() {
+  kernel_name="linux-radxa-rkbsp5"
   pkg_tar_dir=$(mktemp -d)
-  colorecho "$GREEN" "Downloading packages ..."
-  # Download packages
-  curl -LJO $rkbsp_url
-  curl -LJO $headers_rkbsp_url
-  curl -LJO $initrd_rkbsp_url
+  colorecho "$GREEN" "Downloading $kernel_name ..."
+  echo -e "y" | ghrel_packages $kernel_name
+
+  pkg_tar=($(echo -e "n" | ghrel_packages $kernel_name | grep .*pkg.*))
+  non_pkg=($(echo -e "n" | ghrel_packages $kernel_name | grep $kernel_name | grep -v .*pkg.*))
   
   # Extract kernel from pre-compiled packages
-  colorecho "$GREEN" "Extracting kernel ..."
+  colorecho "$GREEN" "Extracting $kernel_name ..."
 
+  # Create folder in pkg_tar_dir
   sudo mkdir $pkg_tar_dir/Kernel
   sudo mkdir $pkg_tar_dir/Kernel/linux
   sudo mkdir $pkg_tar_dir/Kernel/linux/boot
 
-  sudo tar -xf "$(basename $rkbsp_url)" -C "$pkg_tar_dir/Kernel/linux/"
-  sudo tar -xf "$(basename $headers_rkbsp_url)" -C "$pkg_tar_dir/Kernel/linux/"
-  sudo cp -r "$(basename $initrd_rkbsp_url)" $pkg_tar_dir/Kernel/linux/boot/
-  sudo cp -r $pkg_tar_dir/Kernel/linux/usr/lib/modules/*/vmlinuz $pkg_tar_dir/Kernel/linux/boot/vmlinuz-linux-radxa-rkbsp5
+  # Manually install Kernel package
+  for pkg in "${pkg_tar[@]}"; do
+    sudo tar -xf "$pkg" -C "$pkg_tar_dir/Kernel/linux/"
+  done
 
+  # Copy initramfs and vmlinuz
+  sudo cp -r initramfs-${kernel_name}.img $pkg_tar_dir/Kernel/linux/boot/initramfs-${kernel_name}.img
+  sudo cp -r $pkg_tar_dir/Kernel/linux/usr/lib/modules/*/vmlinuz $pkg_tar_dir/Kernel/linux/boot/vmlinuz-${kernel_name}
+
+  # set Boot Partition source dir
   boot_image=$pkg_tar_dir/Kernel/linux/boot
-  sudo rm -rf "$(basename $rkbsp_url)" "$(basename $headers_rkbsp_url)" "$(basename $initrd_rkbsp_url)"
+
+  # Clean up
+  sudo rm -rf "${pkg_tar[@]}" "${non_pkg[@]}"
 }
 
 install_midstream() {
@@ -307,8 +312,12 @@ ghrel_packages() {
             selection=$(basename "$url")
             echo "Install $selection"
             curl -LJO "$url"
-            sudo cp -r $selection $2/$selection
-            sudo rm -rf $selection
+
+            if [ ! -z "$2" ]; then
+              sudo cp -r $selection $2/$selection
+              sudo rm -rf $selection
+            fi
+
         done
     fi
 
