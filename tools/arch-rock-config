@@ -732,6 +732,7 @@ manage_packages() {
     title "Arch Rock Configuration Utility - Manage Packages"
     options=("Install / Update Software - Install Basic Software / RK3588 Specified / Customized Packages")
     options+=("Downgrade Packages - Install / Downgrade any Arch Linux Packages from Archive")
+    options+=("Add 7Ji repo - A pacman repo for pre-built AUR packages for RK3588 and some other SBC")
     options+=("Return to Main Menu")
     select_option "${options[@]}"
     choice=$?
@@ -744,6 +745,9 @@ manage_packages() {
         1)
             downgrade_packages
             ;;
+        2)
+            add_7ji
+            ;;
         *)
             config_options
             ;;
@@ -754,10 +758,20 @@ manage_packages() {
 # Install Packages
 install_packages() {
 
-    title "Arch Rock Configuration Utility - Install / Update Software"
+    if [ "$launch_as_installer" = 1 ]; then
+        title "Install Additional Packages"
+    else
+        title "Arch Rock Configuration Utility - Install / Update Software"
+    fi
 
     category=("Web - Surf the Internet" "Communication - Connect with friends, family, teams" "Suites - Office & Productivity Software" "Multimedia - Audio, Video, Graphics Software" "Gaming / Emulation / Virtualization Software" "Development Tools - Editors, IDEs, Build Tools" "Misc - Firmware Driver, other Tools and Software")
-    options=("Return to Main Menu")
+    
+    if [ "$launch_as_installer" = 1 ]; then
+        options=("Finish Installation")
+    else
+        options=("Return to Main Menu")
+    fi
+
     options+=("$GREEN----------------------------------------------------" "$GREEN Install / Update Software (Press enter to select/deselect): " "$GREEN----------------------------------------------------$GREEN")
     options+=("${category[@]}$NC")
     
@@ -765,7 +779,11 @@ install_packages() {
     choice=$?
 
     if [ "$choice" = "0" ]; then
-        config_options
+        if [ "$launch_as_installer" = 1 ]; then
+            colorecho "$GREEN" "Finishing installation ..."
+        else
+            config_options
+        fi
     elif [ "$choice" = "1" ] || [ "$choice" = "2" ] || [ "$choice" = "3" ]; then
         install_packages
     else
@@ -838,6 +856,7 @@ install_pkg_category() {
         install_packages
     elif [ "$choice" = "1" ]; then
         install_selected_pkg
+        install_packages
     elif [ "$choice" = "2" ]; then
         install_pkg_category
     else
@@ -852,8 +871,11 @@ install_selected_pkg() {
         echo " Install ${selection[i]}"
         case ${selection[i]} in
             "chromium")
-                install_pkg_from_url "https://github.com/kwankiu/archlinux-installer-rock5/releases/download/chromium/re2-1-20230301-1-aarch64.pkg.tar.xz"
-                install_pkg_from_url "https://github.com/kwankiu/archlinux-installer-rock5/releases/download/chromium/chromium-114.0.5735.198-1-aarch64.pkg.tar.xz"
+                if sudo pacman -Ssy "^chromium-mpp$" &> /dev/null; then
+                    sudo pacman -S chromium-mpp --noconfirm
+                else
+                    sudo pacman -S chromium --noconfirm
+                fi
                 ;;
             "teams")
                 install_from_source "aur://teams-for-linux"
@@ -942,6 +964,18 @@ downgrade_packages() {
     choice=$?
 
     install_pkg_from_url ${which_url}${dgpkg_list[choice]}
+}
+
+add_7ji() {
+    colorecho "$GREEN" "Adding 7ji arch repo ..."
+    colorecho "$GREEN" "Adding gpg keys ..."
+    sudo pacman-key --recv-keys BA27F219383BB875
+    sudo pacman-key --lsign BA27F219383BB875
+    colorecho "$GREEN" "Adding server to pacman.conf ..."
+    echo -e "[7Ji]\nServer = https://github.com/7Ji/archrepo/releases/download/\$arch" | sudo tee -a /etc/pacman.conf
+    colorecho "$GREEN" "Updating repo ..."
+    sudo pacman -Syy --noconfirm
+    colorecho "$GREEN" "Done"
 }
 
 ################################################################
@@ -1706,7 +1740,10 @@ elif [ "$1" = "install-kernel" ]; then
 ### Features - Manage Packages ###
 elif [ "$1" = "install" ]; then
     if [ -z "$2" ]; then
-        install_packages "$2"
+        install_packages
+    elif [ "$2" = "--installer" ]; then
+        launch_as_installer=1
+        install_packages
     else
         for ((i = 2; i <= $#; i++)); do
             selection+=("${!i}")
@@ -1745,15 +1782,7 @@ elif [ "$1" = "wifi" ]; then
     wifi_country "$2"
 
 elif [ "$1" = "add-7ji" ]; then
-    colorecho "$GREEN" "Adding 7ji arch repo ..."
-    colorecho "$GREEN" "Adding gpg keys ..."
-    sudo pacman-key --recv-keys BA27F219383BB875
-    sudo pacman-key --lsign BA27F219383BB875
-    colorecho "$GREEN" "Adding server to pacman.conf ..."
-    echo -e "[7Ji]\nServer = https://github.com/7Ji/archrepo/releases/download/\$arch" | sudo tee -a /etc/pacman.conf
-    colorecho "$GREEN" "Updating repo ..."
-    sudo pacman -Syy --noconfirm
-    colorecho "$GREEN" "Done"
+    add_7ji
 
 ### Main Menu ###
 else
