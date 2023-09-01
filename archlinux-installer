@@ -225,8 +225,8 @@ confirm_disk() {
 
 ################################################################
 # Compiled Packages
-install_rkbsp() {
-  kernel_name="linux-radxa-rkbsp5"
+install_kernel() {
+  kernel_name=$1
   pkg_tar_dir=$(mktemp -d)
   colorecho "$GREEN" "Downloading $kernel_name ..."
   echo -e "y" | ghrel_packages $kernel_name
@@ -256,28 +256,6 @@ install_rkbsp() {
 
   # Clean up
   sudo rm -rf "${pkg_tar[@]}" "${non_pkg[@]}"
-}
-
-install_midstream() {
-  colorecho "$GREEN" "Downloading pre-compiled packages ..."
-  # Download pre-compiled packages
-  curl -LJO $midstream_url
-
-  # Extract pre-compiled packages
-  colorecho "$GREEN" "Extracting pre-compiled packages ..."
-  pkg_tar_dir=$(mktemp -d)
-  sudo tar -xf "compiled-pkg-midstream-latest.tar.xz" -C "$pkg_tar_dir"
-  
-  # Extract kernel from pre-compiled packages
-  colorecho "$GREEN" "Extracting kernel ..."
-  sudo mkdir $pkg_tar_dir/Kernel/linux
-  sudo mkdir $pkg_tar_dir/Kernel/linux/boot
-  sudo cp -r $pkg_tar_dir/Kernel/*/initramfs*.img $pkg_tar_dir/Kernel/linux/boot/
-  sudo cp -r $pkg_tar_dir/Kernel/*/vmlinuz* $pkg_tar_dir/Kernel/linux/boot/
-  sudo tar -xf $pkg_tar_dir/Kernel/*/linux-rk3588-midstream-git-1*.*.pkg.tar.xz -C "$pkg_tar_dir/Kernel/linux/"
-  sudo tar -xf $pkg_tar_dir/Kernel/*/linux-rk3588-midstream-git-headers-*.*.pkg.tar.xz -C "$pkg_tar_dir/Kernel/linux/"
-
-  boot_image=$pkg_tar_dir/Kernel/linux/boot
 }
 
 # Install Packages from a GitHub Release Repo
@@ -461,18 +439,18 @@ else
   if [ -z $2 ]; then
       title
       colorecho "$GREEN" "Select a kernel to install:"
-      options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(Experimental) Googulator Midstream Kernel (Linux 6.2)" "Install a Custom Kernel from file")
+      options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(Experimental) Googulator Midstream Kernel (Linux 6.2)" "Install other Kernel from repo")
       select_option "${options[@]}"
       answer=$?
 
       if [ "$answer" = 0 ]; then
-        install_rkbsp
+        install_kernel "linux-radxa-rkbsp5"
       elif [ "$answer" = 1 ]; then
-        install_midstream
+        install_kernel "linux-rk3588-midstream"
       else
-        echo "Enter the path for custom kernel (e.g. /path/to/boot.tar.gz or /path/to/boot.img)"
+        echo "Enter kernel package name:"
         read answer
-        boot_image=answer
+        install_kernel $answer
       fi
   else 
     if [ "$2" = "rkbsp" ]; then
