@@ -10,12 +10,15 @@
 # Define main / dev branch
 branch=dev
 
-# URL for creating the System
-rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
-headers_rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/linux-radxa-rkbsp5-git-headers-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
-#midstream_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-midstream-latest.tar.xz"
-initrd_rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/initramfs-linux-radxa-rkbsp5.img"
-initrd_midstream_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/initramfs-linux-rk3588-midstream.img"
+release_tag_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest"
+# URL for kernel and packages
+rkbsp_url="$release_tag_url/linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
+headers_rkbsp_url="$release_tag_url/linux-radxa-rkbsp5-git-headers-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
+initrd_rkbsp_url="$release_tag_url/initramfs-linux-radxa-rkbsp5.img"
+
+#midstream_url="$release_tag_url/compiled-pkg-midstream-latest.tar.xz"
+#initrd_midstream_url="$release_tag_url/initramfs-linux-rk3588-midstream.img"
+
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 ################################################################
