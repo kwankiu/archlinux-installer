@@ -1,0 +1,55 @@
+name: Initramfs for RKBSP
+
+on: [push, pull_request]
+
+jobs:
+  armv7_job:
+    # The host should always be Linux
+    runs-on: ubuntu-latest
+    name: Build on Arch aarch64
+    steps:
+      - uses: actions/checkout@v3
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: none
+          distro: none
+          base_image: lopsided/archlinux-arm64v8
+
+          # Not required, but speeds up builds by storing container images in
+          # a GitHub package registry.
+          githubToken: ${{ github.token }}
+
+          # Create an artifacts directory
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+
+          # Mount the artifacts directory as /artifacts in the container
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+
+          install: |
+            pacman -Syy --noconfirm
+
+          # Set an output parameter `uname` for use in subsequent steps
+          run: |
+            uname -a
+            curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz
+            echo -e "y" | pacman -U linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz --noconfirm
+            cp -r /boot/initramfs-linux-radxa-rkbsp5.img ${PWD}/artifacts/initramfs-linux-radxa-rkbsp5.img
+            echo "Produced artifact at ${PWD}/artifacts/"
+
+      - name: Show the artifact
+        # Items placed in /artifacts in the container will be in
+        # ${PWD}/artifacts on the host.
+        run: |
+          sudo chmod -R 755 ${PWD}/artifacts/*
+          ls -al "${PWD}/artifacts"
+
+      - name: Upload initramfs.img artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: initramfs
+          path: ${{ github.workspace }}/artifacts/initramfs-linux-radxa-rkbsp5.img
+
