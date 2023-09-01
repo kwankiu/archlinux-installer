@@ -11,7 +11,7 @@
 branch=dev
 
 # URL for kernel and packages
-release_tag_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/latest"
+release_tag_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/repo"
 svnji_url="https://api.github.com/repos/7Ji/archrepo/releases/tags/aarch64"
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
