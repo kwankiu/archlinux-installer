@@ -38,9 +38,7 @@ jobs:
             kernel_name="linux-radxa-rkbsp5"
             echo -e "y" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*
             pkg_tar=($(echo -e "n" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*))
-            for pkg in "${pkg_tar[@]}"; do
-              echo -e "y" | pacman -U $pkg --noconfirm
-            done
+            echo -e "y" | pacman -U linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz --noconfirm
             cp -r /boot/initramfs-${kernel_name}.img ${PWD}/artifacts/initramfs-${kernel_name}.img
             echo "Produced artifact at ${PWD}/artifacts/"
 
