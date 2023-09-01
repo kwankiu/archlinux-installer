@@ -10,16 +10,17 @@
 # Define main / dev branch
 branch=dev
 
-release_tag_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest"
 # URL for kernel and packages
+release_tag_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest"
+ghrel_url="https://api.github.com/repos/7Ji/archrepo/releases/tags/aarch64"
+rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
+
 rkbsp_url="$release_tag_url/linux-radxa-rkbsp5-git-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
 headers_rkbsp_url="$release_tag_url/linux-radxa-rkbsp5-git-headers-5.10.1080722.fd78925da2ce.fadb8d5-1-aarch64.pkg.tar.xz"
 initrd_rkbsp_url="$release_tag_url/initramfs-linux-radxa-rkbsp5.img"
 
 #midstream_url="$release_tag_url/compiled-pkg-midstream-latest.tar.xz"
 #initrd_midstream_url="$release_tag_url/initramfs-linux-rk3588-midstream.img"
-
-rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 ################################################################
 # Tools for formatting / styling
@@ -272,6 +273,42 @@ install_midstream() {
   boot_image=$pkg_tar_dir/Kernel/linux/boot
 }
 
+# Install Packages from a GitHub Release Repo
+ghrel_packages() {
+
+    if [ -z "$1" ]; then
+        colorecho "$RED" "Error: No package specified."
+        exit 1
+    else
+        dgpkg=$1
+    fi
+    
+    which_url=$ghrel_url
+    colorecho "$GREEN" "Fetching $which_url ..."
+    dgpkg_list=($(curl -s "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
+    echo ""
+    colorecho "$BLUE" "The following packages will be installed:"
+    echo ""
+    for url in "${dgpkg_list[@]}"; do
+        selection=$(basename "$url")
+        echo "$selection"
+    done
+    echo ""
+    echo -ne $"${BLUE}Are you sure to install the packages (y/n)?${NC}"
+    read answer
+
+    if [ "$answer" = "y" ]; then
+        for url in "${dgpkg_list[@]}"; do
+            selection=$(basename "$url")
+            echo "Install $selection"
+            curl -LJO "$url"
+            sudo cp -r $selection $2/$selection
+            sudo rm -rf $selection
+        done
+    fi
+
+}
+
 ################################################################
 # Sees if it is a help command or normal command with parameters
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
@@ -285,6 +322,8 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 elif [ "$1" = "-d" ] || [ "$1" = "--dev" ]; then
   echo "Getting the latest installation script from dev ..."
   bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) $2 $3
+elif [ "$1" = "7ji" ]; then
+    ghrel_packages "$2" "$3"
 else
   ################################################################
   # Main Program
