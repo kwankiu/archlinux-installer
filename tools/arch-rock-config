@@ -813,7 +813,7 @@ install_pkg_category() {
         case $1 in
             4)
                 categorytitle="Arch Rock Configuration Utility - Install Web"
-                update_list=("firefox" "chromium" "ungoogled-chromium" "openssh" "nodejs" "nvm")
+                update_list=("firefox" "chromium" "ungoogled-chromium" "openssh" "nodejs" "nvm" "wget")
                 ;;
             5)
                 categorytitle="Arch Rock Configuration Utility - Install Communication"
@@ -825,7 +825,7 @@ install_pkg_category() {
                 ;;
             7)
                 categorytitle="Arch Rock Configuration Utility - Install Multimedia"
-                update_list=("kodi" "vlc" "gimp" "inkscape" "audacity")
+                update_list=("kodi" "vlc" "lollypop" "rhythmbox" "gimp" "inkscape" "krita" "audacity" "ardour" "blender")
                 ;;
             8)
                 categorytitle="Arch Rock Configuration Utility - Install Gaming / Emulation / Virtualization"
@@ -837,7 +837,7 @@ install_pkg_category() {
                 ;;
             9)
                 categorytitle="Arch Rock Configuration Utility - Install Development Tools"
-                update_list=("code" "sublime-text-4" "gnome-terminal" "konsole" "xterm" "git" "python-pipx" "python2") 
+                update_list=("code" "sublime-text-4" "gedit" "vim" "gnome-terminal" "konsole" "xterm" "git" "python-pipx" "python2") 
                 ;;
             10)
                 categorytitle="Arch Rock Configuration Utility - Install Misc"
