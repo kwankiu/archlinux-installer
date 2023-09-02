@@ -337,9 +337,9 @@ archarm_packages() {
 
     if [ "$answer" = "y" ]; then
         for url in "${dgpkg_list[@]}"; do
-            selection=$(basename "$url")
+            selection=$url
             echo "Downloading $selection"
-            curl -LJO "$url"
+            curl -LJO "$which_url/$url"
 
             if [ ! -z "$3" ]; then
               sudo cp -r $selection $3/$selection
