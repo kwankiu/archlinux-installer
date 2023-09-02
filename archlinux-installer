@@ -342,7 +342,7 @@ archarm_packages() {
             curl -LJO "$url"
 
             if [ ! -z "$3" ]; then
-              sudo cp -r $selection $2/$selection
+              sudo cp -r $selection $3/$selection
               sudo rm -rf $selection
             fi
 
