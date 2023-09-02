@@ -321,7 +321,6 @@ archarm_packages() {
 
     for which_url in "${ghrel_url[@]}"; do
       colorecho "$GREEN" "Fetching $which_url ..."
-      #dgpkg_list+=($(curl -sL "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
       dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o ${dgpkg}.*-aarch64.pkg.tar.xz)
     done
 
@@ -682,10 +681,10 @@ else
     fi
     sudo mkdir "$off_ins_dir/lib"
     for pkg in "${lib_pkg[@]}"; do
-      echo -e "y" | archarm_packages ${pkg}.*pkg.* "core" $off_ins_dir/lib
+      echo -e "y" | archarm_packages ${pkg} "core" $off_ins_dir/lib
     done
-    echo -e "y" | archarm_packages sudo-.*pkg.* "core" $off_ins_dir/lib
-    echo -e "y" | archarm_packages dkms-[0-9].*pkg.* "extra" $off_ins_dir/lib
+    echo -e "y" | archarm_packages "sudo-" "core" $off_ins_dir/lib
+    echo -e "y" | archarm_packages "dkms-[0-9]" "extra" $off_ins_dir/lib
   fi
 
   # Download Installer
