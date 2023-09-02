@@ -199,6 +199,10 @@ first_boot_setup() {
     pacman-key --init
     pacman-key --populate archlinuxarm
 
+    title "Adding 7ji archrepo ..."
+    arch-rock-config add-7ji
+    pacman -Syy
+
     # Download and install arch-rock-config
     title "Installing Configuration Utility (arch-rock-config) ..."
     cd /usr/bin
@@ -209,6 +213,7 @@ first_boot_setup() {
     
     # Prompt user to enter a new username
     title "Create User Account"
+    usermod -aG wheel root
     arch-rock-config user remove alarm
     arch-rock-config user add
 
@@ -415,12 +420,6 @@ fi
 
 ################################################################
 # Install additional packages
-
-if [ ! -z "$compiled_pkg_folder/Kernel" ]; then
-    title "Adding 7ji archrepo ..."
-    arch-rock-config add-7ji
-    pacman -Syy
-fi
 
 colorecho "$GREEN" "Starting additional packages installer ..."
 arch-rock-config install --installer

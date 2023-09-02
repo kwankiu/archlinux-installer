@@ -508,7 +508,7 @@ else
     offline_kernel_pkg=("linux-radxa-rkbsp5" "mali-valhall-g610" "r8125" "8852b")
     offline_gpu_pkg=("panfork-git" "dri2to3-git" "gl4es-git")
     offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
-    lib_pkg=("gcc-[0-9]" "gc-" "guile-" "libisl-" "libmpc-" "make-" "patch-" "libnsl-" "python-3")
+    lib_pkg=("gcc-[0-9]" "gc-" "guile-" "libisl-" "libmpc-" "make-" "patch-" "libnsl-" "python-3" "bc-")
   elif [ "$answer" = 1 ]; then
     install_kernel "linux-rockchip-rk3588"
 
@@ -537,7 +537,7 @@ else
     if [ "$dkmsyn" = "y" ]; then
       install_kernel $answer --dkms
       offline_kernel_pkg=("$answer" "mali-valhall-g610" "r8125" "8852b")
-      lib_pkg=("gcc-[0-9]" "gc-" "guile-" "libisl-" "libmpc-" "make-" "patch-" "libnsl-" "python-3")
+      lib_pkg=("gcc-[0-9]" "gc-" "guile-" "libisl-" "libmpc-" "make-" "patch-" "libnsl-" "python-3" "bc-")
     else
       install_kernel $answer
       offline_kernel_pkg=("$answer")
