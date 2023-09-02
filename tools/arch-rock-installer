@@ -132,104 +132,10 @@ check_internet() {
 ################################################################
 # First Boot Setup
 
-first_boot_setup() {
+pre_boot_setup() {
 
-    colorecho "$GREEN" "Running First Boot Setup ..."
-    
-    #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
-    colorecho "$GREEN" "Setting up pacman ..."
-    pacman-key --init
-    pacman-key --populate archlinuxarm
+    colorecho "$GREEN" "Running Pre Boot Setup ..."
 
-    # Allow wheel group in sudoers
-    colorecho "$GREEN" "Allowing wheel group in sudoers ..."
-    echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
-    
-    # Prompt user to enter a new username
-    title "Create User Account"
-    read -p "Enter a new username (default=rock): " new_username
-
-    # Check if the username is not empty
-    if [ -z "$new_username" ]; then
-        new_username="rock"
-    fi
-
-    # Create the user account
-    colorecho "$YELLOW" "Creating user account $new_username."
-    useradd -m -G wheel -s /bin/bash "$new_username"
-
-    # Check if the useradd command was successful
-    if [ $? -eq 0 ]; then
-        colorecho "$GREEN" "User $new_username created successfully"
-
-        # Remove the default "alarm" account
-        if [ ! "$new_username" = "alarm" ]; then
-            userdel -r alarm
-            if [ $? -eq 0 ]; then
-                echo "Default 'alarm' account removed successfully"
-            else
-                echo "Error removing default 'alarm' account"
-            fi
-        fi
-
-    else
-        colorecho "$RED" "Error creating user $new_username"
-        exit 1
-    fi
-
-    # Prompt user to set a password for the new user
-    colorecho "$GREEN" "Create new password for $new_username :"
-    passwd "$new_username"
-
-    # Check if the passwd command was successful
-    if [ $? -eq 0 ]; then
-        colorecho "$GREEN" "Password set for user $new_username"
-    else
-        colorecho "$RED" "Error setting password for user $new_username"
-        exit 1
-    fi
-
-    # Add the user to the sudoers group using usermod
-    colorecho "$GREEN" "Adding $new_username to wheel ..."
-    usermod -aG wheel "$new_username"
-
-    # Check if the usermod command was successful
-    if [ $? -eq 0 ]; then
-        colorecho "$GREEN" "$new_username added to sudoers successfully"
-    else
-        colorecho "$RED" "Error adding user $new_username to sudoers"
-    fi
-
-    # Add the user to other groups
-    colorecho "$GREEN" "Adding $new_username to other groups ..."
-    usermod -aG video "$new_username"
-    usermod -aG audio "$new_username"
-    usermod -aG games "$new_username"
-    usermod -aG log "$new_username"
-    usermod -aG lp "$new_username"
-    usermod -aG optical "$new_username"
-    usermod -aG power "$new_username"
-    usermod -aG scanner "$new_username"
-    usermod -aG storage "$new_username"
-
-    # Install sudo
-    colorecho "$GREEN" "Installing sudo"
-    pacman -Sy sudo --noconfirm
-
-    # Prompt user to change the root password
-    title "Root account options"
-    colorecho "$GREEN" "Do you want to change the root password?"
-    options=("Do not change root password" "Change root password" "Turn off root account")
-    select_option "${options[@]}"
-    answer=$?
-
-    if [ "$answer" = 1 ]; then
-        colorecho "$GREEN" "Set new root password : "
-        passwd
-    elif [ "$answer" = 2 ]; then
-        passwd -l root
-    fi
-    
     # Get boot partition from the current mount point "/"
     title "Updating fstab ..."
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
@@ -261,6 +167,39 @@ first_boot_setup() {
         fi
     fi
 
+    # Allow wheel group in sudoers
+    colorecho "$GREEN" "Allowing wheel group in sudoers ..."
+    echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+
+    # Install dkms and deps
+    if [ ! -d "$compiled_pkg_folder/lib" ]; then
+        colorecho "$GREEN" "Installing requires packages ..."
+        pacman -U $compiled_pkg_folder/lib/*.pkg.tar.* --noconfirm
+        pacman -U $compiled_pkg_folder/Kernel/r8125*.pkg.tar.* --noconfirm
+    else
+        pacman -Sy sudo --noconfirm
+    fi
+
+    # Create a tmp alias script for the installer to determine which step is it in.
+    ALIAS_SCRIPT_DIR="/usr/bin"
+    ALIAS_NAME="continue-first-boot"
+    COMMAND_TO_RUN="installer"
+    echo '#!/bin/bash' > $ALIAS_SCRIPT_DIR/$ALIAS_NAME
+    echo '$COMMAND_TO_RUN \"\$@\"' >> $ALIAS_SCRIPT_DIR/$ALIAS_NAME
+    chmod +x $ALIAS_SCRIPT_DIR/$ALIAS_NAME
+
+    colorecho "$GREEN" "Rebooting..."
+    reboot
+    fi
+
+}
+
+first_boot_setup() {
+    #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+    colorecho "$GREEN" "Setting up pacman ..."
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+
     # Download and install arch-rock-config
     title "Installing Configuration Utility (arch-rock-config) ..."
     cd /usr/bin
@@ -271,17 +210,37 @@ first_boot_setup() {
 
     title "Adding 7ji archrepo ..."
     arch-rock-config add-7ji
+    
+    # Prompt user to enter a new username
+    title "Create User Account"
+    read -p "Enter a new username (default=rock): " new_username
 
-    # Prompt user if they want to reboot
-    title "First Boot Setup"
-    read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
-
-    if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
-        colorecho "$YELLOW" "You can manually reboot later to apply the changes."
-    else
-        colorecho "$GREEN" "Rebooting..."
-        reboot
+    # Check if the username is not empty
+    if [ -z "$new_username" ]; then
+        new_username="rock"
     fi
+
+    arch-rock-config user add $new_username
+    arch-rock-config user remove alarm
+
+    # Prompt user to change the root password
+    title "Root account options"
+    colorecho "$GREEN" "Do you want to change the root password?"
+    options=("Do not change root password" "Change root password" "Turn off root account")
+    select_option "${options[@]}"
+    answer=$?
+
+    if [ "$answer" = 1 ]; then
+        colorecho "$GREEN" "Set new root password : "
+        passwd
+    elif [ "$answer" = 2 ]; then
+        passwd -l root
+    fi
+
+    #title "Time Zone"
+    #arch-rock-config "time" --installer
+    #ntz=$(arch-rock-config time network-time-zone)
+
 }
 
 ################################################################
@@ -308,14 +267,15 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+if [ ! -e "/usr/bin/continue-first-boot" ]; then 
+    pre_boot_setup
+fi
+
 # Check internet connection
 check_internet
 
-# Run first boot setup if not yet done
-if [ ! -e "/usr/bin/arch-rock-config" ]; then 
-    if [ ! "$1" = "--skip-first-boot-setup" ]; then
-        first_boot_setup
-    fi
+if [ ! "$1" = "--skip-first-boot-setup" ]; then
+    first_boot_setup
 fi
 
 # Ensure compiled packages permission
@@ -329,13 +289,7 @@ fi
 title "Install Linux Kernel"
 
 if [ -z "$compiled_pkg_folder/Kernel" ]; then
-    colorecho "$RED" "Error : No pre-compiled Packages found."
-    exit 1
-    #echo "No pre-compiled Packages found. Would you like to build linux kernel from AUR / source (y/n)?"
-    #read answer
-    #if [ "$answer" = "y" ]; then
-    #arch-rock-config install-kernel --no-reboot
-    #fi
+    pacman -Sy linux-radxa-rkbsp5-git --noconfirm
 else
     # remove old kernel files, else the package will not install.
     colorecho "$YELLOW" "Removing existing kernel files ..."
@@ -373,13 +327,7 @@ fi
 title "Install Mesa and GPU drivers"
 
 if [ -z "$compiled_pkg_folder/GPU" ]; then
-    colorecho "$RED" "Error : No pre-compiled Packages found."
-    exit 1
-    #echo "No pre-compiled Packages found. Would you like to build from AUR / source (y/n)?"
-    #read answer
-    #if [ "$answer" = "y" ]; then
-    #arch-rock-config install-gpu
-    #fi
+    pacman -Sy mesa-panfork-git --noconfirm
 else
     colorecho "$GREEN" "Installing Mesa ..."
     pacman -U $compiled_pkg_folder/GPU/*.pkg.tar.* --noconfirm
@@ -391,13 +339,7 @@ fi
 title "Install Video Acceleration"
 
 if [ -z "$compiled_pkg_folder/Video" ]; then
-    colorecho "$RED" "Error : No pre-compiled Packages found."
-    exit 1
-    #echo "No pre-compiled Packages found. Would you like to build from AUR / source (y/n)?"
-    #read answer
-    #if [ "$answer" = "y" ]; then
-    #arch-rock-config install-vpu
-    #fi
+    pacman -Sy mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
 else
     colorecho "$GREEN" "Installing Video Acceleration ..."
     pacman -U $compiled_pkg_folder/Video/*.pkg.tar.* --noconfirm

@@ -275,7 +275,7 @@ install_kernel() {
   sudo rm -rf "${pkg_tar[@]}" "${non_pkg[@]}"
 }
 
-# Install Packages from a GitHub Release Repo
+# Download Packages from a GitHub Release Repo
 ghrel_packages() {
 
     if [ -z "$1" ]; then
@@ -311,6 +311,52 @@ ghrel_packages() {
             curl -LJO "$url"
 
             if [ ! -z "$2" ]; then
+              sudo cp -r $selection $2/$selection
+              sudo rm -rf $selection
+            fi
+
+        done
+    fi
+
+}
+
+# Download Packages from Arch Linux ARM Repo
+archarm_packages() {
+
+    if [ -z "$1" ]; then
+        colorecho "$RED" "Error: No package specified."
+        exit 1
+    else
+        dgpkg=$1
+    fi
+    
+    ghrel_url=("http://mirror.archlinuxarm.org/aarch64/$2") 
+    dgpkg_list=()
+
+    for which_url in "${ghrel_url[@]}"; do
+      colorecho "$GREEN" "Fetching $which_url ..."
+      #dgpkg_list+=($(curl -sL "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
+      dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o ${dgpkg}.*-aarch64.pkg.tar.xz)
+    done
+
+    echo ""
+    colorecho "$BLUE" "The following packages will be downloaded:"
+    echo ""
+    for url in "${dgpkg_list[@]}"; do
+        selection=$(basename "$url")
+        echo "$selection"
+    done
+    echo ""
+    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
+    read answer
+
+    if [ "$answer" = "y" ]; then
+        for url in "${dgpkg_list[@]}"; do
+            selection=$(basename "$url")
+            echo "Downloading $selection"
+            curl -LJO "$url"
+
+            if [ ! -z "$3" ]; then
               sudo cp -r $selection $2/$selection
               sudo rm -rf $selection
             fi
@@ -472,20 +518,21 @@ else
   if [ "$answer" = 0 ]; then
     install_kernel "linux-radxa-rkbsp5" --dkms
 
-    offline_kernel_pkg=("linux-radxa-rkbsp5" "r8125" "8852b")
-    offline_gpu_pkg=("mali-valhall-g610" "panfork-git" "dri2to3-git" "gl4es-git")
+    offline_kernel_pkg=("linux-radxa-rkbsp5" "mali-valhall-g610" "r8125" "8852b")
+    offline_gpu_pkg=("panfork-git" "dri2to3-git" "gl4es-git")
     offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
+    lib_pkg=("gcc-[0-9]" "gc-" "guile-" "libisl-" "libmpc-" "make-" "patch-" "libnsl-" "python-3")
   elif [ "$answer" = 1 ]; then
     install_kernel "linux-rockchip-rk3588"
 
     offline_kernel_pkg=("linux-rockchip-rk3588")
-    offline_gpu_pkg=("mali-valhall-g610" "panfork-git" "dri2to3-git" "gl4es-git")
+    offline_gpu_pkg=("panfork-git" "dri2to3-git" "gl4es-git")
     offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
   elif [ "$answer" = 2 ]; then
     install_kernel "linux-rk3588-midstream"
 
-    offline_kernel_pkg=("linux-rk3588-midstream")
-    offline_gpu_pkg=("mali-valhall-g610" "pancsf-git" "dri2to3-git" "gl4es-git")
+    offline_kernel_pkg=("linux-rk3588-midstream" "mali-valhall-g610")
+    offline_gpu_pkg=("pancsf-git" "dri2to3-git" "gl4es-git")
     offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
   else
     if [ -z $2 ]; then
@@ -502,12 +549,13 @@ else
     fi
     if [ "$dkmsyn" = "y" ]; then
       install_kernel $answer --dkms
-      offline_kernel_pkg=("$answer" "r8125" "8852b")
+      offline_kernel_pkg=("$answer" "mali-valhall-g610" "r8125" "8852b")
+      lib_pkg=("gcc-[0-9]" "gc-" "guile-" "libisl-" "libmpc-" "make-" "patch-" "libnsl-" "python-3")
     else
       install_kernel $answer
       offline_kernel_pkg=("$answer")
     fi
-    offline_gpu_pkg=("mali-valhall-g610" "panfork-git" "dri2to3-git" "gl4es-git")
+    offline_gpu_pkg=("panfork-git" "dri2to3-git" "gl4es-git")
     offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
   fi
 
@@ -614,19 +662,20 @@ else
       if [ ! "$3" = "--offline" ]; then
         title
         colorecho "$GREEN" "Select Installer Type:"
-        options=("(Network Install) Online Installer" "(Experimental) Semi-Offline Installer")
+        options=("(Network Install: Experimental) Online Installer" "(Recommended) Semi-Offline Installer")
         select_option "${options[@]}"
         installer_type=$?
       fi
     fi
   fi
 
+  colorecho "$GREEN" "Downloading packages ..."
+  off_ins_dir="$root_mount_dir/usr/lib/offline-installer"  
+
   if [ "$3" = "--offline" ] || [ "$4" = "--offline" ] || [ "$installer_type" = 1 ] ; then
       # Download packages
-      colorecho "$GREEN" "Downloading packages ..."
-      off_ins_dir="$root_mount_dir/usr/lib/offline-installer"
-      sudo mkdir "$off_ins_dir" "$off_ins_dir/Kernel" "$off_ins_dir/GPU" "$off_ins_dir/Video"
-      pkg_tar=()
+      sudo mkdir "$off_ins_dir"
+      sudo mkdir "$off_ins_dir/Kernel" "$off_ins_dir/GPU" "$off_ins_dir/Video"
 
       for pkg in "${offline_kernel_pkg[@]}"; do
         echo -e "y" | ghrel_packages ${pkg}.*pkg.* $off_ins_dir/Kernel
@@ -639,6 +688,18 @@ else
       for pkg in "${offline_video_pkg[@]}"; do
         echo -e "y" | ghrel_packages ${pkg}.*pkg.* $off_ins_dir/Video
       done
+  fi
+
+  if [ ! -z "$lib_pkg" ]; then
+    if [ ! -d "$off_ins_dir" ]; then
+      sudo mkdir "$off_ins_dir"
+    fi
+    sudo mkdir "$off_ins_dir/lib"
+    for pkg in "${lib_pkg[@]}"; do
+      echo -e "y" | archarm_packages ${pkg}.*pkg.* "core" $off_ins_dir/lib
+    done
+    echo -e "y" | archarm_packages sudo-.*pkg.* "core" $off_ins_dir/lib
+    echo -e "y" | archarm_packages dkms-[0-9].*pkg.* "extra" $off_ins_dir/lib
   fi
 
   # Download Installer
@@ -667,7 +728,7 @@ else
   title
   colorecho "$GREEN" "Created Arch Linux Installer to $drive."
   colorecho "$GREEN" "You may now unmount $drive and boot into the system for installation."
-  colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run command `installer`."
+  colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run command 'installer'."
   echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
 
 fi
