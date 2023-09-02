@@ -416,9 +416,11 @@ fi
 ################################################################
 # Install additional packages
 
-title "Adding 7ji archrepo ..."
-arch-rock-config add-7ji
-pacman -Syy
+if [ ! -z "$compiled_pkg_folder/Kernel" ]; then
+    title "Adding 7ji archrepo ..."
+    arch-rock-config add-7ji
+    pacman -Syy
+fi
 
 colorecho "$GREEN" "Starting additional packages installer ..."
 arch-rock-config install --installer
