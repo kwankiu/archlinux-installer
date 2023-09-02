@@ -321,7 +321,7 @@ archarm_packages() {
 
     for which_url in "${ghrel_url[@]}"; do
       colorecho "$GREEN" "Fetching $which_url ..."
-      dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o ${dgpkg}.*-aarch64.pkg.tar.xz)
+      dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o "^${dgpkg}.*")
     done
 
     echo ""
@@ -366,6 +366,8 @@ elif [ "$1" = "-d" ] || [ "$1" = "--dev" ]; then
   bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) $2 $3
 elif [ "$1" = "get-pkg" ]; then
     ghrel_packages "$2" "$3"
+elif [ "$1" = "arch-pkg" ]; then
+    archarm_packages "$2" "$3"
 else
   ################################################################
   # Main Program
