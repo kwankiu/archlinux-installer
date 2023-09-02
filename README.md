@@ -22,13 +22,12 @@ This will get you a bootable Arch Linux rootfs on your Disk. The default login i
 ```
 installer
 ```
-3. The script will reboot after creating a user account and updating a root password. 
+3. The script will reboot after setting up fstab and installing ethernet dkms driver (if required by kernel). 
 
-To continue the installation, re-run the command, 
+To continue the installation, login to root/root again, re-run the command, 
 
-Tips: You can login to your newly created user account, but the installation must be continued with root, this can be done by:
 ```
-sudo sh installer
+installer
 ```
 
 Tips :

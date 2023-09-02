@@ -206,21 +206,11 @@ first_boot_setup() {
     # Install arch-rock-config
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
     chmod +x arch-rock-config
-
-    title "Adding 7ji archrepo ..."
-    arch-rock-config add-7ji
     
     # Prompt user to enter a new username
     title "Create User Account"
-    read -p "Enter a new username (default=rock): " new_username
-
-    # Check if the username is not empty
-    if [ -z "$new_username" ]; then
-        new_username="rock"
-    fi
-
-    arch-rock-config user add $new_username
     arch-rock-config user remove alarm
+    arch-rock-config user add
 
     # Prompt user to change the root password
     title "Root account options"
@@ -424,6 +414,10 @@ fi
 
 ################################################################
 # Install additional packages
+
+title "Adding 7ji archrepo ..."
+arch-rock-config add-7ji
+pacman -Syy
 
 colorecho "$GREEN" "Starting additional packages installer ..."
 arch-rock-config install --installer
