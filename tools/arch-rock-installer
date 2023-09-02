@@ -278,7 +278,8 @@ fi
 title "Install Linux Kernel"
 
 if [ -z "$compiled_pkg_folder/Kernel" ]; then
-    pacman -Sy linux-radxa-rkbsp5-git --noconfirm
+    arch-rock-config add-7ji
+    pacman -Syy linux-radxa-rkbsp5-git --noconfirm
 else
     # remove old kernel files, else the package will not install.
     colorecho "$YELLOW" "Removing existing kernel files ..."
