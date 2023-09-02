@@ -172,7 +172,7 @@ pre_boot_setup() {
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 
     # Install dkms and deps
-    if [ ! -d "$compiled_pkg_folder/lib" ]; then
+    if [ -d "$compiled_pkg_folder/lib" ]; then
         colorecho "$GREEN" "Installing requires packages ..."
         pacman -U $compiled_pkg_folder/lib/*.pkg.tar.* --noconfirm
         pacman -U $compiled_pkg_folder/Kernel/r8125*.pkg.tar.* --noconfirm
@@ -190,7 +190,6 @@ pre_boot_setup() {
 
     colorecho "$GREEN" "Rebooting..."
     reboot
-    fi
 
 }
 
