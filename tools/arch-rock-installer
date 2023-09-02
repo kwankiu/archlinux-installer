@@ -8,7 +8,7 @@
 # Define variables
 
 # Compiled Packages folder path
-compiled_pkg_folder="/usr/lib/compiled-packages"
+compiled_pkg_folder="/usr/lib/offline-installer"
 
 # Define main / dev branch
 branch=dev
@@ -348,7 +348,7 @@ else
     rm -rf /boot/*
 
     colorecho "$GREEN" "Installing Linux Kernel ..."
-    pacman -U $compiled_pkg_folder/Kernel/*/*.pkg.tar.xz
+    echo -e "y" | pacman -U $compiled_pkg_folder/Kernel/*.pkg.tar.*
 
     colorecho "$YELLOW" "Updating extlinux.conf ..."
     # apply new extlinux.conf
@@ -365,14 +365,6 @@ else
     echo "Updating UUID for extlinux.conf ..."
     sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
     sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
-
-    # for midstream
-    if [ -e /boot/vmlinuz-linux-rk3588-midstream ]; then
-        colorecho "$YELLOW" "Installing mali_csffw.bin ..."
-        # Install mali_csffw.bin
-        pacman -Sy wget --noconfirm
-        wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
-    fi
 fi
 
 ################################################################
@@ -390,11 +382,7 @@ if [ -z "$compiled_pkg_folder/GPU" ]; then
     #fi
 else
     colorecho "$GREEN" "Installing Mesa ..."
-    pacman -U $compiled_pkg_folder/GPU/*/*.pkg.tar.xz --noconfirm
-    if [ -z "$compiled_pkg_folder/GPU/add-ons" ]; then
-        colorecho "$GREEN" "Installing other GPU drivers ..."
-        pacman -U $compiled_pkg_folder/GPU/add-ons/*/*.pkg.tar.xz --noconfirm
-    fi
+    pacman -U $compiled_pkg_folder/GPU/*.pkg.tar.* --noconfirm
 fi
 
 ################################################################
@@ -412,7 +400,7 @@ if [ -z "$compiled_pkg_folder/Video" ]; then
     #fi
 else
     colorecho "$GREEN" "Installing Video Acceleration ..."
-    pacman -U $compiled_pkg_folder/Video/*/*.pkg.tar.xz --noconfirm
+    pacman -U $compiled_pkg_folder/Video/*.pkg.tar.* --noconfirm
 fi
 
 ################################################################
