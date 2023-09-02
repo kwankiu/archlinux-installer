@@ -292,16 +292,18 @@ if [ -z "$compiled_pkg_folder/Kernel" ]; then
 else
     # remove old kernel files, else the package will not install.
     colorecho "$YELLOW" "Removing existing kernel files ..."
-    rm -rf /usr/bin/libmali
-    rm -rf /usr/bin/libmaliw
-    rm -rf /usr/lib/libmali
-    rm -rf /usr/lib/modules
+    rm -rf /usr/bin/libmali*
+    rm -rf /usr/lib/mali*
     rm -rf /usr/lib/firmware/mali_csffw.bin
     rm -rf /usr/src/linux-*
+    rm -rf /usr/share/licenses/*mali*
     rm -rf /boot/*
 
+    pacman -Rns r8125-dkms-git --noconfirm
+    rm -rf /usr/lib/modules
+
     colorecho "$GREEN" "Installing Linux Kernel ..."
-    echo -e "y" | pacman -U $compiled_pkg_folder/Kernel/*.pkg.tar.*
+    pacman -U $compiled_pkg_folder/Kernel/*.pkg.tar.*
 
     colorecho "$YELLOW" "Updating extlinux.conf ..."
     # apply new extlinux.conf
