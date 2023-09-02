@@ -35,13 +35,14 @@ jobs:
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             uname -a
-            kernel_name="linux-radxa-rkbsp5"
-            echo -e "y" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*
-            echo -e "y" | pacman -U ${kernel_name}*.pkg.tar.* --noconfirm
 
             malifw_name="mali-valhall-g610-firmware"
             echo -e "y" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${malifw_name}.*pkg.*
-            echo -e "y" | pacman -U ${malifw_name}*.pkg.tar.* --noconfirm         
+            echo -e "y" | pacman -U ${malifw_name}*.pkg.tar.* --noconfirm    
+
+            kernel_name="linux-radxa-rkbsp5"
+            echo -e "y" | bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) get-pkg ${kernel_name}.*pkg.*
+            echo -e "y" | pacman -U ${kernel_name}*.pkg.tar.* --noconfirm
 
             cp -r /boot/initramfs-${kernel_name}.img ${PWD}/artifacts/initramfs-${kernel_name}.img
             echo "Produced initramfs at ${PWD}/artifacts/initramfs-${kernel_name}.img"
