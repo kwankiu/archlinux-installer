@@ -231,20 +231,6 @@ install_kernel() {
   pkg_tar=($(echo -e "n" | ghrel_packages $kernel_name | grep .*pkg.*))
   non_pkg=($(echo -e "n" | ghrel_packages $kernel_name | grep $kernel_name | grep -v .*pkg.*))
 
-  if [ "$2" = "--dkms" ]; then
-    package_name="r8125"
-    colorecho "$GREEN" "Downloading $package_name ..."
-    echo -e "y" | ghrel_packages $package_name
-    pkg_tar+=($(echo -e "n" | ghrel_packages $package_name | grep .*pkg.*))
-    non_pkg+=($(echo -e "n" | ghrel_packages $package_name | grep $package_name | grep -v .*pkg.*))
-
-    package_name="8852b"
-    colorecho "$GREEN" "Downloading $package_name ..."
-    echo -e "y" | ghrel_packages $package_name
-    pkg_tar+=($(echo -e "n" | ghrel_packages $package_name | grep .*pkg.*))
-    non_pkg+=($(echo -e "n" | ghrel_packages $package_name | grep $package_name | grep -v .*pkg.*))
-  fi
-
   package_name="mali-valhall-g610"
   colorecho "$GREEN" "Downloading $package_name ..."
   echo -e "y" | ghrel_packages $package_name
@@ -516,7 +502,7 @@ else
   fi
 
   if [ "$answer" = 0 ]; then
-    install_kernel "linux-radxa-rkbsp5" --dkms
+    install_kernel "linux-radxa-rkbsp5"
 
     offline_kernel_pkg=("linux-radxa-rkbsp5" "mali-valhall-g610" "r8125" "8852b")
     offline_gpu_pkg=("panfork-git" "dri2to3-git" "gl4es-git")
