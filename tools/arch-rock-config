@@ -208,7 +208,13 @@ install_from_source() {
     fi
     
     colorecho "$GREEN" "Compiling & Installing Package from source ..."
-    makepkg -si
+
+    if [ "$launch_as_installer" = 1 ]; then
+        sudo chown nobody ~/"$source_repo_dir"
+        sudo -u nobody makepkg -si
+    else
+        makepkg -si
+    fi
     
     # Clean Up
     cd "$cpwd"
@@ -1757,7 +1763,14 @@ elif [ "$1" = "install" ]; then
         install_packages
     elif [ "$2" = "--installer" ]; then
         launch_as_installer=1
-        install_packages
+        if [ -z "$3" ]; then
+            install_packages
+        else
+            for ((i = 3; i <= $#; i++)); do
+                selection+=("${!i}")
+            done
+            install_selected_pkg
+        fi
     else
         for ((i = 2; i <= $#; i++)); do
             selection+=("${!i}")
