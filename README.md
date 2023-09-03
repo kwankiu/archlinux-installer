@@ -22,9 +22,11 @@ This will get you a bootable Arch Linux rootfs on your Disk. The default login i
 ```
 installer
 ```
-3. The script will reboot after some first boot setups. 
+3. The script will reboot after creating a user account and updating a root password. 
 
-To continue the installation, login to root/root again, re-run the command, 
+To continue the installation, re-run the command, 
+
+Tips: You will need to login to your newly created user account instead of the root account.
 
 ```
 installer

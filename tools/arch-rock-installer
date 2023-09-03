@@ -131,6 +131,12 @@ first_boot_setup() {
 
     colorecho "$GREEN" "Running First Boot Setup ..."
 
+    # Check if the script is being run with root privileges
+    if [[ $EUID -ne 0 ]]; then
+        colorecho "$RED" "Error : This script must be run as root"
+        exit 1
+    fi
+
     # Get rootfs partition from the current mount point "/"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
@@ -191,6 +197,43 @@ first_boot_setup() {
     arch-rock-config add-7ji
     pacman -Syy
 
+    ################################################################
+    # User and Localization
+
+    # Prompt user to enter a new username
+    title "Create User Account"
+
+    colorecho "$GREEN" "Removing default account ..."
+    arch-rock-config user remove alarm
+
+    title "Create User Account"
+    read -p "Enter a new username (default=rock): " new_username
+
+    # Check if the username is not empty
+    if [ -z "$new_username" ]; then
+        new_username="rock"
+    fi
+
+    arch-rock-config user add $new_username
+
+    # Prompt user to change the root password
+    title "Root account options"
+    colorecho "$GREEN" "Do you want to change the root password?"
+    options=("Turn off root account" "Change root password" "Do not change root password")
+    select_option "${options[@]}"
+    answer=$?
+
+    if [ "$answer" = 1 ]; then
+        colorecho "$GREEN" "Set new root password : "
+        passwd
+    elif [ "$answer" = 0 ]; then
+        passwd -l root
+    fi
+
+    #title "Time Zone"
+    #arch-rock-config "time" --installer
+    #ntz=$(arch-rock-config time network-time-zone)
+
     colorecho "$GREEN" "Rebooting..."
     reboot
 }
@@ -213,12 +256,6 @@ fi
 
 title "Welcome to Arch Rock Installer"
 
-# Check if the script is being run with root privileges
-if [[ $EUID -ne 0 ]]; then
-    colorecho "$RED" "Error : This script must be run as root"
-    exit 1
-fi
-
 # Check internet connection
 check_internet
 
@@ -229,42 +266,13 @@ if [ ! -e "/usr/bin/arch-rock-config" ]; then
     fi
 fi
 
-################################################################
-# User and Localization
-
-    # Prompt user to enter a new username
-    title "Create User Account"
-
-    colorecho "$GREEN" "Removing default account ..."
-    arch-rock-config user remove alarm
-
-    title "Create User Account"
-    read -p "Enter a new username (default=rock): " new_username
-
-    # Check if the username is not empty
-    if [ -z "$new_username" ]; then
-        new_username="rock"
+    # Check if the script is being run with root privileges
+    if [[ $EUID -ne 0 ]]; then
+        colorecho "$GREEN" "Start Installation ..."
+    else
+        colorecho "$RED" "Error : This script must be run as user"
+        exit 1
     fi
-
-    arch-rock-config user add $new_username
-
-    # Prompt user to change the root password
-    title "Root account options"
-    colorecho "$GREEN" "Do you want to change the root password?"
-    options=("Do not change root password" "Change root password" "Turn off root account")
-    select_option "${options[@]}"
-    answer=$?
-
-    if [ "$answer" = 1 ]; then
-        colorecho "$GREEN" "Set new root password : "
-        passwd
-    elif [ "$answer" = 2 ]; then
-        passwd -l root
-    fi
-
-    #title "Time Zone"
-    #arch-rock-config "time" --installer
-    #ntz=$(arch-rock-config time network-time-zone)
 
 ################################################################
 # Install Linux Kernel
@@ -272,12 +280,12 @@ fi
 title "Install Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Kernel ..."
-    pacman -S --overwrite \* linux-radxa-rkbsp5-git
-    su - $new_username -c arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+    sudo pacman -S --overwrite \* linux-radxa-rkbsp5-git
+    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
 
     colorecho "$YELLOW" "Updating extlinux.conf ..."
     # apply new extlinux.conf
-    mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+    sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
 
     # Get rootfs partition from the current mount point "/"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
@@ -288,8 +296,8 @@ title "Install Linux Kernel"
 
     # Change UUID for extlinux.conf
     echo "Updating UUID for extlinux.conf ..."
-    sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
-    sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
 
 ################################################################
 # Install Mesa and GPU drivers
@@ -297,7 +305,7 @@ title "Install Linux Kernel"
 title "Install Mesa and GPU drivers"
 
     colorecho "$GREEN" "Installing Mesa ..."
-    pacman -S mesa-panfork-git --noconfirm
+    sudo pacman -S mesa-panfork-git --noconfirm
 
 ################################################################
 # Install Video Acceleration
@@ -305,7 +313,7 @@ title "Install Mesa and GPU drivers"
 title "Install Video Acceleration"
 
     colorecho "$GREEN" "Installing Video Acceleration ..."
-    pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
+    sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
 
 ################################################################
 # Post Installation
@@ -314,21 +322,21 @@ title "Post Installation"
 
 # The fix for some Bluetooth Modules (A8, AX210, etc.)
 colorecho "$GREEN" "Applying Bluetooth Fix ..."
-echo "blacklist pgdrv" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist btusb" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist btrtl" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist btbcm" >> /etc/modprobe.d/blacklist.conf
-echo "#blacklist btintel" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist pgdrv" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "blacklist btusb" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "blacklist btrtl" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "blacklist btbcm" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo "#blacklist btintel" >> sudo tee /etc/modprobe.d/blacklist.conf
 
 # Network Manager, WiFi, Bluetooth
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
-pacman -S networkmanager iw bluez --noconfirm
+sudo pacman -S networkmanager iw bluez --noconfirm
 
 colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
-systemctl enable NetworkManager.service
-systemctl start NetworkManager.service
-systemctl enable bluetooth.service
-systemctl start bluetooth.service
+sudo systemctl enable NetworkManager.service
+sudo systemctl start NetworkManager.service
+sudo systemctl enable bluetooth.service
+sudo systemctl start bluetooth.service
 
 ################################################################
 # Select desktop environment
@@ -355,7 +363,7 @@ title "Install desktop environment"
 if [ "$de_options" = 0 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome (X only)..."
-    pacman -Syyu gnome --noconfirm
+    sudo pacman -Syyu gnome --noconfirm
     GDM_CONFIG_FILE="/etc/gdm/custom.conf"
     if [ -f "$GDM_CONFIG_FILE" ]; then
         sudo sed -i 's/^#WaylandEnable/WaylandEnable=false/' "$GDM_CONFIG_FILE"
@@ -363,22 +371,22 @@ if [ "$de_options" = 0 ]; then
     else
         echo "GDM configuration file ($GDM_CONFIG_FILE) not found."
     fi
-    systemctl enable gdm
+    sudo systemctl enable gdm
 elif [ "$de_options" = 1 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome (Wayland Experimental) ..."
-    pacman -Syyu gnome-shell gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
-    systemctl enable gdm
+    sudo pacman -Syyu gnome-shell gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    sudo systemctl enable gdm
 elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma ..."
-    pacman -Syyu plasma-desktop sddm --noconfirm
-    systemctl enable sddm
+    sudo pacman -Syyu plasma-desktop sddm --noconfirm
+    sudo systemctl enable sddm
 elif [ "$de_options" = 3 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie ..."
-    pacman -Syyu budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
-    systemctl enable gdm
+    sudo pacman -Syyu budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    sudo systemctl enable gdm
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
 fi
@@ -401,7 +409,7 @@ if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
     echo "You can manually reboot later to apply the changes."
 else
     colorecho "$GREEN" "Cleaning up installations ..."
-    rm -rf /usr/bin/installer
+    sudo rm -rf /usr/bin/installer
     colorecho "$GREEN" "Rebooting system ..."
     reboot
 fi
