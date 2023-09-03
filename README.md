@@ -22,7 +22,7 @@ This will get you a bootable Arch Linux rootfs on your Disk. The default login i
 ```
 installer
 ```
-3. The script will reboot after setting up fstab and installing ethernet dkms driver (if required by kernel). 
+3. The script will reboot after some first boot setups. 
 
 To continue the installation, login to root/root again, re-run the command, 
 

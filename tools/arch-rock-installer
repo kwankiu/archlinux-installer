@@ -255,7 +255,7 @@ fi
 title "Install Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Kernel ..."
-    pacman -S linux-radxa-rkbsp5-git
+    pacman -S --overwrite \* linux-radxa-rkbsp5-git
     arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
 
     colorecho "$YELLOW" "Updating extlinux.conf ..."
