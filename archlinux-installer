@@ -10,11 +10,8 @@
 # Define main / dev branch
 branch=dev
 
-# URL for kernel and packages repo
-svnji_url="https://api.github.com/repos/7Ji/archrepo/releases/tags/aarch64"
-adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/repo"
-
-# URL for Arch Linux Rootfs
+# URL for Kernel and Arch Linux Rootfs
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/latest"
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 ################################################################
@@ -221,24 +218,18 @@ confirm_disk() {
 }
 
 ################################################################
-# Compiled Packages
+
 install_kernel() {
   kernel_name=$1
   pkg_tar_dir=$(mktemp -d)
-  
   colorecho "$GREEN" "Downloading $kernel_name ..."
   echo -e "y" | ghrel_packages $kernel_name
+
   pkg_tar=($(echo -e "n" | ghrel_packages $kernel_name | grep .*pkg.*))
   non_pkg=($(echo -e "n" | ghrel_packages $kernel_name | grep $kernel_name | grep -v .*pkg.*))
-
-  package_name="mali-valhall-g610"
-  colorecho "$GREEN" "Downloading $package_name ..."
-  echo -e "y" | ghrel_packages $package_name
-  pkg_tar+=($(echo -e "n" | ghrel_packages $package_name | grep .*pkg.*))
-  non_pkg+=($(echo -e "n" | ghrel_packages $package_name | grep $package_name | grep -v .*pkg.*))
   
-  # Extract kernel from pre-compiled packages
-  colorecho "$GREEN" "Extracting packages ..."
+  # Extract kernel
+  colorecho "$GREEN" "Extracting $kernel_name ..."
 
   # Create folder in pkg_tar_dir
   sudo mkdir $pkg_tar_dir/Kernel
@@ -261,7 +252,7 @@ install_kernel() {
   sudo rm -rf "${pkg_tar[@]}" "${non_pkg[@]}"
 }
 
-# Download Packages from a GitHub Release Repo
+# Install Packages from a GitHub Release Repo
 ghrel_packages() {
 
     if [ -z "$1" ]; then
@@ -271,7 +262,7 @@ ghrel_packages() {
         dgpkg=$1
     fi
     
-    ghrel_url=("$svnji_url" "$adrepo_url")
+    ghrel_url=("$adrepo_url")
     dgpkg_list=()
 
     for which_url in "${ghrel_url[@]}"; do
@@ -306,51 +297,6 @@ ghrel_packages() {
 
 }
 
-# Download Packages from Arch Linux ARM Repo
-archarm_packages() {
-
-    if [ -z "$1" ]; then
-        colorecho "$RED" "Error: No package specified."
-        exit 1
-    else
-        dgpkg=$1
-    fi
-    
-    ghrel_url=("http://mirror.archlinuxarm.org/aarch64/$2") 
-    dgpkg_list=()
-
-    for which_url in "${ghrel_url[@]}"; do
-      colorecho "$GREEN" "Fetching $which_url ..."
-      dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o "^${dgpkg}.*")
-    done
-
-    echo ""
-    colorecho "$BLUE" "The following packages will be downloaded:"
-    echo ""
-    for url in "${dgpkg_list[@]}"; do
-        selection=$(basename "$url")
-        echo "$selection"
-    done
-    echo ""
-    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
-    read answer
-
-    if [ "$answer" = "y" ]; then
-        for url in "${dgpkg_list[@]}"; do
-            selection=$url
-            echo "Downloading $selection"
-            curl -LJO "$which_url/$url"
-
-            if [ ! -z "$3" ]; then
-              sudo cp -r $selection $3/$selection
-              sudo rm -rf $selection
-            fi
-
-        done
-    fi
-
-}
-
 ################################################################
 # Sees if it is a help command or normal command with parameters
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
@@ -366,8 +312,6 @@ elif [ "$1" = "-d" ] || [ "$1" = "--dev" ]; then
   bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) $2 $3
 elif [ "$1" = "get-pkg" ]; then
     ghrel_packages "$2" "$3"
-elif [ "$1" = "arch-pkg" ]; then
-    archarm_packages "$2" "$3"
 else
   ################################################################
   # Main Program
@@ -489,61 +433,17 @@ else
   if [ -z $2 ]; then
       title
       colorecho "$GREEN" "Select a kernel to install:"
-      options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(Experimental) Armbian Kernel (Linux 5.10)" "(Experimental) Googulator Midstream Kernel (Linux 6.2)" "Install other Kernel from repo")
+      options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(WIP) Install other Kernel from repo")
       select_option "${options[@]}"
       answer=$?
-  else
-      if [ "$2" = "rkbsp" ] || [ "$2" = "linux-radxa-rkbsp5" ]; then
-        answer=0
-      elif [ "$2" = "armbian" ] || [ "$2" = "linux-rockchip-rk3588" ]; then
-        answer=1
-      elif [ "$2" = "midstream" ] || [ "$2" = "linux-rk3588-midstream" ]; then
-        answer=2
-      fi
   fi
 
-  if [ "$answer" = 0 ]; then
+  if [ "$answer" = 0 ] || [ "$2" = "rkbsp" ]; then
     install_kernel "linux-radxa-rkbsp5"
-
-    offline_kernel_pkg=("linux-radxa-rkbsp5" "mali-valhall-g610" "r8125" "8852b")
-    offline_gpu_pkg=("panfork-git" "dri2to3-git" "gl4es-git")
-    offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
-    lib_pkg=("gcc-[0-9]" "gc-" "guile-" "libisl-" "libmpc-" "make-" "patch-" "libnsl-" "python-3" "bc-")
-  elif [ "$answer" = 1 ]; then
-    install_kernel "linux-rockchip-rk3588"
-
-    offline_kernel_pkg=("linux-rockchip-rk3588")
-    offline_gpu_pkg=("panfork-git" "dri2to3-git" "gl4es-git")
-    offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
-  elif [ "$answer" = 2 ]; then
-    install_kernel "linux-rk3588-midstream"
-
-    offline_kernel_pkg=("linux-rk3588-midstream" "mali-valhall-g610")
-    offline_gpu_pkg=("pancsf-git" "dri2to3-git" "gl4es-git")
-    offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
   else
-    if [ -z $2 ]; then
-      echo "Enter kernel package name:"
-      read answer
-    else
-      answer=$2
-    fi
-    if [ -z $3 ]; then
-      echo "Install 8852bu-dkms-git, 8852be-dkms-git, r8125-dkms-git (y/n)?"
-      read dkmsyn
-    else
-      dkmsyn=$3
-    fi
-    if [ "$dkmsyn" = "y" ]; then
-      install_kernel $answer --dkms
-      offline_kernel_pkg=("$answer" "mali-valhall-g610" "r8125" "8852b")
-      lib_pkg=("gcc-[0-9]" "gc-" "guile-" "libisl-" "libmpc-" "make-" "patch-" "libnsl-" "python-3" "bc-")
-    else
-      install_kernel $answer
-      offline_kernel_pkg=("$answer")
-    fi
-    offline_gpu_pkg=("panfork-git" "dri2to3-git" "gl4es-git")
-    offline_video_pkg=("librga-multi" "librist" "/mpp-git" "ffmpeg4.4-mpp" "ffmpeg-mpp")
+    echo "Enter kernel package name:"
+    read answer
+    install_kernel $answer
   fi
 
   ################################################################
@@ -643,51 +543,6 @@ else
   colorecho "$GREEN" "Copying Kernel Files ..."
   sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
   sudo rm -rf $root_mount_dir/boot/*
-
-  if [ -z "$4" ]; then
-    if [ ! "$3" = "--online" ]; then
-      if [ ! "$3" = "--offline" ]; then
-        title
-        colorecho "$GREEN" "Select Installer Type:"
-        options=("(Network Install: Experimental) Online Installer" "(Recommended) Semi-Offline Installer")
-        select_option "${options[@]}"
-        installer_type=$?
-      fi
-    fi
-  fi
-
-  colorecho "$GREEN" "Downloading packages ..."
-  off_ins_dir="$root_mount_dir/usr/lib/offline-installer"  
-
-  if [ "$3" = "--offline" ] || [ "$4" = "--offline" ] || [ "$installer_type" = 1 ] ; then
-      # Download packages
-      sudo mkdir "$off_ins_dir"
-      sudo mkdir "$off_ins_dir/Kernel" "$off_ins_dir/GPU" "$off_ins_dir/Video"
-
-      for pkg in "${offline_kernel_pkg[@]}"; do
-        echo -e "y" | ghrel_packages ${pkg}.*pkg.* $off_ins_dir/Kernel
-      done
-
-      for pkg in "${offline_gpu_pkg[@]}"; do
-        echo -e "y" | ghrel_packages ${pkg}.*pkg.* $off_ins_dir/GPU
-      done
-
-      for pkg in "${offline_video_pkg[@]}"; do
-        echo -e "y" | ghrel_packages ${pkg}.*pkg.* $off_ins_dir/Video
-      done
-  fi
-
-  if [ ! -z "$lib_pkg" ]; then
-    if [ ! -d "$off_ins_dir" ]; then
-      sudo mkdir "$off_ins_dir"
-    fi
-    sudo mkdir "$off_ins_dir/lib"
-    for pkg in "${lib_pkg[@]}"; do
-      echo -e "y" | archarm_packages ${pkg} "core" $off_ins_dir/lib
-    done
-    echo -e "y" | archarm_packages "sudo-" "core" $off_ins_dir/lib
-    echo -e "y" | archarm_packages "dkms-[0-9]" "extra" $off_ins_dir/lib
-  fi
 
   # Download Installer
   colorecho "$GREEN" "Downloading Installer ..."
