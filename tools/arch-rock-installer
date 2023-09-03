@@ -170,6 +170,7 @@ first_boot_setup() {
     # Allow wheel group in sudoers
     colorecho "$GREEN" "Allowing wheel group in sudoers ..."
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+    usermod -aG wheel root
 
     #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
     colorecho "$GREEN" "Setting up pacman ..."
@@ -233,9 +234,19 @@ fi
 
     # Prompt user to enter a new username
     title "Create User Account"
-    usermod -aG wheel root
+
+    colorecho "$GREEN" "Removing default account ..."
     arch-rock-config user remove alarm
-    arch-rock-config user add
+
+    title "Create User Account"
+    read -p "Enter a new username (default=rock): " new_username
+
+    # Check if the username is not empty
+    if [ -z "$new_username" ]; then
+        new_username="rock"
+    fi
+
+    arch-rock-config user add $new_username
 
     # Prompt user to change the root password
     title "Root account options"
@@ -262,7 +273,7 @@ title "Install Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Kernel ..."
     pacman -S --overwrite \* linux-radxa-rkbsp5-git
-    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+    su - $new_username -c arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
 
     colorecho "$YELLOW" "Updating extlinux.conf ..."
     # apply new extlinux.conf
