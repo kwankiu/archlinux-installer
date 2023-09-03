@@ -5,11 +5,6 @@
 #                     Arch Rock Installer                      #
 #                                                              #
 ################################################################
-# Define variables
-
-# Compiled Packages folder path
-compiled_pkg_folder="/usr/lib/offline-installer"
-
 # Define main / dev branch
 branch=dev
 
@@ -116,11 +111,11 @@ check_internet() {
 
     if ! "$internet_available"; then
         colorecho "$RED" "Your system does not appear to have internet connection."
-        colorecho "$YELLOW" "We might not be able to set you up without internet connection. Do you want to continue anyway?"
-        options=("Continue Anyway" "Try Again" "Exit Setup")
+        colorecho "$YELLOW" "This installer requires internet connection. Do you want to try install anyway?"
+        options=("Check Internet Again" "Try Install Anyway" "Exit Installer")
         select_option "${options[@]}"
         answer=$?
-        if [ "$answer" = 1 ]; then
+        if [ "$answer" = 0 ]; then
             check_internet
         elif [ "$answer" = 2 ]; then
             echo "Aborted. Exiting ..."
@@ -132,9 +127,9 @@ check_internet() {
 ################################################################
 # First Boot Setup
 
-pre_boot_setup() {
+first_boot_setup() {
 
-    colorecho "$GREEN" "Running Pre Boot Setup ..."
+    colorecho "$GREEN" "Running First Boot Setup ..."
 
     # Get boot partition from the current mount point "/"
     title "Updating fstab ..."
@@ -170,71 +165,27 @@ pre_boot_setup() {
     # Allow wheel group in sudoers
     colorecho "$GREEN" "Allowing wheel group in sudoers ..."
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+    pacman -Sy sudo --noconfirm
 
-    # Install dkms and deps
-    if [ -d "$compiled_pkg_folder/lib" ]; then
-        colorecho "$GREEN" "Installing requires packages ..."
-        pacman -U $compiled_pkg_folder/lib/*.pkg.tar.* --noconfirm
-        pacman -U $compiled_pkg_folder/Kernel/r8125*.pkg.tar.* --noconfirm
-    else
-        pacman -Sy sudo --noconfirm
-    fi
-
-    # Create a tmp alias script for the installer to determine which step is it in.
-    ALIAS_SCRIPT_DIR="/usr/bin"
-    ALIAS_NAME="continue-first-boot"
-    COMMAND_TO_RUN="installer"
-    echo '#!/bin/bash' > $ALIAS_SCRIPT_DIR/$ALIAS_NAME
-    echo '$COMMAND_TO_RUN \"\$@\"' >> $ALIAS_SCRIPT_DIR/$ALIAS_NAME
-    chmod +x $ALIAS_SCRIPT_DIR/$ALIAS_NAME
-
-    colorecho "$GREEN" "Rebooting..."
-    reboot
-
-}
-
-first_boot_setup() {
     #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
     colorecho "$GREEN" "Setting up pacman ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
 
-    title "Adding 7ji archrepo ..."
-    arch-rock-config add-7ji
-    pacman -Syy
-
     # Download and install arch-rock-config
-    title "Installing Configuration Utility (arch-rock-config) ..."
+    colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
     cd /usr/bin
 
     # Install arch-rock-config
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
     chmod +x arch-rock-config
-    
-    # Prompt user to enter a new username
-    title "Create User Account"
-    usermod -aG wheel root
-    arch-rock-config user remove alarm
-    arch-rock-config user add
 
-    # Prompt user to change the root password
-    title "Root account options"
-    colorecho "$GREEN" "Do you want to change the root password?"
-    options=("Do not change root password" "Change root password" "Turn off root account")
-    select_option "${options[@]}"
-    answer=$?
+    colorecho "$GREEN" "Adding 7ji archrepo ..."
+    arch-rock-config add-7ji
+    pacman -Syy
 
-    if [ "$answer" = 1 ]; then
-        colorecho "$GREEN" "Set new root password : "
-        passwd
-    elif [ "$answer" = 2 ]; then
-        passwd -l root
-    fi
-
-    #title "Time Zone"
-    #arch-rock-config "time" --installer
-    #ntz=$(arch-rock-config time network-time-zone)
-
+    colorecho "$GREEN" "Rebooting..."
+    reboot
 }
 
 ################################################################
@@ -261,45 +212,51 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-if [ ! -e "/usr/bin/continue-first-boot" ]; then 
-    pre_boot_setup
-fi
-
 # Check internet connection
 check_internet
 
-if [ ! "$1" = "--skip-first-boot-setup" ]; then
-    first_boot_setup
+# Run first boot setup if not yet done
+if [ ! -e "/usr/bin/arch-rock-config" ]; then 
+    if [ ! "$1" = "--skip-first-boot-setup" ]; then
+        first_boot_setup
+    fi
 fi
 
-# Ensure compiled packages permission
-if [ -z $compiled_pkg_folder ]; then
-    chmod -R 755 $compiled_pkg_folder/*
-fi
+################################################################
+# User and Localization
+
+    # Prompt user to enter a new username
+    title "Create User Account"
+    usermod -aG wheel root
+    arch-rock-config user remove alarm
+    arch-rock-config user add
+
+    # Prompt user to change the root password
+    title "Root account options"
+    colorecho "$GREEN" "Do you want to change the root password?"
+    options=("Do not change root password" "Change root password" "Turn off root account")
+    select_option "${options[@]}"
+    answer=$?
+
+    if [ "$answer" = 1 ]; then
+        colorecho "$GREEN" "Set new root password : "
+        passwd
+    elif [ "$answer" = 2 ]; then
+        passwd -l root
+    fi
+
+    #title "Time Zone"
+    #arch-rock-config "time" --installer
+    #ntz=$(arch-rock-config time network-time-zone)
 
 ################################################################
 # Install Linux Kernel
 
 title "Install Linux Kernel"
 
-if [ -z "$compiled_pkg_folder/Kernel" ]; then
-    arch-rock-config add-7ji
-    pacman -Syy linux-radxa-rkbsp5-git --noconfirm
-else
-    # remove old kernel files, else the package will not install.
-    colorecho "$YELLOW" "Removing existing kernel files ..."
-    rm -rf /usr/bin/libmali*
-    rm -rf /usr/lib/mali*
-    rm -rf /usr/lib/firmware/mali_csffw.bin
-    rm -rf /usr/src/linux-*
-    rm -rf /usr/share/licenses/*mali*
-    rm -rf /boot/*
-
-    pacman -Rns r8125-dkms-git --noconfirm
-    rm -rf /usr/lib/modules
-
     colorecho "$GREEN" "Installing Linux Kernel ..."
-    pacman -U $compiled_pkg_folder/Kernel/*.pkg.tar.*
+    pacman -S linux-radxa-rkbsp5-git
+    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
 
     colorecho "$YELLOW" "Updating extlinux.conf ..."
     # apply new extlinux.conf
@@ -316,31 +273,22 @@ else
     echo "Updating UUID for extlinux.conf ..."
     sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
     sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
-fi
 
 ################################################################
 # Install Mesa and GPU drivers
 
 title "Install Mesa and GPU drivers"
 
-if [ -z "$compiled_pkg_folder/GPU" ]; then
-    pacman -Sy mesa-panfork-git --noconfirm
-else
     colorecho "$GREEN" "Installing Mesa ..."
-    pacman -U $compiled_pkg_folder/GPU/*.pkg.tar.* --noconfirm
-fi
+    pacman -S mesa-panfork-git --noconfirm
 
 ################################################################
 # Install Video Acceleration
 
 title "Install Video Acceleration"
 
-if [ -z "$compiled_pkg_folder/Video" ]; then
-    pacman -Sy mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
-else
     colorecho "$GREEN" "Installing Video Acceleration ..."
-    pacman -U $compiled_pkg_folder/Video/*.pkg.tar.* --noconfirm
-fi
+    pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
 
 ################################################################
 # Post Installation
@@ -436,7 +384,7 @@ if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
     echo "You can manually reboot later to apply the changes."
 else
     colorecho "$GREEN" "Cleaning up installations ..."
-    rm -rf $compiled_pkg_folder /usr/bin/installer
+    rm -rf /usr/bin/installer
     colorecho "$GREEN" "Rebooting system ..."
     reboot
 fi
