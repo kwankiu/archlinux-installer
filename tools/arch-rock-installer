@@ -170,7 +170,6 @@ first_boot_setup() {
     # Allow wheel group in sudoers
     colorecho "$GREEN" "Allowing wheel group in sudoers ..."
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
-    pacman -Sy sudo --noconfirm
 
     #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
     colorecho "$GREEN" "Setting up pacman ..."
@@ -184,6 +183,8 @@ first_boot_setup() {
     # Install arch-rock-config
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
     chmod +x arch-rock-config
+
+    pacman -Sy sudo --noconfirm
 
     colorecho "$GREEN" "Adding 7ji archrepo ..."
     arch-rock-config add-7ji
