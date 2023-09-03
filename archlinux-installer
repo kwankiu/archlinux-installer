@@ -147,6 +147,7 @@ list_wsl() {
     done
   fi
 
+  options+=("Skip (if you want to create an image or already mounted a disk)")
   select_option "${options[@]}"
   choice=$?
   choice=$((choice+1))
@@ -183,8 +184,20 @@ list_disks() {
     if [[ $choice -le $((i/3)) ]]; then
       selected_disk="/dev/${disks[((choice-1)*3)]}"
     elif [[ $choice -eq $((i/3+1)) ]]; then
-      selected_disk="/out/archlinux.img"
-      colorecho "$GREEN" "Creating an (.img) image at $selected_disk."
+      colorecho "$GREEN" "Creating an (.img) image ..."
+      selected_disk="out/archlinux-installer-rock.img"
+      img_mount="/dev/loop1"
+
+      if [ ! -d "out" ]; then
+        sudo mkdir out
+      fi
+      
+      sudo truncate -s 2G $selected_disk
+      colorecho "$GREEN" "Image created at $selected_disk"
+
+      sudo losetup -P $img_mount $selected_disk
+      selected_disk=$img_mount
+      colorecho "$GREEN" "Image mounted on $selected_disk"
     else
       read -p "Enter the disk path: " selected_disk
       colorecho "$YELLOW" "Manually entered disk path $selected_disk."
@@ -325,8 +338,8 @@ else
     if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ] || [ -x "$(command -v apt)" ]; then
       colorecho "$YELLOW" "Make sure this is your default WSL distro, else it wont works."
     else
-      colorecho "$RED" "Error: Only Debian / Ubuntu Based Distro on WSL2 are supported."
-      exit 1
+      colorecho "$RED" "Error: Only Debian / Ubuntu Based Distro on WSL2 are supported. Disk listed below will NOT work."
+      colorecho "$GREEN" "However, you can still create an image."
     fi
   fi
 
@@ -415,16 +428,11 @@ else
       colorecho "$GREEN" "Select a disk to install or create an image:"
       list_disks
     fi
+
+    # Confirm Disk
     title
-    if [ $selected_disk == "/out/archlinux.img" ]; then
-      if [ ! -d "./out" ]; then
-        sudo mkdir ./out
-      fi
-      drive=./out/archlinux.img
-      sudo dd if=/dev/zero of=$drive bs=1M count=4096
-    else
-      confirm_disk
-    fi
+    confirm_disk
+
   else 
     drive=$1
   fi
