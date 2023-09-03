@@ -474,8 +474,8 @@ else
   # Create GPT table and partitions
   colorecho "$GREEN" "Formatting and partitioning disk ..."
   echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
-  sudo parted $drive mkpart primary fat32 16MiB 500MiB
-  sudo parted $drive mkpart primary ext4 500MiB 100%
+  sudo parted $drive mkpart boot fat32 16MiB 500MiB
+  sudo parted $drive mkpart rootfs ext4 500MiB 100%
   sudo parted $drive set 1 boot on
 
   # Find the partitions
@@ -490,6 +490,7 @@ else
   # Format the partitions
   echo -e 'y' |sudo mkfs.ext4 $root_partition 
   sudo mkfs.vfat -F32 $boot_partition
+  sudo resize2fs $drive
 
   title
 
