@@ -192,7 +192,7 @@ list_disks() {
         sudo mkdir out
       fi
       
-      sudo truncate -s 2G $selected_disk
+      sudo truncate -s 4G $selected_disk
       colorecho "$GREEN" "Image created at $selected_disk"
 
       sudo losetup -P $img_mount $selected_disk
