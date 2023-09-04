@@ -184,20 +184,15 @@ list_disks() {
     if [[ $choice -le $((i/3)) ]]; then
       selected_disk="/dev/${disks[((choice-1)*3)]}"
     elif [[ $choice -eq $((i/3+1)) ]]; then
-      colorecho "$GREEN" "Creating an (.img) image ..."
-      selected_disk="out/archlinux-installer-rock.img"
-      img_mount="/dev/loop1"
-
-      if [ ! -d "out" ]; then
-        sudo mkdir out
+      # Create Image
+      read -p "Image Name (default=archlinux-installer-rock.img): " selected_disk
+      if [ -z "$selected_disk" ]; then
+        selected_disk="archlinux-installer-rock.img"
+      else
+        selected_disk="$selected_disk"
       fi
-      
-      sudo truncate -s 4G $selected_disk
-      colorecho "$GREEN" "Image created at $selected_disk"
+      create_img
 
-      sudo losetup -P $img_mount $selected_disk
-      selected_disk=$img_mount
-      colorecho "$GREEN" "Image mounted on $selected_disk"
     else
       read -p "Enter the disk path: " selected_disk
       colorecho "$YELLOW" "Manually entered disk path $selected_disk."
@@ -205,6 +200,58 @@ list_disks() {
   else
     colorecho "$RED" "Invalid choice $choice. Please select a valid option."
   fi
+}
+
+create_img() {
+  
+  if [ ! -d "out" ]; then
+    sudo mkdir out
+  fi
+  
+  if [ -z "$argsize" ]; then
+    img_size="4G"
+  else
+    img_size=$argsize
+  fi
+
+  if [ -z "$argdisk" ]; then
+    img_mount="/dev/loop1"
+  else
+    img_mount=$argdisk
+  fi
+
+  if [ ! -z "$argimg" ]; then
+    selected_disk=$argimg
+  fi
+
+  # Check if out/$selected_disk exists and generate a unique name if needed
+  if [ -e "out/$selected_disk" ]; then
+      counter=0
+      base_name="${selected_disk%.img}"
+      new_name="${base_name}.img"
+
+      while [ -e "out/$new_name" ]; do
+          counter=$((counter + 1))
+          new_name="${base_name}${counter}.img"
+      done
+
+      selected_disk="$new_name"
+      echo "Renamed to $selected_disk as file already exists."
+  fi
+
+  selected_disk="out/$selected_disk"
+  colorecho "$GREEN" "Creating image at $selected_disk."
+  
+  sudo truncate -s $img_size $selected_disk
+  colorecho "$GREEN" "Image created at $selected_disk"
+
+  if losetup -a | grep "$img_mount"; then
+    sudo losetup --detach $img_mount
+  fi
+
+  sudo losetup -P $img_mount $selected_disk
+  selected_disk=$img_mount
+  colorecho "$GREEN" "Image mounted on $selected_disk"
 }
 
 
@@ -311,21 +358,60 @@ ghrel_packages() {
 }
 
 ################################################################
-# Sees if it is a help command or normal command with parameters
-if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-  colorecho "$BLUE" "Arch Linux Installation Tool for Rock 5 / RK3588 ($branch)"
-  echo "Usage: archlinux-installer <optional_argument>"
+# Loop through the arguments
+for arg in "$@"; do
+  case "$arg" in
+    -h | --help)
+      colorecho "$BLUE" "Arch Linux Installation Tool for Rock 5 / RK3588 ($branch)"
+      echo "Usage: archlinux-installer <optional_argument>"
 
-  colorecho "$GREEN" "Options"
-  echo "-h / --help : Usage and Infomation of this installer."
-  echo "-d / --dev : Use latest dev installation script."
-  exit 1
-elif [ "$1" = "-d" ] || [ "$1" = "--dev" ]; then
-  echo "Getting the latest installation script from dev ..."
-  bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) $2 $3
-elif [ "$1" = "get-pkg" ]; then
-    ghrel_packages "$2" "$3"
-else
+      colorecho "$GREEN" "Options"
+      echo "-h / --help : Usage and Infomation of this Installation Tool."
+      echo "-d / --dev : Use latest dev version of this Installation Tool."
+      echo "-i / --image : Create a disk image with default image name at out folder."
+      echo "-k / --kernel : Create Arch Linux using default kernel option."
+      echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
+      echo "--size=<image_size> : Set disk image size (default is 4G)."
+      echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
+      echo "--kernel=<kernel_name> : Create Arch Linux using the specified kernel option."
+      
+      exit 1
+      ;;
+    -d | --dev)
+      echo "Getting the latest installation script from dev ..."
+      bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) $@
+      exit 1
+      ;;
+    --get-pkg)
+      colorecho "$RED" "For debug only."
+      ghrel_packages $2 $3
+      exit 1
+      ;;
+    --image=*)
+      argimg="${arg#*=}"
+      ;;
+    --disk=*)
+      argdisk="${arg#*=}"
+      ;;
+    --size=*)
+      argsize="${arg#*=}"
+      ;;
+    --kernel=*)
+      argkrl="${arg#*=}"
+      ;;
+    -i | --image)
+      argimg="archlinux-installer-rock.img"
+      ;;
+    -k | --kernel)
+      argkrl="rkbsp"
+      ;;
+    -*)
+      colorecho "$RED" "Invalid command or argument."
+      exit 1
+      ;;
+  esac
+done
+
   ################################################################
   # Main Program
   title
@@ -416,7 +502,7 @@ else
   # This runs when there is no parameters specified
 
   # Choose drive to install / create .img image
-  if [ -z $1 ]; then
+  if [ -z "$argimg" ] && [ -z "$argdisk" ]; then
     if [ ! -z "$WSL_DISTRO_NAME" ]; then
       colorecho "$GREEN" "Mount a Disk to Continue:"
       list_wsl
@@ -432,25 +518,32 @@ else
     # Confirm Disk
     title
     confirm_disk
-
-  else 
-    drive=$1
+  elif [ -z "$argimg" ]; then
+    drive=$argdisk
+  else
+    create_img
+    drive=$selected_disk
   fi
 
   # Install boot partition and kernel
-  if [ -z $2 ]; then
+  if [ -z "$argkrl" ]; then
       title
       colorecho "$GREEN" "Select a kernel to install:"
       options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(WIP) Install other Kernel from repo")
       select_option "${options[@]}"
       answer=$?
+  else
+      answer=99
   fi
 
-  if [ "$answer" = 0 ] || [ "$2" = "rkbsp" ]; then
+  if [ "$answer" = 0 ] || [ "$argkrl" = "rkbsp" ]; then
     install_kernel "linux-radxa-rkbsp5"
   else
-    echo "Enter kernel package name:"
-    read answer
+    if [ -z "$argkrl" ]; then
+      read -p "Enter kernel package name:" answer
+    else
+      answer=$argkrl
+    fi
     install_kernel $answer
   fi
 
@@ -568,7 +661,9 @@ else
   # Unmount the boot and root partitions
   sudo umount $boot_mount_dir $root_mount_dir
 
-  if [ ! -z "$WSL_DISTRO_NAME" ]; then
+  if [[ $drive == /dev/loop* ]]; then
+    sudo losetup --detach $drive
+  elif [ ! -z "$WSL_DISTRO_NAME" ]; then
     wsl.exe --unmount \\$drive
   fi
 
@@ -582,5 +677,4 @@ else
   colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run command 'installer'."
   echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
 
-fi
 ################################################################
