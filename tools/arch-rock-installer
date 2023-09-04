@@ -301,6 +301,9 @@ title "Install Linux Kernel"
         fi
     fi
 
+    colorecho "$GREEN" "Installing DKMS Packages ..."
+    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+
     colorecho "$YELLOW" "Updating extlinux.conf ..."
     # apply new extlinux.conf
     sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
@@ -316,9 +319,6 @@ title "Install Linux Kernel"
     colorecho "$GREEN" "Updating UUID for extlinux.conf ..."
     sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
     sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
-
-    colorecho "$GREEN" "Installing DKMS Packages ..."
-    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
 
 ################################################################
 # Install Mesa and GPU drivers
