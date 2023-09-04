@@ -252,6 +252,8 @@ create_img() {
   sudo losetup -P $img_mount $selected_disk
   selected_disk=$img_mount
   colorecho "$GREEN" "Image mounted on $selected_disk"
+
+  is_img=1
 }
 
 
@@ -655,13 +657,21 @@ done
   sudo chmod +x arch-rock-installer
   sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/installer"
 
+  if [ "$is_img" = 1 ]; then
+    colorecho "$GREEN" "Downloading growpart ..."
+    curl -LJO https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart
+    colorecho "$GREEN" "Copying growpart ..."
+    sudo chmod +x growpart
+    sudo cp -r "growpart" "$root_mount_dir/usr/bin/growpart"
+  fi
+
   # Remove the temporary directory
   sudo rm -rf "$pkg_tar_dir"
 
   # Unmount the boot and root partitions
   sudo umount $boot_mount_dir $root_mount_dir
 
-  if [[ $drive == /dev/loop* ]]; then
+  if [ "$is_img" = 1 ]; then
     sudo losetup --detach $drive
   elif [ ! -z "$WSL_DISTRO_NAME" ]; then
     wsl.exe --unmount \\$drive
@@ -669,7 +679,7 @@ done
 
   # Clean up
   colorecho "$YELLOW" "Cleaning up temporary files ..."
-  sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer
+  sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer growpart
 
   title
   colorecho "$GREEN" "Created Arch Linux Installer to $drive."
