@@ -880,13 +880,14 @@ install_selected_pkg() {
         case ${selection[i]} in
             "chromium")
                 if sudo pacman -Ssy "^chromium-mpp$" &> /dev/null; then
-                    sudo pacman -S chromium-mpp --noconfirm
+                    yes y|sudo pacman -S chromium-mpp
                     install_pkg_from_url "$alaa_url/packages/r/re2/re2-1%3A20230301-1-aarch64.pkg.tar.xz"
                     sudo systemctl enable --now libv4l-rkmpp-setup.service
                     CUSTOM_CMD_TO_RUN="LD_LIBRARY_PATH=/usr/lib/mali-valhall-g610/x11-gbm chromium --use-gl=egl"
                     add_alias "chromium-mpp"
                     CUSTOM_CMD_TO_RUN=""
                     echo "To start Chromium with MPP support, use command chromium-mpp instead of chromium."
+                    sleep 2
                 else
                     sudo pacman -S chromium --noconfirm
                 fi
