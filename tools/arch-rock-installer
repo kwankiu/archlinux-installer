@@ -171,6 +171,7 @@ first_boot_setup() {
     fi
 
     colorecho "$GREEN" "Resizing File System ..."
+    growpart $rootfs_disk 2
     resize2fs $rootfs_partition
 
     # Allow wheel group in sudoers
@@ -266,13 +267,13 @@ if [ ! -e "/usr/bin/arch-rock-config" ]; then
     fi
 fi
 
-    # Check if the script is being run with root privileges
-    if [[ $EUID -ne 0 ]]; then
-        colorecho "$GREEN" "Start Installation ..."
-    else
-        colorecho "$RED" "Error : Installer must be run as user"
-        exit 1
-    fi
+# Check if the script is being run with root privileges
+if [[ $EUID -ne 0 ]]; then
+    colorecho "$GREEN" "Start Installation ..."
+else
+    colorecho "$RED" "Error : Installer must be run as user"
+    exit 1
+fi
 
 ################################################################
 # Install Linux Kernel
@@ -280,8 +281,25 @@ fi
 title "Install Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Kernel ..."
-    sudo pacman -S --overwrite \* linux-radxa-rkbsp5-git linux-radxa-rkbsp5-git-headers
-    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+    oldkrlrel=$(uname -r)
+    kernelpkg="linux-radxa-rkbsp5-git"
+    yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
+
+    if sudo pacman -Qs $kernelpkg > /dev/null ; then
+        colorecho "$GREEN" "Removing Old Kernel Modules ..."
+        sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+    else
+        echo "Manual Confirm Installation" #debug
+        sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
+        if sudo pacman -Qs $kernelpkg > /dev/null ; then
+            colorecho "$GREEN" "Removing Old Kernel Modules ..."
+            sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+        else
+            colorecho "$RED" "Error: Failed to Install Linux Kernel"
+            colorecho "$RED" "Installation can not be continued, exiting ..."
+            exit 1
+        fi
+    fi
 
     colorecho "$YELLOW" "Updating extlinux.conf ..."
     # apply new extlinux.conf
@@ -295,9 +313,12 @@ title "Install Linux Kernel"
     echo "Root partition UUID: $root_uuid"
 
     # Change UUID for extlinux.conf
-    echo "Updating UUID for extlinux.conf ..."
+    colorecho "$GREEN" "Updating UUID for extlinux.conf ..."
     sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
     sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+    colorecho "$GREEN" "Installing DKMS Packages ..."
+    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
 
 ################################################################
 # Install Mesa and GPU drivers
@@ -319,6 +340,9 @@ title "Install Video Acceleration"
 # Post Installation
 
 title "Post Installation"
+
+colorecho "$GREEN" "Performing Full System Upgrade ..."
+sudo pacman -Syyu --noconfirm
 
 # The fix for some Bluetooth Modules (A8, AX210, etc.)
 colorecho "$GREEN" "Applying Bluetooth Fix ..."
@@ -359,7 +383,7 @@ title "Install desktop environment"
 if [ "$de_options" = 0 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome (X only)..."
-    sudo pacman -Syyu gnome --noconfirm
+    sudo pacman -S gnome --noconfirm
     GDM_CONFIG_FILE="/etc/gdm/custom.conf"
     if [ -f "$GDM_CONFIG_FILE" ]; then
         sudo sed -i 's/^#WaylandEnable/WaylandEnable=false/' "$GDM_CONFIG_FILE"
@@ -371,17 +395,17 @@ if [ "$de_options" = 0 ]; then
 elif [ "$de_options" = 1 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome (Wayland Experimental) ..."
-    sudo pacman -Syyu gnome-shell gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma ..."
-    sudo pacman -Syyu plasma-desktop sddm --noconfirm
+    sudo pacman -S plasma-desktop sddm --noconfirm
     sudo systemctl enable sddm
 elif [ "$de_options" = 3 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie ..."
-    sudo pacman -Syyu budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
     sudo systemctl enable gdm
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
@@ -402,12 +426,13 @@ title "Installation Finished"
 read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
 
 if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
-    echo "You can manually reboot later to apply the changes."
+    echo "You may manually reboot later to apply the changes."
+    echo "To remove this installer, run sudo rm -rf /usr/bin/installer"
 else
     colorecho "$GREEN" "Cleaning up installations ..."
     sudo rm -rf /usr/bin/installer
     colorecho "$GREEN" "Rebooting system ..."
-    reboot
+    sudo reboot
 fi
 
 ################################################################
