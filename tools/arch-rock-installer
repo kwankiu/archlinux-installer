@@ -133,7 +133,7 @@ first_boot_setup() {
 
     # Check if the script is being run with root privileges
     if [[ $EUID -ne 0 ]]; then
-        colorecho "$RED" "Error : This script must be run as root"
+        colorecho "$RED" "Error : First Boot Setup must be run as root"
         exit 1
     fi
 
@@ -270,7 +270,7 @@ fi
     if [[ $EUID -ne 0 ]]; then
         colorecho "$GREEN" "Start Installation ..."
     else
-        colorecho "$RED" "Error : This script must be run as user"
+        colorecho "$RED" "Error : Installer must be run as user"
         exit 1
     fi
 
@@ -280,7 +280,7 @@ fi
 title "Install Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Kernel ..."
-    sudo pacman -S --overwrite \* linux-radxa-rkbsp5-git
+    sudo pacman -S --overwrite \* linux-radxa-rkbsp5-git linux-radxa-rkbsp5-git-headers
     arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
 
     colorecho "$YELLOW" "Updating extlinux.conf ..."
@@ -322,11 +322,7 @@ title "Post Installation"
 
 # The fix for some Bluetooth Modules (A8, AX210, etc.)
 colorecho "$GREEN" "Applying Bluetooth Fix ..."
-echo "blacklist pgdrv" >> sudo tee /etc/modprobe.d/blacklist.conf
-echo "blacklist btusb" >> sudo tee /etc/modprobe.d/blacklist.conf
-echo "blacklist btrtl" >> sudo tee /etc/modprobe.d/blacklist.conf
-echo "blacklist btbcm" >> sudo tee /etc/modprobe.d/blacklist.conf
-echo "#blacklist btintel" >> sudo tee /etc/modprobe.d/blacklist.conf
+echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
 
 # Network Manager, WiFi, Bluetooth
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
