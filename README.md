@@ -7,13 +7,15 @@ This is an installation script that gets you through an installation of Arch Lin
 
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
 
-# How to install?
+# Get the installer
 Download and run the script below:
  ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
-This will get you a bootable Arch Linux rootfs on your Disk. The default login is alarm/alarm and root login is root/root.
+This will get you a bootable Arch Linux Installer on your Disk.
+
+Alternatively, you may consider downloading our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest)
 
 # Installation
 
@@ -22,73 +24,69 @@ This will get you a bootable Arch Linux rootfs on your Disk. The default login i
 ```
 installer
 ```
-3. The script will reboot after creating a user account and updating a root password. 
+3. The script will reboot after performing some setups and creating a user account. 
 
 To continue the installation, re-run the command, 
 
-Tips: You will need to login to your newly created user account instead of the root account.
+Note: You will need to login to your newly created user account instead of the root account.
 
 ```
 installer
 ```
-
-Tips :
-If it says that the linux package have a conflict, this is normal, confirm and let the script install the kernel.
-If you want a Desktop Environment, pick a Desktop Environment to install.
 
 4. Once it's done, the script should automatically reboot your system. Enjoy!
 
 # Usage
 
 ```
-archlinux-installer <options/disk_path> <kernel>
+archlinux-installer -OPTIONS or --OPTIONS=<arguments> ...
 ```
 
 ### Options
 
-| Options | Additional Arguments | Description |
+| Options | Arguments | Description |
 | ------------- | ------------- | ------------- |
-| `-h` or `--help` | N/A | Usage and Infomation of this installer. |
-| `-d` or `--dev` | N/A | Use latest dev installation script. |
+| `-h` or `--help` | N/A | Usage and Infomation of this Installation Tool. |
+| `-d` or `--dev` | N/A | Use latest dev version of this Installation Tool. |
+| `-i` or `--image` | `<image_name>` | Create a disk image with default image name at `out` folder or specify an image name with the `<image_name>` argument. |
+| `--size` | `<image_size>` | Set disk image size (default is 4G). |
+| `--disk` | `<disk_path>` | Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default). |
+| `-k` or `--kernel` | `<kernel_name>` | Create Arch Linux using default kernel option or specify a kernel option with the `<kernel_name>` argument. Available kernel options is `rkbsp` only. |
 
-### Optional arguments
-| Argument | Description |
-| ------------- | ------------- |
-| `<disk_path>` | Specify the installation path, this should be a disk path not a partition path. On the Rock 5B, it is /dev/nvme0n1 for NVMe SSD, /dev/mmcblk0 for uSD Card, and /dev/mmcblk1 for eMMC. For SATA or External disk, they are usually on /dev/sdX, which X is usually starting from a-z. |
-| `<kernel>` | Currently available options for kernel are `rkbsp` and `midstream`. You may optionally specifiy a custom kernel by specifying the path to the file. This can be a tar (.tar.gz or .tar.xz) or image (.img). |
 
 ## Examples
 
-#### Typical Usage (Same as [How to install?](https://github.com/kwankiu/archlinux-installer-rock5#how-to-install) section)
+#### Install on a disk
 
-This command will prompt for picking installation options.
+Prompt for picking installation options (Same as [Get the installer](https://github.com/kwankiu/archlinux-installer-rock5#how-to-install) section).
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
+OR
 
-#### Using  `<disk_path>`
-#### (e.g. /dev/sdb)
-
-This command will let you pick a kernel and install Arch Linux to your disk path.
-
+Install on a disk (replace /dev/nvme0n1 with yours) with default Kernel option.
 ```
-bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/sdb
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --disk=/dev/nvme0n1 -k
 ```
 
-#### Using both `<disk_path>` and`<kernel>`
-#### (e.g. /dev/nvme0n1 for `<disk_path>` and rkbsp for `<kernel>`)
+#### Create an image
 
-This command will install Arch Linux with Radxa BSP Kernel to your disk path.
+Create an Arch Linux Installer image (.img) with default Kernel option.
 
 ```
-bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) /dev/nvme0n1 rkbsp
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) -i -k
+```
+OR
+
+Create an Arch Linux Installer image (.img) with custom image name and size with default Kernel option.
+
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --image=myarchinstaller.img --size=4G -k
 ```
 
 #### Using dev branch version
 #### (WARNING: dev branch are not tested and may be broken.)
-
-This command will use the script from dev branch and prompt for picking installation options.
 
 ```
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --dev
@@ -115,8 +113,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-
 
 To launch the configuration utility:
 ```
+arch-rock-config
+
+#or simply just (if ailas added)
 arcu
-#or arch-rock-config
 ```
 ## Optional arguments
 
@@ -172,8 +172,8 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 Kernel package options for Rock 5 / RK3588 : 
 | Kernel Package  | Linux Kernel | Notes |
 | ------------- | ------------- | ------------- |
-| [linux-radxa-rkbsp5-bin](https://aur.archlinux.org/packages/linux-radxa-rkbsp5-bin) | Radxa Rockchip BSP (Linux-5.10.x) | Radxa BSP Kernel from Binary Package (fastest to install, but may not be up-to-date) |
-| [linux-radxa-rkbsp5-git](https://aur.archlinux.org/packages/linux-radxa-rkbsp5-git) | Radxa Rockchip BSP (Linux-5.10.x) | Radxa BSP Kernel from Source Code (latest, but takes a few hours to compile and install) |
+| [linux-radxa-rkbsp5-bin](https://aur.archlinux.org/packages/linux-radxa-rkbsp5-bin) | Radxa Rockchip BSP (Linux-5.10.x) | Radxa BSP Kernel from Binary Package |
+| [linux-radxa-rkbsp5-git](https://aur.archlinux.org/packages/linux-radxa-rkbsp5-git) | Radxa Rockchip BSP (Linux-5.10.x) | Radxa BSP Kernel from Source Code (binary package now available on [7Ji arch repo](https://github.com/7Ji/archrepo)) |
 | [linux-rockchip-rk3588-bin](https://aur.archlinux.org/packages/linux-rockchip-rk3588-bin) | Armbian Rockchip BSP (Linux-5.10.x) | Armbian Kernel from Binary Package (fast to install, but may not work as well as Radxa BSP Kernel for the Rock 5) |
 | [linux-rk3588-midstream](https://github.com/hbiyik/hw_necromancer/tree/master/rock5b/linux-rk3588-midstream) | Googulator's 'Midstream' (Linux-6.2.x) (experimental) | Midstream Kernel from Source Code (based on Linux-6.2, only [basic hardware support](https://github.com/Googulator/linux-rk3588-midstream/wiki), but takes a few hours to compile and install) |
 | Unavailable / [Only on Armbian](https://monka.systemonachip.net/rock5b/edge/deb/) | Linux Mainline Kernel (Linux-6.5) (experimental) | Collabora is currently working on Linux Mainline Kernel for RK3588, [most of the stuff](https://gitlab.collabora.com/hardware-enablement/rockchip-3588/notes-for-rockchip-3588/-/blob/main/mainline-status.md) appears on Midstream is now on Mainline, but things like USB-PD, USB-C, HDMI, are still work-in-progress. |
@@ -186,6 +186,6 @@ arch-rock-config install-kernel <kernel>
 ```
 
 # Known Issues / Troubleshooting
-1. Functionality to create an .img image is still work-in-progress.
-2. Installation Script is known to run on Debian / Ubuntu / Arch Linux / WSL2 (Ubuntu/Debian) (Experimental)
-3. macOS is not supported. You may use Docker or VM and mount your disk to it.
+1. Installation Script is known to run on Debian / Ubuntu / Arch Linux
+2. Support for Ubuntu/Debian running on Windows WSL2 is Experimental, other distro are not supported.
+3. For other distro, you may consider downloading our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest).
