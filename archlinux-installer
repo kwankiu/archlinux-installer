@@ -185,9 +185,9 @@ list_disks() {
       selected_disk="/dev/${disks[((choice-1)*3)]}"
     elif [[ $choice -eq $((i/3+1)) ]]; then
       # Create Image
-      read -p "Image Name (default=archlinux-installer-rock.img): " selected_disk
+      read -p "Image Name (default=archlinux-installer-rock5.img): " selected_disk
       if [ -z "$selected_disk" ]; then
-        selected_disk="archlinux-installer-rock.img"
+        selected_disk="archlinux-installer-rock5.img"
       else
         selected_disk="$selected_disk"
       fi
@@ -205,7 +205,7 @@ list_disks() {
 create_img() {
   
   if [ ! -d "out" ]; then
-    sudo mkdir out
+    mkdir out
   fi
   
   if [ -z "$argsize" ]; then
@@ -232,7 +232,7 @@ create_img() {
 
       while [ -e "out/$new_name" ]; do
           counter=$((counter + 1))
-          new_name="${base_name}${counter}.img"
+          new_name="${base_name}-${counter}.img"
       done
 
       selected_disk="$new_name"
@@ -405,7 +405,7 @@ for arg in "$@"; do
       argchroot=1
       ;;
     -i | --image)
-      argimg="archlinux-installer-rock.img"
+      argimg="archlinux-installer-rock5.img"
       ;;
     -k | --kernel)
       argkrl="rkbsp"
@@ -657,10 +657,11 @@ done
     colorecho "$GREEN" "Chroot into system ..."
     sleep 1
     sudo chroot $root_mount_dir /bin/bash <<END
+    mount -t proc none /proc
     mkdir -p /etc/systemd/system && echo "[Unit]\nDescription=First Boot Installer Service\nAfter=network.target\n\n[Service]\nExecStart=/usr/bin/installer\nType=simple\n\n[Install]\nWantedBy=multi-user.target" | tee $root_mount_dir/etc/systemd/system/first-boot-installer.service
     systemctl enable first-boot-installer.service
-    systemctl start first-boot-installer.service
-    END
+END
+    sleep 5
   fi
 
   # Unmount the boot and root partitions
