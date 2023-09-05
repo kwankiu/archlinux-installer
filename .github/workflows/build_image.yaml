@@ -30,3 +30,6 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
             artifacts: "out/archlinux-installer-rock5.img.xz"
+            prerelease: true
+            allowUpdates: true
+            tag: "alpha"
