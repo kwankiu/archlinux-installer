@@ -212,7 +212,7 @@ install_from_source() {
     fi
     
     colorecho "$GREEN" "Compiling & Installing Package from source ..."
-    makepkg -si
+    yes y|makepkg -si
     
     # Clean Up
     cd "$cpwd"
