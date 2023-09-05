@@ -307,7 +307,7 @@ install_kernel() {
   sudo cp -r initramfs-${kernel_name}.img $pkg_tar_dir/Kernel/linux/boot/initramfs-${kernel_name}.img
   sudo cp -r $pkg_tar_dir/Kernel/linux/usr/lib/modules/*/vmlinuz $pkg_tar_dir/Kernel/linux/boot/vmlinuz-${kernel_name}
 
-  # set Boot Partition source dir
+  # set Boot source dir
   boot_image=$pkg_tar_dir/Kernel/linux/boot
 
   # Clean up
@@ -554,11 +554,9 @@ done
 
   ################################################################
   # Main Setup
-
   title
   root_mount_dir=$(mktemp -d)
-  boot_mount_dir=$(mktemp -d)
-  boot_img_mount_dir=$(mktemp -d)
+  #boot_mount_dir=$(mktemp -d)
 
   # Unmount all partitions of the specified drive
   colorecho "$GREEN" "Unmounting disk ..."
@@ -572,9 +570,9 @@ done
   # Create GPT table and partitions
   colorecho "$GREEN" "Formatting and partitioning disk ..."
   echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
-  sudo parted $drive mkpart boot fat32 16MiB 500MiB
-  sudo parted $drive mkpart rootfs ext4 500MiB 100%
-  sudo parted $drive set 1 boot on
+  sudo parted $drive mkpart config fat32 16MiB 32MiB
+  sudo parted $drive mkpart rootfs ext4 32MiB 100%
+  sudo parted $drive set 2 boot on
 
   # Find the partitions
   if [ -e $drive"1" ]; then
@@ -591,11 +589,10 @@ done
   sudo resize2fs $drive
 
   title
-
   # Mount the partitions
   colorecho "$GREEN" "Mounting partition for install ..."
   sudo mount -o rw $root_partition $root_mount_dir
-  sudo mount $boot_partition $boot_mount_dir
+  #sudo mount $boot_partition $boot_mount_dir
 
   # Download and extract the latest ArchLinux tarball
   colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
@@ -603,36 +600,40 @@ done
 
   colorecho "$GREEN" "Copying Arch Linux rootfs ..."
   sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
+  sudo rm -rf $root_mount_dir/boot/*
+
+  # Copy kernel files
+  colorecho "$GREEN" "Copying Linux Kernel ..."
+  sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
 
   title
-  # Copy contents to boot partition
-  colorecho "$GREEN" "Copying Boot Partition ..."
-  sudo cp -r "$boot_image"/* "$boot_mount_dir"
-
   colorecho "$GREEN" "Updating extlinux.conf ..."
   # Find the UUIDs of the root partition
   root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
   root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
 
   # Copy extlinux template
-  if [ ! -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
-    sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
+  if [ ! -e "$root_mount_dir/boot/extlinux/extlinux.conf" ]; then
+    sudo mv $root_mount_dir/boot/extlinux/extlinux.arch.template $root_mount_dir/boot/extlinux/extlinux.conf
   fi
 
   # Change UUID for extlinux.conf
   echo "Updating UUID for extlinux.conf ..."
-  sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
-  sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+  sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $root_mount_dir/boot/extlinux/extlinux.conf
+  sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $root_mount_dir/boot/extlinux/extlinux.conf
+
+  sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" $root_mount_dir/boot/extlinux/extlinux.conf
+
+  sudo sed -i "s| /initramfs| /boot/initramfs|" $root_mount_dir/boot/extlinux/extlinux.conf
+  sudo sed -i "s| /initrd| /boot/initrd|" $root_mount_dir/boot/extlinux/extlinux.conf
+
+  sudo sed -i "s| /dtbs| /boot/dtbs|" $root_mount_dir/boot/extlinux/extlinux.conf
+  sudo sed -i "s| /dtbo| /boot/dtbo|" $root_mount_dir/boot/extlinux/extlinux.conf
 
   echo "Info : Root partition UUID: $root_uuid"
   echo "Info : Root partition PARTUUID: $root_part_uuid"
 
   title
-  # Copy kernel files
-  colorecho "$GREEN" "Copying Kernel Files ..."
-  sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
-  sudo rm -rf $root_mount_dir/boot/*
-
   # Download Installer
   colorecho "$GREEN" "Downloading Installer ..."
   curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer
@@ -665,7 +666,8 @@ END
   fi
 
   # Unmount the boot and root partitions
-  sudo umount $boot_mount_dir $root_mount_dir
+  sudo umount $root_mount_dir
+  #sudo umount $boot_mount_dir
 
   if [ "$is_img" = 1 ]; then
     sudo losetup --detach $drive
@@ -675,7 +677,8 @@ END
 
   # Clean up
   colorecho "$YELLOW" "Cleaning up temporary files ..."
-  sudo rm -rf $boot_mount_dir $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer growpart
+  sudo rm -rf $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer growpart
+  #sudo rm -rf $boot_mount_dir
 
   title
   colorecho "$GREEN" "Created Arch Linux Installer to $drive."
