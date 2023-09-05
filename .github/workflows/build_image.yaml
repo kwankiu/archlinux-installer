@@ -33,6 +33,6 @@ jobs:
           # Artifact name
           name: Test Image
           # Path to the file to upload
-          path: ${pwd}/out/archlinux-installer-rock5.img
+          path: ${{ github.workspace }}/out/archlinux-installer-rock5.img
           # secrets.GITHUB_TOKEN
           repo-token: ${{ secrets.GITHUB_TOKEN }}
