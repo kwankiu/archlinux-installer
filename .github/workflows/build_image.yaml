@@ -26,7 +26,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build Image
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) -d -i -k --disk=/dev/loop3
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k --disk=/dev/loop3
       - name: Upload to Release Action
         uses: Shopify/upload-to-release@v1.0.1
         with:
