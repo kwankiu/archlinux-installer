@@ -239,11 +239,10 @@ create_img() {
       echo "Renamed to $selected_disk as file already exists."
   fi
 
-  selected_disk="out/$selected_disk"
-  colorecho "$GREEN" "Creating image at $selected_disk."
-  
+  selected_disk="out/$selected_disk"  
   sudo truncate -s $img_size $selected_disk
   colorecho "$GREEN" "Image created at $selected_disk"
+  is_img=$selected_disk
 
   if losetup -a | grep "$img_mount"; then
     sudo losetup --detach $img_mount
@@ -252,8 +251,6 @@ create_img() {
   sudo losetup -P $img_mount $selected_disk
   selected_disk=$img_mount
   colorecho "$GREEN" "Image mounted on $selected_disk"
-
-  is_img=1
 }
 
 
@@ -409,6 +406,9 @@ for arg in "$@"; do
       ;;
     -k | --kernel)
       argkrl="rkbsp"
+      ;;
+    -c | --compress)
+      argxz=1
       ;;
     -*)
       colorecho "$RED" "Invalid command or argument."
@@ -669,8 +669,12 @@ END
   sudo umount $root_mount_dir
   #sudo umount $boot_mount_dir
 
-  if [ "$is_img" = 1 ]; then
+  if [ ! -z "$is_img" ]; then
     sudo losetup --detach $drive
+    if [ "$argxz" = 1 ]; then
+      colorecho "$GREEN" "Compressing Image ..."
+      sudo xz -T 0 $is_img
+    fi
   elif [ ! -z "$WSL_DISTRO_NAME" ]; then
     wsl.exe --unmount \\$drive
   fi
