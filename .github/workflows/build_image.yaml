@@ -31,8 +31,8 @@ jobs:
         uses: Shopify/upload-to-release@v1.0.1
         with:
           # Artifact name
-          name: archlinux-installer-rock5.img
+          name: Test Image
           # Path to the file to upload
-          path: ${pwd}/out/
+          path: ${pwd}/out/archlinux-installer-rock5.img
           # secrets.GITHUB_TOKEN
           repo-token: ${{ secrets.GITHUB_TOKEN }}
