@@ -572,7 +572,7 @@ done
   echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
   sudo parted $drive mkpart config fat32 16MiB 32MiB
   sudo parted $drive mkpart rootfs ext4 32MiB 100%
-  sudo parted $drive set 2 boot on
+  #sudo parted $drive set 2 boot on
 
   # Find the partitions
   if [ -e $drive"1" ]; then
@@ -669,6 +669,11 @@ END
   sudo umount $root_mount_dir
   #sudo umount $boot_mount_dir
 
+  # Clean up
+  colorecho "$YELLOW" "Cleaning up temporary files ..."
+  sudo rm -rf $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer growpart
+  #sudo rm -rf $boot_mount_dir
+
   if [ ! -z "$is_img" ]; then
     sudo losetup --detach $drive
     if [ "$argxz" = 1 ]; then
@@ -678,11 +683,6 @@ END
   elif [ ! -z "$WSL_DISTRO_NAME" ]; then
     wsl.exe --unmount \\$drive
   fi
-
-  # Clean up
-  colorecho "$YELLOW" "Cleaning up temporary files ..."
-  sudo rm -rf $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer growpart
-  #sudo rm -rf $boot_mount_dir
 
   title
   colorecho "$GREEN" "Created Arch Linux Installer to $drive."
