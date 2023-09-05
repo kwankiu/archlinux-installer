@@ -654,7 +654,13 @@ done
   sudo rm -rf "$pkg_tar_dir"
 
   if [ ! -z "$argchroot" ]; then
-  sudo chroot $root_mount_dir
+    colorecho "$GREEN" "Chroot into system ..."
+    sleep 1
+    sudo chroot $root_mount_dir /bin/bash <<END
+    mkdir -p /etc/systemd/system && echo "[Unit]\nDescription=First Boot Installer Service\nAfter=network.target\n\n[Service]\nExecStart=/usr/bin/installer\nType=simple\n\n[Install]\nWantedBy=multi-user.target" | tee $root_mount_dir/etc/systemd/system/first-boot-installer.service
+    systemctl enable first-boot-installer.service
+    systemctl start first-boot-installer.service
+    END
   fi
 
   # Unmount the boot and root partitions
