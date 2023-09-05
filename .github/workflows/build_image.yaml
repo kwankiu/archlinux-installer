@@ -4,12 +4,11 @@ name: Build Arch Linux Installer for Rock 5
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "dev" ]
-  pull_request:
-    branches: [ "dev" ]
+    tags:
+      - 'dev'
 
   # Allows you to run this workflow manually from the Actions tab
-  #workflow_dispatch:
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -17,6 +16,8 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -27,12 +28,8 @@ jobs:
       - name: Build Image
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k --disk=/dev/loop3
-      - name: Upload to Release Action
-        uses: Shopify/upload-to-release@v1.0.1
+          sudo xz -T 0 out/archlinux-installer-rock5.img
+
+      - uses: ncipollo/release-action@v1
         with:
-          # Artifact name
-          name: Test Image
-          # Path to the file to upload
-          path: ${{ github.workspace }}/out/archlinux-installer-rock5.img
-          # secrets.GITHUB_TOKEN
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+            artifacts: "out/archlinux-installer-rock5.img.xz"
