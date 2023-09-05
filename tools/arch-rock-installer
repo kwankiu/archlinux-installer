@@ -312,7 +312,7 @@ title "Install Linux Kernel"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
     # Find the UUIDs of the root partition
-    root_uuid=$(blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
     echo "Root partition UUID: $root_uuid"
 
     # Change UUID for extlinux.conf
