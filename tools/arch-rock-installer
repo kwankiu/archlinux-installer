@@ -95,6 +95,7 @@ title() {
 
 ################################################################
 # Internet Connection Check
+internet_retry_count=0
 
 check_internet() {
     colorecho "$YELLOW" "Checking internet connection..."
@@ -110,16 +111,24 @@ check_internet() {
     done
 
     if ! "$internet_available"; then
-        colorecho "$RED" "Your system does not appear to have internet connection."
-        colorecho "$YELLOW" "This installer requires internet connection. Do you want to try install anyway?"
-        options=("Check Internet Again" "Try Install Anyway" "Exit Installer")
-        select_option "${options[@]}"
-        answer=$?
-        if [ "$answer" = 0 ]; then
+        if [ "$internet_retry_count" -gt 3 ]; then
+            colorecho "$RED" "Your system does not appear to have internet connection."
+            colorecho "$YELLOW" "This installer requires internet connection. Do you want to try install anyway?"
+            options=("Check Internet Again" "Try Install Anyway" "Exit Installer")
+            select_option "${options[@]}"
+            answer=$?
+            if [ "$answer" = 0 ]; then
+                check_internet
+            elif [ "$answer" = 2 ]; then
+                echo "Aborted. Exiting ..."
+                exit 1
+            fi
+        else
+            colorecho "$GREEN" "Waiting for internet connection ..."
+            sleep 3
+            colorecho "$GREEN" "Retrying ..."
             check_internet
-        elif [ "$answer" = 2 ]; then
-            echo "Aborted. Exiting ..."
-            exit 1
+            ((internet_retry_count++))
         fi
     fi
 }
