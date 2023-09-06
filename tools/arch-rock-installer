@@ -253,7 +253,7 @@ init_setup() {
         rm -rf /etc/systemd/system/init-setup.service
     fi
 
-    echo -e "[Unit]\nDescription=Auto-Login and Resume Installer\nAfter=network.target\n\n[Service]\nType=simple\nExecStartPre=/usr/bin/agetty --autologin $new_username --noclear %I \$TERM\nUser=$new_username\nWorkingDirectory=/home/$new_username\nEnvironment=DISPLAY=:0\nExecStart=/usr/bin/installer\nRestart=on-failure\nRestartSec=5\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=multi-user.target" | tee /etc/systemd/system/resume-install.service && systemctl enable resume-install.service
+    echo -e "[Unit]\nDescription=Auto-Login and Resume Installer\nAfter=network.target\n\n[Service]\nType=simple\nExecStartPre=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM\nUser=$new_username\nWorkingDirectory=/home/$new_username\nEnvironment=DISPLAY=:0\nExecStart=/usr/bin/installer\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=multi-user.target" | tee /etc/systemd/system/resume-install.service && systemctl enable resume-install.service
     colorecho "$GREEN" "Rebooting..."
     systemctl reboot
     reboot
