@@ -369,11 +369,15 @@ for arg in "$@"; do
       echo "-d / --dev : Use latest dev version of this Installation Tool."
       echo "-i / --image : Create a disk image with default image name at out folder."
       echo "-k / --kernel : Create Arch Linux using default kernel option."
+      echo "-b / --bootpart : Create Arch Linux with a seperated boot partition."
+      echo "-c / --compress : Compress the Disk Image to .img.xz"
       echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
       echo "--size=<image_size> : Set disk image size (default is 4G)."
       echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
       echo "--kernel=<kernel_name> : Create Arch Linux using the specified kernel option."
-      
+      echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
+      echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
+  
       exit 1
       ;;
     -d | --dev)
@@ -398,6 +402,12 @@ for arg in "$@"; do
     --kernel=*)
       argkrl="${arg#*=}"
       ;;
+    --bootpartstart=*)
+      argbootptst="${arg#*=}"
+      ;;    
+    --bootpartend=*)
+      argbootpted="${arg#*=}"
+      ;;   
     --chroot)
       argchroot=1
       ;;
@@ -406,6 +416,9 @@ for arg in "$@"; do
       ;;
     -k | --kernel)
       argkrl="rkbsp"
+      ;;
+    -b | --bootpart)
+      argbootpt=1
       ;;
     -c | --compress)
       argxz=1
@@ -556,7 +569,10 @@ done
   # Main Setup
   title
   root_mount_dir=$(mktemp -d)
-  #boot_mount_dir=$(mktemp -d)
+
+  if [ "$argbootpt" = 1 ]; then
+    boot_mount_dir=$(mktemp -d)
+  fi
 
   # Unmount all partitions of the specified drive
   colorecho "$GREEN" "Unmounting disk ..."
@@ -570,9 +586,28 @@ done
   # Create GPT table and partitions
   colorecho "$GREEN" "Formatting and partitioning disk ..."
   echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
-  sudo parted $drive mkpart config fat32 16MiB 32MiB
-  sudo parted $drive mkpart rootfs ext4 32MiB 100%
-  #sudo parted $drive set 2 boot on
+
+  if [ -z "$argbootptst" ]; then
+    argbootptst="16MiB"
+  fi
+
+  if [ -z "$argbootpted" ]; then
+    if [ "$argbootpt" = 1 ]; then
+      argbootpted="500MiB"
+    else
+      argbootpted="32MiB"
+    fi
+  fi
+
+  if [ "$argbootpt" = 1 ]; then
+    sudo parted $drive mkpart boot fat32 $argbootptst $argbootpted
+    sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
+    sudo parted $drive set 1 boot on
+  else
+    sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
+    sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
+    sudo parted $drive set 2 boot on
+  fi
 
   # Find the partitions
   if [ -e $drive"1" ]; then
@@ -592,7 +627,10 @@ done
   # Mount the partitions
   colorecho "$GREEN" "Mounting partition for install ..."
   sudo mount -o rw $root_partition $root_mount_dir
-  #sudo mount $boot_partition $boot_mount_dir
+
+  if [ "$argbootpt" = 1 ]; then
+    sudo mount $boot_partition $boot_mount_dir
+  fi
 
   # Download and extract the latest ArchLinux tarball
   colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
@@ -602,33 +640,45 @@ done
   sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
   sudo rm -rf $root_mount_dir/boot/*
 
-  # Copy kernel files
-  colorecho "$GREEN" "Copying Linux Kernel ..."
-  sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
-
+  if [ "$argbootpt" = 1 ]; then
+    # Copy contents to boot partition
+    colorecho "$GREEN" "Copying Boot Partition ..."
+    sudo cp -r "$boot_image"/* "$boot_mount_dir"
+    sudo rm -rf "$boot_image"/*
+  fi
+  
+    # Copy kernel files
+    colorecho "$GREEN" "Copying Linux Kernel ..."
+    sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
+  
   title
   colorecho "$GREEN" "Updating extlinux.conf ..."
+
+  if [ ! "$argbootpt" = 1 ]; then
+    boot_mount_dir=$root_mount_dir/boot
+  fi
+
   # Find the UUIDs of the root partition
   root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
   root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
 
   # Copy extlinux template
-  if [ ! -e "$root_mount_dir/boot/extlinux/extlinux.conf" ]; then
-    sudo mv $root_mount_dir/boot/extlinux/extlinux.arch.template $root_mount_dir/boot/extlinux/extlinux.conf
+  if [ ! -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
+    sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
   fi
 
   # Change UUID for extlinux.conf
   echo "Updating UUID for extlinux.conf ..."
-  sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $root_mount_dir/boot/extlinux/extlinux.conf
-  sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $root_mount_dir/boot/extlinux/extlinux.conf
+  sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+  sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
 
-  sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" $root_mount_dir/boot/extlinux/extlinux.conf
-
-  sudo sed -i "s| /initramfs| /boot/initramfs|" $root_mount_dir/boot/extlinux/extlinux.conf
-  sudo sed -i "s| /initrd| /boot/initrd|" $root_mount_dir/boot/extlinux/extlinux.conf
-
-  sudo sed -i "s| /dtbs| /boot/dtbs|" $root_mount_dir/boot/extlinux/extlinux.conf
-  sudo sed -i "s| /dtbo| /boot/dtbo|" $root_mount_dir/boot/extlinux/extlinux.conf
+  if [ ! "$argbootpt" = 1 ]; then
+    sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" $boot_mount_dir/extlinux/extlinux.conf
+    sudo sed -i "s| /initramfs| /boot/initramfs|" $boot_mount_dir/extlinux/extlinux.conf
+    sudo sed -i "s| /initrd| /boot/initrd|" $boot_mount_dir/extlinux/extlinux.conf
+    sudo sed -i "s| /dtbs| /boot/dtbs|" $boot_mount_dir/extlinux/extlinux.conf
+    sudo sed -i "s| /dtbo| /boot/dtbo|" $boot_mount_dir/extlinux/extlinux.conf
+  fi
 
   echo "Info : Root partition UUID: $root_uuid"
   echo "Info : Root partition PARTUUID: $root_part_uuid"
@@ -667,26 +717,39 @@ END
 
   # Unmount the boot and root partitions
   sudo umount $root_mount_dir
-  #sudo umount $boot_mount_dir
+
+  if [ "$argbootpt" = 1 ]; then
+    sudo umount $boot_mount_dir
+    sudo rm -rf $boot_mount_dir
+  fi
 
   # Clean up
   colorecho "$YELLOW" "Cleaning up temporary files ..."
   sudo rm -rf $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz arch-rock-installer growpart
-  #sudo rm -rf $boot_mount_dir
+
+  title
 
   if [ ! -z "$is_img" ]; then
     sudo losetup --detach $drive
+    colorecho "$YELLOW" "Tips: Check if the image loop device is unmounted successfully."
     if [ "$argxz" = 1 ]; then
-      colorecho "$GREEN" "Compressing Image ..."
+      colorecho "$GREEN" "Compressing Image (this may take some time, grab a coffee) ..."
       sudo xz -T 0 $is_img
+      is_img="${is_img}.xz"
     fi
   elif [ ! -z "$WSL_DISTRO_NAME" ]; then
     wsl.exe --unmount \\$drive
+    colorecho "$YELLOW" "Tips: Check if your disk is unmounted with WSL successfully."
   fi
 
-  title
-  colorecho "$GREEN" "Created Arch Linux Installer to $drive."
-  colorecho "$GREEN" "You may now unmount $drive and boot into the system for installation."
+  if [ ! -z "$is_img" ]; then
+    colorecho "$GREEN" "Created Arch Linux Installer at $is_img."
+    colorecho "$GREEN" "You may now flash the image to your storage device."
+  else
+    colorecho "$GREEN" "Created Arch Linux Installer at $drive."
+    colorecho "$YELLOW" "Tips: Check if your disk is unmounted successfully before you unplug it."
+    colorecho "$GREEN" "You may now boot into $drive for installation."
+  fi
   colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run command 'installer'."
   echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
 
