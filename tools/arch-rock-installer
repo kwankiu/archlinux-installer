@@ -216,7 +216,7 @@ init_setup() {
     pacman -Syy
 
     ################################################################
-    # User and Localization
+    # User Account
 
     # Prompt user to enter a new username
     title "Create User Account"
@@ -248,11 +248,13 @@ init_setup() {
         passwd -l root
     fi
 
-    #title "Time Zone"
-    #arch-rock-config "time" --installer
-    #ntz=$(arch-rock-config time network-time-zone)
+    if [ -e "/etc/systemd/system/init-setup.service" ]; then 
+        systemctl disable init-setup.service
+        rm -rf /etc/systemd/system/init-setup.service
+    fi
 
     colorecho "$GREEN" "Rebooting..."
+    systemctl reboot
     reboot
 }
 
@@ -275,7 +277,7 @@ fi
 ################################################################
 # Installer Setup
 
-title "Welcome to Arch Rock Installer"
+title "Welcome to Arch Linux!"
 
 # Check internet connection
 check_internet
@@ -289,16 +291,25 @@ fi
 
 # Check if the script is being run with root privileges
 if [[ $EUID -ne 0 ]]; then
-    colorecho "$GREEN" "Start Installation ..."
+    title "Arch Rock Installer"
+
 else
     colorecho "$RED" "Error : Installer must be run as user"
     exit 1
 fi
 
 ################################################################
+# Menu (TODO)
+
+    #title "Time Zone"
+    #arch-rock-config "time" --installer
+    #ntz=$(arch-rock-config time network-time-zone)
+    colorecho "$GREEN" "Start Installation ..."
+
+################################################################
 # Install Linux Kernel
 
-title "Install Linux Kernel"
+title "Arch Rock Installer - Install Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Kernel ..."
     oldkrlrel=$(uname -r)
@@ -343,7 +354,7 @@ title "Install Linux Kernel"
 ################################################################
 # Install Mesa and GPU drivers
 
-title "Install Mesa and GPU drivers"
+title "Arch Rock Installer - Install Mesa and GPU drivers"
 
     colorecho "$GREEN" "Installing Mesa ..."
     sudo pacman -S mesa-panfork-git --noconfirm
@@ -351,7 +362,7 @@ title "Install Mesa and GPU drivers"
 ################################################################
 # Install Video Acceleration
 
-title "Install Video Acceleration"
+title "Arch Rock Installer - Install Video Acceleration"
 
     colorecho "$GREEN" "Installing Video Acceleration ..."
     sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
@@ -359,7 +370,7 @@ title "Install Video Acceleration"
 ################################################################
 # Post Installation
 
-title "Post Installation"
+title "Arch Rock Installer - Post Installation"
 
 colorecho "$GREEN" "Performing Full System Upgrade ..."
 sudo pacman -Syyu --noconfirm
@@ -381,7 +392,7 @@ sudo systemctl start bluetooth.service
 ################################################################
 # Select desktop environment
 
-title "Desktop Environment"
+title "Arch Rock Installer - Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 
 options=("Gnome (X only)" "Gnome (Wayland Experimental)" "KDE Plasma" "Budgie")
@@ -397,7 +408,7 @@ de_options=$?
 ################################################################
 # Install desktop environment
 
-title "Install desktop environment"
+title "Arch Rock Installer - Install desktop environment"
 
 # Install desktop environment
 if [ "$de_options" = 0 ]; then
@@ -440,7 +451,7 @@ arch-rock-config install --installer
 ################################################################
 # Installation clean up
 
-title "Installation Finished"
+title "Arch Rock Installer - Installation Finished"
 
 # Prompt user if they want to reboot
 read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
