@@ -158,6 +158,7 @@ add_boot_part_fstab() {
 
 init_setup() {
 
+    title "Welcome to Arch Linux!"
     colorecho "$GREEN" "Running Initial System Setup ..."
 
     # Check if the script is being run with root privileges
