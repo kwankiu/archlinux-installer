@@ -707,7 +707,6 @@ done
   if [ ! -z "$argchroot" ]; then
     colorecho "$GREEN" "Chroot into system ..."
     sudo chroot $root_mount_dir /bin/bash <<END
-    mount -t proc none /proc
     /usr/bin/installer --create-init-setup-service
 END
     sleep 5
