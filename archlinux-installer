@@ -11,8 +11,8 @@
 branch=main
 
 # URL for creating the System
-rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz"
-midstream_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-midstream-latest.tar.xz"
+rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/kernel/compiled-pkg-rkbsp-latest.tar.xz"
+midstream_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/compiled-pkg-midstream-latest.tar.xz"
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 ################################################################
