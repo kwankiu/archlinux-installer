@@ -743,7 +743,7 @@ END
   fi
 
   if [ ! -z "$is_img" ]; then
-    colorecho "$GREEN" "Created Arch Linux Installer at $is_img."
+    colorecho "$GREEN" "Created Arch Linux Installer at $(pwd)/$is_img."
     colorecho "$GREEN" "You may now flash the image to your storage device."
   else
     colorecho "$GREEN" "Created Arch Linux Installer at $drive."
