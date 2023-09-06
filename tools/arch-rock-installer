@@ -253,7 +253,10 @@ init_setup() {
         rm -rf /etc/systemd/system/init-setup.service
     fi
 
-    echo -e "[Unit]\nDescription=Auto-Login and Resume Installer\nAfter=network.target\n\n[Service]\nType=simple\nExecStartPre=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM\nUser=$new_username\nWorkingDirectory=/home/$new_username\nEnvironment=DISPLAY=:0\nExecStart=/usr/bin/installer\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=multi-user.target" | tee /etc/systemd/system/resume-install.service && systemctl enable resume-install.service
+    mkdir -p /etc/systemd/system/getty@tty1.service.d
+    echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    echo "installer" | tee -a /home/$new_username/.bashrc
+
     colorecho "$GREEN" "Rebooting..."
     systemctl reboot
     reboot
@@ -454,7 +457,17 @@ arch-rock-config install --installer
 
 title "Arch Rock Installer - Installation Finished"
 
-# Prompt user if they want to reboot
+# Detect the current username
+current_username=$(whoami)
+
+# Check if "installer" exists in .bashrc
+if sudo grep -q "installer" /home/$current_username/.bashrc; then
+    # Remove "installer" from .bashrc
+    sudo sed -i '/installer/d' /home/$current_username/.bashrc
+    sudo rm -rf /etc/systemd/system/getty@tty1.service.d/autologin.conf
+fi
+
+# Prompt user to reboot
 read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
 
 if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
