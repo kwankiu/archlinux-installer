@@ -407,9 +407,6 @@ for arg in "$@"; do
       ;;    
     --bootpartend=*)
       argbootpted="${arg#*=}"
-      ;;   
-    --chroot)
-      argchroot=1
       ;;
     -i | --image)
       argimg="archlinux-installer-rock5.img"
@@ -704,12 +701,16 @@ done
   # Remove the temporary directory
   sudo rm -rf "$pkg_tar_dir"
 
-  if [ ! -z "$argchroot" ]; then
+  system_arch=$(uname -m)
+  echo "System is $system_arch"
+
+  if [ "$system_arch" == "x86_64" ]; then
+    colorecho "$YELLOW" "Only aarch64 is supported. Skipping Chroot..."
+  else
     colorecho "$GREEN" "Chroot into system ..."
     sudo chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-init-setup-service
 END
-    sleep 5
   fi
 
   # Unmount the boot and root partitions
