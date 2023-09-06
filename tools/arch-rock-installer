@@ -264,6 +264,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     exit 1
 elif [ "$1" = "--create-first-boot-service" ]; then
     create_first_boot_service
+    exit 1
 fi
 
 ################################################################
