@@ -226,8 +226,8 @@ first_boot_setup() {
 
     # Prompt user to change the root password
     title "Root account options"
-    colorecho "$GREEN" "Do you want to change the root password?"
-    options=("Turn off root account" "Change root password" "Do not change root password")
+    colorecho "$GREEN" "Do you want to keep the root account and change the root password?"
+    options=("Turn off root account (recommended)" "Change root password" "Do not change root password")
     select_option "${options[@]}"
     answer=$?
 
