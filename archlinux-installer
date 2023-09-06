@@ -11,7 +11,7 @@
 branch=dev
 
 # URL for Kernel and Arch Linux Rootfs
-adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/latest"
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/kernel"
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 ################################################################
