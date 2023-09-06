@@ -153,6 +153,11 @@ add_boot_part_fstab() {
     fi
 }
 
+create_first_boot_service() {
+    mkdir -p /etc/systemd/system && echo "[Unit]\nDescription=First Boot Installer Service\nAfter=network.target\n\n[Service]\nExecStart=/usr/bin/installer\nType=simple\n\n[Install]\nWantedBy=multi-user.target" | tee $root_mount_dir/etc/systemd/system/first-boot-installer.service
+    systemctl enable first-boot-installer.service
+}
+
 ################################################################
 # First Boot Setup
 
@@ -257,6 +262,8 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "-h / --help : Usage and Infomation of this installer"
     echo "--skip-first-boot-setup : Skip first boot setup (use only if the corresponding setup has been done)"
     exit 1
+elif [ "$1" = "--create-first-boot-service" ]; then
+    create_first_boot_service
 fi
 
 ################################################################
