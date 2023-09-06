@@ -693,7 +693,7 @@ done
   sudo chmod +x arch-rock-installer
   sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/installer"
 
-  if [ "$is_img" = 1 ]; then
+  if [ ! -z "$is_img" ]; then
     colorecho "$GREEN" "Downloading growpart ..."
     curl -LJO https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart
     colorecho "$GREEN" "Copying growpart ..."
