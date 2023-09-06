@@ -743,6 +743,9 @@ END
   if [ ! -z "$is_img" ]; then
     colorecho "$GREEN" "Created Arch Linux Installer at $(pwd)/$is_img."
     colorecho "$GREEN" "You may now flash the image to your storage device."
+    if [ ! -z "$WSL_DISTRO_NAME" ]; then
+      explorer.exe out
+    fi
   else
     colorecho "$GREEN" "Created Arch Linux Installer at $drive."
     colorecho "$YELLOW" "Tips: Check if your disk is unmounted successfully before you unplug it."
