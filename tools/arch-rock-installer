@@ -153,21 +153,16 @@ add_boot_part_fstab() {
     fi
 }
 
-create_first_boot_service() {
-    mkdir -p /etc/systemd/system && echo "[Unit]\nDescription=First Boot Installer Service\nAfter=network.target\n\n[Service]\nExecStart=/usr/bin/installer\nType=simple\n\n[Install]\nWantedBy=multi-user.target" | tee $root_mount_dir/etc/systemd/system/first-boot-installer.service
-    systemctl enable first-boot-installer.service
-}
-
 ################################################################
-# First Boot Setup
+# Initial System Setup
 
-first_boot_setup() {
+init_setup() {
 
-    colorecho "$GREEN" "Running First Boot Setup ..."
+    colorecho "$GREEN" "Running Initial System Setup ..."
 
     # Check if the script is being run with root privileges
     if [[ $EUID -ne 0 ]]; then
-        colorecho "$RED" "Error : First Boot Setup must be run as root"
+        colorecho "$RED" "Error : Initial System Setup must be run as root"
         exit 1
     fi
 
@@ -260,10 +255,10 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 
     colorecho "$GREEN" "Options"
     echo "-h / --help : Usage and Infomation of this installer"
-    echo "--skip-first-boot-setup : Skip first boot setup (use only if the corresponding setup has been done)"
+    echo "--skip-init-setup : Skip init setup (use only if the corresponding setup has been done)"
     exit 1
-elif [ "$1" = "--create-first-boot-service" ]; then
-    create_first_boot_service
+elif [ "$1" = "--create-init-setup-service" ]; then
+    echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/installer\nStandardInput=tty-force\nTTYPath=/dev/tty1\nTTYVHangup=yes\n\n[Install]\nWantedBy=multi-user.target" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
     exit 1
 fi
 
@@ -275,10 +270,10 @@ title "Welcome to Arch Rock Installer"
 # Check internet connection
 check_internet
 
-# Run first boot setup if not yet done
+# Run init setup if not yet done
 if [ ! -e "/usr/bin/arch-rock-config" ]; then 
-    if [ ! "$1" = "--skip-first-boot-setup" ]; then
-        first_boot_setup
+    if [ ! "$1" = "--skip-init-setup" ]; then
+        init_setup
     fi
 fi
 

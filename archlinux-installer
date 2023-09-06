@@ -706,11 +706,9 @@ done
 
   if [ ! -z "$argchroot" ]; then
     colorecho "$GREEN" "Chroot into system ..."
-    sleep 1
     sudo chroot $root_mount_dir /bin/bash <<END
     mount -t proc none /proc
-    mkdir -p /etc/systemd/system && echo "[Unit]\nDescription=First Boot Installer Service\nAfter=network.target\n\n[Service]\nExecStart=/usr/bin/installer\nType=simple\n\n[Install]\nWantedBy=multi-user.target" | tee $root_mount_dir/etc/systemd/system/first-boot-installer.service
-    systemctl enable first-boot-installer.service
+    /usr/bin/installer --create-init-setup-service
 END
     sleep 5
   fi
