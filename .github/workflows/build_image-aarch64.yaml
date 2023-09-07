@@ -40,6 +40,7 @@ jobs:
 
           install: |
             pacman -Syy --noconfirm
+            pacman -S sudo --noconfirm
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
