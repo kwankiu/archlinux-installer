@@ -28,7 +28,7 @@ jobs:
         with:
           arch: none
           distro: none
-          base_image: samip537/archlinux:arm64v8-yay
+          base_image: lopsided/archlinux-arm64v8
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
@@ -39,7 +39,7 @@ jobs:
             --volume "${PWD}"
 
           install: |
-            sudo pacman -Syy --noconfirm
+            pacman -Syy --noconfirm
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
@@ -52,3 +52,4 @@ jobs:
             artifacts: "out/archlinux-installer-rock5.img.xz"
             prerelease: true
             allowUpdates: true
+            tag: "alpha"
