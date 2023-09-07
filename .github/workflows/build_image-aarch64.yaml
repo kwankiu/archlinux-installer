@@ -36,11 +36,11 @@ jobs:
 
           # Mount current directory in the container
           dockerRunArgs: |
+            --privileged
             --volume "${PWD}"
 
           install: |
-            pacman -Syy --noconfirm
-            pacman -S sudo util-linux tar --noconfirm
+            pacman -Syy sudo util-linux tar --noconfirm
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
