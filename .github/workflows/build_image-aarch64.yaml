@@ -40,13 +40,13 @@ jobs:
 
           install: |
             pacman -Syy --noconfirm
-            pacman -S sudo util-linux --noconfirm
+            pacman -S sudo util-linux tar --noconfirm
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             uname -a
             uname -m
-            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k -c --disk=/dev/loop3
+            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k -c
           
       - uses: ncipollo/release-action@v1
         with:

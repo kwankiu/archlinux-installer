@@ -704,7 +704,7 @@ done
   system_arch=$(uname -m)
   echo "System is $system_arch"
 
-  if [ "$system_arch" == "x86_64" ]; then
+  if [ "$system_arch" == "x86_64" ] || [ "$system_arch" == "i386" ] || [ "$system_arch" == "i686" ] || [ "$system_arch" == "armhf" ]; then
     colorecho "$YELLOW" "Only aarch64 is supported. Skipping Chroot..."
   else
     colorecho "$GREEN" "Chroot into system ..."
