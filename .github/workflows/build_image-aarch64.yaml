@@ -1,0 +1,55 @@
+name: Build Arch Linux Installer for Rock 5 on AARCH64
+
+# Controls when the workflow will run
+on:
+  push:
+    tags:
+      - '*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: none
+          distro: none
+          base_image: lopsided/archlinux-arm64v8
+
+          # Not required, but speeds up builds by storing container images in
+          # a GitHub package registry.
+          githubToken: ${{ github.token }}
+
+          # Mount current directory in the container
+          dockerRunArgs: |
+            --volume "${PWD}"
+
+          install: |
+            pacman -Syy --noconfirm
+
+          # Set an output parameter `uname` for use in subsequent steps
+          run: |
+            uname -a
+            uname -m
+            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k -c --disk=/dev/loop3
+          
+      - uses: ncipollo/release-action@v1
+        with:
+            artifacts: "out/archlinux-installer-rock5.img.xz"
+            prerelease: true
+            allowUpdates: true
+            tag: "alpha"
