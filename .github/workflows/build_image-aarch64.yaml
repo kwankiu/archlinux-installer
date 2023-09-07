@@ -40,7 +40,7 @@ jobs:
 
           install: |
             pacman -Syy --noconfirm
-            pacman -S sudo --noconfirm
+            pacman -S sudo util-linux --noconfirm
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
@@ -53,4 +53,3 @@ jobs:
             artifacts: "out/archlinux-installer-rock5.img.xz"
             prerelease: true
             allowUpdates: true
-            tag: "alpha"
