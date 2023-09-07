@@ -26,9 +26,8 @@ jobs:
         name: Run commands
         id: runcmd
         with:
-          arch: none
-          distro: none
-          base_image: lopsided/archlinux-arm64v8
+          arch: aarch64
+          distro: ubuntu-latest
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
@@ -38,10 +37,6 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}"
 
-          install: |
-            pacman -Syy --noconfirm
-
-          # Set an output parameter `uname` for use in subsequent steps
           run: |
             uname -a
             uname -m
