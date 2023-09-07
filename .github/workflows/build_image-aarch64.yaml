@@ -26,9 +26,9 @@ jobs:
         name: Run commands
         id: runcmd
         with:
-          arch: none
+          arch: aarch64
           distro: none
-          base_image: samip537/archlinux:arm64v8-yay
+          base_image: samip537/archlinux:yay
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
