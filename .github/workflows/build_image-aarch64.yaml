@@ -40,6 +40,7 @@ jobs:
           run: |
             uname -a
             uname -m
+            sudo apt update && sudo apt install curl
             bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k -c --disk=/dev/loop3
           
       - uses: ncipollo/release-action@v1
