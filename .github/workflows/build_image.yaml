@@ -1,10 +1,10 @@
 name: Build Arch Linux Installer for Rock 5
 
 # Controls when the workflow will run
-on:
-  push:
-    tags:
-      - '*'
+#on:
+#  push:
+#    tags:
+#      - '*'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

@@ -34,10 +34,14 @@ jobs:
           # a GitHub package registry.
           githubToken: ${{ github.token }}
 
+          # Create an artifacts directory
+          setup: |
+            mkdir -p "${PWD}/img"
+
           # Mount current directory in the container
           dockerRunArgs: |
             --privileged
-            --volume "${PWD}"
+            --volume "${PWD}/img:/img"
 
           install: |
             pacman -Syy sudo util-linux tar --noconfirm
@@ -46,10 +50,11 @@ jobs:
           run: |
             uname -a
             uname -m
+            cd img
             bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k -c
           
       - uses: ncipollo/release-action@v1
         with:
-            artifacts: "out/archlinux-installer-rock5.img.xz"
+            artifacts: "img/out/archlinux-installer-rock5.img.xz"
             prerelease: true
             allowUpdates: true

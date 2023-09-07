@@ -248,7 +248,7 @@ create_img() {
     sudo losetup --detach $img_mount
   fi
 
-  sudo losetup -P $img_mount $selected_disk
+  sudo losetup -P $img_mount $(pwd)/$selected_disk
   selected_disk=$img_mount
   colorecho "$GREEN" "Image mounted on $selected_disk"
 }
