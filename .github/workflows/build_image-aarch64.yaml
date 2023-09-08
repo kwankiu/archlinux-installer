@@ -48,11 +48,16 @@ jobs:
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
-            uname -a
-            uname -m
+            lsblk
             cd img
-            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k -c --disk=/dev/loop4
-          
+            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k --disk=/dev/loop4
+        
+      - name: Check file and compress image
+        run: |
+          chmod -R 755 img/out/*
+          ls -al img/out/
+          xz -T 0 img/out/archlinux-installer-rock5.img
+
       - uses: ncipollo/release-action@v1
         with:
             artifacts: "img/out/archlinux-installer-rock5.img.xz"
