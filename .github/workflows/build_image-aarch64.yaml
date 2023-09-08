@@ -50,7 +50,7 @@ jobs:
           run: |
             lsblk
             cd img
-            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k --disk=/dev/loop4
+            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -i -k --disk=/dev/loop5
         
       - name: Check file and compress image
         run: |
