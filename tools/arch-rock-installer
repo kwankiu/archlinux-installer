@@ -208,6 +208,7 @@ init_setup() {
     attempt=0
     until [ -f /usr/bin/arch-rock-config ] || [ "$attempt" -ge 5 ]; do
         colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
+        sleep 3
         cd /usr/bin
         curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
         ((attempt++))
@@ -460,8 +461,13 @@ elif [ "$de_options" = 2 ]; then
 elif [ "$de_options" = 3 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
-    sudo pacman -S sway wofi lxappearance qt5ct python-pywal waybar pcmanfm-qt pass dunst swayidle xorg-xwayland qt5-wayland gnome-terminal sddm --noconfirm
+    sudo pacman -S sway wofi lxappearance qt5ct python-pywal waybar pcmanfm-qt pass dunst swayidle swaylock swaybg xorg-xwayland qt5-wayland gnome-terminal sddm --noconfirm
     sudo systemctl enable sddm
+    sudo mkdir -p .config/{sway,dunst,waybar,wofi}
+    sudo install -Dm755 /etc/sway/config ~/.config/sway/config
+    sudo install -Dm755 /etc/dunst/dunstrc ~/.config/dunst/dunstrc
+    touch ~/.config/waybar/config
+    touch ~/.config/wofi/config
 elif [ "$de_options" = 4 ]; then
     # Install Cutefish
     colorecho "$GREEN" "Installing Cutefish ..."
