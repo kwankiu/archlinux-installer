@@ -15,26 +15,23 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-
 
 This will get you a bootable Arch Linux Installer on your Disk.
 
-Alternatively, you may consider downloading our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest)
+Alternatively, you may consider downloading our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest) and flash it to your storage device.
 
 # Installation
 
-1. To continue the installation, now boot to Arch Linux and login as root/root
-2. Run the command
-```
-installer
-```
-3. The script will reboot after performing some setups and creating a user account. 
+1. Power ON your Rock 5 / RK3588 Device with the **Storage Device** and **Ethernet Cable** plugged in.
 
-To continue the installation, re-run the command, 
+    Notes:
+    1. If your first boot shows a user login screen instead, login to root/root and run `installer`.
 
-Note: You will need to login to your newly created user account instead of the root account.
+2. The installer will run some setups and you should be prompted to create a user account. Follow the instructions and it should automatically reboot and login to the newly created user account. 
 
-```
-installer
-```
+    Notes:
+    1. If you get stuck while rebooting, you may unplug the power and power it on manually.
+    2. If it does not log in automatically, log in to your newly created user account.
+    3. If the installer does not start automatically, run `installer` to start it.
 
-4. Once it's done, the script should automatically reboot your system. Enjoy!
+3. At this point, you should be able to install Arch Linux with your desired Settings, Desktop Environment, and Software, Enjoy!
 
 # Usage
 
@@ -48,11 +45,14 @@ archlinux-installer -OPTIONS or --OPTIONS=<arguments> ...
 | ------------- | ------------- | ------------- |
 | `-h` or `--help` | N/A | Usage and Infomation of this Installation Tool. |
 | `-d` or `--dev` | N/A | Use latest dev version of this Installation Tool. |
+| `-k` or `--kernel` | `<kernel_name>` | Create Arch Linux using default kernel option or specify a kernel option with the `<kernel_name>` argument. Currently available kernel options is `rkbsp` only. |
 | `-i` or `--image` | `<image_name>` | Create a disk image with default image name at `out` folder or specify an image name with the `<image_name>` argument. |
+| `-b` or `--bootpart` | N/A | Create Arch Linux with a seperated boot partition. |
+| `-c` or `--compress` | N/A | Compress the Disk Image to .img.xz |
 | `--size` | `<image_size>` | Set disk image size (default is 4G). |
 | `--disk` | `<disk_path>` | Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default). |
-| `-k` or `--kernel` | `<kernel_name>` | Create Arch Linux using default kernel option or specify a kernel option with the `<kernel_name>` argument. Available kernel options is `rkbsp` only. |
-
+| `--bootpartstart` | `<size>` | Set Boot/Config Partition Start Sector (default is 16MiB). |
+| `--bootpartend` | `<size>` | Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot). |
 
 ## Examples
 
@@ -85,7 +85,7 @@ Create an Arch Linux Installer image (.img) with custom image name and size with
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --image=myarchinstaller.img --size=4G -k
 ```
 
-#### Using dev branch version
+#### Using the dev branch version
 #### (WARNING: dev branch are not tested and may be broken.)
 
 ```
@@ -159,10 +159,10 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 #### User & Localization
 | Features | Additional Arguments | Description |
 | ------------- | ------------- | ------------- |
-| `user` | `<option>` | Add, Remove and Change User Account Settings. options: `add` `remove` `manage` |
+| `user` | `<option>` | Add, Remove and Change User Account Settings. options: `add <user>` `remove <user>` `manage <user>` |
 | `locale` |  N/A | Generate Locale Settings. |
 | `font` |  N/A | Install Fonts, TTF, Non-English Characters, Special Characters / Emoji. |
-| `time` | `<option>` | Change Time Zone, Current Date and Time. options: `set-time-zone` `set-time-date` `network-time-zone` `system-time-zone`|
+| `time` | `<option>` | Change Time Zone, Current Date and Time. options: `set-time-zone <time-zone> or 'sync'` `set-time-date <YYYY-MM-DD HH:MM:SS>` `network-time-zone` `system-time-zone`|
 | `keyboard` |  N/A | Change Keyboard Layout. |
 | `wifi` |  N/A | Change WiFi Country Settings. |
 
@@ -178,14 +178,14 @@ Kernel package options for Rock 5 / RK3588 :
 | [linux-rk3588-midstream](https://github.com/hbiyik/hw_necromancer/tree/master/rock5b/linux-rk3588-midstream) | Googulator's 'Midstream' (Linux-6.2.x) (experimental) | Midstream Kernel from Source Code (based on Linux-6.2, only [basic hardware support](https://github.com/Googulator/linux-rk3588-midstream/wiki), but takes a few hours to compile and install) |
 | Unavailable / [Only on Armbian](https://monka.systemonachip.net/rock5b/edge/deb/) | Linux Mainline Kernel (Linux-6.5) (experimental) | Collabora is currently working on Linux Mainline Kernel for RK3588, [most of the stuff](https://gitlab.collabora.com/hardware-enablement/rockchip-3588/notes-for-rockchip-3588/-/blob/main/mainline-status.md) appears on Midstream is now on Mainline, but things like USB-PD, USB-C, HDMI, are still work-in-progress. |
 
-You can reinstall/replace the Linux Kernel using `arch-rock-config` :
+You can Build & Install other Linux Kernel from source using `arch-rock-config` :
 ```
-# replace <kernel> with rkbsp, rkbsp-git or midstream
+# replace <kernel> with rkbsp-bin, rkbsp-git or midstream-git
 
 arch-rock-config install-kernel <kernel>
 ```
 
 # Known Issues / Troubleshooting
 1. Installation Script is known to run on Debian / Ubuntu / Arch Linux
-2. Support for Ubuntu/Debian running on Windows WSL2 is Experimental, other distro are not supported.
+2. Support for Ubuntu/Debian running on Windows WSL2 is Experimental, for other WSL2 distros, you can only create disk images.
 3. For other distro, you may consider downloading our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest).
