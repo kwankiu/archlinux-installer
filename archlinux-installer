@@ -783,7 +783,6 @@ END
     colorecho "$YELLOW" "Tips: Check if your disk is unmounted successfully before you unplug it."
     colorecho "$GREEN" "You may now boot into $drive for installation."
   fi
-  colorecho "$YELLOW" "Tips: To Start Arch Linux Installer, login to root/root and run command 'installer'."
   echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
 
 ################################################################
