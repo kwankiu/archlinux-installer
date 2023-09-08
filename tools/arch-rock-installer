@@ -351,7 +351,6 @@ title "Arch Rock Installer - Installing Linux Kernel"
         colorecho "$GREEN" "Removing Old Kernel Modules ..."
         sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
     else
-        echo "Manual Confirm Installation" #debug
         sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
         if sudo pacman -Qs $kernelpkg > /dev/null ; then
             colorecho "$GREEN" "Removing Old Kernel Modules ..."
