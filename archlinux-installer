@@ -214,12 +214,6 @@ create_img() {
     img_size=$argsize
   fi
 
-  if [ -z "$argdisk" ]; then
-    img_mount="/dev/loop1"
-  else
-    img_mount=$argdisk
-  fi
-
   if [ ! -z "$argimg" ]; then
     selected_disk=$argimg
   fi
@@ -244,11 +238,13 @@ create_img() {
   colorecho "$GREEN" "Image created at $selected_disk"
   is_img=$selected_disk
 
-  if losetup -a | grep "$img_mount"; then
-    sudo losetup --detach $img_mount
+  if [ -z "$argdisk" ]; then
+    img_mount=$(sudo losetup -fP --show $(pwd)/$selected_disk)
+  else
+    img_mount=$argdisk
+    sudo losetup -P $img_mount $(pwd)/$selected_disk
   fi
 
-  sudo losetup -P $img_mount $(pwd)/$selected_disk
   selected_disk=$img_mount
   colorecho "$GREEN" "Image mounted on $selected_disk"
 }
@@ -704,13 +700,25 @@ done
   system_arch=$(uname -m)
   echo "System is $system_arch"
 
-  if [ "$system_arch" == "x86_64" ] || [ "$system_arch" == "i386" ] || [ "$system_arch" == "i686" ] || [ "$system_arch" == "armhf" ]; then
-    colorecho "$YELLOW" "Only aarch64 is supported. Skipping Chroot..."
-  else
+  if [ "$system_arch" == "x86_64" ]; then
+    colorecho "$YELLOW" "(chroot from non-aarch64 is experimental) Chroot into system ..."
+    sudo pacman -S qemu-user-static --noconfirm
+    sudo cp /usr/bin/qemu-aarch64-static $root_mount_dir/usr/bin
+    S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
+    S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/local/bin/qemu-aarch64-static:CF'
+    echo -n $S1$S2| sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
+    echo
+    sudo systemctl restart systemd-binfmt.service
+    sudo chroot $root_mount_dir /bin/bash <<END
+    /usr/bin/installer --create-init-setup-service
+END
+  elif [ "$system_arch" = "aarch64" ] || [ "$system_arch" = "arm64" ] || [ "$system_arch" = "armv8" ];
     colorecho "$GREEN" "Chroot into system ..."
     sudo chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-init-setup-service
 END
+  else
+    colorecho "$YELLOW" "System Architecture not supported. Skipping Chroot..."
   fi
 
   # Unmount the boot and root partitions
