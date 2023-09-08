@@ -8,14 +8,17 @@ This is an installation script that gets you through an installation of Arch Lin
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
 
 # Get the installer
+
+## Method 1
+Download our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest) and flash it (using [RPI Imager](https://www.raspberrypi.com/software/), [balenaEtcher](https://etcher.balena.io/), etc) to your storage device.
+
+## Method 2
 Download and run the script below:
  ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
-This will get you a bootable Arch Linux Installer on your Disk.
-
-Alternatively, you may consider downloading our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest) and flash it to your storage device.
+This will set up a bootable Arch Linux Installer on your Disk.
 
 # Installation
 
