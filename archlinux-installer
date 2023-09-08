@@ -218,6 +218,7 @@ create_img() {
     selected_disk=$argimg
   fi
 
+  if [ -z "$argmountimg" ]; then
   # Check if out/$selected_disk exists and generate a unique name if needed
   if [ -e "out/$selected_disk" ]; then
       counter=0
@@ -246,6 +247,14 @@ create_img() {
   fi
 
   selected_disk=$img_mount
+
+  else
+
+  img_mount=$(sudo losetup -fP --show $argimg)
+  is_img=$argimg
+  selected_disk=$img_mount
+  
+  fi
   colorecho "$GREEN" "Image mounted on $selected_disk"
 }
 
@@ -416,6 +425,9 @@ for arg in "$@"; do
     -c | --compress)
       argxz=1
       ;;
+    -m | --mtimg)
+      argmountimg=1
+      ;;
     -*)
       colorecho "$RED" "Invalid command or argument."
       exit 1
@@ -567,6 +579,7 @@ done
     boot_mount_dir=$(mktemp -d)
   fi
 
+  if [ -z "$argmountimg" ]; then
   # Unmount all partitions of the specified drive
   colorecho "$GREEN" "Unmounting disk ..."
   partitions=$(ls ${drive}* 2>/dev/null)
@@ -614,7 +627,18 @@ done
   # Format the partitions
   echo -e 'y' |sudo mkfs.ext4 $root_partition 
   sudo mkfs.vfat -F32 $boot_partition
-  sudo resize2fs $drive
+  else
+
+  # Find the partitions
+  if [ -e $drive"1" ]; then
+    root_partition=$drive"2"
+    boot_partition=$drive"1"
+  else
+    root_partition=$drive"p2"
+    boot_partition=$drive"p1"	
+  fi
+
+  fi
 
   title
   # Mount the partitions
