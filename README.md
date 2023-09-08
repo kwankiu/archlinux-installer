@@ -1,7 +1,7 @@
 # Arch Linux Installer for Rock 5 / RK3588
 ![alt archlinux logo](https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Archlinux-logo-inverted-version.png/500px-Archlinux-logo-inverted-version.png)
 
-This is an installation script that gets you through an installation of Arch Linux on Rockchip RK3588 SoC.
+a community-built Arch Linux Installer for Radxa Rock 5 / Rockchip RK3588 SoC.
 
 ### Currently only works with Radxa Rock 5B.
 
