@@ -31,7 +31,7 @@ Alternatively, you may consider downloading our [prebuilt image](https://github.
     2. If it does not log in automatically, log in to your newly created user account.
     3. If the installer does not start automatically, run `installer` to start it.
 
-3. At this point, you should be able to install Arch Linux with your desired Settings, Desktop Environment, and Software, Enjoy!
+3. At this point, you should be able to install Arch Linux with your desired Settings, Desktop Environment, and Software with the Installer, Enjoy!
 
 # Usage
 
