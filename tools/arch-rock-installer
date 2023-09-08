@@ -201,15 +201,18 @@ init_setup() {
     pacman-key --init
     pacman-key --populate archlinuxarm
 
-    # Download and install arch-rock-config
-    colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
-    cd /usr/bin
-
-    # Install arch-rock-config
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
-    chmod +x arch-rock-config
-
+    colorecho "$GREEN" "Installing sudo ..."
     pacman -Sy sudo --noconfirm
+
+    # Download and install arch-rock-config
+    attempt=0
+    until [ -f /usr/bin/arch-rock-config ] || [ "$attempt" -ge 5 ]; do
+        colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
+        cd /usr/bin
+        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        ((attempt++))
+    done
+    chmod +x arch-rock-config
 
     colorecho "$GREEN" "Adding 7ji archrepo ..."
     arch-rock-config add-7ji
@@ -296,26 +299,50 @@ fi
 # Check if the script is being run with root privileges
 if [[ $EUID -ne 0 ]]; then
     title "Arch Rock Installer"
-
+    colorecho "$GREEN" "Starting Setup ..."
 else
     colorecho "$RED" "Error : Installer must be run as user"
     exit 1
 fi
 
 ################################################################
-# Menu (TODO)
+# Time Zone
 
-    #title "Time Zone"
-    #arch-rock-config "time" --installer
-    #ntz=$(arch-rock-config time network-time-zone)
-    colorecho "$GREEN" "Start Installation ..."
+title "Arch Rock Installer - Time Zone"
+
+    ntz=$(arch-rock-config time network-time-zone)
+    colorecho "$GREEN" "Your time zone is: $ntz"
+    colorecho "$GREEN" "Is that correct?"
+    echo
+
+    options=("Yes, this is correct" "No, let me correct my Time Zone" "Skip setting Time Zone")
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = 0 ]; then
+        arch-rock-config "time" set-time-zone sync
+    elif [ "$choice" = 1 ]; then
+        arch-rock-config "time" set-time-zone
+    fi
+
+################################################################
+# Select desktop environment
+
+title "Arch Rock Installer - Desktop Environment"
+colorecho "$GREEN" "Select a desktop environment to install :"
+echo
+
+options=("Gnome" "KDE Plasma" "Budgie" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
+options+=("Skip")
+
+select_option "${options[@]}"
+de_options=$?
 
 ################################################################
 # Install Linux Kernel
 
-title "Arch Rock Installer - Install Linux Kernel"
+title "Arch Rock Installer - Installing Linux Kernel"
 
-    colorecho "$GREEN" "Installing Linux Kernel ..."
     oldkrlrel=$(uname -r)
     kernelpkg="linux-radxa-rkbsp5-git"
     yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
@@ -370,17 +397,15 @@ title "Arch Rock Installer - Install Linux Kernel"
 ################################################################
 # Install Mesa and GPU drivers
 
-title "Arch Rock Installer - Install Mesa and GPU drivers"
+title "Arch Rock Installer - Installing Mesa and GPU drivers"
 
-    colorecho "$GREEN" "Installing Mesa ..."
     sudo pacman -S mesa-panfork-git --noconfirm
 
 ################################################################
 # Install Video Acceleration
 
-title "Arch Rock Installer - Install Video Acceleration"
+title "Arch Rock Installer - Installing Video Acceleration"
 
-    colorecho "$GREEN" "Installing Video Acceleration ..."
     sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
 
 ################################################################
@@ -406,22 +431,6 @@ sudo systemctl enable bluetooth.service
 sudo systemctl start bluetooth.service
 
 ################################################################
-# Select desktop environment
-
-title "Arch Rock Installer - Desktop Environment"
-colorecho "$GREEN" "Select a desktop environment to install :"
-
-options=("Gnome (X only)" "Gnome (Wayland Experimental)" "KDE Plasma" "Budgie")
-
-# TO BE ADDED
-# options+=("XFCE" "LXQt" "Cinnamon" "Cutefish" "Deepin" "MATE" "Sway")
-
-options+=("Skip")
-
-select_option "${options[@]}"
-de_options=$?
-
-################################################################
 # Install desktop environment
 
 title "Arch Rock Installer - Install desktop environment"
@@ -429,30 +438,65 @@ title "Arch Rock Installer - Install desktop environment"
 # Install desktop environment
 if [ "$de_options" = 0 ]; then
     # Install Gnome
-    colorecho "$GREEN" "Installing Gnome (X only)..."
+    colorecho "$GREEN" "Installing Gnome ..."
     sudo pacman -S gnome --noconfirm
-    GDM_CONFIG_FILE="/etc/gdm/custom.conf"
-    if [ -f "$GDM_CONFIG_FILE" ]; then
-        sudo sed -i 's/^#WaylandEnable/WaylandEnable=false/' "$GDM_CONFIG_FILE"
-        echo "Wayland has been disabled for GDM."
-    else
-        echo "GDM configuration file ($GDM_CONFIG_FILE) not found."
-    fi
+    #GDM_CONFIG_FILE="/etc/gdm/custom.conf"
+    #if [ -f "$GDM_CONFIG_FILE" ]; then
+        #sudo sed -i 's/^#WaylandEnable/WaylandEnable=false/' "$GDM_CONFIG_FILE"
+        #echo "Wayland has been disabled for GDM."
+    #else
+        #echo "GDM configuration file ($GDM_CONFIG_FILE) not found."
+    #fi
     sudo systemctl enable gdm
 elif [ "$de_options" = 1 ]; then
-    # Install Gnome
-    colorecho "$GREEN" "Installing Gnome (Wayland Experimental) ..."
-    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
-    sudo systemctl enable gdm
-elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma ..."
     sudo pacman -S plasma-desktop sddm --noconfirm
     sudo systemctl enable sddm
-elif [ "$de_options" = 3 ]; then
+elif [ "$de_options" = 2 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie ..."
     sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 3 ]; then
+    # Install Sway
+    colorecho "$GREEN" "Installing Sway ..."
+    sudo pacman -S sway wofi lxappearance qt5ct python-pywal waybar pcmanfm-qt pass dunst swayidle xorg-xwayland qt5-wayland gnome-terminal sddm --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 4 ]; then
+    # Install Cutefish
+    colorecho "$GREEN" "Installing Cutefish ..."
+    sudo pacman -S cutefish sddm --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 5 ]; then
+    # Install Deepin
+    colorecho "$GREEN" "Installing Deepin ..."
+    sudo pacman -S deepin deepin-extra --noconfirm
+    echo -e "greeter-session=lightdm-deepin-greeter" | sudo tee /etc/lightdm/lightdm.conf
+elif [ "$de_options" = 6 ]; then
+    # Install XFCE
+    colorecho "$GREEN" "Installing XFCE ..."
+    sudo pacman -S xfce4 xfce4-goodies gdm --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 7 ]; then
+    # Install LXQT
+    colorecho "$GREEN" "Installing LXQT ..."
+    sudo pacman -S lxqt sddm --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 8 ]; then
+    # Install LXDE
+    colorecho "$GREEN" "Installing LXDE ..."
+    sudo pacman -S lxde lxdm-gtk3 --noconfirm
+    sudo systemctl enable lxdm
+elif [ "$de_options" = 9 ]; then
+    # Install MATE
+    colorecho "$GREEN" "Installing MATE ..."
+    sudo pacman -S mate mate-extra gdm --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 10 ]; then
+    # Install Cinnamon
+    colorecho "$GREEN" "Installing Cinnamon ..."
+    sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-terminal metacity gnome-shell gdm --noconfirm
     sudo systemctl enable gdm
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
