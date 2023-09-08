@@ -731,8 +731,6 @@ done
     echo -n $S1$S2| sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
     echo
     sudo systemctl restart systemd-binfmt.service
-
-    sudo cp /usr/bin/qemu-aarch64-static $root_mount_dir/usr/bin
     sudo chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-init-setup-service
 END
