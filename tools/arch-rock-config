@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2309042
+utilver=2309071
 
 # Define main / dev branch
 branch=dev
@@ -29,10 +29,6 @@ armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_l
 
 # URL of Arch Linux ARM Archive
 alaa_url="https://alaa.ad24.cz/"
-
-# Compiled Kernel Package URL
-rkbsp_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-rkbsp-latest.tar.xz"
-midstream_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/latest/compiled-pkg-midstream-latest.tar.xz"
 
 # Directory for storing source files
 source_repo_dir="source-repo-dir"
@@ -467,7 +463,7 @@ system_maintenance() {
     title "Arch Rock Configuration Utility - System Maintenance"
     options=("Package Updates - Check & Perform Selective / Full System Upgrade")
     options+=("Update SPI Bootloader - Flash Latest Radxa U-Boot")
-    options+=("Install Kernel - Re-install / Replace Linux Kernel")
+    options+=("Build & Install Kernel - Install other Linux Kernel from source")
     #options+=("Move Arch Linux - Copy Arch Linux to another disk.")
     options+=("Return to Main Menu")
     select_option "${options[@]}"
@@ -691,7 +687,7 @@ flash_uboot() {
 # Re-install Kernel
 install_kernel() {
 
-    title "Arch Rock Configuration Utility - Re-install Kernel"
+    title "Arch Rock Configuration Utility - Build & Install Kernel"
 
     if [ -z "$1" ]; then
         colorecho "$GREEN" "Select a kernel package to install:"
@@ -699,8 +695,6 @@ install_kernel() {
         options=("linux-radxa-rkbsp5-bin (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Binary Package")
         options+=("linux-radxa-rkbsp5-git (AUR) - Install Radxa BSP Kernel (Linux 5.10) from Source Code")
         options+=("linux-rk3588-midstream (GitHub) - Install Googulator's Experimental Midstream kernel (Linux 6.2) from Source Code")
-        options+=("linux-radxa-rkbsp5-git (GitHub Release) - Install Radxa BSP Kernel (Linux 5.10) Pre-Compiled with Panfrost and Libmali")
-        options+=("linux-rk3588-midstream (GitHub Release) - Install Googulator's Experimental Midstream kernel (Linux 6.2) Pre-Compiled with Pancsf")
         #options+=("linux-rk3588-collabora (GitHub) - Install Collabora's Experimental Upstream kernel (Linux 6.5) from Source Code")
         options+=("Return to Main Menu")
         select_option "${options[@]}"
@@ -714,10 +708,6 @@ install_kernel() {
         install_rkbsp5_git
     elif [ "$choice" = 2 ] || [ "$1" = "midstream-git" ]; then
         install_midstream_git
-    elif [ "$choice" = 3 ] || [ "$1" = "rkbsp" ]; then
-        install_rkbsp
-    elif [ "$choice" = 4 ] || [ "$1" = "midstream" ]; then
-        install_midstream
     else
         config_options
     fi
@@ -1712,22 +1702,23 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     colorecho "$GREEN" "Features"
     colorecho "$YELLOW" "System Maintenance"
     echo "upgrade : Check & Perform Selective / Full System Upgrade."
-    echo "install-kernel <kernel> : Re-install / Replace Linux Kernel. <kernel> options: rkbsp, rkbsp-git, midstream."
+    echo "install-kernel <kernel> : Build & Install other Linux Kernel from source. <kernel> options: rkbsp-bin, rkbsp-git, midstream-git."
     echo "flash-bootloader <bootloader> : Flash Latest SPI Bootloader. <bootloader> options: radxa, radxa-debug, edk2-rock5a, edk2-rock5b, armbian."
     
     colorecho "$YELLOW" "Manage Packages"
     echo "install <package> : Install Software / RK3588 Specified / Customized Packages. <package>: package name."
     echo "downgrade <package> <index> : Install / Downgrade any Arch Linux Packages from Archive. <package>: package name <index>: index to show, default=15."
+    echo "add-7ji : Add 7Ji Arch Linux repo to pacman"
 
     colorecho "$YELLOW" "Performance & Features"
     echo "soc <option> : Manage SoC Settings. options: performance, ondemand, powersave (and status for SoC Monitor) and force-performance which set performance at every bootup."
     echo "fan <option> : Configure PWM Fan-control. options: install, enable, disable and status."
 
     colorecho "$YELLOW" "User & Localization"
-    echo "user : Add, Remove and Change User Account Settings."
+    echo "user <option> : Add, Remove and Change User Account Settings. options: add, remove, manage"
     echo "locale : Generate Locale Settings."
     echo "font : Install Fonts, TTF, Non-English Characters, Special Characters / Emoji."
-    echo "time : Change Time Zone, Current Date and Time."
+    echo "time <option> : Change Time Zone, Current Date and Time. options: set-time-zone, set-time-date, network-time-zone, system-time-zone"
     echo "keyboard : Change Keyboard Layout."
     echo "wifi : Change WiFi Country Settings."
     exit 1
