@@ -712,7 +712,7 @@ done
     sudo chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-init-setup-service
 END
-  elif [ "$system_arch" = "aarch64" ] || [ "$system_arch" = "arm64" ] || [ "$system_arch" = "armv8" ];
+  elif [ "$system_arch" = "aarch64" ] || [ "$system_arch" = "arm64" ] || [ "$system_arch" = "armv8" ]; then
     colorecho "$GREEN" "Chroot into system ..."
     sudo chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-init-setup-service
