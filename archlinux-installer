@@ -702,7 +702,30 @@ done
 
   if [ "$system_arch" == "x86_64" ]; then
     colorecho "$YELLOW" "(chroot from non-aarch64 is experimental) Chroot into system ..."
-    sudo pacman -S qemu-user-static --noconfirm
+
+    # Check if qemu-aarch64-static is installed
+    if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
+      # Check Linux distribution
+      colorecho "$YELLOW" "qemu-aarch64-static is not found, trying to install..."
+      if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+        # Debian/Ubuntu-based
+        sudo apt-get update
+        sudo apt-get install -y qemu-user-static
+      elif [ -f /etc/redhat-release ]; then
+        # Red Hat-based
+        sudo yum update
+        sudo yum install -y qemu-user-static
+      elif [ -f /etc/arch-release ]; then
+        # Arch Linux
+        sudo pacman -S qemu-user-static --noconfirm
+      elif [ -x "$(command -v apk)" ]; then
+        # Alphine-based
+        apk add qemu-user-static
+      else
+        colorecho "$RED" "Error : qemu-aarch64-static is not installed."
+      fi
+    fi
+
     sudo cp /usr/bin/qemu-aarch64-static $root_mount_dir/usr/bin
     S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
     S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/local/bin/qemu-aarch64-static:CF'
