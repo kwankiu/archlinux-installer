@@ -461,13 +461,13 @@ elif [ "$de_options" = 2 ]; then
 elif [ "$de_options" = 3 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
-    sudo pacman -S sway wofi lxappearance qt5ct python-pywal waybar pcmanfm-qt pass dunst swayidle swaylock swaybg xorg-xwayland qt5-wayland gnome-terminal sddm --noconfirm
+    sudo pacman -S sway wofi lxappearance qt5ct python-pywal waybar pcmanfm-qt pass dunst swayidle swaylock swaybg xorg-xwayland qt5-wayland foot sddm --noconfirm
     sudo systemctl enable sddm
     sudo mkdir -p .config/{sway,dunst,waybar,wofi}
     sudo install -Dm755 /etc/sway/config ~/.config/sway/config
     sudo install -Dm755 /etc/dunst/dunstrc ~/.config/dunst/dunstrc
-    touch ~/.config/waybar/config
-    touch ~/.config/wofi/config
+    sudo touch ~/.config/waybar/config
+    sudo touch ~/.config/wofi/config
 elif [ "$de_options" = 4 ]; then
     # Install Cutefish
     colorecho "$GREEN" "Installing Cutefish ..."
