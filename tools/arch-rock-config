@@ -1544,7 +1544,7 @@ locale() {
 
             if [ ! "$1" = "list-available" ]; then
 
-                if [ "$1" = "generate" ] && [ -z "$2" ] ; then
+                if [ "$1" = "generate" ] && [ -z "$2" ]; then
                     colorecho "$GREEN" "Available Locales for generation:"
 
                     for ((i = 0; i < ${#langcode[@]}; i++)); do
@@ -1574,16 +1574,24 @@ locale() {
                     echo "${matches[i]}"
                 done
 
-                select_options=("Generate Locales" "Cancel")
-                select_option "${select_options[@]}"
-                choice=$?
+                if [ -z "$3" ]; then
+                    select_options=("Generate Locales" "Cancel")
+                    select_option "${select_options[@]}"
+                    choice=$?
+                elif [ "$3" = "-y" ]; then
+                    choice=0
+                else
+                    colorecho "$RED" "Invalid option"
+                    exit 1
+                fi
 
                 if [ "$choice" = 0 ]; then
                     for ((i = 0; i < ${#matches[@]}; i++)); do
                         sudo sed -i "s|#${matches[i]}|${matches[i]}|" /etc/locale.gen
                     done
+                    sudo locale-gen
                 fi
-                sudo locale-gen
+        
             else
                 for ((i = 0; i < ${#langcode[@]}; i++)); do
                     echo "${langcode[$i]}"
