@@ -1510,33 +1510,85 @@ manage_user() {
 
 # Function to select and generate locale
 locale() {
+
+    generated_locales=$(sudo locale -a)
+    
+    if [ -z "$1" ]; then
     title "Arch Rock Configuration Utility - Locale"
     
     # List available locales
     colorecho "$GREEN" "Generated Locales:"
-    localectl list-locales
+
+    echo "$generated_locales"
     echo ""
 
     # Prompt to select and generate locale
-    select_options=("List All Supported Locales" "Return to User & Localization Menu")
+    select_options=("Generate New Locales" "Return to User & Localization Menu")
     select_option "${select_options[@]}"
     choice=$?
+    elif [ "$1" = "list-generated" ]; then
+        echo "$generated_locales"
+        exit 1
+    elif [ "$1" = "list-available" ] || [ "$1" = "generate" ]; then
+        choice=0
+    else
+        colorecho "$RED" "Invalid option"
+        exit 1
+    fi
 
     case $choice in
         0)
             # Read available locales from file and add numbers
-            locales=($(cat /usr/share/i18n/SUPPORTED))
-            numbered_locales=()
-            for ((i = 0; i < ${#locales[@]}; i++)); do
-                echo "$((i + 1))) ${locales[$i]}"
-            done
-    
-            # Display numbered locales
-            printf '%s\n' "${numbered_locales[@]}"
-            read -p "Enter the number of the locale to generate: " chosen_number
-            chosen_locale=${locales[$((chosen_number - 1))]}
-            sudo localectl set-locale "$chosen_locale"
-            sudo locale-gen
+            IFS=$'\n' read -d '' -ra locales <<< "$(grep -E '^#[^[:space:]]' /etc/locale.gen | sed 's/^#//')"
+            IFS=$'\n' read -d '' -ra langcode <<< "$(grep -E '^#[^[:space:]]' /etc/locale.gen | sed 's/^#//; s/[ @.].*//' | uniq)"
+
+            if [ ! "$1" = "list-available" ]; then
+
+                if [ "$1" = "generate" ] && [ -z "$2" ] ; then
+                    colorecho "$GREEN" "Available Locales for generation:"
+
+                    for ((i = 0; i < ${#langcode[@]}; i++)); do
+                        echo "$((i + 1))) ${langcode[$i]}"
+                    done
+
+                    read -p "Enter the locale number: " chosen_number
+                    chosen_locale=${langcode[$((chosen_number - 1))]}
+                    colorecho "$GREEEN" "Picked $chosen_locale"
+                else
+                    chosen_locale=$2
+                fi
+
+                # Iterate through the array and find matches
+                matches=()
+                for ((i = 0; i < ${#locales[@]}; i++)); do
+                    element="${locales[i]}"
+                    if [[ "$element" =~ $chosen_locale ]]; then
+                        matches+=("$element")
+                    fi
+                done
+                
+                title "Arch Rock Configuration Utility - Generate Locale"
+                colorecho "$GREEN" "The following locales will be added:"
+
+                for ((i = 0; i < ${#matches[@]}; i++)); do
+                    echo "${matches[i]}"
+                done
+
+                select_options=("Generate Locales" "Cancel")
+                select_option "${select_options[@]}"
+                choice=$?
+
+                if [ "$choice" = 0 ]; then
+                    for ((i = 0; i < ${#matches[@]}; i++)); do
+                        sudo sed -i "s|#${matches[i]}|${matches[i]}|" /etc/locale.gen
+                    done
+                fi
+                sudo locale-gen
+            else
+                for ((i = 0; i < ${#langcode[@]}; i++)); do
+                    echo "${langcode[$i]}"
+                done
+            fi
             ;;
         *)
             user_localization
@@ -1783,7 +1835,7 @@ elif [ "$1" = "user" ]; then
     manage_user "$2" "$3"
 
 elif [ "$1" = "locale" ]; then
-    locale "$2"
+    locale "$2" "$3" "$4"
 
 elif [ "$1" = "font" ]; then
     fonts "$2"
