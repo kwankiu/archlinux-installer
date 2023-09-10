@@ -309,6 +309,30 @@ fi
 ################################################################
 # Time Zone
 
+title "Arch Rock Installer - Language"
+
+    lclist=$(arch-rock-config locale list-available)
+    netlang=$(curl -s https://ipapi.co/languages)
+    network_lang=()
+    IFS=',' read -ra network_lang <<< "$netlang"
+    colorecho "$GREEN" "Let's begin by setting your language, is that right?"
+    colorecho "$GREEN" "Suggested Languages are:"
+    echo
+    options=()
+    for ((i = 0; i < ${#network_lang[@]}-1; i++)); do
+        options+=("${network_lang[$i]}")
+    done
+    options+=("More Options" "Skip setting Language")
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = 0 ]; then
+        echo "Coming Soon"
+    fi
+
+################################################################
+# Time Zone
+
 title "Arch Rock Installer - Time Zone"
 
     ntz=$(arch-rock-config time network-time-zone)
