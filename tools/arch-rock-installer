@@ -11,6 +11,15 @@ branch=dev
 ################################################################
 # Tools for formatting / styling
 
+continent=("Asia" "Africa" "North America" "South America" "Antarctica" "Europe" "Australia")
+
+country[0]=("China" "Japan" "Korea" "India" "Pakistan" "Thailand" "Vietnam")
+country[1]=("Nigeria" "South Africa" "Kenya" "Egypt" "Ghana" "Morocco" "Ethiopia") # Add more African countries
+country[2]=("USA" "Canada" "Mexico" "Cuba" "Jamaica" "Haiti" "Dominican Republic") # Add more North American countries
+country[3]=("Brazil" "Argentina" "Peru" "Chile" "Colombia" "Venezuela" "Ecuador") # Add more South American countries
+country[4]=("France" "Germany" "United Kingdom" "Italy" "Spain" "Greece" "Sweden") # Add more European countries
+country[5]=("Australia" "New Zealand" "Fiji" "Papua New Guinea" "Solomon Islands" "Vanuatu") # Add more Australian countries
+
 # Define terminal color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -315,19 +324,25 @@ title "Arch Rock Installer - Language"
     netlang=$(curl -s https://ipapi.co/languages)
     network_lang=()
     IFS=',' read -ra network_lang <<< "$netlang"
-    colorecho "$GREEN" "Let's begin by setting your language, is that right?"
+    colorecho "$GREEN" "Let's begin with setting up your language, is that right?"
     colorecho "$GREEN" "Suggested Languages are:"
     echo
     options=()
     for ((i = 0; i < ${#network_lang[@]}-1; i++)); do
         options+=("${network_lang[$i]}")
     done
-    options+=("More Options" "Skip setting Language")
+    sgdindx=$i
+    options+=("Select by Country / Region" "Skip setting Language")
     select_option "${options[@]}"
     choice=$?
 
-    if [ "$choice" = 0 ]; then
-        echo "Coming Soon"
+    if [ "$choice" = "$sgdindx" ]; then
+        echo "More Options"
+    elif [ "$choice" -ge "$sgdindx" ]; then
+        echo "Skipping ..."
+    else
+        echo "Set Language to ${options[$choice]}"
+        arch-rock-config locale generate ${options[$choice]} -y
     fi
 
 ################################################################
