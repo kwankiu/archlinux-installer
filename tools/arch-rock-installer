@@ -9,16 +9,38 @@
 branch=dev
 
 ################################################################
-# Tools for formatting / styling
+# Define variables
 
 continent=("Asia" "Africa" "North America" "South America" "Antarctica" "Europe" "Australia")
+langopt=("Chinese" "English" "Spanish" "French" "German" "Arabic" "Other")
 
-country[0]=("China" "Japan" "Korea" "India" "Pakistan" "Thailand" "Vietnam")
-country[1]=("Nigeria" "South Africa" "Kenya" "Egypt" "Ghana" "Morocco" "Ethiopia") # Add more African countries
-country[2]=("USA" "Canada" "Mexico" "Cuba" "Jamaica" "Haiti" "Dominican Republic") # Add more North American countries
-country[3]=("Brazil" "Argentina" "Peru" "Chile" "Colombia" "Venezuela" "Ecuador") # Add more South American countries
-country[4]=("France" "Germany" "United Kingdom" "Italy" "Spain" "Greece" "Sweden") # Add more European countries
-country[5]=("Australia" "New Zealand" "Fiji" "Papua New Guinea" "Solomon Islands" "Vanuatu") # Add more Australian countries
+# Chinese
+langchi=("cmn_TW (Taiwan)" "zh_CN (China)" "zh_HK (Hong Kong)" "zh_TW (Taiwan)")
+
+# English
+langeng=("en_AG (Antigua and Barbuda)" "en_AU (Australia)" "en_BW (Botswana)" "en_CA (Canada)" "en_DK (Denmark)" "en_GB (United Kingdom)" "en_HK (Hong Kong)" "en_IE (Ireland)" "en_IL (Israel)" "en_IN (India)" "en_NG (Nigeria)" "en_NZ (New Zealand)" "en_PH (Philippines)" "en_SC (Seychelles)" "en_SG (Singapore)" "en_US (United States)" "en_ZA (South Africa)" "en_ZM (Zambia)" "en_ZW (Zimbabwe)")
+
+# Spanish
+langspa=("es_AR (Argentina)" "es_BO (Bolivia)" "es_CL (Chile)" "es_CO (Colombia)" "es_CR (Costa Rica)" "es_CU (Cuba)" "es_DO (Dominican Republic)" "es_EC (Ecuador)" "es_ES (Spain)" "es_GT (Guatemala)" "es_HN (Honduras)" "es_MX (Mexico)" "es_NI (Nicaragua)" "es_PA (Panama)" "es_PE (Peru)" "es_PR (Puerto Rico)" "es_PY (Paraguay)" "es_SV (El Salvador)" "es_US (United States)" "es_UY (Uruguay)" "es_VE (Venezuela)")
+
+# French
+langfre=("fr_BE (Belgium)" "fr_CA (Canada)" "fr_CH (Switzerland)" "fr_FR (France)" "fr_LU (Luxembourg)")
+
+# German
+langger=("de_AT (Austria)" "de_BE (Belgium)" "de_CH (Switzerland)" "de_DE (Germany)" "de_IT (Italy)" "de_LI (Liechtenstein)" "de_LU (Luxembourg)")
+
+# Arabic
+langara=("ar_AE (United Arab Emirates)" "ar_BH (Bahrain)" "ar_DZ (Algeria)" "ar_EG (Egypt)" "ar_IN (India)" "ar_IQ (Iraq)" "ar_JO (Jordan)" "ar_KW (Kuwait)" "ar_LB (Lebanon)" "ar_LY (Libya)" "ar_MA (Morocco)" "ar_OM (Oman)" "ar_QA (Qatar)" "ar_SA (Saudi Arabia)" "ar_SD (Sudan)" "ar_SS (South Sudan)" "ar_SY (Syria)" "ar_TN (Tunisia)" "ar_YE (Yemen)")
+
+# Other (TODO)
+langother=()
+langcon["Asia"]=()
+langcon["Europe"]=()
+langcon["Other"]=()
+
+
+################################################################
+# Tools for formatting / styling
 
 # Define terminal color codes
 RED='\033[0;31m'
@@ -332,12 +354,36 @@ title "Arch Rock Installer - Language"
         options+=("${network_lang[$i]}")
     done
     sgdindx=$i
-    options+=("Select by Country / Region" "Skip setting Language")
+    options+=("More Languages" "Skip setting Language")
     select_option "${options[@]}"
     choice=$?
 
     if [ "$choice" = "$sgdindx" ]; then
-        echo "More Options"
+        title "Arch Rock Installer - Language (More Options)"
+        select_option "${langopt[@]}"
+        choice=$?
+        if [ "$choice" = 0 ]; then
+            langchoice=("${langchi[@]}") # Chinese
+        elif [ "$choice" = 1 ]; then
+            langchoice=("${langeng[@]}") # English
+        elif [ "$choice" = 2 ]; then
+            langchoice=("${langspa[@]}") # Spanish
+        elif [ "$choice" = 3 ]; then
+            langchoice=("${langfre[@]}") # French
+        elif [ "$choice" = 4 ]; then
+            langchoice=("${langger[@]}") # German
+        elif [ "$choice" = 5 ]; then
+            langchoice=("${langara[@]}") # Arabic
+        else
+            echo "Coming Soon"
+            exit 1
+            # Other languages
+        fi
+        title "Arch Rock Installer - Language (More Options)"
+        select_option "${langchoice[@]}"
+        choice=$?
+        echo "Set Language to ${langchoice[$choice]%% (*}"
+        arch-rock-config locale generate ${langchoice[$choice]%% (*} -y
     elif [ "$choice" -ge "$sgdindx" ]; then
         echo "Skipping ..."
     else
