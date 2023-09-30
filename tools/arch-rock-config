@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2309101
+utilver=2309301
 
 # Define main / dev branch
 branch=dev
@@ -1776,7 +1776,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 
     colorecho "$YELLOW" "User & Localization"
     echo "user <option> : Add, Remove and Change User Account Settings. options: add, remove, manage"
-    echo "locale : Generate Locale Settings."
+    echo "locale : Generate Locale Settings. options: list-generated, list-available, generate <country_code>"
     echo "font : Install Fonts, TTF, Non-English Characters, Special Characters / Emoji."
     echo "time <option> : Change Time Zone, Current Date and Time. options: set-time-zone, set-time-date, network-time-zone, system-time-zone"
     echo "keyboard : Change Keyboard Layout."

@@ -376,6 +376,7 @@ for arg in "$@"; do
       echo "-k / --kernel : Create Arch Linux using default kernel option."
       echo "-b / --bootpart : Create Arch Linux with a seperated boot partition."
       echo "-c / --compress : Compress the Disk Image to .img.xz"
+      echo "-m / --mtimg : Skip partitioning and use an image instead. (When this argument is used, --image=<image_name> will become the image to be used)"
       echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
       echo "--size=<image_size> : Set disk image size (default is 4G)."
       echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
