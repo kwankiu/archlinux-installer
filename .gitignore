@@ -2,6 +2,8 @@
 *.xz
 *.gz
 *.img
+*.service
+*.tmp
 
 # Ignore output folder
 out

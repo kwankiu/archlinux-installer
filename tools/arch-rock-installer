@@ -5,13 +5,50 @@
 #                     Arch Rock Installer                      #
 #                                                              #
 ################################################################
-# Define variables
-
-# Compiled Packages folder path
-compiled_pkg_folder="/usr/lib/compiled-packages"
-
 # Define main / dev branch
 branch=main
+
+################################################################
+# Define variables
+
+# Language options
+langopt=("Chinese" "English" "Spanish" "French" "German" "Arabic" "Others")
+
+# Chinese
+langchi=("cmn_TW (Taiwan)" "zh_CN (China)" "zh_HK (Hong Kong)" "zh_TW (Taiwan)" "zh_MO (Macau)" "zh_SG (Singapore)"  "zu_ZA (South Africa)" "yue_HK (Hong Kong)" "hak_TW (Taiwan)")
+
+# English
+langeng=("en_AG (Antigua and Barbuda)" "en_AU (Australia)" "en_BW (Botswana)" "en_CA (Canada)" "en_DK (Denmark)" "en_GB (United Kingdom)" "en_HK (Hong Kong)" "en_IE (Ireland)" "en_IL (Israel)" "en_IN (India)" "en_NG (Nigeria)" "en_NZ (New Zealand)" "en_PH (Philippines)" "en_SC (Seychelles)" "en_SG (Singapore)" "en_US (United States)" "en_ZA (South Africa)" "en_ZM (Zambia)" "en_ZW (Zimbabwe)")
+
+# Spanish
+langspa=("es_AR (Argentina)" "es_BO (Bolivia)" "es_CL (Chile)" "es_CO (Colombia)" "es_CR (Costa Rica)" "es_CU (Cuba)" "es_DO (Dominican Republic)" "es_EC (Ecuador)" "es_ES (Spain)" "es_GT (Guatemala)" "es_HN (Honduras)" "es_MX (Mexico)" "es_NI (Nicaragua)" "es_PA (Panama)" "es_PE (Peru)" "es_PR (Puerto Rico)" "es_PY (Paraguay)" "es_SV (El Salvador)" "es_US (United States)" "es_UY (Uruguay)" "es_VE (Venezuela)")
+
+# French
+langfre=("fr_BE (Belgium)" "fr_CA (Canada)" "fr_CH (Switzerland)" "fr_FR (France)" "fr_LU (Luxembourg)")
+
+# German
+langger=("de_AT (Austria)" "de_BE (Belgium)" "de_CH (Switzerland)" "de_DE (Germany)" "de_IT (Italy)" "de_LI (Liechtenstein)" "de_LU (Luxembourg)")
+
+# Arabic
+langara=("ar_AE (United Arab Emirates)" "ar_BH (Bahrain)" "ar_DZ (Algeria)" "ar_EG (Egypt)" "ar_IN (India)" "ar_IQ (Iraq)" "ar_JO (Jordan)" "ar_KW (Kuwait)" "ar_LB (Lebanon)" "ar_LY (Libya)" "ar_MA (Morocco)" "ar_OM (Oman)" "ar_QA (Qatar)" "ar_SA (Saudi Arabia)" "ar_SD (Sudan)" "ar_SS (South Sudan)" "ar_SY (Syria)" "ar_TN (Tunisia)" "ar_YE (Yemen)")
+
+# Sort by Continent
+langcon=("Asia" "Europe" "Americas" "Africa" "Others")
+
+# Asia
+langconas=("az_AZ (Azerbaijan)" "az_IR (Iran)" "as_IN (India)" "bhb_IN (India)" "bho_IN (India)" "bho_NP (Nepal)" "bo_CN (China)" "bo_IN (India)" "dz_BT (Bhutan)" "fa_IR (Iran)" "hi_IN (India)" "he_IL (Israel)" "id_ID (Indonesia)" "ja_JP (Japan)" "ka_GE (Georgia)" "kk_KZ (Kazakhstan)" "km_KH (Cambodia)" "kn_IN (India)" "ko_KR (Korea)" "th_TH (Thailand)" "ta_SG (Singapore)" "vi_VN (Vietnam)" "saq_KE (Kenya)" "ml_IN (India)" "ug_CN (China)" "or_IN (India)" "sw_KE (Kenya)" "ta_MY (Malaysia)" "ta_IN (India)" "brx_IN (India)" "pa_IN (India)" "ug_IR (Iran)" "pa_PK (Pakistan)" "ur_PK (Pakistan)")
+
+# Europe
+langconeu=("bg_BG (Bulgaria)" "ca_IT (Italy)" "ca_AD (Andorra)" "ca_ES (Spain)" "ast_ES (Spain)" "ca_FR (France)" "br_FR (France)" "oc_FR (France)" "cs_CZ (Czech Republic)" "csb_PL (Poland)" "da_DK (Denmark)" "dsb_DE (Germany)" "el_GR (Greece)" "el_CY (Cyprus)" "et_EE (Estonia)" "eu_ES (Spain)" "fi_FI (Finland)" "fur_IT (Italy)" "fy_NL (Netherlands)" "fy_DE (Germany)" "ga_IE (Ireland)" "gl_ES (Spain)" "hr_HR (Croatia)" "hsb_DE (Germany)" "ia_FR (France)" "is_IS (Iceland)" "it_CH (Switzerland)" "it_IT (Italy)" "lv_LV (Latvia)" "mk_MK (North Macedonia)" "mt_MT (Malta)" "nb_NO (Norway)" "nl_BE (Belgium)" "nl_NL (Netherlands)" "nn_NO (Norway)" "no_NO (Norway)" "pl_PL (Poland)" "pt_PT (Portugal)" "ro_RO (Romania)" "sk_SK (Slovakia)" "sl_SI (Slovenia)" "sq_AL (Albania)" "sv_FI (Finland)" "sv_SE (Sweden)" "tr_TR (Turkey)" "uk_UA (Ukraine)" "crh_UA (Ukraine)" "gd_GB (United Kingdom)" "gv_GB (United Kingdom)" "cy_GB (United Kingdom)" "se_NO (Norway)")
+
+# Americas
+langconam=("ayc_PE (Peru)" "qu_PE (Peru)" "chr_US (United States)" "iu_CA (Canada)" "pt_BR (Brazil)" "hif_FJ (Fiji)" "ik_CA (Canada)")
+
+# Africa
+langconaf=("aa_DJ (Djibouti)" "aa_ER (Eritrea)" "aa_ET (Ethiopia)" "ber_DZ (Algeria)" "ber_MA (Morocco)" "gez_ER (Eritrea)" "gez_ET (Ethiopia)" "am_ET (Ethiopia)" "kab_DZ (Algeria)" "sid_ET (Ethiopia)" "sn_ZW (Zimbabwe)" "so_SO (Somalia)" "shi_MA (Morocco)" "shi_Tfng_MA (Morocco)" "rw_RW (Rwanda)" "nso_ZA (South Africa)" "yo_NG (Nigeria)" "xog_UG (Uganda)")
+
+# Others
+langconother=("ru_RU (Russia)" "cv_RU (Russia)" "ta_LK (Sri Lanka)" "ak_GH (Ghana)" "si_LK (Sri Lanka)" "dv_MV (Maldives)" "uz_UZ (Uzbekistan)" "sr_RS (Serbia)" "tk_TM (Turkmenistan)" "bi_VU (Vanuatu)" "sw_TZ (Tanzania)" "ce_RU (Russia)" "sah_RU (Russia)" "sr_CS (Serbia and Montenegro)" "tg_TJ (Tajikistan)" "ps_AF (Afghanistan)" "me_ME (Montenegro)" "ckb_IQ (Iraq)" "be_BY (Belarus)" "kl_GL (Greenland)" "bs_BA (Bosnia and Herzegovina)" "ug_UZ (Uzbekistan)")
 
 ################################################################
 # Tools for formatting / styling
@@ -100,6 +137,7 @@ title() {
 
 ################################################################
 # Internet Connection Check
+internet_retry_count=0
 
 check_internet() {
     colorecho "$YELLOW" "Checking internet connection..."
@@ -115,126 +153,30 @@ check_internet() {
     done
 
     if ! "$internet_available"; then
-        colorecho "$RED" "Your system does not appear to have internet connection."
-        colorecho "$YELLOW" "We might not be able to set you up without internet connection. Do you want to continue anyway?"
-        options=("Continue Anyway" "Try Again" "Exit Setup")
-        select_option "${options[@]}"
-        answer=$?
-        if [ "$answer" = 1 ]; then
+        if [ "$internet_retry_count" -gt 3 ]; then
+            colorecho "$RED" "Your system does not appear to have internet connection."
+            colorecho "$YELLOW" "This installer requires internet connection. Do you want to try install anyway?"
+            options=("Check Internet Again" "Try Install Anyway" "Exit Installer")
+            select_option "${options[@]}"
+            answer=$?
+            if [ "$answer" = 0 ]; then
+                check_internet
+            elif [ "$answer" = 2 ]; then
+                echo "Aborted. Exiting ..."
+                exit 1
+            fi
+        else
+            colorecho "$GREEN" "Waiting for internet connection ..."
+            sleep 3
+            colorecho "$GREEN" "Retrying ..."
             check_internet
-        elif [ "$answer" = 2 ]; then
-            echo "Aborted. Exiting ..."
-            exit 1
+            ((internet_retry_count++))
         fi
     fi
 }
 
-################################################################
-# First Boot Setup
-
-first_boot_setup() {
-
-    colorecho "$GREEN" "Running First Boot Setup ..."
-    
-    #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
-    colorecho "$GREEN" "Setting up pacman ..."
-    pacman-key --init
-    pacman-key --populate archlinuxarm
-
-    # Allow wheel group in sudoers
-    colorecho "$GREEN" "Allowing wheel group in sudoers ..."
-    echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
-    
-    # Prompt user to enter a new username
-    title "Create User Account"
-    read -p "Enter a new username (default=rock): " new_username
-
-    # Check if the username is not empty
-    if [ -z "$new_username" ]; then
-        new_username="rock"
-    fi
-
-    # Create the user account
-    colorecho "$YELLOW" "Creating user account $new_username."
-    useradd -m -G wheel -s /bin/bash "$new_username"
-
-    # Check if the useradd command was successful
-    if [ $? -eq 0 ]; then
-        colorecho "$GREEN" "User $new_username created successfully"
-
-        # Remove the default "alarm" account
-        if [ ! "$new_username" = "alarm" ]; then
-            userdel -r alarm
-            if [ $? -eq 0 ]; then
-                echo "Default 'alarm' account removed successfully"
-            else
-                echo "Error removing default 'alarm' account"
-            fi
-        fi
-
-    else
-        colorecho "$RED" "Error creating user $new_username"
-        exit 1
-    fi
-
-    # Prompt user to set a password for the new user
-    colorecho "$GREEN" "Create new password for $new_username :"
-    passwd "$new_username"
-
-    # Check if the passwd command was successful
-    if [ $? -eq 0 ]; then
-        colorecho "$GREEN" "Password set for user $new_username"
-    else
-        colorecho "$RED" "Error setting password for user $new_username"
-        exit 1
-    fi
-
-    # Add the user to the sudoers group using usermod
-    colorecho "$GREEN" "Adding $new_username to wheel ..."
-    usermod -aG wheel "$new_username"
-
-    # Check if the usermod command was successful
-    if [ $? -eq 0 ]; then
-        colorecho "$GREEN" "$new_username added to sudoers successfully"
-    else
-        colorecho "$RED" "Error adding user $new_username to sudoers"
-    fi
-
-    # Add the user to other groups
-    colorecho "$GREEN" "Adding $new_username to other groups ..."
-    usermod -aG video "$new_username"
-    usermod -aG audio "$new_username"
-    usermod -aG games "$new_username"
-    usermod -aG log "$new_username"
-    usermod -aG lp "$new_username"
-    usermod -aG optical "$new_username"
-    usermod -aG power "$new_username"
-    usermod -aG scanner "$new_username"
-    usermod -aG storage "$new_username"
-
-    # Install sudo
-    colorecho "$GREEN" "Installing sudo"
-    pacman -Sy sudo --noconfirm
-
-    # Prompt user to change the root password
-    title "Root account options"
-    colorecho "$GREEN" "Do you want to change the root password?"
-    options=("Do not change root password" "Change root password" "Turn off root account")
-    select_option "${options[@]}"
-    answer=$?
-
-    if [ "$answer" = 1 ]; then
-        colorecho "$GREEN" "Set new root password : "
-        passwd
-    elif [ "$answer" = 2 ]; then
-        passwd -l root
-    fi
-    
-    # Get boot partition from the current mount point "/"
+add_boot_part_fstab() {
     title "Updating fstab ..."
-    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
-    rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
-    rootfs_disk="${rootfs_disk%p*}"
     boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
 
     # Check if the boot_partition is not empty
@@ -260,25 +202,110 @@ first_boot_setup() {
             echo "Error adding line to /etc/fstab"
         fi
     fi
+}
+
+################################################################
+# Initial System Setup
+
+init_setup() {
+
+    title "Welcome to Arch Linux!"
+    colorecho "$GREEN" "Running Initial System Setup ..."
+
+    # Check if the script is being run with root privileges
+    if [[ $EUID -ne 0 ]]; then
+        colorecho "$RED" "Error : Initial System Setup must be run as root"
+        exit 1
+    fi
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Get disk path using rootfs partition path
+    rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
+    rootfs_disk="${rootfs_disk%p*}"
+
+    if [ ! -e "/boot/extlinux/extlinux.conf" ]; then 
+        add_boot_part_fstab
+    fi
+
+    colorecho "$GREEN" "Resizing File System ..."
+    growpart $rootfs_disk 2
+    resize2fs $rootfs_partition
+
+    # Allow wheel group in sudoers
+    colorecho "$GREEN" "Allowing wheel group in sudoers ..."
+    echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+    usermod -aG wheel root
+
+    #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+    colorecho "$GREEN" "Setting up pacman ..."
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+
+    colorecho "$GREEN" "Installing sudo ..."
+    pacman -Sy sudo --noconfirm
 
     # Download and install arch-rock-config
-    title "Installing Configuration Utility (arch-rock-config) ..."
-    cd /usr/bin
-
-    # Install arch-rock-config
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+    attempt=0
+    until [ -f /usr/bin/arch-rock-config ] || [ "$attempt" -ge 5 ]; do
+        colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
+        sleep 3
+        cd /usr/bin
+        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        ((attempt++))
+    done
     chmod +x arch-rock-config
 
-    # Prompt user if they want to reboot
-    title "First Boot Setup"
-    read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
+    colorecho "$GREEN" "Adding 7ji archrepo ..."
+    arch-rock-config add-7ji
+    pacman -Syy
 
-    if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
-        colorecho "$YELLOW" "You can manually reboot later to apply the changes."
-    else
-        colorecho "$GREEN" "Rebooting..."
-        reboot
+    ################################################################
+    # User Account
+
+    # Prompt user to enter a new username
+    title "Create User Account"
+
+    colorecho "$GREEN" "Removing default account ..."
+    arch-rock-config user remove alarm
+
+    title "Create User Account"
+    read -p "Enter a new username (default=rock): " new_username
+
+    # Check if the username is not empty
+    if [ -z "$new_username" ]; then
+        new_username="rock"
     fi
+
+    arch-rock-config user add $new_username
+
+    # Prompt user to change the root password
+    title "Root account options"
+    colorecho "$GREEN" "Do you want to keep the root account and change the root password?"
+    options=("Turn off root account (recommended)" "Change root password" "Do not change root password")
+    select_option "${options[@]}"
+    answer=$?
+
+    if [ "$answer" = 1 ]; then
+        colorecho "$GREEN" "Set new root password : "
+        passwd
+    elif [ "$answer" = 0 ]; then
+        passwd -l root
+    fi
+
+    if [ -e "/etc/systemd/system/init-setup.service" ]; then 
+        systemctl disable init-setup.service
+        rm -rf /etc/systemd/system/init-setup.service
+    fi
+
+    mkdir -p /etc/systemd/system/getty@tty1.service.d
+    echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    echo "installer" | tee -a /home/$new_username/.bashrc
+
+    colorecho "$GREEN" "Rebooting..."
+    systemctl reboot
+    reboot
 }
 
 ################################################################
@@ -290,207 +317,335 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 
     colorecho "$GREEN" "Options"
     echo "-h / --help : Usage and Infomation of this installer"
-    echo "--skip-first-boot-setup : Skip first boot setup (use only if the corresponding setup has been done)"
+    echo "--skip-init-setup : Skip init setup (use only if the corresponding setup has been done)"
+    exit 1
+elif [ "$1" = "--create-init-setup-service" ]; then
+    echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\nBefore=sshd.service systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
     exit 1
 fi
 
 ################################################################
 # Installer Setup
 
-title "Welcome to Arch Rock Installer"
-
-# Check if the script is being run with root privileges
-if [[ $EUID -ne 0 ]]; then
-    colorecho "$RED" "Error : This script must be run as root"
-    exit 1
-fi
+title "Welcome to Arch Linux!"
 
 # Check internet connection
 check_internet
 
-# Run first boot setup if not yet done
+# Run init setup if not yet done
 if [ ! -e "/usr/bin/arch-rock-config" ]; then 
-    if [ ! "$1" = "--skip-first-boot-setup" ]; then
-        first_boot_setup
+    if [ ! "$1" = "--skip-init-setup" ]; then
+        init_setup
     fi
 fi
 
-# Ensure compiled packages permission
-if [ -z $compiled_pkg_folder ]; then
-    chmod -R 755 $compiled_pkg_folder/*
+# Check if the script is being run with root privileges
+if [[ $EUID -ne 0 ]]; then
+    title "Arch Rock Installer"
+    colorecho "$GREEN" "Starting Setup ..."
+else
+    colorecho "$RED" "Error : Installer must be run as user"
+    exit 1
 fi
 
 ################################################################
-# Install Linux Kernel
+# Time Zone
 
-title "Install Linux Kernel"
+title "Arch Rock Installer - Language"
 
-if [ -z "$compiled_pkg_folder/Kernel" ]; then
-    colorecho "$RED" "Error : No pre-compiled Packages found."
-    exit 1
-    #echo "No pre-compiled Packages found. Would you like to build linux kernel from AUR / source (y/n)?"
-    #read answer
-    #if [ "$answer" = "y" ]; then
-    #arch-rock-config install-kernel --no-reboot
-    #fi
-else
-    # remove old kernel files, else the package will not install.
-    colorecho "$YELLOW" "Removing existing kernel files ..."
-    rm -rf /usr/bin/libmali
-    rm -rf /usr/bin/libmaliw
-    rm -rf /usr/lib/libmali
-    rm -rf /usr/lib/modules
-    rm -rf /usr/lib/firmware/mali_csffw.bin
-    rm -rf /usr/src/linux-*
-    rm -rf /boot/*
+    lclist=$(arch-rock-config locale list-available)
+    netlang=$(curl -s https://ipapi.co/languages)
+    network_lang=()
+    IFS=',' read -ra network_lang <<< "$netlang"
+    colorecho "$GREEN" "Let's begin with setting up your language, is that right?"
+    colorecho "$GREEN" "Suggested Languages are:"
+    echo
+    options=()
+    for ((i = 0; i < ${#network_lang[@]}-1; i++)); do
+        options+=("${network_lang[$i]}")
+    done
+    sgdindx=$i
+    options+=("More Languages" "Skip setting Language")
+    select_option "${options[@]}"
+    choice=$?
 
-    colorecho "$GREEN" "Installing Linux Kernel ..."
-    pacman -U $compiled_pkg_folder/Kernel/*/*.pkg.tar.xz
-
-    colorecho "$YELLOW" "Updating extlinux.conf ..."
-    # apply new extlinux.conf
-    mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
-
-    # Get rootfs partition from the current mount point "/"
-    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
-
-    # Find the UUIDs of the root partition
-    root_uuid=$(blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
-    echo "Root partition UUID: $root_uuid"
-
-    # Change UUID for extlinux.conf
-    echo "Updating UUID for extlinux.conf ..."
-    sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
-    sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
-
-    # for midstream
-    if [ -e /boot/vmlinuz-linux-rk3588-midstream ]; then
-        colorecho "$YELLOW" "Installing mali_csffw.bin ..."
-        # Install mali_csffw.bin
-        pacman -Sy wget --noconfirm
-        wget -P /lib/firmware https://github.com/JeffyCN/mirrors/raw/488f49467f5b4adb8ae944221698e9a4f9acb0ed/firmware/g610/mali_csffw.bin
+    if [ "$choice" = "$sgdindx" ]; then
+        title "Arch Rock Installer - Language (More Options)"
+        select_option "${langopt[@]}"
+        choice=$?
+        if [ "$choice" = 0 ]; then
+            langchoice=("${langchi[@]}") # Chinese
+        elif [ "$choice" = 1 ]; then
+            langchoice=("${langeng[@]}") # English
+        elif [ "$choice" = 2 ]; then
+            langchoice=("${langspa[@]}") # Spanish
+        elif [ "$choice" = 3 ]; then
+            langchoice=("${langfre[@]}") # French
+        elif [ "$choice" = 4 ]; then
+            langchoice=("${langger[@]}") # German
+        elif [ "$choice" = 5 ]; then
+            langchoice=("${langara[@]}") # Arabic
+        else
+            title "Arch Rock Installer - Language (Others - sort by continents)"
+            select_option "${langcon[@]}"
+            choice=$?
+            if [ "$choice" = 0 ]; then
+                langchoice=("${langconas[@]}") # Asia
+            elif [ "$choice" = 1 ]; then
+                langchoice=("${langconeu[@]}") # Europe
+            elif [ "$choice" = 2 ]; then
+                langchoice=("${langconam[@]}") # Americas
+            elif [ "$choice" = 3 ]; then
+                langchoice=("${langconaf[@]}") # Africa
+            elif [ "$choice" = 4 ]; then
+                langchoice=("${langconother[@]}") # Others
+            fi
+        fi
+        title "Arch Rock Installer - Language (More Options)"
+        select_option "${langchoice[@]}"
+        choice=$?
+        echo "Set Language to ${langchoice[$choice]%% (*}"
+        arch-rock-config locale generate ${langchoice[$choice]%% (*} -y
+    elif [ "$choice" -ge "$sgdindx" ]; then
+        echo "Skipping ..."
+    else
+        echo "Set Language to ${options[$choice]}"
+        arch-rock-config locale generate ${options[$choice]} -y
     fi
-fi
 
 ################################################################
-# Install Mesa and GPU drivers
+# Time Zone
 
-title "Install Mesa and GPU drivers"
+title "Arch Rock Installer - Time Zone"
 
-if [ -z "$compiled_pkg_folder/GPU" ]; then
-    colorecho "$RED" "Error : No pre-compiled Packages found."
-    exit 1
-    #echo "No pre-compiled Packages found. Would you like to build from AUR / source (y/n)?"
-    #read answer
-    #if [ "$answer" = "y" ]; then
-    #arch-rock-config install-gpu
-    #fi
-else
-    colorecho "$GREEN" "Installing Mesa ..."
-    pacman -U $compiled_pkg_folder/GPU/*/*.pkg.tar.xz --noconfirm
-    if [ -z "$compiled_pkg_folder/GPU/add-ons" ]; then
-        colorecho "$GREEN" "Installing other GPU drivers ..."
-        pacman -U $compiled_pkg_folder/GPU/add-ons/*/*.pkg.tar.xz --noconfirm
+    ntz=$(arch-rock-config time network-time-zone)
+    colorecho "$GREEN" "Your time zone is: $ntz"
+    colorecho "$GREEN" "Is that correct?"
+    echo
+
+    options=("Yes, this is correct" "No, let me correct my Time Zone" "Skip setting Time Zone")
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = 0 ]; then
+        arch-rock-config "time" set-time-zone sync
+    elif [ "$choice" = 1 ]; then
+        arch-rock-config "time" set-time-zone
     fi
-fi
-
-################################################################
-# Install Video Acceleration
-
-title "Install Video Acceleration"
-
-if [ -z "$compiled_pkg_folder/Video" ]; then
-    colorecho "$RED" "Error : No pre-compiled Packages found."
-    exit 1
-    #echo "No pre-compiled Packages found. Would you like to build from AUR / source (y/n)?"
-    #read answer
-    #if [ "$answer" = "y" ]; then
-    #arch-rock-config install-vpu
-    #fi
-else
-    colorecho "$GREEN" "Installing Video Acceleration ..."
-    pacman -U $compiled_pkg_folder/Video/*/*.pkg.tar.xz --noconfirm
-fi
-
-################################################################
-# Post Installation
-
-title "Post Installation"
-
-# The fix for some Bluetooth Modules (A8, AX210, etc.)
-colorecho "$GREEN" "Applying Bluetooth Fix ..."
-echo "blacklist pgdrv" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist btusb" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist btrtl" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist btbcm" >> /etc/modprobe.d/blacklist.conf
-echo "#blacklist btintel" >> /etc/modprobe.d/blacklist.conf
-
-# Network Manager, WiFi, Bluetooth
-colorecho "$GREEN" "Installing network manager and bluetooth ..."
-pacman -S networkmanager iw bluez --noconfirm
-
-colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
-systemctl enable NetworkManager.service
-systemctl start NetworkManager.service
-systemctl enable bluetooth.service
-systemctl start bluetooth.service
 
 ################################################################
 # Select desktop environment
 
-title "Desktop Environment"
+title "Arch Rock Installer - Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
+echo
 
-options=("Gnome" "KDE Plasma" "Budgie")
-
-# TO BE ADDED
-# options+=("XFCE" "LXQt" "Cinnamon" "Cutefish" "Deepin" "MATE" "Sway")
-
+options=("Gnome" "KDE Plasma" "Budgie" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
 options+=("Skip")
 
 select_option "${options[@]}"
 de_options=$?
 
 ################################################################
+# Install Linux Kernel
+
+title "Arch Rock Installer - Installing Linux Kernel"
+
+    oldkrlrel=$(uname -r)
+    kernelpkg="linux-radxa-rkbsp5-git"
+    yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
+
+    if sudo pacman -Qs $kernelpkg > /dev/null ; then
+        colorecho "$GREEN" "Removing Old Kernel Modules ..."
+        sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+    else
+        sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
+        if sudo pacman -Qs $kernelpkg > /dev/null ; then
+            colorecho "$GREEN" "Removing Old Kernel Modules ..."
+            sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+        else
+            colorecho "$RED" "Error: Failed to Install Linux Kernel"
+            colorecho "$RED" "Installation can not be continued, exiting ..."
+            exit 1
+        fi
+    fi
+
+    colorecho "$GREEN" "Installing DKMS Packages ..."
+    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+
+    colorecho "$YELLOW" "Updating extlinux.conf ..."
+    # apply new extlinux.conf
+    sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Find the UUIDs of the root partition
+    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    echo "Root partition UUID: $root_uuid"
+
+    # Change UUID for extlinux.conf
+    colorecho "$GREEN" "Updating UUID for extlinux.conf ..."
+    
+    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+        echo "Done"
+    else
+        colorecho "$GREEN" "Updating paths for extlinux.conf ..."
+        sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+    fi
+
+################################################################
+# Install Mesa and GPU drivers
+
+title "Arch Rock Installer - Installing Mesa and GPU drivers"
+
+    sudo pacman -S mesa-panfork-git --noconfirm
+
+################################################################
+# Install Video Acceleration
+
+title "Arch Rock Installer - Installing Video Acceleration"
+
+    sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
+
+################################################################
+# Post Installation
+
+title "Arch Rock Installer - Post Installation"
+
+colorecho "$GREEN" "Performing Full System Upgrade ..."
+sudo pacman -Syyu --noconfirm
+
+# The fix for some Bluetooth Modules (A8, AX210, etc.)
+colorecho "$GREEN" "Applying Bluetooth Fix ..."
+echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
+
+# Network Manager, WiFi, Bluetooth
+colorecho "$GREEN" "Installing network manager and bluetooth ..."
+sudo pacman -S networkmanager iw bluez --noconfirm
+
+colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
+sudo systemctl enable NetworkManager.service
+sudo systemctl start NetworkManager.service
+sudo systemctl enable bluetooth.service
+sudo systemctl start bluetooth.service
+
+################################################################
 # Install desktop environment
 
-title "Install desktop environment"
+title "Arch Rock Installer - Install desktop environment"
 
 # Install desktop environment
 if [ "$de_options" = 0 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome ..."
-    pacman -Syyu gnome --noconfirm
-    systemctl enable gdm
+    sudo pacman -S gnome --noconfirm
+    #GDM_CONFIG_FILE="/etc/gdm/custom.conf"
+    #if [ -f "$GDM_CONFIG_FILE" ]; then
+        #sudo sed -i 's/^#WaylandEnable/WaylandEnable=false/' "$GDM_CONFIG_FILE"
+        #echo "Wayland has been disabled for GDM."
+    #else
+        #echo "GDM configuration file ($GDM_CONFIG_FILE) not found."
+    #fi
+    sudo systemctl enable gdm
 elif [ "$de_options" = 1 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma ..."
-    pacman -Syyu plasma-desktop sddm --noconfirm
-    systemctl enable sddm
+    sudo pacman -S plasma-desktop sddm --noconfirm
+    sudo systemctl enable sddm
 elif [ "$de_options" = 2 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie ..."
-    pacman -Syyu budgie-desktop gdm gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
-    systemctl enable gdm
+    sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 3 ]; then
+    # Install Sway
+    colorecho "$GREEN" "Installing Sway ..."
+    sudo pacman -S sway wofi lxappearance qt5ct python-pywal waybar pcmanfm-qt pass dunst swayidle swaylock swaybg xorg-xwayland qt5-wayland foot sddm --noconfirm
+    sudo systemctl enable sddm
+    sudo mkdir -p .config/{sway,dunst,waybar,wofi}
+    sudo install -Dm755 /etc/sway/config ~/.config/sway/config
+    sudo install -Dm755 /etc/dunst/dunstrc ~/.config/dunst/dunstrc
+    sudo touch ~/.config/waybar/config
+    sudo touch ~/.config/wofi/config
+elif [ "$de_options" = 4 ]; then
+    # Install Cutefish
+    colorecho "$GREEN" "Installing Cutefish ..."
+    sudo pacman -S cutefish sddm --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 5 ]; then
+    # Install Deepin
+    colorecho "$GREEN" "Installing Deepin ..."
+    sudo pacman -S deepin deepin-extra --noconfirm
+    echo -e "greeter-session=lightdm-deepin-greeter" | sudo tee /etc/lightdm/lightdm.conf
+elif [ "$de_options" = 6 ]; then
+    # Install XFCE
+    colorecho "$GREEN" "Installing XFCE ..."
+    sudo pacman -S xfce4 xfce4-goodies gdm --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 7 ]; then
+    # Install LXQT
+    colorecho "$GREEN" "Installing LXQT ..."
+    sudo pacman -S lxqt sddm --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 8 ]; then
+    # Install LXDE
+    colorecho "$GREEN" "Installing LXDE ..."
+    sudo pacman -S lxde lxdm-gtk3 --noconfirm
+    sudo systemctl enable lxdm
+elif [ "$de_options" = 9 ]; then
+    # Install MATE
+    colorecho "$GREEN" "Installing MATE ..."
+    sudo pacman -S mate mate-extra gdm --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 10 ]; then
+    # Install Cinnamon
+    colorecho "$GREEN" "Installing Cinnamon ..."
+    sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-terminal metacity gnome-shell gdm --noconfirm
+    sudo systemctl enable gdm
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
 fi
 
 ################################################################
+# Install additional packages
+
+colorecho "$GREEN" "Starting additional packages installer ..."
+arch-rock-config install --installer
+
+################################################################
 # Installation clean up
 
-title "Installation Finished"
+title "Arch Rock Installer - Installation Finished"
 
-# Prompt user if they want to reboot
+# Detect the current username
+current_username=$(whoami)
+
+# Check if "installer" exists in .bashrc
+if sudo grep -q "installer" /home/$current_username/.bashrc; then
+    # Remove "installer" from .bashrc
+    sudo sed -i '/installer/d' /home/$current_username/.bashrc
+    sudo rm -rf /etc/systemd/system/getty@tty1.service.d/autologin.conf
+fi
+
+# Prompt user to reboot
 read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
 
 if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
-    echo "You can manually reboot later to apply the changes."
+    echo "You may manually reboot later to apply the changes."
+    echo "To remove this installer, run sudo rm -rf /usr/bin/installer"
 else
     colorecho "$GREEN" "Cleaning up installations ..."
-    rm -rf $compiled_pkg_folder /usr/bin/arch-rock-installer
+    sudo rm -rf /usr/bin/installer
     colorecho "$GREEN" "Rebooting system ..."
-    reboot
+    sudo reboot
 fi
 
 ################################################################
