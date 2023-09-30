@@ -50,6 +50,7 @@ archlinux-installer -OPTIONS or --OPTIONS=<arguments> ...
 | `-d` or `--dev` | N/A | Use latest dev version of this Installation Tool. |
 | `-k` or `--kernel` | `<kernel_name>` | Create Arch Linux using default kernel option or specify a kernel option with the `<kernel_name>` argument. Currently available kernel options is `rkbsp` only. |
 | `-i` or `--image` | `<image_name>` | Create a disk image with default image name at `out` folder or specify an image name with the `<image_name>` argument. |
+| `-m` or `--mtimg` | N/A | Skip partitioning and use an image instead. (When this argument is used, --image=<image_name> will become the image to be used). Notes: This is a workaround that allows you to put an empty partitioned image in --image and skip the formatting and partitioning process. |
 | `-b` or `--bootpart` | N/A | Create Arch Linux with a seperated boot partition. |
 | `-c` or `--compress` | N/A | Compress the Disk Image to .img.xz |
 | `--size` | `<image_size>` | Set disk image size (default is 4G). |
@@ -163,7 +164,7 @@ arch-rock-config <options/features> <additional-arguments (optional)>
 | Features | Additional Arguments | Description |
 | ------------- | ------------- | ------------- |
 | `user` | `<option>` | Add, Remove and Change User Account Settings. options: `add <user>` `remove <user>` `manage <user>` |
-| `locale` |  N/A | Generate Locale Settings. |
+| `locale` |  N/A | Generate Locale Settings. options: `list-generated` : print generated locales, `list-available` : print all available locales to generate, `generate <country_code>` : country code to generate locale (en_US) |
 | `font` |  N/A | Install Fonts, TTF, Non-English Characters, Special Characters / Emoji. |
 | `time` | `<option>` | Change Time Zone, Current Date and Time. options: `set-time-zone <time-zone> or 'sync'` `set-time-date <YYYY-MM-DD HH:MM:SS>` `network-time-zone` `system-time-zone`|
 | `keyboard` |  N/A | Change Keyboard Layout. |
