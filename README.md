@@ -20,7 +20,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-
 
 This will set up a bootable Arch Linux Installer on your Disk.
 
-*There might be issues with SD Card booting. Therefore, we recommend using [Method 1](https://github.com/kwankiu/archlinux-installer-rock5/tree/dev#method-1) unless you know what you are doing, see [this issue](https://github.com/kwankiu/archlinux-installer-rock5/issues/12) for more infomation.
+*There might be issues with SD Card booting. Therefore, we recommend using [Method 1](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest) unless you know what you are doing, see [this issue](https://github.com/kwankiu/archlinux-installer-rock5/issues/12) for more infomation.
 
 
 
