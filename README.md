@@ -9,16 +9,20 @@ a community-built Arch Linux Installer for Radxa Rock 5 / Rockchip RK3588 SoC.
 
 # Get the installer
 
-## Method 1
+## Method 1 (Recommended)
 Download our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest) and flash it (using [RPI Imager](https://www.raspberrypi.com/software/), [balenaEtcher](https://etcher.balena.io/), etc) to your storage device.
 
-## Method 2
+## Method 2 (Advanced)
 Download and run the script below:
  ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
 ```
 
 This will set up a bootable Arch Linux Installer on your Disk.
+
+*There might be issues with SD Card booting. Therefore, we recommend using [Method 1](https://github.com/kwankiu/archlinux-installer-rock5/tree/dev#method-1) unless you know what you are doing, see [this issue](https://github.com/kwankiu/archlinux-installer-rock5/issues/12) for more infomation.
+
+
 
 # Installation
 
