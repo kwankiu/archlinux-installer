@@ -50,6 +50,8 @@ langconaf=("aa_DJ (Djibouti)" "aa_ER (Eritrea)" "aa_ET (Ethiopia)" "ber_DZ (Alge
 # Others
 langconother=("ru_RU (Russia)" "cv_RU (Russia)" "ta_LK (Sri Lanka)" "ak_GH (Ghana)" "si_LK (Sri Lanka)" "dv_MV (Maldives)" "uz_UZ (Uzbekistan)" "sr_RS (Serbia)" "tk_TM (Turkmenistan)" "bi_VU (Vanuatu)" "sw_TZ (Tanzania)" "ce_RU (Russia)" "sah_RU (Russia)" "sr_CS (Serbia and Montenegro)" "tg_TJ (Tajikistan)" "ps_AF (Afghanistan)" "me_ME (Montenegro)" "ckb_IQ (Iraq)" "be_BY (Belarus)" "kl_GL (Greenland)" "bs_BA (Bosnia and Herzegovina)" "ug_UZ (Uzbekistan)")
 
+internet_retry_count=0
+
 ################################################################
 # Tools for formatting / styling
 
@@ -137,7 +139,6 @@ title() {
 
 ################################################################
 # Internet Connection Check
-internet_retry_count=0
 
 check_internet() {
     colorecho "$YELLOW" "Checking internet connection..."
