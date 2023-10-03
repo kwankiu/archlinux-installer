@@ -10,7 +10,6 @@ branch=dev
 
 ################################################################
 # Define variables
-
 internet_retry_count=0
 
 # Compiled Packages folder path
@@ -173,8 +172,8 @@ check_internet() {
             colorecho "$GREEN" "Waiting for internet connection ..."
             sleep 3
             colorecho "$GREEN" "Retrying ..."
-            check_internet
             ((internet_retry_count++))
+            check_internet
         fi
     fi
 }
