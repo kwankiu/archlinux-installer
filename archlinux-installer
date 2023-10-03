@@ -283,6 +283,25 @@ confirm_disk() {
 
 ################################################################
 
+add_wifi_pkg() {
+  pkg_tar=()
+
+  echo -e "y" | archarm_packages wpa_supplicant-2 core
+  pkg_tar+=($(echo -e "n" | archarm_packages wpa_supplicant-2 core | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages pcsclite extra
+  pkg_tar+=($(echo -e "n" | archarm_packages pcsclite extra | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages dialog core
+  pkg_tar+=($(echo -e "n" | archarm_packages dialog core | grep .*pkg.*))
+
+  # copy package
+  sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
+  for pkg in "${pkg_tar[@]}"; do
+    sudo cp -r "$pkg" "$root_mount_dir/usr/lib/compiled-packages"
+  done
+}
+
 install_kernel() {
   kernel_name=$1
   pkg_tar_dir=$(mktemp -d)

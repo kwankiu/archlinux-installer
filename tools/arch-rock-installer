@@ -11,6 +11,11 @@ branch=dev
 ################################################################
 # Define variables
 
+internet_retry_count=0
+
+# Compiled Packages folder path
+compiled_pkg_folder="/usr/lib/compiled-packages"
+
 # Language options
 langopt=("Chinese" "English" "Spanish" "French" "German" "Arabic" "Others")
 
@@ -49,8 +54,6 @@ langconaf=("aa_DJ (Djibouti)" "aa_ER (Eritrea)" "aa_ET (Ethiopia)" "ber_DZ (Alge
 
 # Others
 langconother=("ru_RU (Russia)" "cv_RU (Russia)" "ta_LK (Sri Lanka)" "ak_GH (Ghana)" "si_LK (Sri Lanka)" "dv_MV (Maldives)" "uz_UZ (Uzbekistan)" "sr_RS (Serbia)" "tk_TM (Turkmenistan)" "bi_VU (Vanuatu)" "sw_TZ (Tanzania)" "ce_RU (Russia)" "sah_RU (Russia)" "sr_CS (Serbia and Montenegro)" "tg_TJ (Tajikistan)" "ps_AF (Afghanistan)" "me_ME (Montenegro)" "ckb_IQ (Iraq)" "be_BY (Belarus)" "kl_GL (Greenland)" "bs_BA (Bosnia and Herzegovina)" "ug_UZ (Uzbekistan)")
-
-internet_retry_count=0
 
 ################################################################
 # Tools for formatting / styling
@@ -329,6 +332,14 @@ fi
 # Installer Setup
 
 title "Welcome to Arch Linux!"
+
+# Pre-init : install compiled packages
+if [ ! -e $compiled_pkg_folder ]; then 
+    if [ ! "$1" = "--skip-install-pkg" ]; then
+        colorecho "$GREEN" "Installing Required Packages ..."
+        yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.xz
+    fi
+fi
 
 # Check internet connection
 check_internet
