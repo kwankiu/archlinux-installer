@@ -361,6 +361,51 @@ ghrel_packages() {
 
 }
 
+# Download Packages from Arch Linux ARM Repo
+archarm_packages() {
+
+    if [ -z "$1" ]; then
+        colorecho "$RED" "Error: No package specified."
+        exit 1
+    else
+        dgpkg=$1
+    fi
+    
+    ghrel_url=("http://mirror.archlinuxarm.org/aarch64/$2") 
+    dgpkg_list=()
+
+    for which_url in "${ghrel_url[@]}"; do
+      colorecho "$GREEN" "Fetching $which_url ..."
+      dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o "^${dgpkg}.*")
+    done
+
+    echo ""
+    colorecho "$BLUE" "The following packages will be downloaded:"
+    echo ""
+    for url in "${dgpkg_list[@]}"; do
+        selection=$(basename "$url")
+        echo "$selection"
+    done
+    echo ""
+    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
+    read answer
+
+    if [ "$answer" = "y" ]; then
+        for url in "${dgpkg_list[@]}"; do
+            selection=$url
+            echo "Downloading $selection"
+            curl -LJO "$which_url/$url"
+
+            if [ ! -z "$3" ]; then
+              sudo cp -r $selection $3/$selection
+              sudo rm -rf $selection
+            fi
+
+        done
+    fi
+
+}
+
 ################################################################
 # Loop through the arguments
 for arg in "$@"; do
@@ -394,6 +439,11 @@ for arg in "$@"; do
     --get-pkg)
       colorecho "$RED" "For debug only."
       ghrel_packages $2 $3
+      exit 1
+      ;;
+    --arch-pkg)
+      colorecho "$RED" "For debug only."
+      archarm_packages $2 $3
       exit 1
       ;;
     --image=*)
