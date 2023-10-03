@@ -388,7 +388,7 @@ for arg in "$@"; do
       ;;
     -d | --dev)
       echo "Getting the latest installation script from dev ..."
-      bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) $@
+      bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) ${@:2}
       exit 1
       ;;
     --get-pkg)
