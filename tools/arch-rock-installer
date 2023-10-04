@@ -324,6 +324,10 @@ init_setup() {
         rm -rf /etc/systemd/system/init-setup.service
     fi
 
+    if [ -e $compiled_pkg_folder ]; then 
+        rm -rf $compiled_pkg_folder
+    fi
+
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo "installer" | tee -a /home/$new_username/.bashrc
