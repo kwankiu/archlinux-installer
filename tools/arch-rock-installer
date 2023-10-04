@@ -277,7 +277,7 @@ init_setup() {
         colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
         sleep 3
         cd /usr/bin
-        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        curl -k -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
         ((attempt++))
     done
     chmod +x arch-rock-config
