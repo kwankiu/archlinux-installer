@@ -165,7 +165,11 @@ check_internet() {
             if [ "$answer" = 0 ]; then
                 check_internet
             elif [ "$answer" = 1 ]; then
-                wifi-menu
+                if [ -x "$(command -v sudo)" ]; then
+                    wifi-menu wlan0
+                else
+                    sudo wifi-menu wlan0
+                fi
                 check_internet
             elif [ "$answer" = 3 ]; then
                 echo "Aborted. Exiting ..."
