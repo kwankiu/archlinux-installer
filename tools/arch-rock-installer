@@ -336,7 +336,7 @@ fi
 title "Welcome to Arch Linux!"
 
 # Pre-init : install compiled packages
-if [ ! -e $compiled_pkg_folder ]; then 
+if [ -e $compiled_pkg_folder ]; then 
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
         yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.xz

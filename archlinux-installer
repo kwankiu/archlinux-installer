@@ -289,11 +289,17 @@ add_wifi_pkg() {
   echo -e "y" | archarm_packages wpa_supplicant-2 core
   pkg_tar+=($(echo -e "n" | archarm_packages wpa_supplicant-2 core | grep .*pkg.*))
 
+  echo -e "y" | archarm_packages dialog core
+  pkg_tar+=($(echo -e "n" | archarm_packages dialog core | grep .*pkg.*))
+
   echo -e "y" | archarm_packages pcsclite extra
   pkg_tar+=($(echo -e "n" | archarm_packages pcsclite extra | grep .*pkg.*))
 
-  echo -e "y" | archarm_packages dialog core
-  pkg_tar+=($(echo -e "n" | archarm_packages dialog core | grep .*pkg.*))
+  echo -e "y" | archarm_packages duktape extra
+  pkg_tar+=($(echo -e "n" | archarm_packages duktape extra | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages polkit-1 extra
+  pkg_tar+=($(echo -e "n" | archarm_packages polkit-1 extra | grep .*pkg.*))
 
   # copy package
   sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
