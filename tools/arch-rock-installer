@@ -555,7 +555,7 @@ title "Arch Rock Installer - Installing Video Acceleration"
 ################################################################
 # Post Installation
 
-title "Arch Rock Installer - Post Installation"
+title "Arch Rock Installer - Post Installation (Part 1)"
 
 colorecho "$GREEN" "Performing Full System Upgrade ..."
 sudo pacman -Syyu --noconfirm
@@ -568,11 +568,9 @@ echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#bl
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
 sudo pacman -S networkmanager iw bluez --noconfirm
 
-colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
-sudo systemctl enable NetworkManager.service
-sudo systemctl start NetworkManager.service
-sudo systemctl enable bluetooth.service
-sudo systemctl start bluetooth.service
+# Disable Sleep
+colorecho "$GREEN" "Disable suspend ..."
+echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
 
 ################################################################
 # Install desktop environment
@@ -650,6 +648,17 @@ elif [ "$de_options" = 10 ]; then
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
 fi
+
+################################################################
+# Post Installation
+
+title "Arch Rock Installer - Post Installation (Part 2)"
+
+colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
+sudo systemctl enable NetworkManager.service
+sudo systemctl start NetworkManager.service
+sudo systemctl enable bluetooth.service
+sudo systemctl start bluetooth.service
 
 ################################################################
 # Install additional packages
