@@ -275,7 +275,7 @@ init_setup() {
     sleep 3
     # Loop until curl is successful or max attempts reached
     attempt=0
-    until curl -sSf -LJO https://github.com/ >/dev/null 2>&1 || [ "$attempt" -ge 5 ]; do
+    until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 5 ]; do
         colorecho "$RED" "Establishing SSL internet connection ..."
         sleep 3
         ((attempt++))
