@@ -157,8 +157,11 @@ check_internet() {
 
     if ! "$internet_available"; then
         if [ "$internet_retry_count" -gt 3 ]; then
-            colorecho "$RED" "Your system does not appear to have internet connection."
-            colorecho "$YELLOW" "This installer requires internet connection. Do you want to try install anyway?"
+            colorecho "$YELLOW" "Your system does not appear to have internet connection."
+            colorecho "$RED" "This installer requires internet connection."
+            colorecho "$YELLOW" "Tips: Sometimes the driver takes time to load, in this case just choose Check Internet Again."
+            colorecho "$YELLOW" "Tips: If your device does not have ethernet, or if you prefer using WiFi, choose Setup / Connect a WiFi."
+            colorecho "$YELLOW" "Warning: Installation will fail or incomplete if you choose to Install anyway, ensure that you have a proper internet connection."
             options=("Check Internet Again")
 
             # Check if there is a Wireless Interface and get the first one
@@ -180,6 +183,9 @@ check_internet() {
             if [ "$answer" = 0 ]; then
                 check_internet
             elif [ "$answer" = 1 ]; then
+                if [ -z "$iwdev" ]; then
+                    read -p "Please specify the network device (e.g. wlan0): " iwdev
+                fi
                 if [ -x "$(command -v sudo)" ]; then
                     sudo wifi-menu $iwdev
                 else
@@ -263,7 +269,25 @@ init_setup() {
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
-    #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+    # Ensure SSL (Sync Clock)
+    colorecho "$GREEN" "Enabling Time Sync ..."
+    systemctl enable —now systemd.timesyncd.service
+    sleep 3
+    # Loop until curl is successful or max attempts reached
+    attempt=0
+    until curl -sSf -LJO https://github.com/ >/dev/null 2>&1 || [ "$attempt" -ge 5 ]; do
+        colorecho "$RED" "Establishing SSL internet connection ..."
+        sleep 3
+        ((attempt++))
+    done
+
+    if [ "$attempt" -ge 5 ]; then
+        colorecho "$RED" "Failed to establish SSL internet connection after $attempt attempts."
+        colorecho "$YELLOW" "Reboot your device and try again."
+        exit 1
+    fi
+
+    # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
     colorecho "$GREEN" "Setting up pacman ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
@@ -277,7 +301,7 @@ init_setup() {
         colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
         sleep 3
         cd /usr/bin
-        curl -k -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
         ((attempt++))
     done
     chmod +x arch-rock-config
