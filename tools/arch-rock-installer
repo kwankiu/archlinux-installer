@@ -271,7 +271,7 @@ init_setup() {
 
     # Ensure SSL (Sync Clock)
     colorecho "$GREEN" "Enabling Time Sync ..."
-    systemctl enable —now systemd.timesyncd.service
+    systemctl enable -—now systemd-timesyncd.service
     sleep 3
     # Loop until curl is successful or max attempts reached
     attempt=0
