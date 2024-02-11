@@ -275,8 +275,6 @@ init_setup() {
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
-    systemctl status systemd-timesyncd # for debugging
-
     # Loop until curl is successful or max attempts reached
     attempt=0
     until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 5 ]; do
@@ -285,9 +283,8 @@ init_setup() {
         ((attempt++))
     done
 
-    systemctl status systemd-timesyncd # for debugging
-
     if [ "$attempt" -ge 5 ]; then
+        systemctl status systemd-timesyncd # for debugging
         colorecho "$RED" "Failed to establish SSL internet connection after $attempt attempts."
         colorecho "$YELLOW" "Restart your device and try again or press Ctrl+C to exit this installer for manual operation."
         options=("Continue Anyway (may break)" "Restart Now")
