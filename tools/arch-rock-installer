@@ -190,6 +190,12 @@ check_internet() {
                     sudo wifi-menu $iwdev
                 else
                     wifi-menu $iwdev
+                    colorecho "$GREEN" "Updating NTP Time Sync ..."
+                    rm -rf /etc/systemd/network/*
+                    systemctl restart systemd-networkd
+                    sleep 1
+                    timedatectl set-ntp false
+                    timedatectl set-ntp true
                 fi
                 check_internet
             elif [ "$answer" = 3 ]; then
