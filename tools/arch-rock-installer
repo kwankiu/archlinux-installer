@@ -269,10 +269,6 @@ init_setup() {
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
-    # Ensure SSL (Sync Clock)
-    colorecho "$GREEN" "Enabling Time Sync ..."
-    systemctl enable --now systemd-timesyncd.service
-    sleep 3
     # Loop until curl is successful or max attempts reached
     attempt=0
     until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 5 ]; do
@@ -283,8 +279,15 @@ init_setup() {
 
     if [ "$attempt" -ge 5 ]; then
         colorecho "$RED" "Failed to establish SSL internet connection after $attempt attempts."
-        colorecho "$YELLOW" "Reboot your device and try again."
-        exit 1
+        colorecho "$YELLOW" "Restart your device and try again or press Ctrl+C to exit this installer for manual operation."
+        options=("Continue Anyway (may break)" "Restart Now")
+        select_option "${options[@]}"
+        answer=$?
+        if [ "$answer" = 1 ]; then
+            colorecho "$YELLOW" "Restarting your device ... Unplug / Restart your device manually if it does not reboot automatically."
+            systemctl reboot
+            reboot
+        fi
     fi
 
     # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
@@ -387,6 +390,13 @@ if [ -e $compiled_pkg_folder ]; then
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
         yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.xz
+
+        # Ensure SSL (Sync Clock)
+        colorecho "$GREEN" "Enabling Time Sync ..."
+        systemctl enable systemd-timesyncd
+        systemctl start systemd-timesyncd
+        sleep 3
+        systemctl status systemd-timesyncd # for debugging
     fi
 fi
 
