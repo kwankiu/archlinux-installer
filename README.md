@@ -26,10 +26,16 @@ This will set up a bootable Arch Linux Installer on your Disk.
 
 # Installation
 
-1. Power ON your Rock 5 / RK3588 Device with the **Storage Device** and **Ethernet Cable** plugged in.
+1. Power ON your Rock 5 / RK3588 Device with the **Storage Device** and **Ethernet Cable (or WiFi Card)** plugged in .
 
     Notes:
     1. If your first boot shows a user login screen instead, login to root/root and run `installer`.
+
+    Notes for using WiFi:
+    1. WiFi support is experimental. This is only tested on RTL8852BE, other WiFi Card (like Intel AX200) may not be supported.
+    2. The installer will first check a few times for internet connections, you will get an option to connect to WiFi after the check.
+    3. After the inital setup, the device will reboot, and you will need to connect to WiFi again after the reboot.
+    4. After the installation, you will need to connect to WiFi again.
 
 2. The installer will run some setups and you should be prompted to create a user account. Follow the instructions and it should automatically reboot and login to the newly created user account. 
 

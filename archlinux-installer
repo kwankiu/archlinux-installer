@@ -283,6 +283,36 @@ confirm_disk() {
 
 ################################################################
 
+add_wifi_pkg() {
+  pkg_tar=()
+
+  echo -e "y" | archarm_packages wpa_supplicant-2 core
+  pkg_tar+=($(echo -e "n" | archarm_packages wpa_supplicant-2 core | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages dialog core
+  pkg_tar+=($(echo -e "n" | archarm_packages dialog core | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages pcsclite extra
+  pkg_tar+=($(echo -e "n" | archarm_packages pcsclite extra | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages duktape extra
+  pkg_tar+=($(echo -e "n" | archarm_packages duktape extra | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages polkit-1 extra
+  pkg_tar+=($(echo -e "n" | archarm_packages polkit-1 extra | grep .*pkg.*))
+
+  # copy package
+  sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
+  for pkg in "${pkg_tar[@]}"; do
+    sudo cp -r "$pkg" "$root_mount_dir/usr/lib/compiled-packages"
+  done
+
+  # Clean up
+  sudo rm -rf "${pkg_tar[@]}"
+
+  ls $root_mount_dir/usr/lib/compiled-packages/
+}
+
 install_kernel() {
   kernel_name=$1
   pkg_tar_dir=$(mktemp -d)
@@ -361,6 +391,51 @@ ghrel_packages() {
 
 }
 
+# Download Packages from Arch Linux ARM Repo
+archarm_packages() {
+
+    if [ -z "$1" ]; then
+        colorecho "$RED" "Error: No package specified."
+        exit 1
+    else
+        dgpkg=$1
+    fi
+    
+    ghrel_url=("http://mirror.archlinuxarm.org/aarch64/$2") 
+    dgpkg_list=()
+
+    for which_url in "${ghrel_url[@]}"; do
+      colorecho "$GREEN" "Fetching $which_url ..."
+      dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o "^${dgpkg}.*")
+    done
+
+    echo ""
+    colorecho "$BLUE" "The following packages will be downloaded:"
+    echo ""
+    for url in "${dgpkg_list[@]}"; do
+        selection=$(basename "$url")
+        echo "$selection"
+    done
+    echo ""
+    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
+    read answer
+
+    if [ "$answer" = "y" ]; then
+        for url in "${dgpkg_list[@]}"; do
+            selection=$url
+            echo "Downloading $selection"
+            curl -LJO "$which_url/$url"
+
+            if [ ! -z "$3" ]; then
+              sudo cp -r $selection $3/$selection
+              sudo rm -rf $selection
+            fi
+
+        done
+    fi
+
+}
+
 ################################################################
 # Loop through the arguments
 for arg in "$@"; do
@@ -394,6 +469,11 @@ for arg in "$@"; do
     --get-pkg)
       colorecho "$RED" "For debug only."
       ghrel_packages $2 $3
+      exit 1
+      ;;
+    --arch-pkg)
+      colorecho "$RED" "For debug only."
+      archarm_packages $2 $3
       exit 1
       ;;
     --image=*)
@@ -718,6 +798,9 @@ done
     sudo chmod +x growpart
     sudo cp -r "growpart" "$root_mount_dir/usr/bin/growpart"
   fi
+
+  # Download packages needed to get a WiFi menu / connection
+  add_wifi_pkg
 
   # Remove the temporary directory
   sudo rm -rf "$pkg_tar_dir"

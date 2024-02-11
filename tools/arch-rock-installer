@@ -10,6 +10,10 @@ branch=main
 
 ################################################################
 # Define variables
+internet_retry_count=0
+
+# Compiled Packages folder path
+compiled_pkg_folder="/usr/lib/compiled-packages"
 
 # Language options
 langopt=("Chinese" "English" "Spanish" "French" "German" "Arabic" "Others")
@@ -137,7 +141,6 @@ title() {
 
 ################################################################
 # Internet Connection Check
-internet_retry_count=0
 
 check_internet() {
     colorecho "$YELLOW" "Checking internet connection..."
@@ -154,14 +157,48 @@ check_internet() {
 
     if ! "$internet_available"; then
         if [ "$internet_retry_count" -gt 3 ]; then
-            colorecho "$RED" "Your system does not appear to have internet connection."
-            colorecho "$YELLOW" "This installer requires internet connection. Do you want to try install anyway?"
-            options=("Check Internet Again" "Try Install Anyway" "Exit Installer")
+            colorecho "$YELLOW" "Your system does not appear to have internet connection."
+            colorecho "$RED" "This installer requires internet connection."
+            colorecho "$YELLOW" "Tips: Sometimes the driver takes time to load, in this case just choose Check Internet Again."
+            colorecho "$YELLOW" "Tips: If your device does not have ethernet, or if you prefer using WiFi, choose Setup / Connect a WiFi."
+            colorecho "$YELLOW" "Warning: Installation will fail or incomplete if you choose to Install anyway, ensure that you have a proper internet connection."
+            options=("Check Internet Again")
+
+            # Check if there is a Wireless Interface and get the first one
+            for dev in /sys/class/net/*; do
+                if [ -e "$dev"/wireless ]; then
+                    iwdev=${dev##*/};
+                    break;
+                fi
+            done
+            if [ -z "$iwdev" ]; then
+                options+=("Setup / Connect a WiFi (No Wireless Interface found)")
+            else
+                options+=("Setup / Connect a WiFi ($iwdev)")
+            fi
+            
+            options+=("Install Anyway (may break)" "Exit Installer")
             select_option "${options[@]}"
             answer=$?
             if [ "$answer" = 0 ]; then
                 check_internet
-            elif [ "$answer" = 2 ]; then
+            elif [ "$answer" = 1 ]; then
+                if [ -z "$iwdev" ]; then
+                    read -p "Please specify the network device (e.g. wlan0): " iwdev
+                fi
+                if [ -x "$(command -v sudo)" ]; then
+                    sudo wifi-menu $iwdev
+                else
+                    wifi-menu $iwdev
+                    colorecho "$GREEN" "Updating NTP Time Sync ..."
+                    rm -rf /etc/systemd/network/*
+                    systemctl restart systemd-networkd
+                    sleep 1
+                    timedatectl set-ntp false
+                    timedatectl set-ntp true
+                fi
+                check_internet
+            elif [ "$answer" = 3 ]; then
                 echo "Aborted. Exiting ..."
                 exit 1
             fi
@@ -169,8 +206,8 @@ check_internet() {
             colorecho "$GREEN" "Waiting for internet connection ..."
             sleep 3
             colorecho "$GREEN" "Retrying ..."
-            check_internet
             ((internet_retry_count++))
+            check_internet
         fi
     fi
 }
@@ -238,7 +275,29 @@ init_setup() {
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
-    #Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+    # Loop until curl is successful or max attempts reached
+    attempt=0
+    until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 5 ]; do
+        colorecho "$RED" "Establishing SSL internet connection ..."
+        sleep 3
+        ((attempt++))
+    done
+
+    if [ "$attempt" -ge 5 ]; then
+        systemctl status systemd-timesyncd # for debugging
+        colorecho "$RED" "Failed to establish SSL internet connection after $attempt attempts."
+        colorecho "$YELLOW" "Restart your device and try again or press Ctrl+C to exit this installer for manual operation."
+        options=("Continue Anyway (may break)" "Restart Now")
+        select_option "${options[@]}"
+        answer=$?
+        if [ "$answer" = 1 ]; then
+            colorecho "$YELLOW" "Restarting your device ... Unplug / Restart your device manually if it does not reboot automatically."
+            systemctl reboot
+            reboot
+        fi
+    fi
+
+    # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
     colorecho "$GREEN" "Setting up pacman ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
@@ -299,6 +358,10 @@ init_setup() {
         rm -rf /etc/systemd/system/init-setup.service
     fi
 
+    if [ -e $compiled_pkg_folder ]; then 
+        rm -rf $compiled_pkg_folder
+    fi
+
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo "installer" | tee -a /home/$new_username/.bashrc
@@ -328,6 +391,19 @@ fi
 # Installer Setup
 
 title "Welcome to Arch Linux!"
+
+# Pre-init : install compiled packages
+if [ -e $compiled_pkg_folder ]; then 
+    if [ ! "$1" = "--skip-install-pkg" ]; then
+        colorecho "$GREEN" "Installing Required Packages ..."
+        yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.xz --needed
+
+        # Ensure SSL (Sync Clock)
+        colorecho "$GREEN" "Enabling Time Sync ..."
+        systemctl enable systemd-timesyncd
+        systemctl start systemd-timesyncd
+    fi
+fi
 
 # Check internet connection
 check_internet
@@ -518,7 +594,7 @@ title "Arch Rock Installer - Installing Video Acceleration"
 ################################################################
 # Post Installation
 
-title "Arch Rock Installer - Post Installation"
+title "Arch Rock Installer - Post Installation (Part 1)"
 
 colorecho "$GREEN" "Performing Full System Upgrade ..."
 sudo pacman -Syyu --noconfirm
@@ -531,11 +607,9 @@ echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#bl
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
 sudo pacman -S networkmanager iw bluez --noconfirm
 
-colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
-sudo systemctl enable NetworkManager.service
-sudo systemctl start NetworkManager.service
-sudo systemctl enable bluetooth.service
-sudo systemctl start bluetooth.service
+# Disable Sleep
+colorecho "$GREEN" "Disable suspend ..."
+echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
 
 ################################################################
 # Install desktop environment
@@ -613,6 +687,17 @@ elif [ "$de_options" = 10 ]; then
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
 fi
+
+################################################################
+# Post Installation
+
+title "Arch Rock Installer - Post Installation (Part 2)"
+
+colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
+sudo systemctl enable NetworkManager.service
+sudo systemctl start NetworkManager.service
+sudo systemctl enable bluetooth.service
+sudo systemctl start bluetooth.service
 
 ################################################################
 # Install additional packages
