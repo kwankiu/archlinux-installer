@@ -996,7 +996,7 @@ add_7ji() {
 add_bredrepo() {
     colorecho "$GREEN" "Adding BredOS Repo ..."
     colorecho "$GREEN" "Adding server to pacman.conf ..."
-    echo -e "[BredOS]\nSigLevel = Optional PackageRequired\nServer= https://github.com/BredGang/bred-repo/raw/main/$repo/$arch" | sudo tee -a /etc/pacman.conf
+    echo -e "[BredOS]\nSigLevel = Optional PackageRequired\nServer= https://github.com/BredGang/bred-repo/raw/main/\$repo/\$arch" | sudo tee -a /etc/pacman.conf
     colorecho "$GREEN" "Updating repo ..."
     sudo pacman -Syy bredos-keyring --noconfirm
     colorecho "$GREEN" "Done"
