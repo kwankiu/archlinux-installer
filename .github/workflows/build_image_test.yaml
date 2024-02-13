@@ -26,8 +26,8 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build Image for Edge 2 seperated boot partition
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-edge2 --sbc=edge2 --addpkg=ap6275p-firmware -c -b --image=archlinux-installer-edge2-sepboot.img.xz
-          mv boot/*.img.xz *.img.xz
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-edge2 --sbc=edge2 --addpkg=ap6275p-firmware -c -b --image=archlinux-installer-edge2-sepboot.img
+          mv out/*.img.xz *.img.xz
       - uses: ncipollo/release-action@v1
         with:
             artifacts: "archlinux-installer-edge2-sepboot.img.xz"
