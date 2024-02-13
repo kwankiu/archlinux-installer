@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2309301
+utilver=2402131
 
 # Define main / dev branch
 branch=dev
@@ -993,6 +993,15 @@ add_7ji() {
     colorecho "$GREEN" "Done"
 }
 
+add_bredrepo() {
+    colorecho "$GREEN" "Adding BredOS Repo ..."
+    colorecho "$GREEN" "Adding server to pacman.conf ..."
+    echo -e "[BredOS]\nSigLevel = Optional PackageRequired\nServer= https://github.com/BredGang/bred-repo/raw/main/$repo/$arch" | sudo tee -a /etc/pacman.conf
+    colorecho "$GREEN" "Updating repo ..."
+    sudo pacman -Syy bredos-keyring --noconfirm
+    colorecho "$GREEN" "Done"
+}
+
 ################################################################
 # Credits to NicoD https://github.com/NicoD-SBC/armbian-gaming/blob/main/armbian-gaming.sh
 
@@ -1859,6 +1868,9 @@ elif [ "$1" = "wifi" ]; then
 
 elif [ "$1" = "add-7ji" ]; then
     add_7ji
+
+elif [ "$1" = "add-bredrepo" ]; then
+    add_bredrepo
 
 ### Main Menu ###
 else

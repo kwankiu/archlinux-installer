@@ -8,6 +8,9 @@
 # Define main / dev branch
 branch=dev
 
+# Target Device for Installation
+install_target="rock5"
+
 ################################################################
 # Define variables
 internet_retry_count=0
@@ -318,7 +321,11 @@ init_setup() {
 
     colorecho "$GREEN" "Adding 7ji archrepo ..."
     arch-rock-config add-7ji
-    pacman -Syy
+
+    if [ "$install_target" = "edge2" ]; then
+        colorecho "$GREEN" "Adding BredOS Repo ..."
+        arch-rock-config add-bredrepo
+    fi
 
     ################################################################
     # User Account
@@ -528,7 +535,13 @@ de_options=$?
 title "Arch Rock Installer - Installing Linux Kernel"
 
     oldkrlrel=$(uname -r)
-    kernelpkg="linux-radxa-rkbsp5-git"
+
+    if [ "$install_target" = "rock5" ]; then
+        kernelpkg="linux-radxa-rkbsp5-git"
+    elif [ "$install_target" = "edge2" ]; then
+        kernelpkg="linux-edge2"
+    fi
+
     yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
 
     if sudo pacman -Qs $kernelpkg > /dev/null ; then
@@ -546,35 +559,39 @@ title "Arch Rock Installer - Installing Linux Kernel"
         fi
     fi
 
-    colorecho "$GREEN" "Installing DKMS Packages ..."
-    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+    if [ "$install_target" = "rock5" ]; then
+        colorecho "$GREEN" "Installing DKMS Packages ..."
+        arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+    fi
 
-    colorecho "$YELLOW" "Updating extlinux.conf ..."
-    # apply new extlinux.conf
-    sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+    if [ -e "/boot/extlinux/extlinux.arch.template" ]; then 
+        colorecho "$YELLOW" "Updating extlinux.conf ..."
+        # apply new extlinux.conf
+        sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
 
-    # Get rootfs partition from the current mount point "/"
-    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+        # Get rootfs partition from the current mount point "/"
+        rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
-    # Find the UUIDs of the root partition
-    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
-    echo "Root partition UUID: $root_uuid"
+        # Find the UUIDs of the root partition
+        root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+        echo "Root partition UUID: $root_uuid"
 
-    # Change UUID for extlinux.conf
-    colorecho "$GREEN" "Updating UUID for extlinux.conf ..."
-    
-    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
-    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+        # Change UUID for extlinux.conf
+        colorecho "$GREEN" "Updating UUID for extlinux.conf ..."
+        
+        sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
 
-    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
-        echo "Done"
-    else
-        colorecho "$GREEN" "Updating paths for extlinux.conf ..."
-        sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+        if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+            echo "Done"
+        else
+            colorecho "$GREEN" "Updating paths for extlinux.conf ..."
+            sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+        fi
     fi
 
 ################################################################
@@ -599,17 +616,26 @@ title "Arch Rock Installer - Post Installation (Part 1)"
 colorecho "$GREEN" "Performing Full System Upgrade ..."
 sudo pacman -Syyu --noconfirm
 
-# The fix for some Bluetooth Modules (A8, AX210, etc.)
-colorecho "$GREEN" "Applying Bluetooth Fix ..."
-echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
+if [ "$install_target" = "rock5" ]; then
+
+    # The fix for some Bluetooth Modules (A8, AX210, etc.)
+    colorecho "$GREEN" "Applying Bluetooth Fix ..."
+    echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
+    # Disable Sleep
+    colorecho "$GREEN" "Disable suspend ..."
+    echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
+
+elif [ "$install_target" = "edge2" ]; then
+
+    # Post Install
+    colorecho "$GREEN" "Running Edge2 Post Install ..."
+    sudo pacman -S edge2-post-install --noconfirm
+
+fi
 
 # Network Manager, WiFi, Bluetooth
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
 sudo pacman -S networkmanager iw bluez --noconfirm
-
-# Disable Sleep
-colorecho "$GREEN" "Disable suspend ..."
-echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
 
 ################################################################
 # Install desktop environment

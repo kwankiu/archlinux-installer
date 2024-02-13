@@ -302,15 +302,26 @@ add_wifi_pkg() {
   pkg_tar+=($(echo -e "n" | archarm_packages polkit-1 extra | grep .*pkg.*))
 
   # copy package
-  sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
   for pkg in "${pkg_tar[@]}"; do
     sudo cp -r "$pkg" "$root_mount_dir/usr/lib/compiled-packages"
   done
 
   # Clean up
   sudo rm -rf "${pkg_tar[@]}"
+}
 
-  ls $root_mount_dir/usr/lib/compiled-packages/
+add_pkg() {
+  colorecho "$GREEN" "Downloading $argaddpkg ..."
+  echo -e "y" | ghrel_packages $argaddpkg
+
+  pkg_tar=($(echo -e "n" | ghrel_packages $argaddpkg | grep .*pkg.*))
+
+  for pkg in "${pkg_tar[@]}"; do
+    sudo cp -r "$pkg" "$root_mount_dir/usr/lib/compiled-packages"
+  done
+  
+  # Clean up
+  sudo rm -rf "${pkg_tar[@]}"
 }
 
 install_kernel() {
@@ -458,6 +469,7 @@ for arg in "$@"; do
       echo "--kernel=<kernel_name> : Create Arch Linux using the specified kernel option."
       echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
       echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
+      echo "--sbc=<model_name> : Set Installer Target SBC (install_target), (default is rock5)."
   
       exit 1
       ;;
@@ -487,6 +499,14 @@ for arg in "$@"; do
       ;;
     --kernel=*)
       argkrl="${arg#*=}"
+      ;;
+    --sbc=*)
+      argsbc="${arg#*=}"
+      colorecho "$RED" "Build image for target device: ${argsbc}"
+      ;;
+    --addpkg=*)
+      argaddpkg="${arg#*=}"
+      colorecho "$RED" "Get extra packages that matches: ${argaddpkg}"
       ;;
     --bootpartstart=*)
       argbootptst="${arg#*=}"
@@ -790,6 +810,9 @@ done
   colorecho "$GREEN" "Copying Installer ..."
   sudo chmod +x arch-rock-installer
   sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/installer"
+  if [ ! -z "$argsbc" ]; then
+    sudo sed -i "s/install_target=\"rock5\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer"
+  fi
 
   if [ ! -z "$is_img" ]; then
     colorecho "$GREEN" "Downloading growpart ..."
@@ -799,8 +822,11 @@ done
     sudo cp -r "growpart" "$root_mount_dir/usr/bin/growpart"
   fi
 
-  # Download packages needed to get a WiFi menu / connection
+  # Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
+  sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
   add_wifi_pkg
+  add_pkg
+  ls $root_mount_dir/usr/lib/compiled-packages/
 
   # Remove the temporary directory
   sudo rm -rf "$pkg_tar_dir"
