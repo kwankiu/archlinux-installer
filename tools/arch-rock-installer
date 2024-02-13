@@ -403,7 +403,7 @@ title "Welcome to Arch Linux!"
 if [ -e $compiled_pkg_folder ]; then 
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
-        yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.xz --needed
+        yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.* --needed
 
         # Ensure SSL (Sync Clock)
         colorecho "$GREEN" "Enabling Time Sync ..."
