@@ -29,10 +29,10 @@ jobs:
           curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/rock-5b_empty.img.xz
           unxz rock-5b_empty.img.xz
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -k -c -m --image=rock-5b_empty.img
-          mv rock-5b_empty.img.xz archlinux-installer-rock5.img.xz
+          mv rock-5b_empty.img.xz rock5-archlinux-installer.img.xz
       - uses: ncipollo/release-action@v1
         with:
-            artifacts: "archlinux-installer-rock5.img.xz"
+            artifacts: "rock5-archlinux-installer.img.xz"
             makeLatest: false
             prerelease: true
             allowUpdates: true
