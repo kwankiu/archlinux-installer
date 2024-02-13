@@ -825,7 +825,9 @@ done
   # Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
   sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
   add_wifi_pkg
-  add_pkg
+  if [ ! -z "$argaddpkg" ]; then
+    add_pkg
+  fi
   ls $root_mount_dir/usr/lib/compiled-packages/
 
   # Remove the temporary directory
