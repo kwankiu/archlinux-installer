@@ -658,7 +658,7 @@ if [ "$de_options" = 0 ]; then
 elif [ "$de_options" = 1 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma ..."
-    sudo pacman -S plasma-desktop sddm --noconfirm
+    sudo pacman -S plasma-desktop sddm konsole dhclient --noconfirm
     sudo systemctl enable sddm
 elif [ "$de_options" = 2 ]; then
     # Install Budgie
