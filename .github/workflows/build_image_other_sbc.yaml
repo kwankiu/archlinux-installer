@@ -26,10 +26,8 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build Image for Edge 2
         run: |
-          curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/rock-5b_empty.img.xz
-          unxz rock-5b_empty.img.xz
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-edge2 --sbc=edge2 --addpkg=ap6275p-firmware -c -m --image=rock-5b_empty.img
-          mv rock-5b_empty.img.xz edge2-archlinux-installer.img.xz
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-edge2 --sbc=edge2 --addpkg=ap6275p-firmware -c -b --image=edge2-archlinux-installer.img
+          cp -r out/edge2-archlinux-installer.img.xz edge2-archlinux-installer.img.xz
       - uses: ncipollo/release-action@v1
         with:
             artifacts: "edge2-archlinux-installer.img.xz"
