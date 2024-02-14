@@ -26,11 +26,24 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build Image for Edge 2
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-edge2 --sbc=edge2 --addpkg=ap6275p-firmware -c -b --image=edge2-archlinux-installer.img
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-edge2 --sbc=edge2 --addpkg=linux-firmware-joshua-git -c -b --image=edge2-archlinux-installer.img
           cp -r out/edge2-archlinux-installer.img.xz edge2-archlinux-installer.img.xz
+
+      - name: Build Image for Orange Pi 5
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-aarch64-orangepi5-git --sbc=orangepi5 --addpkg=linux-firmware-orangepi-git -c -b --image=orangepi5-archlinux-installer.img
+          cp -r out/orangepi5-archlinux-installer.img.xz orangepi5-archlinux-installer.img.xz
+
       - uses: ncipollo/release-action@v1
         with:
             artifacts: "edge2-archlinux-installer.img.xz"
+            makeLatest: false
+            prerelease: true
+            allowUpdates: true
+
+      - uses: ncipollo/release-action@v1
+        with:
+            artifacts: "orangepi5-archlinux-installer.img.xz"
             makeLatest: false
             prerelease: true
             allowUpdates: true

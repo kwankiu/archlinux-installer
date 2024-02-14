@@ -502,11 +502,11 @@ for arg in "$@"; do
       ;;
     --sbc=*)
       argsbc="${arg#*=}"
-      colorecho "$RED" "Build image for target device: ${argsbc}"
+      colorecho "$GREEN" "Build image for target device: ${argsbc}"
       ;;
     --addpkg=*)
       argaddpkg="${arg#*=}"
-      colorecho "$RED" "Get extra packages that matches: ${argaddpkg}"
+      colorecho "$GREEN" "Get extra packages that matches: ${argaddpkg}"
       ;;
     --bootpartstart=*)
       argbootptst="${arg#*=}"

@@ -5,6 +5,11 @@
 #                     Arch Rock Installer                      #
 #                                                              #
 ################################################################
+# Version of this script 
+# (For developer : Update whenever there is a change in this file or its related files)
+# format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
+installerver=2402131
+
 # Define main / dev branch
 branch=dev
 
@@ -215,6 +220,33 @@ check_internet() {
     fi
 }
 
+# Check Installer Updates
+check_installer_updates() {
+    colorecho "$YELLOW" "Checking for installer updates..."
+    remote_installerver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
+    if [ "$remote_installerver" -gt "$installerver" ]; then
+        colorecho "$GREEN" "A newer version ($remote_installerver) of this installer is available, do you want to update this installer?"
+        options=("Update this Installer" "Do not update this installer")
+        select_option "${options[@]}"
+        answer=$?
+        if [ "$answer" = 0 ]; then
+            # Download Installer
+            colorecho "$GREEN" "Downloading Installer ..."
+            curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer
+
+            # Update arch-rock-installer
+            colorecho "$GREEN" "Updating Installer ..."
+            sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" arch-rock-installer
+            sudo chmod +x arch-rock-installer
+            sudo cp -r arch-rock-installer /usr/bin/installer
+            sudo rm -rf arch-rock-installer
+
+            colorecho "$GREEN" "Installer updated. System will reboot now. If it does not reboot automatically, reboot your device manually."
+            reboot | systemctl reboot
+        fi
+    fi
+}
+
 add_boot_part_fstab() {
     title "Updating fstab ..."
     boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
@@ -415,6 +447,9 @@ fi
 # Check internet connection
 check_internet
 
+# Check Updates
+check_installer_updates
+
 # Run init setup if not yet done
 if [ ! -e "/usr/bin/arch-rock-config" ]; then 
     if [ ! "$1" = "--skip-init-setup" ]; then
@@ -517,6 +552,43 @@ title "Arch Rock Installer - Time Zone"
     fi
 
 ################################################################
+# Select linux kernel
+
+title "Arch Rock Installer - Linux Kernel"
+colorecho "$GREEN" "Select a linux kernel to install :"
+echo
+options=()
+
+# Kernel options for each install target
+# format: kernelpkg (repo) - Description (linux_kernel_version)
+# notes: put the recommended option at first line and mark (Recommended) in Description
+
+if [ "$install_target" = "rock5" ]; then
+    options+=("linux-radxa-rkbsp5-git (7Ji) - (Recommended) Install Linux Radxa BSP Kernel (Linux 5.10.x)")
+    options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+    options+=("linux-rkbsp6.1-joshua-git (7Ji) - Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
+elif [ "$install_target" = "edge2" ]; then
+    options+=("linux-rockchip-joshua-git (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+    options+=("linux-edge2 (BredOS) - Install BredOS Linux Khadas Edge2 Kernel (Linux 5.10.66)")    
+    options+=("linux-rkbsp6.1-joshua-git (7Ji) - Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
+elif [ "$install_target" = "orangepi5" ]; then
+    options+=("linux-aarch64-orangepi5-git (7Ji) - (Recommended) Install AArch64 vendor kernel for Orange Pi 5/5B/5Plus/5Pro (Linux 5.10.x)")
+    options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+    options+=("linux-rkbsp6.1-joshua-git (7Ji) - Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
+fi
+
+options+=("Install other kernel from pacman (Experimental, make sure this package is available in a repo added to pacman)")
+select_option "${options[@]}"
+krl_options=$?
+selected_option="${options[$krl_options]}"
+kernelpkg=$(echo "$selected_option" | awk '{print $1}')
+
+if [ "$kernelpkg" = "Install" ]; then
+    read -p "Enter a kernel to install from pacman (e.g. linux-radxa-rkbsp5-git): " kernelpkg
+fi
+#echo "selected ${kernelpkg}"
+
+################################################################
 # Select desktop environment
 
 title "Arch Rock Installer - Desktop Environment"
@@ -536,12 +608,6 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
     oldkrlrel=$(uname -r)
 
-    if [ "$install_target" = "rock5" ]; then
-        kernelpkg="linux-radxa-rkbsp5-git"
-    elif [ "$install_target" = "edge2" ]; then
-        kernelpkg="linux-edge2"
-    fi
-
     yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
 
     if sudo pacman -Qs $kernelpkg > /dev/null ; then
@@ -559,14 +625,21 @@ title "Arch Rock Installer - Installing Linux Kernel"
         fi
     fi
 
-    if [ "$install_target" = "rock5" ]; then
-        colorecho "$GREEN" "Installing DKMS Packages ..."
-        arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+    colorecho "$GREEN" "Installing Linux Firmware ..." 
+    if [ "$install_target" = "orangepi5" ]; then
+        yes y|sudo pacman -S linux-firmware-orangepi-git
+    else
+        yes y|sudo pacman -S linux-firmware-joshua-git
     fi
 
+    # Update extlinux.conf
+    colorecho "$YELLOW" "Updating extlinux.conf ..."
+
     if [ -e "/boot/extlinux/extlinux.arch.template" ]; then 
-        colorecho "$YELLOW" "Updating extlinux.conf ..."
+        # Generate new extlinux.conf if template supplied
+
         # apply new extlinux.conf
+        colorecho "$YELLOW" "Generating extlinux.conf from template ..."
         sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
 
         # Get rootfs partition from the current mount point "/"
@@ -591,6 +664,23 @@ title "Arch Rock Installer - Installing Linux Kernel"
             sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
             sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
             sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+        fi
+    else
+        # Patch the existing extlinux.conf as template is not supplied
+        colorecho "$GREEN" "Patching extlinux.conf ..."
+
+        # Update vmlinuz
+        sudo sed -i "s| /vmlinuz-*| /vmlinuz-$kernelpkg|" /boot/extlinux/extlinux.conf
+
+        # Update initrd
+        sudo sed -i "s| /initramfs-*| /initramfs-$kernelpkg.img|" /boot/extlinux/extlinux.conf
+
+        # Update devicetreedir
+        sudo sed -i "s| /dtbs/$oldkrlrel| /dtbs|" /boot/extlinux/extlinux.conf #remove old kernel dtbs pkgbase path if exists
+        sudo sed -i "s| /dtbs/$kernelpkg| /dtbs|" /boot/extlinux/extlinux.conf #remove kernelpkg dtbs pkgbase path if exists, should never exist, but just in case
+
+        if [ -e "/boot/dtbs/$kernelpkg/rockchip" ]; then 
+            sudo sed -i "s| /dtbs/| /dtbs/$kernelpkg/|" /boot/extlinux/extlinux.conf #add if the dtbs path has a pkgbase
         fi
     fi
 

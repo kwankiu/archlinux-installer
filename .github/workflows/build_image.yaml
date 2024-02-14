@@ -28,7 +28,7 @@ jobs:
         run: |
           curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/rock-5b_empty.img.xz
           unxz rock-5b_empty.img.xz
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -k -c -m --image=rock-5b_empty.img
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) -k --addpkg=linux-firmware-joshua-git -c -m --image=rock-5b_empty.img
           mv rock-5b_empty.img.xz rock5-archlinux-installer.img.xz
       - uses: ncipollo/release-action@v1
         with:
