@@ -777,7 +777,7 @@ done
     sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
   
   title
-  colorecho "$GREEN" "Updating extlinux.conf ..."
+  colorecho "$GREEN" "Generating extlinux.conf ..."
 
   if [ ! "$argbootpt" = 1 ]; then
     boot_mount_dir=$root_mount_dir/boot
@@ -787,13 +787,24 @@ done
   root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
   root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
 
-  # Copy extlinux template
-  if [ ! -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
+  # Create extlinux.conf
+  if [ -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
+    colorecho "$YELLOW" "Skipped. extlinux.conf already exists."
+  elif [ -e "$boot_mount_dir/extlinux/extlinux.arch.template" ]; then
     sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
+  elif [ ! -z "$argsbc" ]; then
+    colorecho "$GREEN" "Getting ${argsbc}.extlinux.template from repo ..."
+    echo -e "y" | ghrel_packages "${argsbc}.extlinux.template"
+    sudo cp -r ${argsbc}.extlinux.template $boot_mount_dir/extlinux/extlinux.conf
+    sudo rm -rf ${argsbc}.extlinux.template
+  else
+    colorecho "$RED" "Error, neither sbc nor extlinux template were specified. Unable to generate extlinux.conf. You may need to create extlinux.conf manually."
   fi
 
-  # Change UUID for extlinux.conf
-  echo "Updating UUID for extlinux.conf ..."
+  echo "Updating extlinux.conf ..."
+  # Update pkgbase for extlinux.conf
+  sudo sed -i "s|%PKGBASE%|$argkrl|" $boot_mount_dir/extlinux/extlinux.conf
+  # Update UUID for extlinux.conf
   sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
   sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
 
