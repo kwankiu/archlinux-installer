@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402142
+installerver=2402143
 
 # Define main / dev branch
 branch=dev
@@ -636,10 +636,16 @@ title "Arch Rock Installer - Installing Linux Kernel"
     fi
 
     colorecho "$GREEN" "Installing Linux Firmware ..." 
-    if [ "$install_target" = "orangepi5" ]; then
-        yes y|sudo pacman -S linux-firmware-orangepi-git
+    if [[ "$kernelpkg" == *"-orangepi"* ]]; then
+        yes y|sudo pacman -S --overwrite \* linux-firmware-orangepi-git
+    elif [[ "$kernelpkg" == *"-radxa-rkbsp5"* ]]; then
+        colorecho "$GREEN" "Installing DKMS Packages ..."
+        arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
+    elif [[ "$kernelpkg" == *"-joshua"* ]]; then
+        yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git
     else
-        yes y|sudo pacman -S linux-firmware-joshua-git
+        read -p "Enter packages to install (e.g. linux-firmware-joshua-git): " firmwarepkg
+        yes y|sudo pacman -S --overwrite \* $firmwarepkg
     fi
 
     # Update extlinux.conf
@@ -707,7 +713,7 @@ title "Arch Rock Installer - Installing Video Acceleration"
 title "Arch Rock Installer - Post Installation (Part 1)"
 
 colorecho "$GREEN" "Performing Full System Upgrade ..."
-sudo pacman -Syyu --noconfirm
+yes y | sudo pacman -Syyu --ignore linux-aarch64
 
 if [ "$install_target" = "rock5" ]; then
 
