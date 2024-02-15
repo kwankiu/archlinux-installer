@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402151
+installerver=2402152
 
 # Define main / dev branch
 branch=dev
@@ -604,8 +604,7 @@ fi
 title "Arch Rock Installer - Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 echo
-
-options=("Gnome" "KDE Plasma" "Budgie" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
+options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
 options+=("Skip")
 
 select_option "${options[@]}"
@@ -751,7 +750,7 @@ title "Arch Rock Installer - Install desktop environment"
 # Install desktop environment
 if [ "$de_options" = 0 ]; then
     # Install Gnome
-    colorecho "$GREEN" "Installing Gnome ..."
+    colorecho "$GREEN" "Installing Gnome (Full) ..."
     sudo pacman -S gnome --noconfirm
     #GDM_CONFIG_FILE="/etc/gdm/custom.conf"
     #if [ -f "$GDM_CONFIG_FILE" ]; then
@@ -762,16 +761,26 @@ if [ "$de_options" = 0 ]; then
     #fi
     sudo systemctl enable gdm
 elif [ "$de_options" = 1 ]; then
+    # Install Gnome
+    colorecho "$GREEN" "Installing Gnome (Minimal) ..."
+    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus xdg-user-dirs --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
-    colorecho "$GREEN" "Installing KDE Plasma ..."
+    colorecho "$GREEN" "Installing KDE Plasma (Full) ..."
     sudo pacman -S plasma-meta sddm plasma-wayland-session kde-applications-meta --noconfirm
     sudo systemctl enable sddm
-elif [ "$de_options" = 2 ]; then
-    # Install Budgie
-    colorecho "$GREEN" "Installing Budgie ..."
-    sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
-    sudo systemctl enable gdm
 elif [ "$de_options" = 3 ]; then
+    # Install KDE Plasma
+    colorecho "$GREEN" "Installing KDE Plasma (No KDE Apps) ..."
+    sudo pacman -S plasma-meta sddm plasma-wayland-session konsole --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 4 ]; then
+    # Install Budgie
+    colorecho "$GREEN" "Installing Budgie Desktop ..."
+    sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus xdg-user-dirs --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 5 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
     sudo pacman -S sway wofi lxappearance qt5ct python-pywal waybar pcmanfm-qt pass dunst swayidle swaylock swaybg xorg-xwayland qt5-wayland foot sddm --noconfirm
@@ -781,37 +790,37 @@ elif [ "$de_options" = 3 ]; then
     sudo install -Dm755 /etc/dunst/dunstrc ~/.config/dunst/dunstrc
     sudo touch ~/.config/waybar/config
     sudo touch ~/.config/wofi/config
-elif [ "$de_options" = 4 ]; then
+elif [ "$de_options" = 6 ]; then
     # Install Cutefish
     colorecho "$GREEN" "Installing Cutefish ..."
     sudo pacman -S cutefish sddm --noconfirm
     sudo systemctl enable sddm
-elif [ "$de_options" = 5 ]; then
+elif [ "$de_options" = 7 ]; then
     # Install Deepin
     colorecho "$GREEN" "Installing Deepin ..."
     sudo pacman -S deepin deepin-extra --noconfirm
     echo -e "greeter-session=lightdm-deepin-greeter" | sudo tee /etc/lightdm/lightdm.conf
-elif [ "$de_options" = 6 ]; then
+elif [ "$de_options" = 8 ]; then
     # Install XFCE
     colorecho "$GREEN" "Installing XFCE ..."
     sudo pacman -S xfce4 xfce4-goodies gdm --noconfirm
     sudo systemctl enable gdm
-elif [ "$de_options" = 7 ]; then
+elif [ "$de_options" = 9 ]; then
     # Install LXQT
     colorecho "$GREEN" "Installing LXQT ..."
     sudo pacman -S lxqt sddm --noconfirm
     sudo systemctl enable sddm
-elif [ "$de_options" = 8 ]; then
+elif [ "$de_options" = 10 ]; then
     # Install LXDE
     colorecho "$GREEN" "Installing LXDE ..."
     sudo pacman -S lxde lxdm-gtk3 --noconfirm
     sudo systemctl enable lxdm
-elif [ "$de_options" = 9 ]; then
+elif [ "$de_options" = 11 ]; then
     # Install MATE
     colorecho "$GREEN" "Installing MATE ..."
     sudo pacman -S mate mate-extra gdm --noconfirm
     sudo systemctl enable gdm
-elif [ "$de_options" = 10 ]; then
+elif [ "$de_options" = 12 ]; then
     # Install Cinnamon
     colorecho "$GREEN" "Installing Cinnamon ..."
     sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-terminal metacity gnome-shell gdm --noconfirm
