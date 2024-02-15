@@ -620,6 +620,7 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
     colorecho "$GREEN" "Removing linux-aarch64 ..."
     yes y|sudo pacman -R linux-aarch64
+    sudo rm -rf /etc/mkinitcpio.d/*
 
     colorecho "$GREEN" "Installing new kernel ..."
     yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
