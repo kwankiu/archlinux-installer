@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402143
+installerver=2402144
 
 # Define main / dev branch
 branch=dev
@@ -618,6 +618,10 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
     oldkrlrel=$(uname -r)
 
+    colorecho "$GREEN" "Removing linux-aarch64 ..."
+    yes y|sudo pacman -R linux-aarch64
+
+    colorecho "$GREEN" "Installing new kernel ..."
     yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
 
     if sudo pacman -Qs $kernelpkg > /dev/null ; then
@@ -713,7 +717,7 @@ title "Arch Rock Installer - Installing Video Acceleration"
 title "Arch Rock Installer - Post Installation (Part 1)"
 
 colorecho "$GREEN" "Performing Full System Upgrade ..."
-yes y | sudo pacman -Syyu --ignore linux-aarch64
+sudo pacman -Syyu --noconfirm --ignore linux-aarch64
 
 if [ "$install_target" = "rock5" ]; then
 
