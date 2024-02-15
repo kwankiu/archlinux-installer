@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402144
+installerver=2402145
 
 # Define main / dev branch
 branch=dev
@@ -642,12 +642,14 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Firmware ..." 
     if [[ "$kernelpkg" == *"-orangepi"* ]]; then
-        yes y|sudo pacman -S --overwrite \* linux-firmware-orangepi-git
+        yes y|sudo pacman -S --overwrite \* linux-firmware-orangepi-git mali-valhall-g610-firmware
     elif [[ "$kernelpkg" == *"-radxa-rkbsp5"* ]]; then
+        colorecho "$GREEN" "Removing linux-firmware-joshua-git ..."
+        yes y|sudo pacman -R linux-firmware-joshua-git
         colorecho "$GREEN" "Installing DKMS Packages ..."
         arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
-        yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git
+        yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
     else
         read -p "Enter packages to install (e.g. linux-firmware-joshua-git): " firmwarepkg
         yes y|sudo pacman -S --overwrite \* $firmwarepkg
