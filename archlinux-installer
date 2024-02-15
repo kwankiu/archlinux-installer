@@ -466,7 +466,9 @@ for arg in "$@"; do
       echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
       echo "--size=<image_size> : Set disk image size (default is 4G)."
       echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
-      echo "--kernel=<kernel_name> : Create Arch Linux using the specified kernel option."
+      echo "--kernel=<kernel_name> : Set kernel package to get from repo."
+      echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
+      echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
       echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
       echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
       echo "--sbc=<model_name> : Set Installer Target SBC (install_target), (default is rock5)."
@@ -499,6 +501,7 @@ for arg in "$@"; do
       ;;
     --kernel=*)
       argkrl="${arg#*=}"
+      colorecho "$GREEN" "Build image with kernel: ${argkrl}"
       ;;
     --sbc=*)
       argsbc="${arg#*=}"
@@ -507,6 +510,10 @@ for arg in "$@"; do
     --addpkg=*)
       argaddpkg="${arg#*=}"
       colorecho "$GREEN" "Get extra packages that matches: ${argaddpkg}"
+      ;;
+    --adrepourl=*)
+      adrepo_url="${arg#*=}"
+      colorecho "$RED" "Using custom package repo at ${adrepo_url}"
       ;;
     --bootpartstart=*)
       argbootptst="${arg#*=}"
