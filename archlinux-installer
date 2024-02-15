@@ -795,6 +795,12 @@ done
   elif [ ! -z "$argsbc" ]; then
     colorecho "$GREEN" "Getting ${argsbc}.extlinux.template from repo ..."
     echo -e "y" | ghrel_packages "${argsbc}.extlinux.template"
+
+    # Check if the extlinux directory exists, create it if it doesn't
+    if [ ! -d "$boot_mount_dir/extlinux" ]; then
+        sudo mkdir -p "$boot_mount_dir/extlinux"
+    fi
+
     sudo cp -r ${argsbc}.extlinux.template $boot_mount_dir/extlinux/extlinux.conf
     sudo rm -rf ${argsbc}.extlinux.template
   else

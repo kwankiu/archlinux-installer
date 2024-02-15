@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402131
+installerver=2402141
 
 # Define main / dev branch
 branch=dev
@@ -633,55 +633,48 @@ title "Arch Rock Installer - Installing Linux Kernel"
     fi
 
     # Update extlinux.conf
-    colorecho "$YELLOW" "Updating extlinux.conf ..."
+    colorecho "$YELLOW" "Generating extlinux.conf ..."
 
     if [ -e "/boot/extlinux/extlinux.arch.template" ]; then 
-        # Generate new extlinux.conf if template supplied
-
-        # apply new extlinux.conf
-        colorecho "$YELLOW" "Generating extlinux.conf from template ..."
+        colorecho "$YELLOW" "Using extlinux.arch.template ..."
         sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
-
-        # Get rootfs partition from the current mount point "/"
-        rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
-
-        # Find the UUIDs of the root partition
-        root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
-        echo "Root partition UUID: $root_uuid"
-
-        # Change UUID for extlinux.conf
-        colorecho "$GREEN" "Updating UUID for extlinux.conf ..."
-        
-        sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
-
-        if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
-            echo "Done"
-        else
-            colorecho "$GREEN" "Updating paths for extlinux.conf ..."
-            sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
-            sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
-            sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
-            sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
-            sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
-        fi
     else
-        # Patch the existing extlinux.conf as template is not supplied
-        colorecho "$GREEN" "Patching extlinux.conf ..."
+        # Kernel does not provide template, get sbc template
+        colorecho "$YELLOW" "Downloading extlinux template for ${install_target} ..."
+        curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/${install_target}.extlinux.template
+        sudo mv ${install_target}.extlinux.template /boot/extlinux/extlinux.conf
+    fi        
+        
+    colorecho "$YELLOW" "Generating extlinux.conf from template ..."
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
-        # Update vmlinuz
-        sudo sed -i "s| /vmlinuz-*| /vmlinuz-$kernelpkg|" /boot/extlinux/extlinux.conf
+    # Find the UUIDs of the root partition
+    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+    echo "Root partition UUID: $root_uuid"
 
-        # Update initrd
-        sudo sed -i "s| /initramfs-*| /initramfs-$kernelpkg.img|" /boot/extlinux/extlinux.conf
+    colorecho "$GREEN" "Updating extlinux.conf ..."
 
-        # Update devicetreedir
-        sudo sed -i "s| /dtbs/$oldkrlrel| /dtbs|" /boot/extlinux/extlinux.conf #remove old kernel dtbs pkgbase path if exists
-        sudo sed -i "s| /dtbs/$kernelpkg| /dtbs|" /boot/extlinux/extlinux.conf #remove kernelpkg dtbs pkgbase path if exists, should never exist, but just in case
+    # Change pkgbase for extlinux.conf
+    if [ ! -e "/boot/dtbs/$kernelpkg" ]; then 
+        sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
+    fi
 
-        if [ -e "/boot/dtbs/$kernelpkg/rockchip" ]; then 
-            sudo sed -i "s| /dtbs/| /dtbs/$kernelpkg/|" /boot/extlinux/extlinux.conf #add if the dtbs path has a pkgbase
-        fi
+    sudo sed -i "s|%PKGBASE%|$kernelpkg|" /boot/extlinux/extlinux.conf
+
+    # Change UUID for extlinux.conf   
+    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+        echo "Done"
+    else
+        colorecho "$GREEN" "Updating paths for extlinux.conf ..."
+        sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
     fi
 
 ################################################################
