@@ -165,11 +165,18 @@ check_internet() {
 
     if ! "$internet_available"; then
         if [ "$internet_retry_count" -gt 3 ]; then
-            colorecho "$YELLOW" "Your system does not appear to have internet connection."
-            colorecho "$RED" "This installer requires internet connection."
-            colorecho "$YELLOW" "Tips: Sometimes the driver takes time to load, in this case just choose Check Internet Again."
-            colorecho "$YELLOW" "Tips: If your device does not have ethernet, or if you prefer using WiFi, choose Setup / Connect a WiFi."
-            colorecho "$YELLOW" "Warning: Installation will fail or incomplete if you choose to Install anyway, ensure that you have a proper internet connection."
+
+            # Check if any network interface is up
+            if ip link show | grep "state UP"; then
+                colorecho "$YELLOW" "Your system has connected to a network, but it does not appear to have an internet connection."
+                colorecho "$RED" "This installer requires an internet connection. Please ensure that you have a proper internet connection."
+                colorecho "$YELLOW" "Warning: Installation may fail or be incomplete if you choose to proceed without an internet connection."
+            else
+                colorecho "$YELLOW" "Your system has not connected to a network."
+                colorecho "$GREEN" "Tip: Sometimes the driver may take time to load. In such cases, simply choose 'Check Internet Again'."
+                colorecho "$GREEN" "Tip: To connect to a WiFi network, select 'Setup / Connect to WiFi'."
+            fi
+            
             options=("Check Internet Again")
 
             # Check if there is a Wireless Interface and get the first one
@@ -185,7 +192,8 @@ check_internet() {
                 options+=("Setup / Connect a WiFi ($iwdev)")
             fi
             
-            options+=("Install Anyway (may break)" "Exit Installer")
+            options+=("Exit Installer")
+            options+=("Skip Internet Check (installation may fail)")
             select_option "${options[@]}"
             answer=$?
             if [ "$answer" = 0 ]; then
@@ -206,14 +214,19 @@ check_internet() {
                     timedatectl set-ntp true
                 fi
                 check_internet
-            elif [ "$answer" = 3 ]; then
+            elif [ "$answer" = 2 ]; then
                 echo "Aborted. Exiting ..."
                 exit 1
             fi
         else
-            colorecho "$GREEN" "Waiting for internet connection ..."
-            sleep 3
-            colorecho "$GREEN" "Retrying ..."
+            if ip link show | grep "state UP"; then
+                colorecho "$GREEN" "Waiting for internet connection ..."
+                sleep 3
+                colorecho "$GREEN" "Retrying ..."
+            else
+                colorecho "$GREEN" "Waiting for network ..."
+                sleep 3
+            fi
             ((internet_retry_count++))
             check_internet
         fi
@@ -456,13 +469,6 @@ if [ -e $compiled_pkg_folder ]; then
         systemctl enable systemd-timesyncd
         systemctl start systemd-timesyncd
     fi
-fi
-
-# Check if any network interface is up
-if ip link show | grep "state UP"; then
-    echo "Network interface is up"
-else
-    echo "Network interface is down, maybe here we can start WiFi automatically?"
 fi
 
 # Check internet connection
