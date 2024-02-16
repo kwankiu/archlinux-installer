@@ -458,6 +458,21 @@ if [ -e $compiled_pkg_folder ]; then
     fi
 fi
 
+
+
+# Get list of all Ethernet interfaces
+interfaces=$(ip link show | grep -oP '\d+:\s+\K[^:]+(?=:.*ETHER)')
+
+# Iterate over each Ethernet interface
+for interface in $interfaces; do
+    # Check if Ethernet interface is up
+    if ip link show "$interface" | grep -q "state UP"; then
+        echo "Ethernet interface $interface is up"
+    else
+        echo "Ethernet interface $interface is down"
+    fi
+done
+
 # Check internet connection
 check_internet
 
