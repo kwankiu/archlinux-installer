@@ -243,16 +243,17 @@ check_installer_updates() {
                 chmod +x arch-rock-installer
                 cp -r arch-rock-installer /usr/bin/installer
                 rm -rf arch-rock-installer
+                colorecho "$GREEN" "Installer updated. System will reboot now. If it does not reboot automatically, reboot your device manually."
+                systemctl reboot | reboot
             else
                 # If not running as root
                 sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" arch-rock-installer
                 sudo chmod +x arch-rock-installer
                 sudo cp -r arch-rock-installer /usr/bin/installer
                 sudo rm -rf arch-rock-installer
+                colorecho "$GREEN" "Installer updated. System will reboot now. If it does not reboot automatically, reboot your device manually."
+                sudo reboot
             fi
-
-            colorecho "$GREEN" "Installer updated. System will reboot now. If it does not reboot automatically, reboot your device manually."
-            systemctl reboot | reboot
         fi
     fi
 }
@@ -370,7 +371,7 @@ init_setup() {
     fi
 
     colorecho "$GREEN" "Enabling ParallelDownloads for pacman ..."
-    sed -i 's/^#ParallelDownloads/ParallelDownloads = 20/' /etc/pacman.conf
+    sed -i 's/^#ParallelDownloads\s*=\s*\([0-9]\{1,3\}\)\?$/ParallelDownloads = 20/' /etc/pacman.conf
 
     ################################################################
     # User Account
