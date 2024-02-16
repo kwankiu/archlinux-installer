@@ -660,7 +660,7 @@ title "Arch Rock Installer - Installing Linux Kernel"
     # Update extlinux.conf
     colorecho "$YELLOW" "Generating extlinux.conf ..."
 
-    if [ -e "/boot/extlinux/extlinux.arch.template" ]; then 
+    if sudo test -e  "/boot/extlinux/extlinux.arch.template"; then 
         colorecho "$YELLOW" "Using extlinux.arch.template ..."
         sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
     else
