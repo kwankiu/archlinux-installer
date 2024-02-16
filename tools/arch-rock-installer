@@ -682,6 +682,11 @@ title "Arch Rock Installer - Installing Linux Kernel"
         sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
     fi
 
+    # fix rockchip overlay directory name
+    if sudo test -e "/boot/dtbs/$kernelpkg/rockchip/overlay"; then
+        sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
+    fi
+
     sudo sed -i "s|%PKGBASE%|$kernelpkg|" /boot/extlinux/extlinux.conf
 
     # Change UUID for extlinux.conf   
