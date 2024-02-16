@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402156
+installerver=2402161
 
 # Define main / dev branch
 branch=dev
@@ -458,20 +458,12 @@ if [ -e $compiled_pkg_folder ]; then
     fi
 fi
 
-
-
-# Get list of all Ethernet interfaces
-interfaces=$(ip link show | grep -oP '\d+:\s+\K[^:]+(?=:.*ETHER)')
-
-# Iterate over each Ethernet interface
-for interface in $interfaces; do
-    # Check if Ethernet interface is up
-    if ip link show "$interface" | grep -q "state UP"; then
-        echo "Ethernet interface $interface is up"
-    else
-        echo "Ethernet interface $interface is down"
-    fi
-done
+# Check if any network interface is up
+if ip link show | grep "state UP"; then
+    echo "Network interface is up"
+else
+    echo "Network interface is down, maybe here we can start WiFi automatically?"
+fi
 
 # Check internet connection
 check_internet
