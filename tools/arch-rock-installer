@@ -678,7 +678,7 @@ title "Arch Rock Installer - Installing Linux Kernel"
     colorecho "$GREEN" "Updating extlinux.conf ..."
 
     # Change pkgbase for extlinux.conf
-    if [ ! -e "/boot/dtbs/$kernelpkg" ]; then 
+    if sudo test ! -e "/boot/dtbs/$kernelpkg"; then 
         sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
     fi
 
