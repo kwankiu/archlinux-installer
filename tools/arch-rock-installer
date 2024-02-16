@@ -688,15 +688,18 @@ title "Arch Rock Installer - Installing Linux Kernel"
     sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
     sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
 
-    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
-        echo "Done"
-    else
+    # Check if /boot is mounted as a partition or directory
+    if mountpoint -q /boot; then
+        colorecho "$GREEN" "/boot is mounted as a directory"
         colorecho "$GREEN" "Updating paths for extlinux.conf ..."
         sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
         sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
         sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
         sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
         sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+    else
+        colorecho "$GREEN" "/boot is mounted as a partition"
+        colorecho "$GREEN" "Done"
     fi
 
 ################################################################
