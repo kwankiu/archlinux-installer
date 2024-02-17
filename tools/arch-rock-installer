@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402161
+installerver=2402171
 
 # Define main / dev branch
 branch=dev
@@ -145,6 +145,9 @@ title() {
   echo "---------------------------------------------------------------------"
   colorecho "$BLUE" "${text}"
   echo "---------------------------------------------------------------------"
+  if [ "$branch" = "dev" ]; then
+    echo "You are running a development build installer. It is experimental and may not work properly."
+  fi
 }
 
 ################################################################
@@ -164,7 +167,7 @@ check_internet() {
     done
 
     if ! "$internet_available"; then
-        if [ "$internet_retry_count" -gt 3 ]; then
+        if [ "$internet_retry_count" -gt 2 ]; then
 
             # Check if any network interface is up
             if ip link show | grep "state UP"; then
@@ -256,16 +259,22 @@ check_installer_updates() {
                 chmod +x arch-rock-installer
                 cp -r arch-rock-installer /usr/bin/installer
                 rm -rf arch-rock-installer
-                colorecho "$GREEN" "Installer updated. System will reboot now. If it does not reboot automatically, reboot your device manually."
-                systemctl reboot | reboot
+                colorecho "$GREEN" "Installer updated. System will reboot now."
+                if ! reboot; then
+                    if ! systemctl reboot; then
+                        echo "Unable to reboot automatically, please reboot your device manually."
+                    fi
+                fi 
             else
                 # If not running as root
                 sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" arch-rock-installer
                 sudo chmod +x arch-rock-installer
                 sudo cp -r arch-rock-installer /usr/bin/installer
                 sudo rm -rf arch-rock-installer
-                colorecho "$GREEN" "Installer updated. System will reboot now. If it does not reboot automatically, reboot your device manually."
-                sudo reboot
+                colorecho "$GREEN" "Installer updated. System will reboot now."
+                if ! sudo reboot; then
+                    echo "Unable to reboot automatically, please reboot your device manually."
+                fi
             fi
         fi
     fi
@@ -350,9 +359,12 @@ init_setup() {
         select_option "${options[@]}"
         answer=$?
         if [ "$answer" = 1 ]; then
-            colorecho "$YELLOW" "Restarting your device ... Unplug / Restart your device manually if it does not reboot automatically."
-            systemctl reboot
-            reboot
+            colorecho "$YELLOW" "Rebooting device ..."
+            if ! reboot; then
+                if ! systemctl reboot; then
+                    echo "Unable to reboot automatically, please reboot your device manually."
+                fi
+            fi 
         fi
     fi
 
@@ -433,8 +445,11 @@ init_setup() {
     echo "installer" | tee -a /home/$new_username/.bashrc
 
     colorecho "$GREEN" "Rebooting..."
-    systemctl reboot
-    reboot
+    if ! reboot; then
+        if ! systemctl reboot; then
+            echo "Unable to reboot automatically, please reboot your device manually."
+        fi
+    fi 
 }
 
 ################################################################
@@ -467,7 +482,14 @@ if [ -e $compiled_pkg_folder ]; then
         # Ensure SSL (Sync Clock)
         colorecho "$GREEN" "Enabling Time Sync ..."
         systemctl enable systemd-timesyncd
-        systemctl start systemd-timesyncd
+        
+
+        colorecho "$GREEN" "System will reboot now."
+        if ! reboot; then
+            if ! systemctl reboot; then
+                echo "Unable to reboot automatically, please reboot your device manually."
+            fi
+        fi 
     fi
 fi
 
@@ -896,7 +918,9 @@ else
     colorecho "$GREEN" "Cleaning up installations ..."
     sudo rm -rf /usr/bin/installer
     colorecho "$GREEN" "Rebooting system ..."
-    sudo reboot
+    if ! sudo reboot; then
+        echo "Unable to reboot automatically, please reboot your device manually."
+    fi
 fi
 
 ################################################################
