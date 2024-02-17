@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402171
+installerver=2402172
 
 # Define main / dev branch
 branch=dev
@@ -436,10 +436,6 @@ init_setup() {
         rm -rf /etc/systemd/system/init-setup.service
     fi
 
-    if [ -e $compiled_pkg_folder ]; then 
-        rm -rf $compiled_pkg_folder
-    fi
-
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo "installer" | tee -a /home/$new_username/.bashrc
@@ -477,19 +473,26 @@ title "Welcome to Arch Linux!"
 if [ -e $compiled_pkg_folder ]; then 
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
-        yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.* --needed
+        if yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.* --needed; then
 
-        # Ensure SSL (Sync Clock)
-        colorecho "$GREEN" "Enabling Time Sync ..."
-        systemctl enable systemd-timesyncd
-        
+            echo "Removing packages archives ..."
+            rm -rf $compiled_pkg_folder
 
-        colorecho "$GREEN" "System will reboot now."
-        if ! reboot; then
-            if ! systemctl reboot; then
-                echo "Unable to reboot automatically, please reboot your device manually."
-            fi
-        fi 
+            # Ensure SSL (Sync Clock)
+            colorecho "$GREEN" "Enabling Time Sync ..."
+            systemctl enable systemd-timesyncd
+
+            colorecho "$GREEN" "System will reboot now."
+            if ! reboot; then
+                if ! systemctl reboot; then
+                    echo "Unable to reboot automatically, please reboot your device manually."
+                fi
+            fi 
+        else
+            colorecho "$RED" "Failed to install Required Packages. The image may be broken, try flashing the image again."
+            sleep 5
+            exit 1
+        fi
     fi
 fi
 
