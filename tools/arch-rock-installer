@@ -813,7 +813,7 @@ if [ "$de_options" = 0 ]; then
 elif [ "$de_options" = 1 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome (Minimal) ..."
-    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweaks nautilus xdg-user-dirs --noconfirm
+    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-user-dirs --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
@@ -828,7 +828,7 @@ elif [ "$de_options" = 3 ]; then
 elif [ "$de_options" = 4 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie Desktop ..."
-    sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweaks nautilus xdg-user-dirs --noconfirm
+    sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks nautilus xdg-user-dirs --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 5 ]; then
     # Install Sway
