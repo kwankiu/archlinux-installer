@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402172
+installerver=2402173
 
 # Define main / dev branch
 branch=dev
@@ -818,17 +818,17 @@ elif [ "$de_options" = 1 ]; then
 elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma (Full) ..."
-    sudo pacman -S plasma-meta sddm plasma-wayland-session kde-applications-meta --noconfirm
+    sudo pacman -S plasma-meta sddm kde-applications-meta --noconfirm
     sudo systemctl enable sddm
 elif [ "$de_options" = 3 ]; then
     # Install KDE Plasma
     colorecho "$GREEN" "Installing KDE Plasma (No KDE Apps) ..."
-    sudo pacman -S plasma-meta sddm plasma-wayland-session konsole --noconfirm
+    sudo pacman -S plasma-meta sddm konsole --noconfirm
     sudo systemctl enable sddm
 elif [ "$de_options" = 4 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie Desktop ..."
-    sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks nautilus xdg-user-dirs --noconfirm
+    sudo pacman -S budgie-desktop budgie-desktop-view budgie-backgrounds gdm gnome-keyring gnome-console gnome-disk-utility gnome-tweaks nautilus xdg-user-dirs --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 5 ]; then
     # Install Sway
