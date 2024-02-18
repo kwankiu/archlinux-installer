@@ -146,7 +146,7 @@ title() {
   colorecho "$BLUE" "${text}"
   echo "---------------------------------------------------------------------"
   if [ "$branch" = "dev" ]; then
-    echo "You are running a development build installer. It is experimental and may not work properly."
+    colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
   fi
 }
 
@@ -647,7 +647,7 @@ title "Arch Rock Installer - Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 echo
 options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
-options+=("Skip")
+options+=("Do not install a Desktop Environment")
 
 select_option "${options[@]}"
 de_options=$?
@@ -750,9 +750,9 @@ title "Arch Rock Installer - Installing Linux Kernel"
     fi
 
 ################################################################
-# Install Mesa and GPU drivers
+# Install Graphics Acceleration
 
-title "Arch Rock Installer - Installing Mesa and GPU drivers"
+title "Arch Rock Installer - Installing Graphics Acceleration"
 
     sudo pacman -S mesa-panfork-git --noconfirm
 
