@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402173
+installerver=2402174
 
 # Define main / dev branch
 branch=dev
@@ -628,9 +628,11 @@ pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
 if [ "$kernelpkg" = "Install" ]; then
     read -p "Enter a kernel to install from pacman (e.g. linux-radxa-rkbsp5-git): " kernelpkg
     read -p "Enter additional packages to install (e.g. linux-firmware-joshua-git): " firmwarepkg
-    read -p "Do you want to add a pacman repo (y/n)? " addpacmanrepo
+    read -p "Do you want to add a pacman repo? [Y/n]: " addpacmanrepo
+    if [[ $addpacmanrepo == [Yy]* ]]; then
+        arch-rock-config add-repo
+    fi
 fi
-#echo "selected ${kernelpkg}"
 
 ################################################################
 # Select desktop environment
@@ -645,19 +647,23 @@ select_option "${options[@]}"
 de_options=$?
 
 ################################################################
+# Installation begins here
 title "Arch Rock Installer - Configuring Pacman"
-
-    colorecho "$GREEN" "Adding 7Ji repo ..."
-    arch-rock-config add-repo 7Ji
-
-    if [ "$install_target" = "edge2" ]; then
-        colorecho "$GREEN" "Adding BredOS Repo ..."
-        arch-rock-config add-repo BredOS
-    fi
 
     colorecho "$GREEN" "Enabling ParallelDownloads for pacman ..."
     sed -i 's/^#ParallelDownloads\s*=\s*\([0-9]\{1,3\}\)\?$/ParallelDownloads = 20/' /etc/pacman.conf
 
+    if [[ -z $addpacmanrepo ]]; then
+        echo "Adding $pacmanrepo ..."
+        arch-rock-config add-repo $pacmanrepo
+    fi
+
+    if [[ "$kernelpkg" == *"-edge2"* ]]; then
+        # needed since we added BredOS instead of 7Ji
+        arch-rock-config add-repo 7Ji
+    fi
+
+################################################################
 # Install Linux Kernel
 
 title "Arch Rock Installer - Installing Linux Kernel"
@@ -697,7 +703,7 @@ title "Arch Rock Installer - Installing Linux Kernel"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
         yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
     elif [[ "$kernelpkg" == *"-edge2"* ]]; then
-        yes y|sudo pacman -S --overwrite \* ap6275p-firmware mali-valhall-g610-firmware
+        yes y|sudo pacman -S --overwrite \* ap6275p-firmware mali-G610-firmware
     else
         yes y|sudo pacman -S --overwrite \* $firmwarepkg
     fi
