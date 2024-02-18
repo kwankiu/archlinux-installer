@@ -726,7 +726,7 @@ manage_packages() {
     title "Arch Rock Configuration Utility - Manage Packages"
     options=("Install / Update Software - Install Basic Software / RK3588 Specified / Customized Packages")
     options+=("Downgrade Packages - Install / Downgrade any Arch Linux Packages from Archive")
-    options+=("Add 7Ji repo - A pacman repo for pre-built AUR packages for RK3588 and some other SBC")
+    options+=("Add Pacman Repo - Add a repository to archlinux system's package manager (pacman).")
     options+=("Return to Main Menu")
     select_option "${options[@]}"
     choice=$?
@@ -740,7 +740,7 @@ manage_packages() {
             downgrade_packages
             ;;
         2)
-            add_7ji
+            add_repo
             ;;
         *)
             config_options
@@ -981,22 +981,40 @@ downgrade_packages() {
     install_pkg_from_url ${which_url}${dgpkg_list[choice]}
 }
 
-add_7ji() {
-    colorecho "$GREEN" "Adding 7ji arch repo ..."
-    colorecho "$GREEN" "Adding gpg keys ..."
-    sudo pacman-key --recv-keys BA27F219383BB875
-    sudo pacman-key --lsign BA27F219383BB875
-    colorecho "$GREEN" "Adding server to pacman.conf ..."
-    echo -e "[7Ji]\nServer = https://github.com/7Ji/archrepo/releases/download/\$arch" | sudo tee -a /etc/pacman.conf
-    colorecho "$GREEN" "Updating repo ..."
-    sudo pacman -Syy --noconfirm
-    colorecho "$GREEN" "Done"
-}
+add_repo() {
+    if [ -z "$1" ]; then
+        title "Arch Rock Configuration Utility - Add Pacman Repo"
+        read -p "Enter repo name: " repo_name
+        read -p "Enter server URL for $repo_name repo: " server_url
+        read -p "Do you want to add a GPG key for $repo_name repo? [Y/n]: " add_gpg_key
+        if [[ $add_gpg_key == [Yy]* ]]; then
+            read -p "Enter GPG key for $repo_name repo: " gpg_key
+        fi
+    elif [ "$1" = "7Ji" ]; then
+        server_url="https://github.com/7Ji/archrepo/releases/download/\$arch"
+        gpg_key="BA27F219383BB875"
+    elif [ "$1" = "BredOS" ]; then
+        server_url="https://github.com/BredGang/bred-repo/raw/main/\$repo/\$arch"
+    else
+        colorecho "$RED" "Invalid repo name. Aborting."
+        return 1
+    fi
 
-add_bredrepo() {
-    colorecho "$GREEN" "Adding BredOS Repo ..."
-    colorecho "$GREEN" "Adding server to pacman.conf ..."
-    echo -e "[BredOS]\nSigLevel = Never\nServer= https://github.com/BredGang/bred-repo/raw/main/\$repo/\$arch" | sudo tee -a /etc/pacman.conf
+    if [ -z "$repo_name" ]; then
+        repo_name="$1"
+    fi
+
+    colorecho "$GREEN" "Adding $repo_name to pacman.conf ..."
+
+    if [ -z "$gpg_key" ]; then
+        echo -e "[$repo_name]\nServer = $server_url" | sudo tee -a /etc/pacman.conf
+    else
+        echo -e "[$repo_name]\nSigLevel = Never\nServer = $server_url" | sudo tee -a /etc/pacman.conf
+        colorecho "$GREEN" "Adding GPG keys ..."
+        sudo pacman-key --recv-keys "$gpg_key"
+        sudo pacman-key --lsign "$gpg_key"
+    fi
+
     colorecho "$GREEN" "Updating repo ..."
     sudo pacman -Syy --noconfirm
     colorecho "$GREEN" "Done"
@@ -1866,11 +1884,16 @@ elif [ "$1" = "keyboard" ]; then
 elif [ "$1" = "wifi" ]; then
     wifi_country "$2"
 
+elif [ "$1" = "add-repo" ]; then
+    add_repo "$2"
+
 elif [ "$1" = "add-7ji" ]; then
-    add_7ji
+    echo "Deprecated: use add-repo <repo_name> instead"
+    add_repo "7Ji"
 
 elif [ "$1" = "add-bredrepo" ]; then
-    add_bredrepo
+    echo "Deprecated: use add-repo <repo_name> instead"
+    add_repo "BredOS"
 
 ### Main Menu ###
 else
