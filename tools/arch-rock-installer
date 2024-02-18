@@ -618,15 +618,15 @@ options=()
 if [ "$install_target" = "rock5" ]; then
     options+=("linux-radxa-rkbsp5-git (7Ji) - (Recommended) Install Linux Radxa BSP Kernel (Linux 5.10.x)")
     options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
-    options+=("linux-rkbsp-joshua-git (7Ji) - Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
+    options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
 elif [ "$install_target" = "edge2" ]; then
     options+=("linux-rockchip-joshua-git (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
     options+=("linux-edge2 (BredOS) - Install BredOS Linux Khadas Edge2 Kernel (Linux 5.10.66)")    
-    options+=("linux-rkbsp-joshua-git (7Ji) - Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
+    options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
 elif [ "$install_target" = "orangepi5" ]; then
     options+=("linux-aarch64-orangepi5-git (7Ji) - (Recommended) Install AArch64 vendor kernel for Orange Pi 5/5B/5Plus/5Pro (Linux 5.10.x)")
     options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
-    options+=("linux-rkbsp-joshua-git (7Ji) - Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
+    options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Joshua Linux BSP 6.1 Kernel (Linux 6.1.x)")
 fi
 
 options+=("Install other kernel from pacman (Experimental, make sure this package is available in a repo added to pacman)")
@@ -637,6 +637,7 @@ kernelpkg=$(echo "$selected_option" | awk '{print $1}')
 
 if [ "$kernelpkg" = "Install" ]; then
     read -p "Enter a kernel to install from pacman (e.g. linux-radxa-rkbsp5-git): " kernelpkg
+    read -p "Enter additional packages to install (e.g. linux-firmware-joshua-git): " firmwarepkg
 fi
 #echo "selected ${kernelpkg}"
 
@@ -691,8 +692,9 @@ title "Arch Rock Installer - Installing Linux Kernel"
         arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
         yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
+    elif [[ "$kernelpkg" == *"-edge2"* ]]; then
+        yes y|sudo pacman -S --overwrite \* ap6275p-firmware mali-valhall-g610-firmware
     else
-        read -p "Enter packages to install (e.g. linux-firmware-joshua-git): " firmwarepkg
         yes y|sudo pacman -S --overwrite \* $firmwarepkg
     fi
 
