@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402174
+installerver=2402175
 
 # Define main / dev branch
 branch=dev
@@ -703,7 +703,7 @@ title "Arch Rock Installer - Installing Linux Kernel"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
         yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
     elif [[ "$kernelpkg" == *"-edge2"* ]]; then
-        yes y|sudo pacman -S --overwrite \* ap6275p-firmware mali-G610-firmware
+        yes y|sudo pacman -S --overwrite \* ap6275p-firmware mali-valhall-g610-firmware
     else
         yes y|sudo pacman -S --overwrite \* $firmwarepkg
     fi
@@ -784,20 +784,18 @@ colorecho "$GREEN" "Performing Full System Upgrade ..."
 sudo pacman -Syyu --noconfirm --ignore linux-aarch64
 
 if [ "$install_target" = "rock5" ]; then
-
     # The fix for some Bluetooth Modules (A8, AX210, etc.)
     colorecho "$GREEN" "Applying Bluetooth Fix ..."
     echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
     # Disable Sleep
     colorecho "$GREEN" "Disable suspend ..."
     echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
+fi
 
-elif [ "$install_target" = "edge2" ]; then
-
+if [[ "$kernelpkg" == *"-edge2"* ]]; then
     # Post Install
     colorecho "$GREEN" "Running Edge2 Post Install ..."
     sudo pacman -S edge2-post-install --noconfirm
-
 fi
 
 # Network Manager, WiFi, Bluetooth
