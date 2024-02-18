@@ -792,9 +792,8 @@ if [ "$install_target" = "rock5" ]; then
     # Disable Sleep
     colorecho "$GREEN" "Disable suspend ..."
     echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
-fi
 # Edge 2
-if [ "$install_target" = "edge2" ]; then
+elif [ "$install_target" = "edge2" ]; then
     # For testing only, blacklist other bluetooth except boardcom just in case 
     colorecho "$GREEN" "Applying Bluetooth Fix ..."
     echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
@@ -805,9 +804,8 @@ if [ "$install_target" = "edge2" ]; then
     colorecho "$GREEN" "Creating FAN control service ..."
     echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee -a /usr/lib/systemd/system/fan.service
     sudo systemctl enable fan.service
-fi
 # Orange Pi 5
-if [ "$install_target" = "orangepi5" ]; then
+elif [ "$install_target" = "orangepi5" ]; then
     # Disable Sleep
     colorecho "$GREEN" "Disable suspend ..."
     echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
