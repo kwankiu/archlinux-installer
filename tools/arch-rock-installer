@@ -159,7 +159,7 @@ check_internet() {
     internet_available=false
 
     for server in "${servers[@]}"; do
-        if ping -q -c 3 "$server" >/dev/null; then
+        if ping -q -c 3 "$server" >/dev/null 2>&1; then
             colorecho "$GREEN" "Internet is available via $server."
             internet_available=true
             break
