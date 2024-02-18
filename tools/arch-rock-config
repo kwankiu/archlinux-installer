@@ -873,7 +873,7 @@ install_selected_pkg() {
                     yes y|sudo pacman -S chromium-mpp
                     #install_pkg_from_url "$alaa_url/packages/r/re2/re2-1%3A20230301-1-aarch64.pkg.tar.xz"
                     sudo systemctl enable --now libv4l-rkmpp-setup.service
-                    echo -e "# Default settings for chromium-browser. This file is sourced by /bin/sh from\n# /usr/bin/chromium-browser\n\n# Options to pass to chromium-browser\nLD_LIBRARY_PATH=/usr/lib/mali-valhall-g610/x11-wayland-gbm\nCHROMIUM_FLAGS=\"--use-gl=egl\"" | sudo tee -a -p /etc/chromium-browser/default >/dev/null
+                    echo -e "# Default settings for chromium-browser. This file is sourced by /bin/sh from\n# /usr/bin/chromium-browser\n\n# Options to pass to chromium-browser\nLD_LIBRARY_PATH=/usr/lib/mali-valhall-g610/x11-wayland-gbm\nCHROMIUM_FLAGS=\"--use-gl=egl\"" | sudo tee -p /etc/chromium-browser/default >/dev/null
                 else
                     sudo pacman -S chromium --noconfirm
                 fi
