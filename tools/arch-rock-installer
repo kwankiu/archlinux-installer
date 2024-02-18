@@ -766,7 +766,7 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
 title "Arch Rock Installer - Installing Graphics Acceleration"
 
-    sudo pacman -S mesa-panfork-git --noconfirm
+    sudo pacman -S mesa-panfork-git libmali-valhall-g610-x11-wayland-gbm --noconfirm
 
 ################################################################
 # Install Video Acceleration
