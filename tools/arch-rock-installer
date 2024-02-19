@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402182
+installerver=2402183
 
 # Define main / dev branch
 branch=dev
@@ -260,6 +260,7 @@ check_installer_updates() {
                 cp -r arch-rock-installer /usr/bin/installer
                 rm -rf arch-rock-installer
                 colorecho "$GREEN" "Installer updated. System will reboot now."
+                systemctl stop systemd-logind
                 if ! reboot; then
                     if ! systemctl reboot; then
                         echo "Unable to reboot automatically, please reboot your device manually."
@@ -359,7 +360,8 @@ init_setup() {
         select_option "${options[@]}"
         answer=$?
         if [ "$answer" = 1 ]; then
-            colorecho "$YELLOW" "Rebooting device ..."
+            colorecho "$GREEN" "System will reboot now."
+            systemctl stop systemd-logind
             if ! reboot; then
                 if ! systemctl reboot; then
                     echo "Unable to reboot automatically, please reboot your device manually."
@@ -429,7 +431,8 @@ init_setup() {
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo "installer" | tee -a /home/$new_username/.bashrc
 
-    colorecho "$GREEN" "Rebooting..."
+    colorecho "$GREEN" "System will reboot now."
+    systemctl stop systemd-logind
     if ! reboot; then
         if ! systemctl reboot; then
             echo "Unable to reboot automatically, please reboot your device manually."
@@ -472,6 +475,7 @@ if [ -e $compiled_pkg_folder ]; then
             systemctl enable systemd-timesyncd
 
             colorecho "$GREEN" "System will reboot now."
+            systemctl stop systemd-logind
             if ! reboot; then
                 if ! systemctl reboot; then
                     echo "Unable to reboot automatically, please reboot your device manually."
