@@ -946,7 +946,10 @@ install_selected_pkg() {
                 install_from_source "aur://yay-git"
                 ;;
             *)
-                if sudo pacman -Ssy "^${selection[i]}$" &> /dev/null; then
+                if [[ "${selection[i]}" == *"://"* ]]; then
+                    colorecho "$GREEN" "Installing package from ${selection[i]} ..."
+                    install_from_source "${selection[i]}"
+                elif sudo pacman -Ssy "^${selection[i]}$" &> /dev/null; then
                     colorecho "$GREEN" "Installing ${selection[i]} with pacman ..."
                     sudo pacman -S ${selection[i]} --noconfirm
                 else
