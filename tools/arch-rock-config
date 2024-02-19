@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402187
+utilver=2402188
 
 # Define main / dev branch
 branch=dev
@@ -1533,13 +1533,13 @@ manage_user() {
                     ;;
                 2)  
                     if sudo -lU "$selected_user" | grep -q NOPASSWD; then
-                        sudo sed -i "s/^\($selected_user.*\)NOPASSWD/\1ALL/" /etc/sudoers
+                        sudo sed -i "s/^\($selected_user.*\)NOPASSWD: ALL/\1ALL/" /etc/sudoers
                         colorecho "$GREEN" "Enabled Sudo Password for $selected_user"
                     else
                         # NOPASSWD is not set, check if the user exists in sudoers file
                         if sudo grep -q "^[^#]*$selected_user" /etc/sudoers; then
-                            # User exists, change ALL: ALL to NOPASSWD: ALL
-                            sudo sed -i "s/^\($selected_user.*\)ALL: ALL/\1NOPASSWD: ALL/" /etc/sudoers
+                            # User exists, change (ALL) ALL to (ALL) NOPASSWD: ALL
+                            sudo sed -i "s/^\($selected_user.*\)(ALL) ALL/\1(ALL) NOPASSWD: ALL/" /etc/sudoers
                             echo "Changed $selected_user permissions to NOPASSWD: ALL"
                         else
                             # User does not exist, add it to sudoers file
