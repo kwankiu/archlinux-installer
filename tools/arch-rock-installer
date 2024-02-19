@@ -727,6 +727,12 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
     colorecho "$GREEN" "Updating extlinux.conf ..."
 
+    if [[ "$kernelpkg" == *"linux-rkbsp"* ]]; then
+        if [ "$install_target" = "edge2" ]; then
+            sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs/linux-rockchip-joshua-git|" /boot/extlinux/extlinux.conf
+        fi
+    fi
+
     # Change pkgbase for extlinux.conf
     if sudo test ! -e "/boot/dtbs/$kernelpkg"; then 
         sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
