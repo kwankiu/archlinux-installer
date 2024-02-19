@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402184
+utilver=2402185
 
 # Define main / dev branch
 branch=dev
@@ -1456,6 +1456,7 @@ manage_user() {
         t_user=$2
     elif [ "$1" = "manage" ]; then
         selected_user=$2
+        manage_action=$3
     fi
 
     case $choice in
@@ -1497,20 +1498,30 @@ manage_user() {
             if [ -z "$selected_user" ]; then
                 selected_user=${real_users[$((choice - 2))]}
             fi
-            title "Arch Rock Configuration Utility - Manage $selected_user"
-            colorecho "$GREEN" "User: $selected_user"
-            echo ""
 
-            # Perform actions for the selected user (if needed)
-            options=("Return to Manage User Menu" "Change User Password")
+            # Check if NOPASSWD File is created
             sudoers_file="/etc/sudoers.d/99_nopasswd_$selected_user"
-            if sudo [ -e "$sudoers_file" ]; then
-                options+=("Enable Sudo Password")
-            else
-                options+=("Disable Sudo Password")
+
+            if [ -z "$manage_action" ]; then
+                title "Arch Rock Configuration Utility - Manage $selected_user"
+                colorecho "$GREEN" "User: $selected_user"
+                echo ""
+
+                # Perform actions for the selected user (if needed)
+                options=("Return to Manage User Menu" "Change User Password")
+
+                if sudo [ -e "$sudoers_file" ]; then
+                    options+=("Enable Sudo Password")
+                else
+                    options+=("Disable Sudo Password")
+                fi
+
+                select_option "${options[@]}"
+                choice=$?
+            elif [ "$manage_action" = "sudopw" ]; then
+                choice=2
             fi
-            select_option "${options[@]}"
-            choice=$?
+
             case $choice in
                 0)
                     manage_user
@@ -1520,8 +1531,8 @@ manage_user() {
                     ;;
                 2)  
                     if sudo [ -e "$sudoers_file" ]; then
-                    sudo rm -rf $sudoers_file
-                    colorecho "$GREEN" "Enabled Sudo Password for $selected_user"
+                        sudo rm -rf $sudoers_file
+                        colorecho "$GREEN" "Enabled Sudo Password for $selected_user"
                     else
                         sudo sh -c "echo '$selected_user ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99_nopasswd_$selected_user"
                         colorecho "$GREEN" "Disabled Sudo Password for $selected_user"
@@ -1864,7 +1875,7 @@ elif [ "$1" = "fan" ]; then
 ### Features - User & Localization ###
 
 elif [ "$1" = "user" ]; then
-    manage_user "$2" "$3"
+    manage_user "$2" "$3" "$4"
 
 elif [ "$1" = "locale" ]; then
     locale "$2" "$3" "$4"
