@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402185
+installerver=2402186
 
 # Define main / dev branch
 branch=dev
@@ -260,12 +260,9 @@ check_installer_updates() {
                 cp -r arch-rock-installer /usr/bin/installer
                 rm -rf arch-rock-installer
                 colorecho "$GREEN" "Installer updated. System will reboot now."
-                
-                if ! reboot --no-wall; then
-                    if ! reboot --force; then
-                        echo "Unable to reboot automatically, please reboot your device manually."
-                    fi
-                fi 
+                if ! reboot --force; then
+                    echo "Unable to reboot automatically, please reboot your device manually."
+                fi
             else
                 # If not running as root
                 sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" arch-rock-installer
@@ -361,12 +358,9 @@ init_setup() {
         answer=$?
         if [ "$answer" = 1 ]; then
             colorecho "$GREEN" "System will reboot now."
-            
-            if ! reboot --no-wall; then
-                if ! reboot --force; then
-                    echo "Unable to reboot automatically, please reboot your device manually."
-                fi
-            fi 
+            if ! reboot --force; then
+                echo "Unable to reboot automatically, please reboot your device manually."
+            fi
         fi
     fi
 
@@ -433,11 +427,8 @@ init_setup() {
     echo "installer" | tee -a /home/$new_username/.bashrc
 
     colorecho "$GREEN" "System will reboot now."
-    
-    if ! reboot --no-wall; then
-        if ! reboot --force; then
-            echo "Unable to reboot automatically, please reboot your device manually."
-        fi
+    if ! reboot --force; then
+        echo "Unable to reboot automatically, please reboot your device manually."
     fi 
 }
 
@@ -476,11 +467,8 @@ if [ -e $compiled_pkg_folder ]; then
             systemctl enable systemd-timesyncd
 
             colorecho "$GREEN" "System will reboot now."
-            
-            if ! reboot --no-wall; then
-                if ! reboot --force; then
-                    echo "Unable to reboot automatically, please reboot your device manually."
-                fi
+            if ! reboot --force; then
+                echo "Unable to reboot automatically, please reboot your device manually."
             fi 
         else
             colorecho "$RED" "Failed to install Required Packages. The image may be broken, try flashing the image again."
