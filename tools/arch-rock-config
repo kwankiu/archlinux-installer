@@ -919,6 +919,9 @@ install_selected_pkg() {
             "code")
                 install_from_source "aur://visual-studio-code-bin"
                 ;;
+            "radxa-imager")
+                install_from_source "https://github.com/rock5-images-repo/radxa-imager.git"
+                ;;
             "kodi")
                 if sudo pacman -Ssy "^kodi-nexus-mpp-git$" &> /dev/null; then 
                     sudo pacman -S kodi-nexus-mpp-git --noconfirm
