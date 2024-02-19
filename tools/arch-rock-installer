@@ -260,9 +260,9 @@ check_installer_updates() {
                 cp -r arch-rock-installer /usr/bin/installer
                 rm -rf arch-rock-installer
                 colorecho "$GREEN" "Installer updated. System will reboot now."
-                systemctl stop systemd-logind
-                if ! reboot; then
-                    if ! systemctl reboot; then
+                
+                if ! reboot --no-wall; then
+                    if ! reboot --force; then
                         echo "Unable to reboot automatically, please reboot your device manually."
                     fi
                 fi 
@@ -361,9 +361,9 @@ init_setup() {
         answer=$?
         if [ "$answer" = 1 ]; then
             colorecho "$GREEN" "System will reboot now."
-            systemctl stop systemd-logind
-            if ! reboot; then
-                if ! systemctl reboot; then
+            
+            if ! reboot --no-wall; then
+                if ! reboot --force; then
                     echo "Unable to reboot automatically, please reboot your device manually."
                 fi
             fi 
@@ -433,9 +433,9 @@ init_setup() {
     echo "installer" | tee -a /home/$new_username/.bashrc
 
     colorecho "$GREEN" "System will reboot now."
-    systemctl stop systemd-logind
-    if ! reboot; then
-        if ! systemctl reboot; then
+    
+    if ! reboot --no-wall; then
+        if ! reboot --force; then
             echo "Unable to reboot automatically, please reboot your device manually."
         fi
     fi 
@@ -476,9 +476,9 @@ if [ -e $compiled_pkg_folder ]; then
             systemctl enable systemd-timesyncd
 
             colorecho "$GREEN" "System will reboot now."
-            systemctl stop systemd-logind
-            if ! reboot; then
-                if ! systemctl reboot; then
+            
+            if ! reboot --no-wall; then
+                if ! reboot --force; then
                     echo "Unable to reboot automatically, please reboot your device manually."
                 fi
             fi 
