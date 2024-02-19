@@ -917,8 +917,9 @@ install_selected_pkg() {
             "kodi")
                 if sudo pacman -Ssy "^kodi-nexus-mpp-git$" &> /dev/null; then 
                     sudo pacman -S kodi-nexus-mpp-git --noconfirm
-                else               
-                    install_from_source "aur://kodi-nexus-mpp-git"
+                    if ! sudo pacman -Qs kodi-nexus-mpp-git > /dev/null ; then
+                        sudo pacman -S kodi-nexus-mpp-git
+                    fi
                 fi
                 ;;
             "intel-ax210-fw")
