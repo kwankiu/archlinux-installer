@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402188
+utilver=2402191
 
 # Define main / dev branch
 branch=dev
@@ -193,6 +193,10 @@ install_from_source() {
     if [[ "$repo_url" == aur://* ]]; then
         package_name="${repo_url#aur://}"
         repo_url="https://aur.archlinux.org/$package_name.git"
+    # If the URL starts with 'gh://', modify the URL to use GitHub repository
+    elif [[ "$repo_url" == gh://* ]]; then
+        ghrepo_name="${repo_url#gh://}"
+        repo_url="https://github.com/$ghrepo_name.git"
     fi
     
     # Clone repo
@@ -920,7 +924,7 @@ install_selected_pkg() {
                 install_from_source "aur://visual-studio-code-bin"
                 ;;
             "radxa-imager")
-                install_from_source "https://github.com/rock5-images-repo/radxa-imager.git"
+                install_from_source "gh://rock5-images-repo/radxa-imager"
                 ;;
             "kodi")
                 if sudo pacman -Ssy "^kodi-nexus-mpp-git$" &> /dev/null; then 
