@@ -407,6 +407,7 @@ init_setup() {
     fi
 
     arch-rock-config user add $new_username
+    arch-rock-config user manage $new_username sudopw
 
     # Prompt user to change the root password
     title "Root account options"
@@ -930,6 +931,7 @@ title "Arch Rock Installer - Installation Finished"
 
 # Detect the current username
 current_username=$(whoami)
+arch-rock-config user manage $current_username sudopw
 
 # Check if "installer" exists in .bashrc
 if sudo grep -q "installer" /home/$current_username/.bashrc; then
