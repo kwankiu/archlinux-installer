@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402192
+utilver=2402193
 
 # Define main / dev branch
 branch=dev
@@ -212,7 +212,8 @@ install_from_source() {
     fi
     
     colorecho "$GREEN" "Compiling & Installing Package from source ..."
-    yes y|makepkg -si
+    yes y|makepkg -s
+    yes y|sudo pacman -U --overwrite \* *.pkg.tar.xz
     
     # Clean Up
     cd "$cpwd"
