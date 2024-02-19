@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402186
+utilver=2402187
 
 # Define main / dev branch
 branch=dev
@@ -1504,9 +1504,6 @@ manage_user() {
                 selected_user=${real_users[$((choice - 2))]}
             fi
 
-            # Check if NOPASSWD File is created
-            sudoers_file="/etc/sudoers.d/99_nopasswd_$selected_user"
-
             if [ -z "$manage_action" ]; then
                 title "Arch Rock Configuration Utility - Manage $selected_user"
                 colorecho "$GREEN" "User: $selected_user"
@@ -1515,7 +1512,7 @@ manage_user() {
                 # Perform actions for the selected user (if needed)
                 options=("Return to Manage User Menu" "Change User Password")
 
-                if sudo [ -e "$sudoers_file" ]; then
+                if sudo -lU "$selected_user" | grep -q NOPASSWD; then
                     options+=("Enable Sudo Password")
                 else
                     options+=("Disable Sudo Password")
@@ -1535,11 +1532,20 @@ manage_user() {
                     sudo passwd "$selected_user"
                     ;;
                 2)  
-                    if sudo [ -e "$sudoers_file" ]; then
-                        sudo rm -rf $sudoers_file
+                    if sudo -lU "$selected_user" | grep -q NOPASSWD; then
+                        sudo sed -i "s/^\($selected_user.*\)NOPASSWD/\1ALL/" /etc/sudoers
                         colorecho "$GREEN" "Enabled Sudo Password for $selected_user"
                     else
-                        echo "$selected_user ALL=(ALL) NOPASSWD: ALL" | sudo tee "/etc/sudoers.d/99_nopasswd_$selected_user" >/dev/null
+                        # NOPASSWD is not set, check if the user exists in sudoers file
+                        if sudo grep -q "^[^#]*$selected_user" /etc/sudoers; then
+                            # User exists, change ALL: ALL to NOPASSWD: ALL
+                            sudo sed -i "s/^\($selected_user.*\)ALL: ALL/\1NOPASSWD: ALL/" /etc/sudoers
+                            echo "Changed $selected_user permissions to NOPASSWD: ALL"
+                        else
+                            # User does not exist, add it to sudoers file
+                            echo "$selected_user ALL=(ALL) NOPASSWD: ALL" | sudo tee -a "/etc/sudoers" >/dev/null
+                            echo "Added $selected_user to sudoers file with NOPASSWD: ALL"
+                        fi
                         colorecho "$GREEN" "Disabled Sudo Password for $selected_user"
                     fi
                     ;;
