@@ -207,7 +207,7 @@ install_from_source() {
     # Compile & Install
     cd "$source_repo_dir"
     
-    if [ ! -z "$2" ]; then
+    if [ ! -z "$2" ] && [ "$2" != "--noinstall" ]; then
         cd "$2"
     fi
     
