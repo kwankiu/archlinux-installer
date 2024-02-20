@@ -213,7 +213,7 @@ install_from_source() {
     
     colorecho "$GREEN" "Compiling & Installing Package from source ..."
     yes y|makepkg -s
-    yes y|sudo pacman -U --overwrite \* *.pkg.tar.xz
+    yes y|sudo pacman -U --overwrite \* *.pkg.tar.*
     
     # Clean Up
     cd "$cpwd"
