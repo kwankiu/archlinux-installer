@@ -49,4 +49,8 @@ rootfs_dir="out/arch-linux-aarch64"
     sudo systemctl restart systemd-binfmt.service
 
     colorecho "$GREEN" "Starting ..."
-    sudo arch-chroot $rootfs_dir
+    if [ -z "$(command -v arch-chroot)" ]; then
+        sudo chroot $rootfs_dir
+    else
+        sudo arch-chroot $rootfs_dir
+    fi
