@@ -1,0 +1,52 @@
+#!/bin/bash
+
+################################################################
+# Tools for formatting / styling
+
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Echo with colors
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+################################################################
+
+rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
+rootfs_dir="out/arch-linux-aarch64"
+
+# Check if qemu-aarch64-static is installed
+    if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
+        colorecho "$YELLOW" "qemu-aarch64-static is not found, trying to install..."
+        # Arch Linux
+        sudo pacman -S qemu-user-static --noconfirm
+    fi
+    if [ -z "$(command -v arch-chroot)" ]; then
+        sudo pacman -S arch-install-scripts --noconfirm
+    fi
+
+# Create directory and get rootfs
+    if [ ! -d $rootfs_dir ]; then
+        sudo mkdir -p $rootfs_dir
+        # Download and extract the latest ArchLinux tarball
+        colorecho "$GREEN" "Downloading Arch Linux AARCH64 rootfs ..."
+        curl -LJO $rootfs_url
+        colorecho "$GREEN" "Extracting Arch Linux AARCH64 rootfs ..."
+        sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $rootfs_dir
+        sudo rm -rf ArchLinuxARM-aarch64-latest.tar.gz
+    fi
+
+    S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
+    S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:CF'
+    echo -n $S1$S2| sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
+    echo
+    sudo systemctl restart systemd-binfmt.service
+
+    colorecho "$GREEN" "Starting ..."
+    sudo arch-chroot $rootfs_dir
