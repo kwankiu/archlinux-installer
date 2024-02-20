@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402194
+utilver=2402195
 
 # Define main / dev branch
 branch=dev
@@ -213,11 +213,15 @@ install_from_source() {
     
     colorecho "$GREEN" "Compiling & Installing Package from source ..."
     makepkg -sA --noconfirm
-    sudo pacman -U --overwrite \* *.pkg.tar.* --noconfirm
+
+    if [ "$2" != "--noinstall" ] && [ "$3" != "--noinstall" ]; then
+        sudo pacman -U --overwrite \* *.pkg.tar.* --noconfirm
     
-    # Clean Up
-    cd "$cpwd"
-    sudo rm -rf ~/"$source_repo_dir"
+        # Clean Up
+        cd "$cpwd"
+        sudo rm -rf ~/"$source_repo_dir"
+    fi 
+
 }
 
 
@@ -1882,6 +1886,13 @@ elif [ "$1" = "install" ]; then
             selection+=("${!i}")
         done
         install_selected_pkg
+    fi
+
+elif [ "$1" = "build" ]; then
+    if [ -z "$3" ]; then
+        install_from_source "$2" "--noinstall"
+    else
+        install_from_source "$2" "$3" "--noinstall"
     fi
 
 elif [ "$1" = "downgrade" ]; then
