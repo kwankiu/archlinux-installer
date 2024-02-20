@@ -619,7 +619,7 @@ kernelpkg=$(echo "$selected_option" | awk '{print $1}')
 pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
 
 if [ "$kernelpkg" = "Install" ]; then
-    read -p "Do you need to compile a kernel from a GitHub repo (answer n will install from pacman instead)? [Y/n]: " compilepkggit
+    read -p "Do you need to compile a kernel from a GitHub repo (answer n to install from pacman instead)? [Y/n]: " compilepkggit
     if [[ $compilepkggit == [Yy]* ]]; then
         read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
         read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
