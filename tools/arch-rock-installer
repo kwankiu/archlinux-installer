@@ -975,7 +975,7 @@ else
     sudo rm -rf /usr/bin/installer
     arch-rock-config user manage $current_username sudopw
     colorecho "$GREEN" "Rebooting system ..."
-    if ! reboot; then
+    if ! sudo systemctl reboot; then
         if ! sudo reboot; then
             echo "Unable to reboot automatically, please reboot your device manually."
         fi
