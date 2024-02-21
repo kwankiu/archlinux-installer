@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402196
+utilver=2402197
 
 # Define main / dev branch
 branch=dev
@@ -29,6 +29,8 @@ armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_l
 
 # URL of Arch Linux ARM Archive
 alaa_url="https://alaa.ad24.cz/"
+
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/kernel"
 
 # Directory for storing source files
 source_repo_dir="source-repo-dir"
@@ -224,7 +226,7 @@ install_from_source() {
 
 }
 
-
+# Install Single Packages from any URL
 install_pkg_from_url() {
     colorecho "$GREEN" "Downloading package from $1 ..."
     curl -LJO $1
@@ -232,6 +234,51 @@ install_pkg_from_url() {
     colorecho "$GREEN" "Installing package $ipkgname ..."
     sudo pacman -U $ipkgname
     rm -rf $ipkgname
+}
+
+# Download Packages from a GitHub Release Repo
+install_ghrel_packages() {
+
+    if [ -z "$1" ]; then
+        colorecho "$RED" "Error: No package specified."
+        exit 1
+    else
+        dgpkg=$1
+    fi
+    
+    ghrel_url=("$adrepo_url")
+    dgpkg_list=()
+
+    for which_url in "${ghrel_url[@]}"; do
+      colorecho "$GREEN" "Fetching $which_url ..."
+      dgpkg_list+=($(curl -s "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
+    done
+
+    echo ""
+    colorecho "$BLUE" "The following packages will be downloaded:"
+    echo ""
+    for url in "${dgpkg_list[@]}"; do
+        selection=$(basename "$url")
+        echo "$selection"
+    done
+    echo ""
+    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
+    read answer
+
+    if [ "$answer" = "y" ]; then
+        for url in "${dgpkg_list[@]}"; do
+            selection=$(basename "$url")
+            echo "Downloading and Installing $selection ..."
+            install_pkg_from_url "$url"
+
+            if [ ! -z "$2" ]; then
+              sudo cp -r $selection $2/$selection
+              sudo rm -rf $selection
+            fi
+
+        done
+    fi
+
 }
 
 ################################################################
@@ -957,8 +1004,11 @@ install_selected_pkg() {
                 elif sudo pacman -Ssy "^${selection[i]}$" &> /dev/null; then
                     colorecho "$GREEN" "Installing ${selection[i]} with pacman ..."
                     sudo pacman -S ${selection[i]} --noconfirm
+                elif pkg_tar=($(echo -e "n" | ghrel_packages "${selection[i]}" | grep '.*pkg.*')); then
+                    colorecho "$GREEN" "Installing ${selection[i]} from adrepo ..."
+                    ghrel_packages "${selection[i]}"
                 else
-                    colorecho "$GREEN"  "Installing ${selection[i]} from AUR ..."
+                    colorecho "$GREEN"  "Compling and Installing ${selection[i]} from AUR ..."
                     install_from_source "aur://${selection[i]}"
                 fi
                 ;;
