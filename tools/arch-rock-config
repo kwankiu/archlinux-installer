@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402203
+utilver=2402204
 
 # Define main / dev branch
 branch=dev
@@ -1550,7 +1550,6 @@ manage_user() {
             sudo usermod -aG power "$new_user"
             sudo usermod -aG scanner "$new_user"
             sudo usermod -aG storage "$new_user"
-            echo "$new_user  hostname =NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl halt,/usr/bin/systemctl reboot" | sudo tee -a "/etc/sudoers" >/dev/null
             ;;
         99)
             if [ -z "$t_user" ]; then
