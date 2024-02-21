@@ -805,7 +805,7 @@ title "Arch Rock Installer - Installing Graphics Acceleration"
 
 title "Arch Rock Installer - Installing Video Acceleration"
 
-    sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
+    sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-rockchip-git --noconfirm
 
 ################################################################
 # Post Installation
