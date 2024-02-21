@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402205
+installerver=2402206
 
 # Define main / dev branch
 branch=dev
@@ -824,9 +824,11 @@ if [ "$install_target" = "rock5" ]; then
     echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
 # Edge 2
 elif [ "$install_target" = "edge2" ]; then
-    # For testing only, blacklist other bluetooth except boardcom just in case 
-    #colorecho "$GREEN" "Applying Bluetooth Fix ..."
-    #echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
+    # For testing, to enable AP6275P bluetooth
+    colorecho "$GREEN" "Applying Bluetooth Fix ..."
+    curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+    sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
+    echo -e "[Unit]\nDescription=AP6275P Bluetooth service\n\n[Service]\nType=simple\nExecStart=/bin/bash -c 'bt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d '\0'); wifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d '\0'); if [[ \${wifi_chip} == \"ap6275p\" && \${bt_status} == \"okay\" ]]; then echo \"Enabling BT from ap6275p...\"; rfkill unblock all; brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 & echo \$! > /var/run/brcm_patchram_plus.pid; else echo \"Error: Your BT ap6275p firmware is probably not loaded\"; echo \"WiFi Chip Info: \${wifi_chip}\"; echo \"BT Status: \${bt_status}\"; fi'\n\n[Install]\nWantedBy=multi-user.target" | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
     # FAN control for Edge 2
     colorecho "$GREEN" "Installing FAN control for Edge 2 ..."
     curl -LJO https://raw.githubusercontent.com/BredOS/sbc-pkgbuilds/main/edge2-post-install/fan.sh
