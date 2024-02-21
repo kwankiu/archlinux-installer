@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402203
+installerver=2402204
 
 # Define main / dev branch
 branch=dev
@@ -816,10 +816,11 @@ sudo pacman -Syyu --noconfirm --ignore linux-aarch64
 # Rock 5
 if [ "$install_target" = "rock5" ]; then
     # The fix for some Bluetooth Modules (A8, AX210, etc.)
-    colorecho "$GREEN" "Applying Bluetooth Fix ..."
-    echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
+    #colorecho "$GREEN" "Applying Bluetooth Fix ..."
+    #echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
     # Disable Sleep
     colorecho "$GREEN" "Disable suspend ..."
+    sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
     echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
 # Edge 2
 elif [ "$install_target" = "edge2" ]; then
@@ -837,6 +838,7 @@ elif [ "$install_target" = "edge2" ]; then
 elif [ "$install_target" = "orangepi5" ]; then
     # Disable Sleep
     colorecho "$GREEN" "Disable suspend ..."
+    sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
     echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
 fi
 
