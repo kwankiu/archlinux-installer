@@ -617,16 +617,21 @@ options=()
 # notes: put the recommended option at first line and mark (Recommended) in Description
 
 if [ "$install_target" = "rock5" ]; then
-    options+=("linux-radxa-rkbsp5-git (7Ji) - (Recommended) Install Linux Radxa BSP Kernel (Linux 5.10.x)")
-    options+=("linux-rockchip-joshua (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
-    options+=("linux-rkbsp (7Ji) - (Experimental) Install Linux RKBSP 6.1 Kernel (Linux 6.1.x)")
+    options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+    options+=("linux-radxa-rkbsp5-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.x)")
 elif [ "$install_target" = "edge2" ]; then
     options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
     options+=("linux-edge2 (BredOS) - Install BredOS Linux Khadas Edge2 Kernel (Linux 5.10.66)")    
-    options+=("linux-rkbsp (7Ji) - (Experimental) Install Linux RKBSP 6.1 Kernel (Linux 6.1.x)")
 elif [ "$install_target" = "orangepi5" ]; then
     options+=("linux-aarch64-orangepi5-git (7Ji) - (Recommended) Install AArch64 vendor kernel for Orange Pi 5/5B/5Plus/5Pro (Linux 5.10.x)")
     options+=("linux-rockchip-joshua (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+fi
+
+if [ "$branch" = "dev" ]; then
+    #options+=("linux-rockchip-joshua-bin (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+    #options+=("linux-aarch64-rc (7Ji) alarm repo - Install Linux Mainline RC Kernel (Linux 6.x-rcx)")
+    #options+=("linux-aarch64 (7Ji) alarm repo - Install Linux Mainline Kernel (Linux 6.x)")
+    options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Linux RKBSP 6.1 Kernel (Linux 6.1.x)")
     options+=("linux-rkbsp (7Ji) - (Experimental) Install Linux RKBSP 6.1 Kernel (Linux 6.1.x)")
 fi
 
