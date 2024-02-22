@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402218
+installerver=2402222
 
 # Define main / dev branch
 branch=main
@@ -19,6 +19,9 @@ install_target="rock5"
 ################################################################
 # Compiled Packages folder path
 compiled_pkg_folder="/usr/lib/compiled-packages"
+
+# Pacman ParallelDownloads
+prldownloads=30
 
 # Language options
 langopt=("Chinese" "English" "Spanish" "French" "German" "Arabic" "Others")
@@ -194,6 +197,9 @@ network_option() {
     fi
 
     echo "Press 's' to skip internet Check (installation may fail)"
+    if [ -x "$(command -v sudo)" ]; then
+        echo "Press 'p' to configure pacman ParallelDownloads (current value: $prldownloads)"
+    fi
     colorecho "$YELLOW" "Waiting for internet connection..."
 
     # Set terminal to non-blocking mode to read single keypress
@@ -251,6 +257,15 @@ network_option() {
                     fi
                 fi
             
+            ;;
+        [pP])
+            if [ -x "$(command -v sudo)" ]; then
+                read -p "Enter a value to set pacman ParallelDownloads to (current value: $prldownloads): " prldownloads
+                network_option
+            else
+                echo "Invalid choice."
+                network_option
+            fi
             ;;
         [sS])
             echo "Skipping internet Check"
@@ -692,7 +707,7 @@ de_options=$?
 title "Arch Rock Installer - Configuring Pacman"
 
     colorecho "$GREEN" "Enabling ParallelDownloads for pacman ..."
-    sudo sed -i 's/^#ParallelDownloads\s*=\s*\([0-9]\{1,3\}\)\?$/ParallelDownloads = 20/' /etc/pacman.conf
+    sudo sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $prldownloads/" /etc/pacman.conf
 
     if [[ -z $addpacmanrepo ]]; then
         echo "Adding $pacmanrepo ..."
@@ -847,39 +862,39 @@ colorecho "$GREEN" "Performing Full System Upgrade ..."
 sudo pacman -Syyu --noconfirm --ignore linux-aarch64
 
 # SBC or Kernel Specfic Post Installation
-# Rock 5
-if [ "$install_target" = "rock5" ]; then
-    # The fix for some Bluetooth Modules (A8, AX210, etc.)
-    #colorecho "$GREEN" "Applying Bluetooth Fix ..."
+if [ "$install_target" = "rock5" ] || [ "$install_target" = "orangepi5" ]; then
+    #colorecho "$GREEN" "Fix: blacklist conflicting bluetooth drivers ..."
     #echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
     # Disable Sleep
     colorecho "$GREEN" "Disable suspend ..."
     sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
     echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
-# Edge 2
-elif [ "$install_target" = "edge2" ]; then
+fi
+
+if [ "$install_target" = "edge2" ]; then
     colorecho "$GREEN" "Fix : Switch WiFi backend to iwd ..."
     sudo mkdir -p /etc/NetworkManager/conf.d
     echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
-    # For testing, to enable AP6275P bluetooth
-    colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
-    curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
-    sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
-    echo -e "[Unit]\nDescription=AP6275P Bluetooth service\n\n[Service]\nType=simple\nExecStart=/bin/bash -c 'bt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d '\0'); wifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d '\0'); if [[ \${wifi_chip} == \"ap6275p\" && \${bt_status} == \"okay\" ]]; then echo \"Enabling BT from ap6275p...\"; rfkill unblock all; brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 & echo \$! > /var/run/brcm_patchram_plus.pid; else echo \"Error: Your BT ap6275p firmware is probably not loaded\"; echo \"WiFi Chip Info: \${wifi_chip}\"; echo \"BT Status: \${bt_status}\"; fi'\n\n[Install]\nWantedBy=multi-user.target" | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
-    sudo systemctl enable bt_ap6275p.service
     # FAN control for Edge 2
     colorecho "$GREEN" "Installing FAN control for Edge 2 ..."
     curl -LJO https://raw.githubusercontent.com/BredOS/sbc-pkgbuilds/main/edge2-post-install/fan.sh
+    sudo chmod +x fan.sh
     sudo mv fan.sh /usr/local/bin/fan.sh
     colorecho "$GREEN" "Creating FAN control service ..."
-    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee -a /usr/lib/systemd/system/fan.service
+    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee -a /usr/lib/systemd/system/fan.service
     sudo systemctl enable fan.service
-# Orange Pi 5
-elif [ "$install_target" = "orangepi5" ]; then
-    # Disable Sleep
-    colorecho "$GREEN" "Disable suspend ..."
-    sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
-    echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
+fi
+
+if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
+    # For testing, to enable AP6275P bluetooth
+    colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
+    curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+    sudo chmod +x brcm_patchram_plus
+    sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
+    echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error: Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info: ${wifi_chip}"\n    echo "BT Status: ${bt_status}"\nfi' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
+    sudo chmod +x /usr/local/bin/bt_ap6275p.sh
+    echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/sudo /usr/local/bin/bt_ap6275p.sh\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
+    sudo systemctl enable bt_ap6275p.service
 fi
 
 # Network Manager, WiFi, Bluetooth
