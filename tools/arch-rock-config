@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402204
+utilver=2402205
 
 # Define main / dev branch
 branch=dev
@@ -926,8 +926,7 @@ install_selected_pkg() {
         case ${selection[i]} in
             "chromium")
                 if sudo pacman -Ssy "^chromium-mpp$" &> /dev/null; then
-                    sudo pacman -S chromium-mpp --noconfirm
-                    #install_pkg_from_url "$alaa_url/packages/r/re2/re2-1%3A20230301-1-aarch64.pkg.tar.xz"
+                    sudo pacman -S chromium-mpp
                     sudo systemctl enable --now libv4l-rkmpp-setup.service
                     # Check if the file /etc/chromium-browser exists
                     if [ ! -e "/etc/chromium-browser" ]; then
