@@ -161,11 +161,19 @@ check_internet() {
                 # NTP Sync for WiFi
                 if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
                     colorecho "$GREEN" "Updating NTP Time Sync ..."
-                    rm -rf /etc/systemd/network/*
-                    systemctl restart systemd-networkd
-                    sleep 1
-                    timedatectl set-ntp false
-                    timedatectl set-ntp true
+                    if [ -x "$(command -v sudo)" ]; then
+                        sudo rm -rf /etc/systemd/network/*
+                        sudo systemctl restart systemd-networkd
+                        sleep 1
+                        sudo timedatectl set-ntp false
+                        sudo timedatectl set-ntp true
+                    else
+                        rm -rf /etc/systemd/network/*
+                        systemctl restart systemd-networkd
+                        sleep 1
+                        timedatectl set-ntp false
+                        timedatectl set-ntp true
+                    fi
                 fi
                 return 0
             else
