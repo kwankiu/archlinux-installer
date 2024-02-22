@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402211
+installerver=2402212
 
 # Define main / dev branch
 branch=dev
@@ -828,6 +828,7 @@ if [ "$install_target" = "rock5" ]; then
 # Edge 2
 elif [ "$install_target" = "edge2" ]; then
     colorecho "$GREEN" "Fix : Switch WiFi backend to iwd ..."
+    sudo mkdir -p /etc/NetworkManager/conf.d
     echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
     # For testing, to enable AP6275P bluetooth
     colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
