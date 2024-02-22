@@ -17,9 +17,6 @@ branch=dev
 install_target="rock5"
 
 ################################################################
-# Define variables
-internet_retry_count=0
-
 # Compiled Packages folder path
 compiled_pkg_folder="/usr/lib/compiled-packages"
 
@@ -152,63 +149,17 @@ title() {
 
 ################################################################
 # Internet Connection Check
-
 check_internet() {
-    colorecho "$YELLOW" "Checking internet connection..."
     servers=("google.com" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile DNS (for China users)
+    #servers=("invalid.example") # debug test case: simulate no internet 
+    #servers=("0.0.0.0") # debug test case: bypass internet
     internet_available=false
-
-    for server in "${servers[@]}"; do
-        if ping -q -c 3 "$server" >/dev/null 2>&1; then
-            colorecho "$GREEN" "Internet is available via $server."
-            internet_available=true
-            break
-        fi
-    done
-
-    if ! "$internet_available"; then
-        if [ "$internet_retry_count" -gt 2 ]; then
-
-            # Check if any network interface is up
-            if ip link show | grep "state UP"; then
-                colorecho "$YELLOW" "Your system has connected to a network, but it does not appear to have an internet connection."
-                colorecho "$RED" "This installer requires an internet connection. Please ensure that you have a proper internet connection."
-                colorecho "$YELLOW" "Warning: Installation may fail or be incomplete if you choose to proceed without an internet connection."
-            else
-                colorecho "$YELLOW" "Your system has not connected to a network."
-                colorecho "$GREEN" "Tip: Sometimes the driver may take time to load. In such cases, simply choose 'Check Internet Again'."
-                colorecho "$GREEN" "Tip: To connect to a WiFi network, select 'Setup / Connect to WiFi'."
-            fi
-            
-            options=("Check Internet Again")
-
-            # Check if there is a Wireless Interface and get the first one
-            for dev in /sys/class/net/*; do
-                if [ -e "$dev"/wireless ]; then
-                    iwdev=${dev##*/};
-                    break;
-                fi
-            done
-            if [ -z "$iwdev" ]; then
-                options+=("Setup / Connect a WiFi (No Wireless Interface found)")
-            else
-                options+=("Setup / Connect a WiFi ($iwdev)")
-            fi
-            
-            options+=("Exit Installer")
-            options+=("Skip Internet Check (installation may fail)")
-            select_option "${options[@]}"
-            answer=$?
-            if [ "$answer" = 0 ]; then
-                check_internet
-            elif [ "$answer" = 1 ]; then
-                if [ -z "$iwdev" ]; then
-                    read -p "Please specify the network device (e.g. wlan0): " iwdev
-                fi
-                if [ -x "$(command -v sudo)" ]; then
-                    sudo wifi-menu $iwdev
-                else
-                    wifi-menu $iwdev
+        for server in "${servers[@]}"; do
+            if ping -q -c 3 "$server" >/dev/null 2>&1; then
+                colorecho "$GREEN" "\n Internet is available via $server."
+                internet_available=true
+                # NTP Sync for WiFi
+                if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
                     colorecho "$GREEN" "Updating NTP Time Sync ..."
                     rm -rf /etc/systemd/network/*
                     systemctl restart systemd-networkd
@@ -216,24 +167,82 @@ check_internet() {
                     timedatectl set-ntp false
                     timedatectl set-ntp true
                 fi
-                check_internet
-            elif [ "$answer" = 2 ]; then
-                echo "Aborted. Exiting ..."
-                exit 1
-            fi
-        else
-            if ip link show | grep "state UP"; then
-                colorecho "$GREEN" "Waiting for internet connection ..."
-                sleep 3
-                colorecho "$GREEN" "Retrying ..."
+                return 0
             else
-                colorecho "$GREEN" "Waiting for network ..."
-                sleep 3
+                return -1
             fi
-            ((internet_retry_count++))
-            check_internet
+        done
+}
+
+network_option() {
+    colorecho "$GREEN" "Network Option:"
+
+    # Check if there is a Wireless Interface and get the first one
+    for dev in /sys/class/net/*; do
+        if [ -e "$dev"/wireless ]; then
+            iwdev=${dev##*/};
+            break;
         fi
+    done
+
+    if [ -z "$iwdev" ]; then
+        echo "Press 'w' to connect to a WiFi network (No wireless interface found)"
+    else
+        echo "Press 'w' to connect to a WiFi network ($iwdev)"
     fi
+
+    echo "Press 's' to skip internet Check (installation may fail)"
+    colorecho "$YELLOW" "Waiting for internet connection..."
+
+    # Set terminal to non-blocking mode to read single keypress
+    stty -echo raw
+
+    # Initialize variables
+    keypress=''
+    last_check=$(date +%s)
+
+    while [ "$keypress" = '' ]; do
+        # Check if it's time to perform internet check
+        current_time=$(date +%s)
+        if [ $((current_time - last_check)) -ge 3 ]; then
+            # Check internet connectivity in the background
+            if check_internet; then
+                netsus=1
+                break
+            fi
+            last_check=$current_time
+        fi
+
+        # Read single keypress with timeout
+        read -t 0.1 -n 1 keypress
+    done
+
+    # Restore terminal settings
+    stty echo -raw
+
+    case $keypress in
+        [wW])
+            echo "Connecting to a WiFi network..."
+            if [ -z "$iwdev" ]; then
+                read -p "Please specify the network device (e.g. wlan0): " iwdev
+            fi
+            if [ -x "$(command -v sudo)" ]; then
+                sudo wifi-menu $iwdev
+            else
+                wifi-menu $iwdev
+            fi
+            network_option
+            ;;
+        [sS])
+            echo "Skipping internet Check"
+            ;;
+        *)
+            if [ -z "$netsus" ]; then
+                echo "Invalid choice."
+                network_option
+            fi
+            ;;
+    esac
 }
 
 # Check Installer Updates
@@ -481,11 +490,8 @@ if [ -e $compiled_pkg_folder ]; then
     fi
 fi
 
-# Check internet connection
-check_internet
-
-# Check Updates
-check_installer_updates
+# Network option menu
+network_option
 
 # Run init setup if not yet done
 if [ ! -e "/usr/bin/arch-rock-config" ]; then 
