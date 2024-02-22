@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402218
+installerver=2402221
 
 # Define main / dev branch
 branch=dev
@@ -19,6 +19,9 @@ install_target="rock5"
 ################################################################
 # Compiled Packages folder path
 compiled_pkg_folder="/usr/lib/compiled-packages"
+
+# Pacman ParallelDownloads
+prldownloads=30
 
 # Language options
 langopt=("Chinese" "English" "Spanish" "French" "German" "Arabic" "Others")
@@ -194,6 +197,9 @@ network_option() {
     fi
 
     echo "Press 's' to skip internet Check (installation may fail)"
+    if [ -x "$(command -v sudo)" ]; then
+        echo "Press 'p' to configure pacman ParallelDownloads (current value: $prldownloads)"
+    fi
     colorecho "$YELLOW" "Waiting for internet connection..."
 
     # Set terminal to non-blocking mode to read single keypress
@@ -251,6 +257,15 @@ network_option() {
                     fi
                 fi
             
+            ;;
+        [pP])
+            if [ -x "$(command -v sudo)" ]; then
+                read -p "Enter a value to set pacman ParallelDownloads to (current value: $prldownloads): " prldownloads
+                network_option
+            else
+                echo "Invalid choice."
+                network_option
+            fi
             ;;
         [sS])
             echo "Skipping internet Check"
@@ -692,7 +707,7 @@ de_options=$?
 title "Arch Rock Installer - Configuring Pacman"
 
     colorecho "$GREEN" "Enabling ParallelDownloads for pacman ..."
-    sudo sed -i 's/^#ParallelDownloads\s*=\s*\([0-9]\{1,3\}\)\?$/ParallelDownloads = 20/' /etc/pacman.conf
+    sudo sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $prldownloads/" /etc/pacman.conf
 
     if [[ -z $addpacmanrepo ]]; then
         echo "Adding $pacmanrepo ..."
@@ -864,8 +879,11 @@ elif [ "$install_target" = "edge2" ]; then
     # For testing, to enable AP6275P bluetooth
     colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
     curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+    sudo chmod +x brcm_patchram_plus
     sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
-    echo -e "[Unit]\nDescription=AP6275P Bluetooth service\n\n[Service]\nType=simple\nExecStart=/bin/bash -c 'bt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d '\0'); wifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d '\0'); if [[ \${wifi_chip} == \"ap6275p\" && \${bt_status} == \"okay\" ]]; then echo \"Enabling BT from ap6275p...\"; rfkill unblock all; brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 & echo \$! > /var/run/brcm_patchram_plus.pid; else echo \"Error: Your BT ap6275p firmware is probably not loaded\"; echo \"WiFi Chip Info: \${wifi_chip}\"; echo \"BT Status: \${bt_status}\"; fi'\n\n[Install]\nWantedBy=multi-user.target" | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
+    echo -e '#!/bin/bash\n\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d '\''\\0'\'')\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d '\''\\0'\'')\n\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error: Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info: ${wifi_chip}"\n    echo "BT Status: ${bt_status}"\nfi\n' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null
+    sudo chmod +x /usr/local/bin/bt_ap6275p.sh
+    echo -e '[Unit]\nDescription=AP6275P Bluetooth service\n\n[Service]\nType=simple\nExecStart=/usr/local/bin/bt_ap6275p.sh\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
     sudo systemctl enable bt_ap6275p.service
     # FAN control for Edge 2
     colorecho "$GREEN" "Installing FAN control for Edge 2 ..."
