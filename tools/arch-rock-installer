@@ -207,6 +207,7 @@ network_option() {
         if [ $((current_time - last_check)) -ge 3 ]; then
             # Check internet connectivity in the background
             if check_internet; then
+                netsus=1
                 break
             fi
             last_check=$current_time
@@ -236,7 +237,10 @@ network_option() {
             echo "Skipping internet Check"
             ;;
         *)
-            echo "Invalid choice."
+            if [ -z "$netsus" ]; then
+                echo "Invalid choice."
+                network_option
+            fi
             ;;
     esac
 }
