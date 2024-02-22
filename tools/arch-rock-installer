@@ -5,13 +5,18 @@
 #                     Arch Rock Installer                      #
 #                                                              #
 ################################################################
+# Version of this script 
+# (For developer : Update whenever there is a change in this file or its related files)
+# format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
+installerver=2402218
+
 # Define main / dev branch
 branch=main
 
-################################################################
-# Define variables
-internet_retry_count=0
+# Target Device for Installation
+install_target="rock5"
 
+################################################################
 # Compiled Packages folder path
 compiled_pkg_folder="/usr/lib/compiled-packages"
 
@@ -137,77 +142,166 @@ title() {
   echo "---------------------------------------------------------------------"
   colorecho "$BLUE" "${text}"
   echo "---------------------------------------------------------------------"
+  if [ "$branch" = "dev" ]; then
+    colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
+  fi
 }
 
 ################################################################
 # Internet Connection Check
-
 check_internet() {
-    colorecho "$YELLOW" "Checking internet connection..."
     servers=("google.com" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile DNS (for China users)
+    #servers=("invalid.example") # debug test case: simulate no internet 
+    #servers=("0.0.0.0") # debug test case: bypass internet
     internet_available=false
+        for server in "${servers[@]}"; do
+            if ping -q -c 3 "$server" >/dev/null 2>&1; then
+                colorecho "$GREEN" "\n Internet is available via $server."
+                internet_available=true
 
-    for server in "${servers[@]}"; do
-        if ping -q -c 3 "$server" >/dev/null; then
-            colorecho "$GREEN" "Internet is available via $server."
-            internet_available=true
-            break
+                return 0
+            else
+                return -1
+            fi
+        done
+}
+
+network_option() {
+    colorecho "$GREEN" "Network Option:"
+
+    # Check if there is a Wireless Interface and get the first one
+    for dev in /sys/class/net/*; do
+        if [ -e "$dev"/wireless ]; then
+            iwdev=${dev##*/};
+            break;
         fi
     done
+    # Check one more time since driver maybe not yet loaded
+    if [ -z "$iwdev" ]; then
+        sleep 3
+        for dev in /sys/class/net/*; do
+            if [ -e "$dev"/wireless ]; then
+                iwdev=${dev##*/};
+                break;
+            fi
+        done
+    fi
 
-    if ! "$internet_available"; then
-        if [ "$internet_retry_count" -gt 3 ]; then
-            colorecho "$YELLOW" "Your system does not appear to have internet connection."
-            colorecho "$RED" "This installer requires internet connection."
-            colorecho "$YELLOW" "Tips: Sometimes the driver takes time to load, in this case just choose Check Internet Again."
-            colorecho "$YELLOW" "Tips: If your device does not have ethernet, or if you prefer using WiFi, choose Setup / Connect a WiFi."
-            colorecho "$YELLOW" "Warning: Installation will fail or incomplete if you choose to Install anyway, ensure that you have a proper internet connection."
-            options=("Check Internet Again")
+    if [ -z "$iwdev" ]; then
+        echo "Press 'w' to connect to a WiFi network (No wireless interface found)"
+    else
+        echo "Press 'w' to connect to a WiFi network ($iwdev)"
+    fi
 
-            # Check if there is a Wireless Interface and get the first one
-            for dev in /sys/class/net/*; do
-                if [ -e "$dev"/wireless ]; then
-                    iwdev=${dev##*/};
-                    break;
-                fi
-            done
+    echo "Press 's' to skip internet Check (installation may fail)"
+    colorecho "$YELLOW" "Waiting for internet connection..."
+
+    # Set terminal to non-blocking mode to read single keypress
+    stty -echo raw
+
+    # Initialize variables
+    keypress=''
+    last_check=$(date +%s)
+
+    while [ "$keypress" = '' ]; do
+        # Check if it's time to perform internet check
+        current_time=$(date +%s)
+        if [ $((current_time - last_check)) -ge 3 ]; then
+            # Check internet connectivity in the background
+            if check_internet; then
+                netsus=1
+                break
+            fi
+            last_check=$current_time
+        fi
+
+        # Read single keypress with timeout
+        read -t 0.1 -n 1 keypress
+    done
+
+    # Restore terminal settings
+    stty echo -raw
+
+    case $keypress in
+        [wW])
+            echo "Connecting to a WiFi network..."
             if [ -z "$iwdev" ]; then
-                options+=("Setup / Connect a WiFi (No Wireless Interface found)")
+                read -p "Please specify the network device (e.g. wlan0): " iwdev
+            fi
+            if [ -x "$(command -v sudo)" ]; then
+                sudo wifi-menu $iwdev
             else
-                options+=("Setup / Connect a WiFi ($iwdev)")
-            fi
-            
-            options+=("Install Anyway (may break)" "Exit Installer")
-            select_option "${options[@]}"
-            answer=$?
-            if [ "$answer" = 0 ]; then
-                check_internet
-            elif [ "$answer" = 1 ]; then
-                if [ -z "$iwdev" ]; then
-                    read -p "Please specify the network device (e.g. wlan0): " iwdev
-                fi
-                if [ -x "$(command -v sudo)" ]; then
-                    sudo wifi-menu $iwdev
-                else
-                    wifi-menu $iwdev
+                wifi-menu $iwdev
+            fi               
+             # NTP Sync for WiFi
+                if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
                     colorecho "$GREEN" "Updating NTP Time Sync ..."
-                    rm -rf /etc/systemd/network/*
-                    systemctl restart systemd-networkd
-                    sleep 1
-                    timedatectl set-ntp false
-                    timedatectl set-ntp true
+                    if [ -x "$(command -v sudo)" ]; then
+                        sudo rm -rf /etc/systemd/network/*
+                        sudo systemctl restart systemd-networkd
+                        sleep 1
+                        sudo timedatectl set-ntp false
+                        sudo timedatectl set-ntp true
+                    else
+                        rm -rf /etc/systemd/network/*
+                        systemctl restart systemd-networkd
+                        sleep 1
+                        timedatectl set-ntp false
+                        timedatectl set-ntp true
+                    fi
                 fi
-                check_internet
-            elif [ "$answer" = 3 ]; then
-                echo "Aborted. Exiting ..."
-                exit 1
+            
+            ;;
+        [sS])
+            echo "Skipping internet Check"
+            ;;
+        *)
+            if [ -z "$netsus" ]; then
+                echo "Invalid choice."
+                network_option
             fi
-        else
-            colorecho "$GREEN" "Waiting for internet connection ..."
-            sleep 3
-            colorecho "$GREEN" "Retrying ..."
-            ((internet_retry_count++))
-            check_internet
+            ;;
+    esac
+}
+
+# Check Installer Updates
+check_installer_updates() {
+    colorecho "$YELLOW" "Checking for installer updates..."
+    remote_installerver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
+    if [ "$remote_installerver" -gt "$installerver" ]; then
+        colorecho "$GREEN" "A newer version ($remote_installerver) of this installer is available, do you want to update this installer?"
+        options=("Update this Installer" "Do not update this installer")
+        select_option "${options[@]}"
+        answer=$?
+        if [ "$answer" = 0 ]; then
+            # Download Installer
+            colorecho "$GREEN" "Downloading Installer ..."
+            curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer
+
+            # Update arch-rock-installer
+            colorecho "$GREEN" "Updating Installer ..."
+            # Check if the script is being run with root privileges
+            if [ $(id -u) -eq 0 ]; then
+                # If running as root
+                sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" arch-rock-installer
+                chmod +x arch-rock-installer
+                cp -r arch-rock-installer /usr/bin/installer
+                rm -rf arch-rock-installer
+                colorecho "$GREEN" "Installer updated. System will reboot now."
+                if ! reboot --force; then
+                    echo "Unable to reboot automatically, please reboot your device manually."
+                fi
+            else
+                # If not running as root
+                sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" arch-rock-installer
+                sudo chmod +x arch-rock-installer
+                sudo cp -r arch-rock-installer /usr/bin/installer
+                sudo rm -rf arch-rock-installer
+                colorecho "$GREEN" "Installer updated. System will reboot now."
+                if ! sudo reboot; then
+                    echo "Unable to reboot automatically, please reboot your device manually."
+                fi
+            fi
         fi
     fi
 }
@@ -291,9 +385,10 @@ init_setup() {
         select_option "${options[@]}"
         answer=$?
         if [ "$answer" = 1 ]; then
-            colorecho "$YELLOW" "Restarting your device ... Unplug / Restart your device manually if it does not reboot automatically."
-            systemctl reboot
-            reboot
+            colorecho "$GREEN" "System will reboot now."
+            if ! reboot --force; then
+                echo "Unable to reboot automatically, please reboot your device manually."
+            fi
         fi
     fi
 
@@ -316,10 +411,6 @@ init_setup() {
     done
     chmod +x arch-rock-config
 
-    colorecho "$GREEN" "Adding 7ji archrepo ..."
-    arch-rock-config add-7ji
-    pacman -Syy
-
     ################################################################
     # User Account
 
@@ -338,6 +429,10 @@ init_setup() {
     fi
 
     arch-rock-config user add $new_username
+    arch-rock-config user manage $new_username sudopw
+
+    hostname=$(hostnamectl --static)
+    echo "$new_username $hostname =NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl halt,/usr/bin/systemctl reboot" | tee -a "/etc/sudoers" >/dev/null
 
     # Prompt user to change the root password
     title "Root account options"
@@ -358,17 +453,14 @@ init_setup() {
         rm -rf /etc/systemd/system/init-setup.service
     fi
 
-    if [ -e $compiled_pkg_folder ]; then 
-        rm -rf $compiled_pkg_folder
-    fi
-
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $new_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo "installer" | tee -a /home/$new_username/.bashrc
 
-    colorecho "$GREEN" "Rebooting..."
-    systemctl reboot
-    reboot
+    colorecho "$GREEN" "System will reboot now."
+    if ! reboot --force; then
+        echo "Unable to reboot automatically, please reboot your device manually."
+    fi 
 }
 
 ################################################################
@@ -396,18 +488,31 @@ title "Welcome to Arch Linux!"
 if [ -e $compiled_pkg_folder ]; then 
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
-        yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.xz --needed
+        if yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.* --needed; then
 
-        # Ensure SSL (Sync Clock)
-        colorecho "$GREEN" "Enabling Time Sync ..."
-        systemctl enable systemd-timesyncd
-        systemctl start systemd-timesyncd
+            echo "Removing packages archives ..."
+            rm -rf $compiled_pkg_folder
+
+            # Ensure SSL (Sync Clock)
+            colorecho "$GREEN" "Enabling Time Sync ..."
+            systemctl enable systemd-timesyncd
+
+            colorecho "$GREEN" "System will reboot now."
+            if ! reboot --force; then
+                echo "Unable to reboot automatically, please reboot your device manually."
+            fi 
+        else
+            colorecho "$RED" "Failed to install Required Packages. The image may be broken, try flashing the image again."
+            sleep 5
+            exit 1
+        fi
     fi
 fi
 
-# Check internet connection
-check_internet
-
+# Network option menu
+network_option
+# Check Updates
+check_installer_updates
 # Run init setup if not yet done
 if [ ! -e "/usr/bin/arch-rock-config" ]; then 
     if [ ! "$1" = "--skip-init-setup" ]; then
@@ -510,17 +615,94 @@ title "Arch Rock Installer - Time Zone"
     fi
 
 ################################################################
+# Select linux kernel
+
+title "Arch Rock Installer - Linux Kernel"
+colorecho "$GREEN" "Select a linux kernel to install :"
+echo
+options=()
+
+# Kernel options for each install target
+# format: kernelpkg (repo) - Description (linux_kernel_version)
+# notes: put the recommended option at first line and mark (Recommended) in Description
+
+if [ "$install_target" = "rock5" ]; then
+    options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+    options+=("linux-radxa-rkbsp5-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.x)")
+elif [ "$install_target" = "edge2" ]; then
+    options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+    options+=("linux-edge2 (BredOS) - Install BredOS Linux Khadas Edge2 Kernel (Linux 5.10.66)")    
+elif [ "$install_target" = "orangepi5" ]; then
+    options+=("linux-aarch64-orangepi5-git (7Ji) - (Recommended) Install AArch64 vendor kernel for Orange Pi 5/5B/5Plus/5Pro (Linux 5.10.x)")
+    options+=("linux-rockchip-joshua (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+fi
+
+if [ "$branch" = "dev" ]; then
+    #options+=("linux-rockchip-joshua-bin (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+    #options+=("linux-aarch64-rc (7Ji) alarm repo - Install Linux Mainline RC Kernel (Linux 6.x-rcx)")
+    #options+=("linux-aarch64 (7Ji) alarm repo - Install Linux Mainline Kernel (Linux 6.x)")
+    options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Linux RKBSP 6.1 Kernel (Linux 6.1.x)")
+    options+=("linux-rkbsp (7Ji) - (Experimental) Install Linux RKBSP 6.1 Kernel (Linux 6.1.x)")
+fi
+
+options+=("Install other kernel (Experimental)")
+select_option "${options[@]}"
+krl_options=$?
+selected_option="${options[$krl_options]}"
+kernelpkg=$(echo "$selected_option" | awk '{print $1}')
+pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
+
+if [ "$kernelpkg" = "Install" ]; then
+    options=("Enter a kernel to install from pacman" "Enter a kernel to install from adrepo" "Compile a kernel from a GitHub repo")
+    select_option "${options[@]}"
+    compilepkggit=$?
+    if [[ $compilepkggit = 2 ]]; then
+        read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
+        read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
+    elif [[ $compilepkggit = 1 ]]; then  
+        read -p "Enter a kernel to install from adrepo (e.g. linux-radxa-rkbsp5-git): " kernelpkg
+    elif [[ $compilepkggit = 0 ]]; then
+        read -p "Enter a kernel to install from pacman (e.g. linux-radxa-rkbsp5-git): " kernelpkg
+    else
+        echo "No option is selected, kernel may not be installed."
+    fi
+    read -p "Enter additional packages to install (e.g. linux-firmware-joshua-git or leave it blank): " firmwarepkg
+    read -p "Do you want to add a pacman repo? [Y/n or 7Ji or BredOS]: " addpacmanrepo
+    if [[ $addpacmanrepo == [Yy]* ]]; then
+        arch-rock-config add-repo
+    elif [[ $addpacmanrepo != [Nn]* ]]; then
+        arch-rock-config add-repo $addpacmanrepo
+    fi
+fi
+
+################################################################
 # Select desktop environment
 
 title "Arch Rock Installer - Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 echo
-
-options=("Gnome" "KDE Plasma" "Budgie" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
-options+=("Skip")
+options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
+options+=("Do not install a Desktop Environment")
 
 select_option "${options[@]}"
 de_options=$?
+
+################################################################
+# Installation begins here
+title "Arch Rock Installer - Configuring Pacman"
+
+    colorecho "$GREEN" "Enabling ParallelDownloads for pacman ..."
+    sudo sed -i 's/^#ParallelDownloads\s*=\s*\([0-9]\{1,3\}\)\?$/ParallelDownloads = 20/' /etc/pacman.conf
+
+    if [[ -z $addpacmanrepo ]]; then
+        echo "Adding $pacmanrepo ..."
+        arch-rock-config add-repo $pacmanrepo
+    fi
+
+    if [[ "$kernelpkg" == *"-edge2"* ]]; then
+        # needed since we added BredOS instead of 7Ji
+        arch-rock-config add-repo 7Ji
+    fi
 
 ################################################################
 # Install Linux Kernel
@@ -528,31 +710,75 @@ de_options=$?
 title "Arch Rock Installer - Installing Linux Kernel"
 
     oldkrlrel=$(uname -r)
-    kernelpkg="linux-radxa-rkbsp5-git"
-    yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
 
-    if sudo pacman -Qs $kernelpkg > /dev/null ; then
-        colorecho "$GREEN" "Removing Old Kernel Modules ..."
-        sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
-    else
-        sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
-        if sudo pacman -Qs $kernelpkg > /dev/null ; then
-            colorecho "$GREEN" "Removing Old Kernel Modules ..."
+    colorecho "$GREEN" "Removing linux-aarch64 ..."
+    yes y|sudo pacman -R linux-aarch64
+    sudo rm -rf /etc/mkinitcpio.d/*
+
+    if [[ -z "$kernelurl" ]]; then
+        if [[ $compilepkggit = 1 ]]; then
+            colorecho "$GREEN" "Installing new kernel (adrepo) ..."
+            echo -e "y"  | arch-rock-config install $kernelpkg
             sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
         else
-            colorecho "$RED" "Error: Failed to Install Linux Kernel"
-            colorecho "$RED" "Installation can not be continued, exiting ..."
-            exit 1
+            colorecho "$GREEN" "Installing new kernel ..."
+            yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
+
+            if sudo pacman -Qs $kernelpkg > /dev/null ; then
+                colorecho "$GREEN" "Removing Old Kernel Modules ..."
+                sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+            else
+                sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
+                if sudo pacman -Qs $kernelpkg > /dev/null ; then
+                    colorecho "$GREEN" "Removing Old Kernel Modules ..."
+                    sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+                else
+                    colorecho "$RED" "Error: Failed to Install Linux Kernel"
+                    colorecho "$RED" "Installation can not be continued, exiting ..."
+                    exit 1
+                fi
+            fi
         fi
+    else
+        colorecho "$GREEN" "Compiling and Installing new kernel from GitHub repo ..."
+        arch-rock-config install "gh://${kernelurl}"
+        sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+        colorecho "$GREEN" "I will pause here 5 seconds for debugging, take a screenshot if you need."
+        sleep 5
     fi
 
-    colorecho "$GREEN" "Installing DKMS Packages ..."
-    arch-rock-config install "r8125-dkms-git" "8852bu-dkms-git" "8852be-dkms-git" 
+    colorecho "$GREEN" "Installing Linux Firmware ..." 
+    if [[ "$kernelpkg" == *"-orangepi"* ]]; then
+        yes y|sudo pacman -S --overwrite \* linux-firmware-orangepi-git mali-valhall-g610-firmware
+    elif [[ "$kernelpkg" == *"-radxa-rkbsp5"* ]]; then
+        colorecho "$GREEN" "Removing linux-firmware-joshua-git ..."
+        yes y|sudo pacman -R linux-firmware-joshua-git
+        colorecho "$GREEN" "Installing DKMS Packages ..."
+        arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
+    elif [[ "$kernelpkg" == *"linux-rkbsp"* ]]; then
+        yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
+    elif [[ "$kernelpkg" == *"-joshua"* ]]; then
+        yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
+    elif [[ "$kernelpkg" == *"-edge2"* ]]; then
+        yes y|sudo pacman -S --overwrite \* ap6275p-firmware mali-valhall-g610-firmware
+    else
+        yes y|sudo pacman -S --overwrite \* $firmwarepkg
+    fi
 
-    colorecho "$YELLOW" "Updating extlinux.conf ..."
-    # apply new extlinux.conf
-    sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+    # Update extlinux.conf
+    colorecho "$YELLOW" "Generating extlinux.conf ..."
 
+    if sudo test -e  "/boot/extlinux/extlinux.arch.template"; then 
+        colorecho "$YELLOW" "Using extlinux.arch.template ..."
+        sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
+    else
+        # Kernel does not provide template, get sbc template
+        colorecho "$YELLOW" "Downloading extlinux template for ${install_target} ..."
+        curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/${install_target}.extlinux.template
+        sudo mv ${install_target}.extlinux.template /boot/extlinux/extlinux.conf
+    fi        
+        
+    colorecho "$YELLOW" "Generating extlinux.conf from template ..."
     # Get rootfs partition from the current mount point "/"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
@@ -560,15 +786,36 @@ title "Arch Rock Installer - Installing Linux Kernel"
     root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
     echo "Root partition UUID: $root_uuid"
 
-    # Change UUID for extlinux.conf
-    colorecho "$GREEN" "Updating UUID for extlinux.conf ..."
-    
+    colorecho "$GREEN" "Updating extlinux.conf ..."
+
+    if [[ "$kernelpkg" == *"linux-rkbsp"* ]]; then
+        if [ "$install_target" = "edge2" ]; then
+            sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs/linux-rockchip-joshua-git|" /boot/extlinux/extlinux.conf
+        fi
+    fi
+
+    # Change pkgbase for extlinux.conf
+    if sudo test ! -e "/boot/dtbs/$kernelpkg"; then 
+        sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
+    fi
+
+    # fix rockchip overlay directory name
+    if sudo test -e "/boot/dtbs/$kernelpkg/rockchip/overlay"; then
+        sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
+    fi
+
+    sudo sed -i "s|%PKGBASE%|$kernelpkg|" /boot/extlinux/extlinux.conf
+
+    # Change UUID for extlinux.conf   
     sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
     sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
 
-    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
-        echo "Done"
+    # Check if /boot is mounted as a partition or directory
+    if mountpoint -q /boot; then
+        colorecho "$GREEN" "/boot is mounted as a partition"
+        colorecho "$GREEN" "Done"
     else
+        colorecho "$GREEN" "/boot is mounted as a directory"
         colorecho "$GREEN" "Updating paths for extlinux.conf ..."
         sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
         sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
@@ -578,18 +825,18 @@ title "Arch Rock Installer - Installing Linux Kernel"
     fi
 
 ################################################################
-# Install Mesa and GPU drivers
+# Install Graphics Acceleration
 
-title "Arch Rock Installer - Installing Mesa and GPU drivers"
+title "Arch Rock Installer - Installing Graphics Acceleration"
 
-    sudo pacman -S mesa-panfork-git --noconfirm
+    sudo pacman -S mesa-panfork-git libmali-valhall-g610-x11-wayland-gbm --noconfirm
 
 ################################################################
 # Install Video Acceleration
 
 title "Arch Rock Installer - Installing Video Acceleration"
 
-    sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-mpp --noconfirm
+    sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-rockchip-git --noconfirm
 
 ################################################################
 # Post Installation
@@ -597,19 +844,47 @@ title "Arch Rock Installer - Installing Video Acceleration"
 title "Arch Rock Installer - Post Installation (Part 1)"
 
 colorecho "$GREEN" "Performing Full System Upgrade ..."
-sudo pacman -Syyu --noconfirm
+sudo pacman -Syyu --noconfirm --ignore linux-aarch64
 
-# The fix for some Bluetooth Modules (A8, AX210, etc.)
-colorecho "$GREEN" "Applying Bluetooth Fix ..."
-echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
+# SBC or Kernel Specfic Post Installation
+# Rock 5
+if [ "$install_target" = "rock5" ]; then
+    # The fix for some Bluetooth Modules (A8, AX210, etc.)
+    #colorecho "$GREEN" "Applying Bluetooth Fix ..."
+    #echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
+    # Disable Sleep
+    colorecho "$GREEN" "Disable suspend ..."
+    sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
+    echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
+# Edge 2
+elif [ "$install_target" = "edge2" ]; then
+    colorecho "$GREEN" "Fix : Switch WiFi backend to iwd ..."
+    sudo mkdir -p /etc/NetworkManager/conf.d
+    echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
+    # For testing, to enable AP6275P bluetooth
+    colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
+    curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+    sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
+    echo -e "[Unit]\nDescription=AP6275P Bluetooth service\n\n[Service]\nType=simple\nExecStart=/bin/bash -c 'bt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d '\0'); wifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d '\0'); if [[ \${wifi_chip} == \"ap6275p\" && \${bt_status} == \"okay\" ]]; then echo \"Enabling BT from ap6275p...\"; rfkill unblock all; brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 & echo \$! > /var/run/brcm_patchram_plus.pid; else echo \"Error: Your BT ap6275p firmware is probably not loaded\"; echo \"WiFi Chip Info: \${wifi_chip}\"; echo \"BT Status: \${bt_status}\"; fi'\n\n[Install]\nWantedBy=multi-user.target" | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
+    sudo systemctl enable bt_ap6275p.service
+    # FAN control for Edge 2
+    colorecho "$GREEN" "Installing FAN control for Edge 2 ..."
+    curl -LJO https://raw.githubusercontent.com/BredOS/sbc-pkgbuilds/main/edge2-post-install/fan.sh
+    sudo mv fan.sh /usr/local/bin/fan.sh
+    colorecho "$GREEN" "Creating FAN control service ..."
+    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee -a /usr/lib/systemd/system/fan.service
+    sudo systemctl enable fan.service
+# Orange Pi 5
+elif [ "$install_target" = "orangepi5" ]; then
+    # Disable Sleep
+    colorecho "$GREEN" "Disable suspend ..."
+    sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
+    echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
+fi
 
 # Network Manager, WiFi, Bluetooth
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
 sudo pacman -S networkmanager iw bluez --noconfirm
-
-# Disable Sleep
-colorecho "$GREEN" "Disable suspend ..."
-echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
 
 ################################################################
 # Install desktop environment
@@ -619,7 +894,7 @@ title "Arch Rock Installer - Install desktop environment"
 # Install desktop environment
 if [ "$de_options" = 0 ]; then
     # Install Gnome
-    colorecho "$GREEN" "Installing Gnome ..."
+    colorecho "$GREEN" "Installing Gnome (Full) ..."
     sudo pacman -S gnome --noconfirm
     #GDM_CONFIG_FILE="/etc/gdm/custom.conf"
     #if [ -f "$GDM_CONFIG_FILE" ]; then
@@ -630,16 +905,26 @@ if [ "$de_options" = 0 ]; then
     #fi
     sudo systemctl enable gdm
 elif [ "$de_options" = 1 ]; then
-    # Install KDE Plasma
-    colorecho "$GREEN" "Installing KDE Plasma ..."
-    sudo pacman -S plasma-desktop sddm --noconfirm
-    sudo systemctl enable sddm
-elif [ "$de_options" = 2 ]; then
-    # Install Budgie
-    colorecho "$GREEN" "Installing Budgie ..."
-    sudo pacman -S budgie-desktop gdm gnome-keyring gnome-control-center gnome-terminal gnome-tweak-tool nautilus --noconfirm
+    # Install Gnome
+    colorecho "$GREEN" "Installing Gnome (Minimal) ..."
+    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-user-dirs --noconfirm
     sudo systemctl enable gdm
+elif [ "$de_options" = 2 ]; then
+    # Install KDE Plasma
+    colorecho "$GREEN" "Installing KDE Plasma (Full) ..."
+    sudo pacman -S plasma-meta sddm kde-applications-meta --noconfirm
+    sudo systemctl enable sddm
 elif [ "$de_options" = 3 ]; then
+    # Install KDE Plasma
+    colorecho "$GREEN" "Installing KDE Plasma (No KDE Apps) ..."
+    sudo pacman -S plasma-meta sddm konsole --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 4 ]; then
+    # Install Budgie
+    colorecho "$GREEN" "Installing Budgie Desktop ..."
+    sudo pacman -S budgie-desktop budgie-desktop-view budgie-backgrounds gdm gnome-keyring gnome-console gnome-disk-utility gnome-tweaks nautilus xdg-user-dirs --noconfirm
+    sudo systemctl enable gdm
+elif [ "$de_options" = 5 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
     sudo pacman -S sway wofi lxappearance qt5ct python-pywal waybar pcmanfm-qt pass dunst swayidle swaylock swaybg xorg-xwayland qt5-wayland foot sddm --noconfirm
@@ -649,37 +934,37 @@ elif [ "$de_options" = 3 ]; then
     sudo install -Dm755 /etc/dunst/dunstrc ~/.config/dunst/dunstrc
     sudo touch ~/.config/waybar/config
     sudo touch ~/.config/wofi/config
-elif [ "$de_options" = 4 ]; then
+elif [ "$de_options" = 6 ]; then
     # Install Cutefish
     colorecho "$GREEN" "Installing Cutefish ..."
     sudo pacman -S cutefish sddm --noconfirm
     sudo systemctl enable sddm
-elif [ "$de_options" = 5 ]; then
+elif [ "$de_options" = 7 ]; then
     # Install Deepin
     colorecho "$GREEN" "Installing Deepin ..."
     sudo pacman -S deepin deepin-extra --noconfirm
     echo -e "greeter-session=lightdm-deepin-greeter" | sudo tee /etc/lightdm/lightdm.conf
-elif [ "$de_options" = 6 ]; then
+elif [ "$de_options" = 8 ]; then
     # Install XFCE
     colorecho "$GREEN" "Installing XFCE ..."
     sudo pacman -S xfce4 xfce4-goodies gdm --noconfirm
     sudo systemctl enable gdm
-elif [ "$de_options" = 7 ]; then
+elif [ "$de_options" = 9 ]; then
     # Install LXQT
     colorecho "$GREEN" "Installing LXQT ..."
     sudo pacman -S lxqt sddm --noconfirm
     sudo systemctl enable sddm
-elif [ "$de_options" = 8 ]; then
+elif [ "$de_options" = 10 ]; then
     # Install LXDE
     colorecho "$GREEN" "Installing LXDE ..."
     sudo pacman -S lxde lxdm-gtk3 --noconfirm
     sudo systemctl enable lxdm
-elif [ "$de_options" = 9 ]; then
+elif [ "$de_options" = 11 ]; then
     # Install MATE
     colorecho "$GREEN" "Installing MATE ..."
     sudo pacman -S mate mate-extra gdm --noconfirm
     sudo systemctl enable gdm
-elif [ "$de_options" = 10 ]; then
+elif [ "$de_options" = 12 ]; then
     # Install Cinnamon
     colorecho "$GREEN" "Installing Cinnamon ..."
     sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-terminal metacity gnome-shell gdm --noconfirm
@@ -724,13 +1009,19 @@ fi
 read -t 5 -p "Changes have been made. We will reboot your system in 5 seconds. Do you want to reboot now? (y/n): " reboot_choice
 
 if [[ "$reboot_choice" == "n" || "$reboot_choice" == "N" ]]; then
+    arch-rock-config user manage $current_username sudopw
     echo "You may manually reboot later to apply the changes."
     echo "To remove this installer, run sudo rm -rf /usr/bin/installer"
 else
     colorecho "$GREEN" "Cleaning up installations ..."
     sudo rm -rf /usr/bin/installer
+    arch-rock-config user manage $current_username sudopw
     colorecho "$GREEN" "Rebooting system ..."
-    sudo reboot
+    if ! sudo systemctl reboot; then
+        if ! sudo reboot; then
+            echo "Unable to reboot automatically, please reboot your device manually."
+        fi
+    fi
 fi
 
 ################################################################

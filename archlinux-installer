@@ -302,15 +302,26 @@ add_wifi_pkg() {
   pkg_tar+=($(echo -e "n" | archarm_packages polkit-1 extra | grep .*pkg.*))
 
   # copy package
-  sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
   for pkg in "${pkg_tar[@]}"; do
     sudo cp -r "$pkg" "$root_mount_dir/usr/lib/compiled-packages"
   done
 
   # Clean up
   sudo rm -rf "${pkg_tar[@]}"
+}
 
-  ls $root_mount_dir/usr/lib/compiled-packages/
+add_pkg() {
+  colorecho "$GREEN" "Downloading $argaddpkg ..."
+  echo -e "y" | ghrel_packages $argaddpkg
+
+  pkg_tar=($(echo -e "n" | ghrel_packages $argaddpkg | grep .*pkg.*))
+
+  for pkg in "${pkg_tar[@]}"; do
+    sudo cp -r "$pkg" "$root_mount_dir/usr/lib/compiled-packages"
+  done
+  
+  # Clean up
+  sudo rm -rf "${pkg_tar[@]}"
 }
 
 install_kernel() {
@@ -455,9 +466,12 @@ for arg in "$@"; do
       echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
       echo "--size=<image_size> : Set disk image size (default is 4G)."
       echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
-      echo "--kernel=<kernel_name> : Create Arch Linux using the specified kernel option."
+      echo "--kernel=<kernel_name> : Set kernel package to get from repo."
+      echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
+      echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
       echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
       echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
+      echo "--sbc=<model_name> : Set Installer Target SBC (install_target), (default is rock5)."
   
       exit 1
       ;;
@@ -487,6 +501,19 @@ for arg in "$@"; do
       ;;
     --kernel=*)
       argkrl="${arg#*=}"
+      colorecho "$GREEN" "Build image with kernel: ${argkrl}"
+      ;;
+    --sbc=*)
+      argsbc="${arg#*=}"
+      colorecho "$GREEN" "Build image for target device: ${argsbc}"
+      ;;
+    --addpkg=*)
+      argaddpkg="${arg#*=}"
+      colorecho "$GREEN" "Get extra packages that matches: ${argaddpkg}"
+      ;;
+    --adrepourl=*)
+      adrepo_url="${arg#*=}"
+      colorecho "$RED" "Using custom package repo at ${adrepo_url}"
       ;;
     --bootpartstart=*)
       argbootptst="${arg#*=}"
@@ -750,7 +777,7 @@ done
     sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
   
   title
-  colorecho "$GREEN" "Updating extlinux.conf ..."
+  colorecho "$GREEN" "Generating extlinux.conf ..."
 
   if [ ! "$argbootpt" = 1 ]; then
     boot_mount_dir=$root_mount_dir/boot
@@ -760,13 +787,30 @@ done
   root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
   root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
 
-  # Copy extlinux template
-  if [ ! -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
+  # Create extlinux.conf
+  if [ -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
+    colorecho "$YELLOW" "Skipped. extlinux.conf already exists."
+  elif [ -e "$boot_mount_dir/extlinux/extlinux.arch.template" ]; then
     sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
+  elif [ ! -z "$argsbc" ]; then
+    colorecho "$GREEN" "Getting ${argsbc}.extlinux.template from repo ..."
+    echo -e "y" | ghrel_packages "${argsbc}.extlinux.template"
+
+    # Check if the extlinux directory exists, create it if it doesn't
+    if [ ! -d "$boot_mount_dir/extlinux" ]; then
+        sudo mkdir -p "$boot_mount_dir/extlinux"
+    fi
+
+    sudo cp -r ${argsbc}.extlinux.template $boot_mount_dir/extlinux/extlinux.conf
+    sudo rm -rf ${argsbc}.extlinux.template
+  else
+    colorecho "$RED" "Error, neither sbc nor extlinux template were specified. Unable to generate extlinux.conf. You may need to create extlinux.conf manually."
   fi
 
-  # Change UUID for extlinux.conf
-  echo "Updating UUID for extlinux.conf ..."
+  echo "Updating extlinux.conf ..."
+  # Update pkgbase for extlinux.conf
+  sudo sed -i "s|%PKGBASE%|$argkrl|" $boot_mount_dir/extlinux/extlinux.conf
+  # Update UUID for extlinux.conf
   sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
   sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
 
@@ -790,6 +834,9 @@ done
   colorecho "$GREEN" "Copying Installer ..."
   sudo chmod +x arch-rock-installer
   sudo cp -r "arch-rock-installer" "$root_mount_dir/usr/bin/installer"
+  if [ ! -z "$argsbc" ]; then
+    sudo sed -i "s/install_target=\"rock5\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer"
+  fi
 
   if [ ! -z "$is_img" ]; then
     colorecho "$GREEN" "Downloading growpart ..."
@@ -799,8 +846,13 @@ done
     sudo cp -r "growpart" "$root_mount_dir/usr/bin/growpart"
   fi
 
-  # Download packages needed to get a WiFi menu / connection
+  # Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
+  sudo mkdir "$root_mount_dir/usr/lib/compiled-packages"
   add_wifi_pkg
+  if [ ! -z "$argaddpkg" ]; then
+    add_pkg
+  fi
+  ls $root_mount_dir/usr/lib/compiled-packages/
 
   # Remove the temporary directory
   sudo rm -rf "$pkg_tar_dir"

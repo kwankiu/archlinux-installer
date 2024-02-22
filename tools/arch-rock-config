@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2309301
+utilver=2402205
 
 # Define main / dev branch
 branch=main
@@ -29,6 +29,8 @@ armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_l
 
 # URL of Arch Linux ARM Archive
 alaa_url="https://alaa.ad24.cz/"
+
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/kernel"
 
 # Directory for storing source files
 source_repo_dir="source-repo-dir"
@@ -193,6 +195,10 @@ install_from_source() {
     if [[ "$repo_url" == aur://* ]]; then
         package_name="${repo_url#aur://}"
         repo_url="https://aur.archlinux.org/$package_name.git"
+    # If the URL starts with 'gh://', modify the URL to use GitHub repository
+    elif [[ "$repo_url" == gh://* ]]; then
+        ghrepo_name="${repo_url#gh://}"
+        repo_url="https://github.com/$ghrepo_name.git"
     fi
     
     # Clone repo
@@ -203,26 +209,76 @@ install_from_source() {
     # Compile & Install
     cd "$source_repo_dir"
     
-    if [ ! -z "$2" ]; then
+    if [ ! -z "$2" ] && [ "$2" != "--noinstall" ]; then
         cd "$2"
     fi
     
     colorecho "$GREEN" "Compiling & Installing Package from source ..."
-    yes y|makepkg -si
+    makepkg -sA --noconfirm
+
+    if [ "$2" != "--noinstall" ] && [ "$3" != "--noinstall" ]; then
+        sudo pacman -U --overwrite \* *.pkg.tar.* --noconfirm
     
-    # Clean Up
-    cd "$cpwd"
-    sudo rm -rf ~/"$source_repo_dir"
+        # Clean Up
+        cd "$cpwd"
+        sudo rm -rf ~/"$source_repo_dir"
+    fi 
+
 }
 
-
+# Install Single Packages from any URL
 install_pkg_from_url() {
     colorecho "$GREEN" "Downloading package from $1 ..."
     curl -LJO $1
     ipkgname=$(basename $1)
     colorecho "$GREEN" "Installing package $ipkgname ..."
-    sudo pacman -U $ipkgname
+    sudo pacman -U --overwrite \* $ipkgname --noconfirm
     rm -rf $ipkgname
+}
+
+# Download Packages from a GitHub Release Repo
+install_ghrel_packages() {
+
+    if [ -z "$1" ]; then
+        colorecho "$RED" "Error: No package specified."
+        exit 1
+    else
+        dgpkg=$1
+    fi
+    
+    ghrel_url=("$adrepo_url")
+    dgpkg_list=()
+
+    for which_url in "${ghrel_url[@]}"; do
+      colorecho "$GREEN" "Fetching $which_url ..."
+      dgpkg_list+=($(curl -s "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
+    done
+
+    echo ""
+    colorecho "$BLUE" "The following packages will be downloaded:"
+    echo ""
+    for url in "${dgpkg_list[@]}"; do
+        selection=$(basename "$url")
+        echo "$selection"
+    done
+    echo ""
+    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
+    read answer
+
+    if [ "$answer" = "y" ]; then
+        for url in "${dgpkg_list[@]}"; do
+            selection=$(basename "$url")
+            echo "Downloading and Installing $selection ..."
+            install_pkg_from_url "$url"
+
+            if [ ! -z "$2" ]; then
+              sudo cp -r $selection $2/$selection
+              sudo rm -rf $selection
+            fi
+
+        done
+    fi
+
 }
 
 ################################################################
@@ -726,7 +782,7 @@ manage_packages() {
     title "Arch Rock Configuration Utility - Manage Packages"
     options=("Install / Update Software - Install Basic Software / RK3588 Specified / Customized Packages")
     options+=("Downgrade Packages - Install / Downgrade any Arch Linux Packages from Archive")
-    options+=("Add 7Ji repo - A pacman repo for pre-built AUR packages for RK3588 and some other SBC")
+    options+=("Add Pacman Repo - Add a repository to archlinux system's package manager (pacman).")
     options+=("Return to Main Menu")
     select_option "${options[@]}"
     choice=$?
@@ -740,7 +796,7 @@ manage_packages() {
             downgrade_packages
             ;;
         2)
-            add_7ji
+            add_repo
             ;;
         *)
             config_options
@@ -870,14 +926,14 @@ install_selected_pkg() {
         case ${selection[i]} in
             "chromium")
                 if sudo pacman -Ssy "^chromium-mpp$" &> /dev/null; then
-                    yes y|sudo pacman -S chromium-mpp
-                    install_pkg_from_url "$alaa_url/packages/r/re2/re2-1%3A20230301-1-aarch64.pkg.tar.xz"
+                    sudo pacman -S chromium-mpp
                     sudo systemctl enable --now libv4l-rkmpp-setup.service
-                    CUSTOM_CMD_TO_RUN="LD_LIBRARY_PATH=/usr/lib/mali-valhall-g610/x11-gbm chromium --use-gl=egl"
-                    add_alias "chromium-mpp"
-                    CUSTOM_CMD_TO_RUN=""
-                    echo "To start Chromium with MPP support, use command chromium-mpp instead of chromium."
-                    sleep 2
+                    # Check if the file /etc/chromium-browser exists
+                    if [ ! -e "/etc/chromium-browser" ]; then
+                        # Create the directory /etc/chromium-browser
+                        sudo mkdir -p "/etc/chromium-browser"
+                    fi
+                    echo -e "# Default settings for chromium-browser. This file is sourced by /bin/sh from\n# /usr/bin/chromium-browser\n\n# Options to pass to chromium-browser\nLD_LIBRARY_PATH=/usr/lib/mali-valhall-g610/x11-wayland-gbm\nCHROMIUM_FLAGS=\"--use-gl=egl\"" | sudo tee /etc/chromium-browser/default >/dev/null
                 else
                     sudo pacman -S chromium --noconfirm
                 fi
@@ -918,11 +974,15 @@ install_selected_pkg() {
             "code")
                 install_from_source "aur://visual-studio-code-bin"
                 ;;
+            "radxa-imager")
+                install_from_source "gh://rock5-images-repo/radxa-imager"
+                ;;
             "kodi")
                 if sudo pacman -Ssy "^kodi-nexus-mpp-git$" &> /dev/null; then 
                     sudo pacman -S kodi-nexus-mpp-git --noconfirm
-                else               
-                    install_from_source "aur://kodi-nexus-mpp-git"
+                    if ! sudo pacman -Qs kodi-nexus-mpp-git > /dev/null ; then
+                        sudo pacman -S kodi-nexus-mpp-git
+                    fi
                 fi
                 ;;
             "intel-ax210-fw")
@@ -937,11 +997,17 @@ install_selected_pkg() {
                 install_from_source "aur://yay-git"
                 ;;
             *)
-                if sudo pacman -Ssy "^${selection[i]}$" &> /dev/null; then
+                if [[ "${selection[i]}" == *"://"* ]]; then
+                    colorecho "$GREEN" "Installing package from ${selection[i]} ..."
+                    install_from_source "${selection[i]}"
+                elif sudo pacman -Ssy "^${selection[i]}$" &> /dev/null; then
                     colorecho "$GREEN" "Installing ${selection[i]} with pacman ..."
                     sudo pacman -S ${selection[i]} --noconfirm
+                elif pkg_tar=($(echo -e "n" | install_ghrel_packages "${selection[i]}" | grep '.*pkg.*')); then
+                    colorecho "$GREEN" "Installing ${selection[i]} from adrepo ..."
+                    install_ghrel_packages "${selection[i]}"
                 else
-                    colorecho "$GREEN"  "Installing ${selection[i]} from AUR ..."
+                    colorecho "$GREEN"  "Compling and Installing ${selection[i]} from AUR ..."
                     install_from_source "aur://${selection[i]}"
                 fi
                 ;;
@@ -981,13 +1047,40 @@ downgrade_packages() {
     install_pkg_from_url ${which_url}${dgpkg_list[choice]}
 }
 
-add_7ji() {
-    colorecho "$GREEN" "Adding 7ji arch repo ..."
-    colorecho "$GREEN" "Adding gpg keys ..."
-    sudo pacman-key --recv-keys BA27F219383BB875
-    sudo pacman-key --lsign BA27F219383BB875
-    colorecho "$GREEN" "Adding server to pacman.conf ..."
-    echo -e "[7Ji]\nServer = https://github.com/7Ji/archrepo/releases/download/\$arch" | sudo tee -a /etc/pacman.conf
+add_repo() {
+    if [ -z "$1" ]; then
+        title "Arch Rock Configuration Utility - Add Pacman Repo"
+        read -p "Enter repo name: " repo_name
+        read -p "Enter server URL for $repo_name repo: " server_url
+        read -p "Do you want to add a GPG key for $repo_name repo? [Y/n]: " add_gpg_key
+        if [[ $add_gpg_key == [Yy]* ]]; then
+            read -p "Enter GPG key for $repo_name repo: " gpg_key
+        fi
+    elif [ "$1" = "7Ji" ]; then
+        server_url="https://github.com/7Ji/archrepo/releases/download/\$arch"
+        gpg_key="BA27F219383BB875"
+    elif [ "$1" = "BredOS" ]; then
+        server_url="https://github.com/BredGang/bred-repo/raw/main/\$repo/\$arch"
+    else
+        colorecho "$RED" "Invalid repo name. Aborting."
+        return 1
+    fi
+
+    if [ -z "$repo_name" ]; then
+        repo_name="$1"
+    fi
+
+    colorecho "$GREEN" "Adding $repo_name to pacman.conf ..."
+
+    if [ -z "$gpg_key" ]; then
+        echo -e "[$repo_name]\nServer = $server_url" | sudo tee -a /etc/pacman.conf
+    else
+        echo -e "[$repo_name]\nSigLevel = Never\nServer = $server_url" | sudo tee -a /etc/pacman.conf
+        colorecho "$GREEN" "Adding GPG keys ..."
+        sudo pacman-key --recv-keys "$gpg_key"
+        sudo pacman-key --lsign "$gpg_key"
+    fi
+
     colorecho "$GREEN" "Updating repo ..."
     sudo pacman -Syy --noconfirm
     colorecho "$GREEN" "Done"
@@ -1432,6 +1525,7 @@ manage_user() {
         t_user=$2
     elif [ "$1" = "manage" ]; then
         selected_user=$2
+        manage_action=$3
     fi
 
     case $choice in
@@ -1473,20 +1567,27 @@ manage_user() {
             if [ -z "$selected_user" ]; then
                 selected_user=${real_users[$((choice - 2))]}
             fi
-            title "Arch Rock Configuration Utility - Manage $selected_user"
-            colorecho "$GREEN" "User: $selected_user"
-            echo ""
 
-            # Perform actions for the selected user (if needed)
-            options=("Return to Manage User Menu" "Change User Password")
-            sudoers_file="/etc/sudoers.d/99_nopasswd_$selected_user"
-            if sudo [ -e "$sudoers_file" ]; then
-                options+=("Enable Sudo Password")
-            else
-                options+=("Disable Sudo Password")
+            if [ -z "$manage_action" ]; then
+                title "Arch Rock Configuration Utility - Manage $selected_user"
+                colorecho "$GREEN" "User: $selected_user"
+                echo ""
+
+                # Perform actions for the selected user (if needed)
+                options=("Return to Manage User Menu" "Change User Password")
+
+                if sudo -lU "$selected_user" | grep -q NOPASSWD; then
+                    options+=("Enable Sudo Password")
+                else
+                    options+=("Disable Sudo Password")
+                fi
+
+                select_option "${options[@]}"
+                choice=$?
+            elif [ "$manage_action" = "sudopw" ]; then
+                choice=2
             fi
-            select_option "${options[@]}"
-            choice=$?
+
             case $choice in
                 0)
                     manage_user
@@ -1495,11 +1596,20 @@ manage_user() {
                     sudo passwd "$selected_user"
                     ;;
                 2)  
-                    if sudo [ -e "$sudoers_file" ]; then
-                    sudo rm -rf $sudoers_file
-                    colorecho "$GREEN" "Enabled Sudo Password for $selected_user"
+                    if sudo -lU "$selected_user" | grep -q NOPASSWD; then
+                        sudo sed -i "s/^\($selected_user.*\)NOPASSWD: ALL/\1ALL/" /etc/sudoers
+                        colorecho "$GREEN" "Enabled Sudo Password for $selected_user"
                     else
-                        sudo sh -c "echo '$selected_user ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99_nopasswd_$selected_user"
+                        # NOPASSWD is not set, check if the user exists in sudoers file
+                        if sudo grep -q "^[^#]*$selected_user ALL" /etc/sudoers; then
+                            # User exists, change (ALL) ALL to (ALL) NOPASSWD: ALL
+                            sudo sed -i "s/^\($selected_user.*\)(ALL) ALL/\1(ALL) NOPASSWD: ALL/" /etc/sudoers
+                            echo "Changed $selected_user permissions to NOPASSWD: ALL"
+                        else
+                            # User does not exist, add it to sudoers file
+                            echo "$selected_user ALL=(ALL) NOPASSWD: ALL" | sudo tee -a "/etc/sudoers" >/dev/null
+                            echo "Added $selected_user to sudoers file with NOPASSWD: ALL"
+                        fi
                         colorecho "$GREEN" "Disabled Sudo Password for $selected_user"
                     fi
                     ;;
@@ -1827,6 +1937,13 @@ elif [ "$1" = "install" ]; then
         install_selected_pkg
     fi
 
+elif [ "$1" = "build" ]; then
+    if [ -z "$3" ]; then
+        install_from_source "$2" "--noinstall"
+    else
+        install_from_source "$2" "$3" "--noinstall"
+    fi
+
 elif [ "$1" = "downgrade" ]; then
     downgrade_packages "$2" "$3"
 
@@ -1840,7 +1957,7 @@ elif [ "$1" = "fan" ]; then
 ### Features - User & Localization ###
 
 elif [ "$1" = "user" ]; then
-    manage_user "$2" "$3"
+    manage_user "$2" "$3" "$4"
 
 elif [ "$1" = "locale" ]; then
     locale "$2" "$3" "$4"
@@ -1857,8 +1974,16 @@ elif [ "$1" = "keyboard" ]; then
 elif [ "$1" = "wifi" ]; then
     wifi_country "$2"
 
+elif [ "$1" = "add-repo" ]; then
+    add_repo "$2"
+
 elif [ "$1" = "add-7ji" ]; then
-    add_7ji
+    echo "Deprecated: use add-repo <repo_name> instead"
+    add_repo "7Ji"
+
+elif [ "$1" = "add-bredrepo" ]; then
+    echo "Deprecated: use add-repo <repo_name> instead"
+    add_repo "BredOS"
 
 ### Main Menu ###
 else
