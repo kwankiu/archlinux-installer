@@ -11,7 +11,7 @@
 installerver=2402218
 
 # Define main / dev branch
-branch=dev
+branch=main
 
 # Target Device for Installation
 install_target="rock5"
