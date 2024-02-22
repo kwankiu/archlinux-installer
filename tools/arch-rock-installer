@@ -17,9 +17,6 @@ branch=dev
 install_target="rock5"
 
 ################################################################
-# Define variables
-internet_retry_count=0
-
 # Compiled Packages folder path
 compiled_pkg_folder="/usr/lib/compiled-packages"
 
@@ -154,7 +151,7 @@ title() {
 # Internet Connection Check
 check_internet() {
     colorecho "$YELLOW" "Checking internet connection..."
-    netservers=("google.com" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile DNS (for China users)
+    servers=("google.com" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile DNS (for China users)
     internet_available=false
 
     while [ "$internet_available" = false ]; do
@@ -162,20 +159,27 @@ check_internet() {
             colorecho "$GREEN" "Connected to Network ... Please wait ..."
         fi
         sleep 3
-        for server in "${netservers[@]}"; do
+        for server in "${servers[@]}"; do
             if ping -q -c 3 "$server" >/dev/null 2>&1; then
                 colorecho "$GREEN" "\n Internet is available via $server."
                 internet_available=true
                 kill -SIGUSR1 "$pid2"  # Send signal to kill network_option
-                (printf "\033[?25h"; stty echo; printf '\n'; exit) < /dev/tty
-                tset
+                #tset # Clear cursor of terminal
+                # NTP Sync for WiFi
+                if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
+                    colorecho "$GREEN" "Updating NTP Time Sync ..."
+                    rm -rf /etc/systemd/network/*
+                    systemctl restart systemd-networkd
+                    sleep 1
+                    timedatectl set-ntp false
+                    timedatectl set-ntp true
+                fi
                 break
             fi
         done
     done
 }
 
-is_wifi=false
 network_option() {
     colorecho "$GREEN" "Tip: Sometimes the driver may take time to load."
     colorecho "$GREEN" "Tip: To connect to a WiFi network, select 'Setup / Connect to WiFi'."
@@ -196,13 +200,12 @@ network_option() {
     fi
 
     #options+=("Skip Internet Check (installation may fail)")
-    (select_option "${options[@]}"; exit) < /dev/tty
+    #(select_option "${options[@]}"; exit) < /dev/tty
     answer=$?
     if [ "$answer" = 0 ]; then
         if [ -z "$iwdev" ]; then
             read -p "Please specify the network device (e.g. wlan0): " iwdev
         fi
-        is_wifi=true
         if [ -x "$(command -v sudo)" ]; then
             sudo wifi-menu $iwdev
         else
@@ -289,14 +292,6 @@ init_setup() {
 
     title "Welcome to Arch Linux!"
     colorecho "$GREEN" "Running Initial System Setup ..."
-
-
-        colorecho "$GREEN" "Updating NTP Time Sync ..."
-        rm -rf /etc/systemd/network/*
-        systemctl restart systemd-networkd
-        sleep 1
-        timedatectl set-ntp false
-        timedatectl set-ntp true
 
     # Check if the script is being run with root privileges
     if [[ $EUID -ne 0 ]]; then
