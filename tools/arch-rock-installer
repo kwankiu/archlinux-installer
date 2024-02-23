@@ -862,20 +862,30 @@ colorecho "$GREEN" "Performing Full System Upgrade ..."
 sudo pacman -Syyu --noconfirm --ignore linux-aarch64
 
 # SBC or Kernel Specfic Post Installation
-# Rock 5
-if [ "$install_target" = "rock5" ]; then
-    # The fix for some Bluetooth Modules (A8, AX210, etc.)
-    #colorecho "$GREEN" "Applying Bluetooth Fix ..."
+if [ "$install_target" = "rock5" ] || [ "$install_target" = "orangepi5" ]; then
+    #colorecho "$GREEN" "Fix: blacklist conflicting bluetooth drivers ..."
     #echo -e "blacklist pgdrv\nblacklist btusb\nblacklist btrtl\nblacklist btbcm\n#blacklist btintel" | sudo tee -a /etc/modprobe.d/blacklist.conf
     # Disable Sleep
     colorecho "$GREEN" "Disable suspend ..."
     sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
     echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
-# Edge 2
-elif [ "$install_target" = "edge2" ]; then
+fi
+
+if [ "$install_target" = "edge2" ]; then
     colorecho "$GREEN" "Fix : Switch WiFi backend to iwd ..."
     sudo mkdir -p /etc/NetworkManager/conf.d
     echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
+    # FAN control for Edge 2
+    colorecho "$GREEN" "Installing FAN control for Edge 2 ..."
+    curl -LJO https://raw.githubusercontent.com/BredOS/sbc-pkgbuilds/main/edge2-post-install/fan.sh
+    sudo chmod +x fan.sh
+    sudo mv fan.sh /usr/local/bin/fan.sh
+    colorecho "$GREEN" "Creating FAN control service ..."
+    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee -a /usr/lib/systemd/system/fan.service
+    sudo systemctl enable fan.service
+fi
+
+if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
     # For testing, to enable AP6275P bluetooth
     colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
     curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
@@ -885,20 +895,6 @@ elif [ "$install_target" = "edge2" ]; then
     sudo chmod +x /usr/local/bin/bt_ap6275p.sh
     echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/sudo /usr/local/bin/bt_ap6275p.sh\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
     sudo systemctl enable bt_ap6275p.service
-    # FAN control for Edge 2
-    colorecho "$GREEN" "Installing FAN control for Edge 2 ..."
-    curl -LJO https://raw.githubusercontent.com/BredOS/sbc-pkgbuilds/main/edge2-post-install/fan.sh
-    sudo chmod +x fan.sh
-    sudo mv fan.sh /usr/local/bin/fan.sh
-    colorecho "$GREEN" "Creating FAN control service ..."
-    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee -a /usr/lib/systemd/system/fan.service
-    sudo systemctl enable fan.service
-# Orange Pi 5
-elif [ "$install_target" = "orangepi5" ]; then
-    # Disable Sleep
-    colorecho "$GREEN" "Disable suspend ..."
-    sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
-    echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
 fi
 
 # Network Manager, WiFi, Bluetooth
