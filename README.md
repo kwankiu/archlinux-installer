@@ -8,17 +8,11 @@ a community-built Arch Linux Installer for ARM (Aarch64) based devices.
 ### Supported devices:
 - Radxa Rock 5 series (Rock 5A and Rock 5B)
 - Orange Pi 5 series ([Needs Testing](https://github.com/kwankiu/archlinux-installer-rock5/discussions))
-- Khadas Edge 2 ([Known Issues](https://github.com/kwankiu/archlinux-installer-rock5/wiki/General#edge2-known-issues))
-
-  
+- Khadas Edge 2 ([Known Issues](https://github.com/kwankiu/archlinux-installer-rock5/wiki/General#known-issues))
 
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
 
-  
-
 # Get the installer
-
-  
 
 ## Flashing images (Recommended)
 
@@ -71,7 +65,6 @@ More details can be found at our [wiki](https://github.com/kwankiu/archlinux-ins
 4. After the installation, you will need to connect to WiFi again.
 
   More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer-rock5/wiki/General#troubleshooting).
-
 
 # Arch Rock Configuration Utility (experimental)
 
