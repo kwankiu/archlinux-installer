@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402221
+installerver=2402222
 
 # Define main / dev branch
 branch=dev
@@ -883,7 +883,7 @@ elif [ "$install_target" = "edge2" ]; then
     sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
     echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error: Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info: ${wifi_chip}"\n    echo "BT Status: ${bt_status}"\nfi' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
     sudo chmod +x /usr/local/bin/bt_ap6275p.sh
-    echo -e '[Unit]\nDescription=AP6275P Bluetooth service\n\n[Service]\nType=simple\nExecStart=/usr/local/bin/bt_ap6275p.sh\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
+    echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=simple\nExecStartPre=/usr/bin/sleep 5\nExecStart=/usr/local/bin/bt_ap6275p.sh\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
     sudo systemctl enable bt_ap6275p.service
     # FAN control for Edge 2
     colorecho "$GREEN" "Installing FAN control for Edge 2 ..."
