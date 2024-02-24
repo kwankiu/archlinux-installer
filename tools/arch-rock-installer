@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402222
+installerver=2402241
 
 # Define main / dev branch
 branch=main
@@ -899,7 +899,11 @@ fi
 
 # Network Manager, WiFi, Bluetooth
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
-sudo pacman -S networkmanager iw bluez --noconfirm
+sudo pacman -S networkmanager iw iwd bluez --noconfirm
+
+# Basic Fonts for Asian Characters and Emoji
+colorecho "$GREEN" "Installing fonts ..."
+sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
 
 ################################################################
 # Install desktop environment
