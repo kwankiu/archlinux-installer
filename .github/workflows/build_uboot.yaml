@@ -23,7 +23,7 @@ jobs:
     steps:
       # Install required packages
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y git device-tree-compiler libncurses5 libncurses5-dev build-essential gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu libssl-dev mtools bc python3 python-is-python3 dosfstools flex bison
+        run: sudo apt-get update && sudo apt-get install -y git device-tree-compiler libncurses5 libncurses5-dev build-essential gcc-13 gcc-13-aarch64-linux-gnu binutils-aarch64-linux-gnu libssl-dev mtools bc python3 python-is-python3 dosfstools flex bison
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
