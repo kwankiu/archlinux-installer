@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - 'u-boot*'
+      - 'u-boot'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -20,16 +21,38 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Install required packages
+      - name: Install dependencies
+      - run: sudo apt update && sudo apt install -y git device-tree-compiler libncurses5 libncurses5-dev build-essential libssl-dev mtools bc python dosfstools flex bison
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
       # Runs a set of commands using the runners shell
-      - name: Build Rock 5B
+      - name: Build U-Boot (Rock 5B Stable)
         run: |
           echo WIP
+          mkdir ~/rk3588-sdk && cd ~/rk3588-sdk
+          git clone -b stable-5.10-rock5 https://github.com/radxa/u-boot.git
+          git clone -b master https://github.com/radxa/rkbin.git
+          git clone -b debian https://github.com/radxa/build.git
+
+          cd ~/rk3588-sdk
+          ./build/mk-uboot.sh rk3588-rock-5b     #For ROCK 5B
+          ls ~/rk3588-sdk/out/u-boot
+          cp -r ~/rk3588-sdk/out/u-boot/idbloader.img idbloader-rock-5b-stable.img
+          cp -r ~/rk3588-sdk/out/u-boot/u-boot.itb u-boot-rock-5b-stable.itb
+
       - uses: ncipollo/release-action@v1
         with:
-            artifacts: "WIP"
+            artifacts: "idbloader-rock-5b-stable.img"
+            makeLatest: false
+            prerelease: false
+            allowUpdates: true
+
+      - uses: ncipollo/release-action@v1
+        with:
+            artifacts: "u-boot-rock-5b-stable.itb"
             makeLatest: false
             prerelease: false
             allowUpdates: true
