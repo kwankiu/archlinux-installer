@@ -31,5 +31,5 @@ jobs:
         with:
             artifacts: "WIP"
             makeLatest: false
-            prerelease: true
+            prerelease: false
             allowUpdates: true
