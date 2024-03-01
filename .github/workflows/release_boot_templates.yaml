@@ -2,6 +2,9 @@ name: Release Boot Templates
 
 # Controls when the workflow will run
 on:
+  push:
+    tags:
+      - 'kernel'
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -21,7 +24,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build Rock 5B
         run: |
-          echo WIP
+          echo $GITHUB_WORKSPACE
       - uses: ncipollo/release-action@v1
         with:
             artifacts: "WIP"
