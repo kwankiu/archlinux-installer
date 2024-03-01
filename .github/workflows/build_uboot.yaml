@@ -27,8 +27,6 @@ jobs:
           echo "deb http://cz.archive.ubuntu.com/ubuntu mantic main" | sudo tee /etc/apt/sources.list.d/temporary-repository.list
           sudo apt-get update
           sudo apt-get install -y gcc-13 gcc-13-aarch64-linux-gnu
-          sudo rm /etc/apt/sources.list.d/temporary-repository.list
-          sudo apt-get update
           sudo apt-get install -y git device-tree-compiler libncurses5 libncurses5-dev build-essential binutils-aarch64-linux-gnu libssl-dev mtools bc python3 python-is-python3 dosfstools flex bison
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
