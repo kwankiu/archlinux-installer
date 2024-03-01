@@ -23,7 +23,7 @@ jobs:
     steps:
       # Install required packages
       - name: Install dependencies
-      - run: sudo apt update && sudo apt install -y git device-tree-compiler libncurses5 libncurses5-dev build-essential libssl-dev mtools bc python dosfstools flex bison
+        run: sudo apt update && sudo apt install -y git device-tree-compiler libncurses5 libncurses5-dev build-essential libssl-dev mtools bc python dosfstools flex bison
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
