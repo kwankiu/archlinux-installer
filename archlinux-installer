@@ -469,6 +469,8 @@ for arg in "$@"; do
       echo "--kernel=<kernel_name> : Set kernel package to get from repo."
       echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
       echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
+      echo "--sbc=<model> : Set an SBC model which will be used to generate extlinux and this variable will also be passed to installer."
+      echo "--ubootpkg=<url> : Flash u-boot to the target disk or image. This takes a u-boot deb package and extract idbloader and uboot from /usr/lib of the package."
       echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
       echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
       echo "--sbc=<model_name> : Set Installer Target SBC (install_target), (default is rock5)."
@@ -514,6 +516,10 @@ for arg in "$@"; do
     --adrepourl=*)
       adrepo_url="${arg#*=}"
       colorecho "$RED" "Using custom package repo at ${adrepo_url}"
+      ;;
+    --ubootpkg=*)
+      arguboot="${arg#*=}"
+      colorecho "$GREEN" "Build image with uboot from: ${arguboot}"
       ;;
     --bootpartstart=*)
       argbootptst="${arg#*=}"
@@ -721,6 +727,37 @@ done
     sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
     sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
     sudo parted $drive set 2 boot on
+  fi
+
+  # Pack u-boot
+  if [ -n "$arguboot" ]; then
+    echo "Flashing u-boot"
+    # Create a temporary directory
+    uboot_extract_dir=$(mktemp -d)
+    
+    # Download the Debian package to the temporary directory
+    if (cd $uboot_extract_dir && curl -L "$arguboot" -o "uboot.deb"); then
+      # Extract the Debian package using ar
+      if ar xv "$uboot_extract_dir/uboot.deb" --output $uboot_extract_dir; then
+        # Extract data.tar.zst from the Debian package
+        if tar -I zstd -xf "$uboot_extract_dir/data.tar.zst" -C "$uboot_extract_dir"; then
+          # Copy idbloader.img and u-boot.itb to destination directory
+          if sudo dd if="$uboot_extract_dir/usr/lib/u-boot/idbloader.img" of="$drive" bs=512 seek=64 && \
+            sudo dd if="$uboot_extract_dir/usr/lib/u-boot/u-boot.itb" of="$drive" bs=512 seek=16384; then
+            # Remove the temporary directory
+            rm -rf "$uboot_extract_dir"
+          else
+            echo "Failed to copy idbloader.img or u-boot.itb to destination directory."
+          fi
+        else
+          echo "Failed to extract data.tar.zst from the Debian package."
+        fi
+      else
+        echo "Failed to extract the Debian package using ar."
+      fi
+    else
+      echo "Failed to download the Debian package."
+    fi
   fi
 
   # Find the partitions
