@@ -5,7 +5,7 @@ on:
   push:
     tags:
       - 'b*'
-      - 'u*r5'
+      - 'd*r5'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
