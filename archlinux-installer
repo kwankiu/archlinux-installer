@@ -731,7 +731,7 @@ done
 
   # Pack u-boot
   if [ -n "$arguboot" ]; then
-    echo "Flashing u-boot"
+    colorecho "$GREEN" "Flashing u-boot ..."
     # Copy idbloader.img and u-boot.itb to destination directory
     sudo dd if="$arguboot/idbloader.img" of="$drive" bs=512 seek=64
     sudo dd if="$arguboot/u-boot.itb" of="$drive" bs=512 seek=16384
