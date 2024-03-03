@@ -25,7 +25,7 @@ jobs:
       
     - name: Build u-boot in Docker
       run: |
-        docker run -it --name fenix -v $(pwd):/home/khadas/fenix \
+        docker run --name fenix -v $(pwd):/home/khadas/fenix \
                    -v /etc/localtime:/etc/localtime:ro \
                    -v /etc/timezone:/etc/timezone:ro \
                    -v $HOME/.ccache:/home/khadas/.ccache --privileged \
