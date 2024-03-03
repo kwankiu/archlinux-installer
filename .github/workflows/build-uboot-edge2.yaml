@@ -42,3 +42,4 @@ jobs:
           makeLatest: false
           prerelease: false
           allowUpdates: true
+          omitBody: true
