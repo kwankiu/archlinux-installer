@@ -1,0 +1,38 @@
+name: Build Edge 2 u-boot
+
+# Controls when the workflow will run
+on:
+  push:
+    tags:
+      - 'u-b*'
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+      
+    - name: Pull Docker image
+      run: docker pull numbqq/fenix:latest
+      
+    - name: Build u-boot in Docker
+      run: |
+        docker run -it --name fenix -v $(pwd):/home/khadas/fenix \
+                   -v /etc/localtime:/etc/localtime:ro \
+                   -v /etc/timezone:/etc/timezone:ro \
+                   -v $HOME/.ccache:/home/khadas/.ccache --privileged \
+                   --device=/dev/loop-control:/dev/loop-control \
+                   --device=/dev/loop0:/dev/loop0 --cap-add SYS_ADMIN \
+                   numbqq/fenix /bin/bash -c "cd /home/khadas/fenix && source env/setenv.sh KHADAS_BOARD=Edge2 --default && make uboot"
+
+    - uses: ncipollo/release-action@v1
+      with:
+          artifacts: "wip"
+          makeLatest: false
+          prerelease: false
+          allowUpdates: true
