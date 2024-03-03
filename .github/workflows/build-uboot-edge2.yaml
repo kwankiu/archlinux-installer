@@ -32,10 +32,11 @@ jobs:
                    --device=/dev/loop-control:/dev/loop-control \
                    --device=/dev/loop0:/dev/loop0 --cap-add SYS_ADMIN \
                    numbqq/fenix /bin/bash -c "cd /home/khadas/fenix && source env/setenv.sh KHADAS_BOARD=Edge2 --default && make uboot"
+        ls -l
 
     - uses: ncipollo/release-action@v1
       with:
-          artifacts: "wip"
+          artifacts: "u*,i*"
           makeLatest: false
           prerelease: false
           allowUpdates: true
