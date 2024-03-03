@@ -732,9 +732,20 @@ done
   # Pack u-boot
   if [ -n "$arguboot" ]; then
     colorecho "$GREEN" "Flashing u-boot ..."
-    # Copy idbloader.img and u-boot.itb to destination directory
-    sudo dd if="$arguboot/idbloader.img" of="$drive" bs=512 seek=64
-    sudo dd if="$arguboot/u-boot.itb" of="$drive" bs=512 seek=16384
+
+    if [ -f "$arguboot/idbloader.img" ] && [ -f "$arguboot/u-boot.itb" ]; then
+        sudo dd if="$arguboot/idbloader.img" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+    elif [ -f "$arguboot/idblock.bin" ] && [ -f "$arguboot/uboot.img" ]; then 
+        sudo dd if="$arguboot/idblock.bin" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/uboot.img" of="$drive" seek=16384 conv=notrunc
+    elif [ -f "$arguboot/tpl-spl.img" ] && [ -f "$arguboot/u-boot.itb" ]; then   
+        sudo dd if="$arguboot/tpl-spl.img" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+    else
+        colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
+    fi
+    
   fi
 
   # Find the partitions

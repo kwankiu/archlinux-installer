@@ -1,4 +1,4 @@
-name: Build Arch Linux Installer for Edge 2
+name: Build Arch Linux Installer for Khadas Edge 2
 
 # Controls when the workflow will run
 on:
@@ -25,9 +25,16 @@ jobs:
       - uses: actions/checkout@v3
 
       # Runs a set of commands using the runners shell
+      - name: Extract U-Boot
+        run: |
+          curl -L https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.2-2017.09_arm64.deb -o uboot.deb
+          ar xv uboot.deb
+          tar -xf data.tar.xz
+          ls -l
+
       - name: Build Image for Edge 2
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=edge2 --addpkg=linux-firmware-joshua-git -c -b --image=edge2-archlinux-installer.img
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=edge2 --addpkg=linux-firmware-joshua-git -c -b --image=edge2-archlinux-installer.img --uboot=usr/lib/u-boot
           cp -r out/edge2-archlinux-installer.img.xz edge2-archlinux-installer.img.xz
 
       - name: Add meta data to Image for Edge 2
@@ -40,7 +47,7 @@ jobs:
              match=BOARD=Edge2 \
              link=https://github.com/kwankiu/archlinux-installer-rock5/wiki \
              duration=250 \
-             desc="Community-built Arch Linux Installer for ARM (Aarch64) with main focus on the Radxa Rock 5 and RK3588"
+             desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for Khadas Edge 2"
         continue-on-error: true
 
       - uses: ncipollo/release-action@v1

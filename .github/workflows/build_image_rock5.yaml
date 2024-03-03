@@ -1,4 +1,4 @@
-name: Build Arch Linux Installer for Rock 5
+name: Build Arch Linux Installer for Radxa Rock 5
 
 # Controls when the workflow will run
 on:
@@ -34,12 +34,12 @@ jobs:
 
       - name: Build Image for Rock 5A
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c -b --image=rock-5a-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5a
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5a-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5a
           cp -r out/rock-5a-archlinux-installer.img.xz rock-5a-archlinux-installer.img.xz
 
       - name: Build Image for Rock 5B
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c -b --image=rock-5b-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5b
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5b-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5b
           cp -r out/rock-5b-archlinux-installer.img.xz rock-5b-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1
