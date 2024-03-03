@@ -32,13 +32,20 @@ jobs:
           tar -xf data.tar.xz
           ls -l
 
-      - name: Build Image
+      - name: Build Image for Rock 5A
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c -b --image=rock-5a-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5a
+          cp -r out/rock-5a-archlinux-installer.img.xz rock-5a-archlinux-installer.img.xz
+
+      - name: Build Image for Rock 5B
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c -b --image=rock-5b-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5b
           cp -r out/rock-5b-archlinux-installer.img.xz rock-5b-archlinux-installer.img.xz
+
       - uses: ncipollo/release-action@v1
         with:
-            artifacts: "rock5-archlinux-installer.img.xz"
+            artifacts: "*-archlinux-installer.img.xz"
             makeLatest: false
             prerelease: true
             allowUpdates: true
+            omitBody: true
