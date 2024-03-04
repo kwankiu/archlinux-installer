@@ -650,6 +650,8 @@ elif [ "$install_target" = "edge2" ]; then
 elif [ "$install_target" = "orangepi5" ]; then
     options+=("linux-aarch64-orangepi5-git (7Ji) - (Recommended) Install AArch64 vendor kernel for Orange Pi 5/5B/5Plus/5Pro (Linux 5.10.x)")
     options+=("linux-rockchip-joshua (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
+elif [ "$install_target" = "zero3" ]; then
+    options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
 fi
 
 if [ "$branch" = "dev" ]; then
