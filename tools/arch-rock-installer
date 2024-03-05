@@ -8,7 +8,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2402282
+installerver=2403041
 
 # Define main / dev branch
 branch=dev
@@ -547,10 +547,70 @@ fi
 ################################################################
 # Time Zone
 
-title "Arch Rock Installer - Language"
+    # Full Language Choice Menu
+    langchoicemenu() {
+        title "Arch Rock Installer - Language (More Options)"
+        select_option "${langopt[@]}" "Skip setting Language"
+        choice=$?
+        if [ "$choice" = 0 ]; then
+            langchoice=("${langchi[@]}") # Chinese
+        elif [ "$choice" = 1 ]; then
+            langchoice=("${langeng[@]}") # English
+        elif [ "$choice" = 2 ]; then
+            langchoice=("${langspa[@]}") # Spanish
+        elif [ "$choice" = 3 ]; then
+            langchoice=("${langfre[@]}") # French
+        elif [ "$choice" = 4 ]; then
+            langchoice=("${langger[@]}") # German
+        elif [ "$choice" = 5 ]; then
+            langchoice=("${langara[@]}") # Arabic
+        elif [ "$choice" = 6 ]; then
+            title "Arch Rock Installer - Language (Others - sort by continents)"
+            select_option "${langcon[@]}"
+            choice=$?
+            if [ "$choice" = 0 ]; then
+                langchoice=("${langconas[@]}") # Asia
+            elif [ "$choice" = 1 ]; then
+                langchoice=("${langconeu[@]}") # Europe
+            elif [ "$choice" = 2 ]; then
+                langchoice=("${langconam[@]}") # Americas
+            elif [ "$choice" = 3 ]; then
+                langchoice=("${langconaf[@]}") # Africa
+            elif [ "$choice" = 4 ]; then
+                langchoice=("${langconother[@]}") # Others
+            fi
+        else
+            return
+        fi
+        title "Arch Rock Installer - Language (More Options)"
+        select_option "${langchoice[@]}"
+        choice=$?
+        title "Arch Rock Installer - Language Setup"
+        read -p "Confirm setting language to ${langchoice[$choice]%% (*} ? [Y/n]:" langcfm
+        if [[ $langcfm == [Yy]* ]]; then
+            arch-rock-config locale generate "${langchoice[$choice]%% (*}" -y
+        else
+            langchoicemenu
+            return
+        fi
+    }
+
+    title "Arch Rock Installer - Language"
 
     lclist=$(arch-rock-config locale list-available)
-    netlang=$(curl -s https://ipapi.co/languages)
+
+    lapicount=0
+    while [ $lapicount -lt 10 ]; do
+        netlang=$(curl -s https://ipapi.co/languages)
+        if echo "$netlang" | grep -q "RateLimited"; then
+            echo "Error"
+            sleep 1
+            lapicount=$((lapicount + 1))
+        else
+            break  # Exit the loop if there's no error
+        fi
+    done
+
     network_lang=()
     IFS=',' read -ra network_lang <<< "$netlang"
     colorecho "$GREEN" "Let's begin with setting up your language, is that right?"
@@ -566,47 +626,12 @@ title "Arch Rock Installer - Language"
     choice=$?
 
     if [ "$choice" = "$sgdindx" ]; then
-        title "Arch Rock Installer - Language (More Options)"
-        select_option "${langopt[@]}"
-        choice=$?
-        if [ "$choice" = 0 ]; then
-            langchoice=("${langchi[@]}") # Chinese
-        elif [ "$choice" = 1 ]; then
-            langchoice=("${langeng[@]}") # English
-        elif [ "$choice" = 2 ]; then
-            langchoice=("${langspa[@]}") # Spanish
-        elif [ "$choice" = 3 ]; then
-            langchoice=("${langfre[@]}") # French
-        elif [ "$choice" = 4 ]; then
-            langchoice=("${langger[@]}") # German
-        elif [ "$choice" = 5 ]; then
-            langchoice=("${langara[@]}") # Arabic
-        else
-            title "Arch Rock Installer - Language (Others - sort by continents)"
-            select_option "${langcon[@]}"
-            choice=$?
-            if [ "$choice" = 0 ]; then
-                langchoice=("${langconas[@]}") # Asia
-            elif [ "$choice" = 1 ]; then
-                langchoice=("${langconeu[@]}") # Europe
-            elif [ "$choice" = 2 ]; then
-                langchoice=("${langconam[@]}") # Americas
-            elif [ "$choice" = 3 ]; then
-                langchoice=("${langconaf[@]}") # Africa
-            elif [ "$choice" = 4 ]; then
-                langchoice=("${langconother[@]}") # Others
-            fi
-        fi
-        title "Arch Rock Installer - Language (More Options)"
-        select_option "${langchoice[@]}"
-        choice=$?
-        echo "Set Language to ${langchoice[$choice]%% (*}"
-        arch-rock-config locale generate ${langchoice[$choice]%% (*} -y
+        langchoicemenu
     elif [ "$choice" -ge "$sgdindx" ]; then
         echo "Skipping ..."
     else
         echo "Set Language to ${options[$choice]}"
-        arch-rock-config locale generate ${options[$choice]} -y
+        arch-rock-config locale generate "${options[$choice]}" -y
     fi
 
 ################################################################
@@ -631,67 +656,78 @@ title "Arch Rock Installer - Time Zone"
 
 ################################################################
 # Select linux kernel
+kernel_menu() {
+    title "Arch Rock Installer - Linux Kernel"
+    colorecho "$GREEN" "Select a linux kernel to install :"
+    colorecho "$GREEN" "  Linux Kernel \t\t Repo \t\t Description \t\t\t Kernel Version"
+    options=()
 
-title "Arch Rock Installer - Linux Kernel"
-colorecho "$GREEN" "Select a linux kernel to install :"
-echo
-options=()
+    # Kernel options for each install target
+    # format: kernelpkg (repo) - Description (linux_kernel_version)
+    # notes: put the recommended option at first line and mark (Recommended) in Description
 
-# Kernel options for each install target
-# format: kernelpkg (repo) - Description (linux_kernel_version)
-# notes: put the recommended option at first line and mark (Recommended) in Description
+    if [ "$install_target" = "rock5" ]; then
+        options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+        options+=("linux-radxa-rkbsp5-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.1xx)")
+        options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.198)")
+    elif [ "$install_target" = "edge2" ]; then
+        options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+        options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.198)")
+    elif [ "$install_target" = "orangepi5" ]; then
+        options+=("linux-aarch64-orangepi5-git (7Ji) - (Recommended) Install AArch64 vendor kernel for Orange Pi 5/5B/5Plus/5Pro (Linux 5.10.1xx)")
+        options+=("linux-rockchip-joshua (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+        options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.198)")
+    elif [ "$install_target" = "zero3" ]; then
+        options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+        options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.198)")
+    fi
 
-if [ "$install_target" = "rock5" ]; then
-    options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
-    options+=("linux-radxa-rkbsp5-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.x)")
-elif [ "$install_target" = "edge2" ]; then
-    options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
-    options+=("linux-edge2 (BredOS) - Install BredOS Linux Khadas Edge2 Kernel (Linux 5.10.66)")    
-elif [ "$install_target" = "orangepi5" ]; then
-    options+=("linux-aarch64-orangepi5-git (7Ji) - (Recommended) Install AArch64 vendor kernel for Orange Pi 5/5B/5Plus/5Pro (Linux 5.10.x)")
-    options+=("linux-rockchip-joshua (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
-elif [ "$install_target" = "zero3" ]; then
-    options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
-fi
+    if [ "$branch" = "dev" ]; then
+        #options+=("linux-aarch64 (alarm) - Install Linux Mainline Kernel (Linux 6.x)")
+        options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+        options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)")
+        #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)")
+        options+=("linux-rkbsp (7Ji) - (Experimental) Install Linux Rockchip 6.1 SDK Kernel (Linux 6.1.43)")
+    fi
 
-if [ "$branch" = "dev" ]; then
-    #options+=("linux-rockchip-joshua-bin (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.x)")
-    #options+=("linux-aarch64-rc (7Ji) alarm repo - Install Linux Mainline RC Kernel (Linux 6.x-rcx)")
-    #options+=("linux-aarch64 (7Ji) alarm repo - Install Linux Mainline Kernel (Linux 6.x)")
-    options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Linux RKBSP 6.1 Kernel (Linux 6.1.x)")
-    options+=("linux-rkbsp (7Ji) - (Experimental) Install Linux RKBSP 6.1 Kernel (Linux 6.1.x)")
-fi
-
-options+=("Install other kernel (Experimental)")
-select_option "${options[@]}"
-krl_options=$?
-selected_option="${options[$krl_options]}"
-kernelpkg=$(echo "$selected_option" | awk '{print $1}')
-pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
-
-if [ "$kernelpkg" = "Install" ]; then
-    options=("Enter a kernel to install from pacman" "Enter a kernel to install from adrepo" "Compile a kernel from a GitHub repo")
+    options+=("(Others) Enter custom kernel options (Experimental)")
     select_option "${options[@]}"
-    compilepkggit=$?
-    if [[ $compilepkggit = 2 ]]; then
-        read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
-        read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
-    elif [[ $compilepkggit = 1 ]]; then  
-        read -p "Enter a kernel to install from adrepo (e.g. linux-radxa-rkbsp5-git): " kernelpkg
-    elif [[ $compilepkggit = 0 ]]; then
-        read -p "Enter a kernel to install from pacman (e.g. linux-radxa-rkbsp5-git): " kernelpkg
-    else
-        echo "No option is selected, kernel may not be installed."
-    fi
-    read -p "Enter additional packages to install (e.g. linux-firmware-joshua-git or leave it blank): " firmwarepkg
-    read -p "Do you want to add a pacman repo? [Y/n or 7Ji or BredOS]: " addpacmanrepo
-    if [[ $addpacmanrepo == [Yy]* ]]; then
-        arch-rock-config add-repo
-    elif [[ $addpacmanrepo != [Nn]* ]]; then
-        arch-rock-config add-repo $addpacmanrepo
-    fi
-fi
+    krl_options=$?
+    selected_option="${options[$krl_options]}"
+    kernelpkg=$(echo "$selected_option" | awk '{print $1}')
+    pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
 
+    if [ "$kernelpkg" = "(Others)" ]; then
+        options=("Install a kernel from pacman")
+        options+=("Install a kernel from adrepo")
+        options+=("Install a kernel from source (using AGR or AUR)")
+        options+=("Return to the upper kernel menu")
+
+        select_option "${options[@]}"
+        compilepkggit=$?
+
+        if [[ $compilepkggit = 0 ]]; then
+            read -p "Enter a kernel to install from pacman (e.g. linux-aarch64): " kernelpkg
+        elif [[ $compilepkggit = 1 ]]; then  
+            read -p "Enter a kernel to install from adrepo (e.g. linux-radxa-rkbsp5-git): " kernelpkg
+        elif [[ $compilepkggit = 2 ]]; then
+            read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
+            read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
+        else
+            #colorecho "$YELLOW" "Warning: No option is selected, kernel may not be installed."
+            kernel_menu
+            return
+        fi
+        read -p "Enter additional packages to install (e.g. linux-firmware-joshua-git or leave it blank): " firmwarepkg
+        read -p "Do you want to add a pacman repo? [Y/n or 7Ji or BredOS]: " addpacmanrepo
+        if [[ $addpacmanrepo == [Yy]* ]]; then
+            arch-rock-config add-repo
+        elif [[ $addpacmanrepo != [Nn]* ]]; then
+            arch-rock-config add-repo $addpacmanrepo
+        fi
+    fi
+}
+kernel_menu
 ################################################################
 # Select desktop environment
 
