@@ -1,14 +1,24 @@
 #!/bin/bash
 
-################################################################
-#                                                              #
-#                     Arch Rock Installer                      #
-#                                                              #
-################################################################
+#################################################################
+#                    _     _      _                             #
+#     /\            | |   | |    (_)                            #
+#    /  \   _ __ ___| |__ | |     _ _ __  _   ___  __           #
+#   / /\ \ | '__/ __| '_ \| |    | | '_ \| | | \ \/ /           #
+#  / ____ \| | | (__| | | | |____| | | | | |_| |>  <            #
+# /_/    \_\_|  \___|_| |_|______|_|_| |_|\__,_/_/\_\ __        #
+#  _____           _        _ _           (  __)/  \(  _ \      #
+# |_   _|         | |      | | |           ) _)(  O ))   /      #
+#   | |  _ __  ___| |_ __ _| | | ___ _ __ (__)  \__/(__\_)      #
+#   | | | '_ \/ __| __/ _` | | |/ _ \ '__|    /__\ (  _ \( \/ ) #
+#  _| |_| | | \__ \ || (_| | | |  __/ |      /    \ )   // \/ \ #
+# |_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/ #
+#                                                               #
+#################################################################
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403041
+installerver=2403042
 
 # Define main / dev branch
 branch=dev
@@ -144,6 +154,29 @@ title() {
   text="$1"
   echo "---------------------------------------------------------------------"
   colorecho "$BLUE" "${text}"
+  echo "---------------------------------------------------------------------"
+  if [ "$branch" = "dev" ]; then
+    colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
+  fi
+}
+
+# Title Logo
+titlelogo() {
+  clear
+  text="$1"
+  echo "---------------------------------------------------------------------"
+  colorecho "$BLUE" "                    _     _      _                  "
+  colorecho "$BLUE" "     /\            | |   | |    (_)                 "
+  colorecho "$BLUE" "    /  \   _ __ ___| |__ | |     _ _ __  _   ___  __"
+  colorecho "$BLUE" "   / /\ \ | '__/ __| '_ \| |    | | '_ \| | | \ \/ /"
+  colorecho "$BLUE" "  / ____ \| | | (__| | | | |____| | | | | |_| |>  < "
+  colorecho "$BLUE" " /_/    \_\_|  \___|_| |_|______|_|_| |_|\__,_/_/\_\ __"
+  colorecho "$BLUE" "  _____           _        _ _           (  __)/  \(  _ \  "
+  colorecho "$BLUE" " |_   _|         | |      | | |           ) _)(  O ))   /  "
+  colorecho "$BLUE" "   | |  _ __  ___| |_ __ _| | | ___ _ __ (__)  \__/(__\_)"
+  colorecho "$BLUE" "   | | | '_ \/ __| __/ _\` | | |/ _ \ '__|    /__\ (  _ \( \/ )"
+  colorecho "$BLUE" "  _| |_| | | \__ \ || (_| | | |  __/ |      /    \ )   // \/ \ "
+  colorecho "$BLUE" " |_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/"
   echo "---------------------------------------------------------------------"
   if [ "$branch" = "dev" ]; then
     colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
@@ -355,7 +388,7 @@ add_boot_part_fstab() {
 
 init_setup() {
 
-    title "Welcome to Arch Linux!"
+    titlelogo
     colorecho "$GREEN" "Running Initial System Setup ..."
 
     # Check if the script is being run with root privileges
@@ -497,7 +530,7 @@ fi
 ################################################################
 # Installer Setup
 
-title "Welcome to Arch Linux!"
+titlelogo
 
 # Pre-init : install compiled packages
 if [ -e $compiled_pkg_folder ]; then 
@@ -537,7 +570,7 @@ fi
 
 # Check if the script is being run with root privileges
 if [[ $EUID -ne 0 ]]; then
-    title "Arch Rock Installer"
+    titlelogo
     colorecho "$GREEN" "Starting Setup ..."
 else
     colorecho "$RED" "Error : Installer must be run as user"
