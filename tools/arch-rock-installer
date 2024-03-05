@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403042
+installerver=2403051
 
 # Define main / dev branch
 branch=dev
@@ -718,7 +718,7 @@ kernel_menu() {
     if [ "$branch" = "dev" ]; then
         #options+=("linux-aarch64 (alarm) - Install Linux Mainline Kernel (Linux 6.x)")
         options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
-        options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)")
+        #options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)")
         #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)")
         options+=("linux-rkbsp (7Ji) - (Experimental) Install Linux Rockchip 6.1 SDK Kernel (Linux 6.1.43)")
     fi
@@ -752,7 +752,7 @@ kernel_menu() {
             return
         fi
         read -p "Enter additional packages to install (e.g. linux-firmware-joshua-git or leave it blank): " firmwarepkg
-        read -p "Do you want to add a pacman repo? [Y/n or 7Ji or BredOS]: " addpacmanrepo
+        read -p "Do you want to add a pacman repo? [Y/n or 7Ji]: " addpacmanrepo
         if [[ $addpacmanrepo == [Yy]* ]]; then
             arch-rock-config add-repo
         elif [[ $addpacmanrepo != [Nn]* ]]; then
@@ -783,11 +783,6 @@ title "Arch Rock Installer - Configuring Pacman"
     if [[ -z $addpacmanrepo ]]; then
         echo "Adding $pacmanrepo ..."
         arch-rock-config add-repo $pacmanrepo
-    fi
-
-    if [[ "$kernelpkg" == *"-edge2"* ]]; then
-        # needed since we added BredOS instead of 7Ji
-        arch-rock-config add-repo 7Ji
     fi
 
 ################################################################
