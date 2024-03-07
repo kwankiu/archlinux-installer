@@ -770,17 +770,13 @@ title "Arch Rock Installer - Installing Linux Kernel"
     colorecho "$GREEN" "Installing Linux Firmware ..." 
     if [[ "$kernelpkg" == *"-orangepi"* ]]; then
         yes y|sudo pacman -S --overwrite \* linux-firmware-orangepi-git mali-valhall-g610-firmware
-    elif [[ "$kernelpkg" == *"-radxa-rkbsp5"* ]]; then
+    elif [[ "$kernelpkg" == *"-radxa"* ]]; then
         colorecho "$GREEN" "Removing linux-firmware-joshua-git ..."
         yes y|sudo pacman -R linux-firmware-joshua-git
         colorecho "$GREEN" "Installing DKMS Packages ..."
         arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
-    elif [[ "$kernelpkg" == *"linux-rkbsp"* ]]; then
-        yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
         yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
-    elif [[ "$kernelpkg" == *"-edge2"* ]]; then
-        yes y|sudo pacman -S --overwrite \* ap6275p-firmware mali-valhall-g610-firmware
     else
         yes y|sudo pacman -S --overwrite \* $firmwarepkg
     fi
