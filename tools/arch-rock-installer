@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403071
+installerver=2403072
 
 # Define main / dev branch
 branch=dev
@@ -719,8 +719,9 @@ kernel_menu() {
         options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
         #options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
         #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
-        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux 6.x)")
-        options+=("linux-joshua-git (7Ji) - Install Linux Mainline Kernel with patches for rk3588 devices with linux-git trunk of Joshua (Linux 6.x)")
+        options+=("linux-joshua-git (7Ji) - Install Linux Mainline Kernel with patches for rk3588 devices with linux-git trunk of Joshua (Linux 6.7.0)")
+        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux 6.x latest)")
+        options+=("linux-aarch64 (7Ji) - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux 6.x latest)")
     fi 
 
     options+=("(Others) Enter custom kernel options (Experimental)")
@@ -792,9 +793,11 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
     oldkrlrel=$(uname -r)
 
-    colorecho "$GREEN" "Removing linux-aarch64 ..."
-    yes y|sudo pacman -R linux-aarch64
-    sudo rm -rf /etc/mkinitcpio.d/*
+    if [[ "$kernelpkg" != "linux-aarch64" ]]; then
+        colorecho "$GREEN" "Removing linux-aarch64 ..."
+        yes y|sudo pacman -R linux-aarch64
+        sudo rm -rf /etc/mkinitcpio.d/*
+    fi
 
     if [[ -z "$kernelurl" ]]; then
         if [[ $compilepkggit = 1 ]]; then
@@ -830,16 +833,18 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Firmware ..." 
     if [[ "$kernelpkg" == *"-orangepi"* ]]; then
-        yes y|sudo pacman -S --overwrite \* linux-firmware-orangepi-git mali-valhall-g610-firmware
+        yes y|sudo pacman -S linux-firmware-orangepi-git mali-valhall-g610-firmware
     elif [[ "$kernelpkg" == *"-radxa"* ]]; then
         colorecho "$GREEN" "Removing linux-firmware-joshua-git ..."
         yes y|sudo pacman -R linux-firmware-joshua-git
         colorecho "$GREEN" "Installing DKMS Packages ..."
         arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
-        yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
+        yes y|sudo pacman -S linux-firmware-joshua-git mali-valhall-g610-firmware
+    elif [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+        yes y|sudo pacman -S linux-firmware-joshua-git mali-valhall-g610-firmware
     else
-        yes y|sudo pacman -S --overwrite \* $firmwarepkg
+        yes y|sudo pacman -S $firmwarepkg
     fi
 
     # Update extlinux.conf
@@ -900,14 +905,34 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
 title "Arch Rock Installer - Installing Graphics Acceleration"
 
-    sudo pacman -S mesa-panfork-git libmali-valhall-g610-x11-wayland-gbm --noconfirm
+    if sudo pacman -Ssy "mesa-panfork-git" &> /dev/null; then
+        sudo pacman -S mesa-panfork-git libmali-valhall-g610-x11-wayland-gbm --noconfirm
+    else
+        sudo pacman -S mesa --noconfirm
+    fi
 
 ################################################################
 # Install Video Acceleration
 
 title "Arch Rock Installer - Installing Video Acceleration"
 
-    sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-rockchip-git --noconfirm
+    if sudo pacman -Ssy "mpp-git" &> /dev/null; then
+        sudo pacman -S mpp-git --noconfirm
+    elif sudo pacman -Ssy "mpp" &> /dev/null; then
+        sudo pacman -S mpp --noconfirm
+    fi
+
+    if sudo pacman -Ssy "ffmpeg4.4-mpp" &> /dev/null; then
+        sudo pacman -S ffmpeg4.4-mpp --noconfirm   
+    fi
+
+    if sudo pacman -Ssy "ffmpeg-rockchip-git" &> /dev/null; then
+        sudo pacman -S ffmpeg-rockchip-git --noconfirm
+    elif sudo pacman -Ssy "ffmpeg-mpp-git" &> /dev/null; then
+        sudo pacman -S ffmpeg-mpp-git --noconfirm
+    else
+        sudo pacman -S ffmpeg--noconfirm
+    fi
 
 ################################################################
 # Post Installation
@@ -915,7 +940,10 @@ title "Arch Rock Installer - Installing Video Acceleration"
 title "Arch Rock Installer - Post Installation (Part 1)"
 
 colorecho "$GREEN" "Performing Full System Upgrade ..."
-sudo pacman -Syyu --noconfirm --ignore linux-aarch64
+
+if [[ "$kernelpkg" != "linux-aarch64" ]]; then
+    sudo pacman -Syyu --noconfirm --ignore linux-aarch64
+fi
 
 # SBC or Kernel Specfic Post Installation
 if [ "$install_target" = "rock5" ] || [ "$install_target" = "orangepi5" ]; then
