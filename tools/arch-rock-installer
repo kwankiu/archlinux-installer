@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403051
+installerver=2403071
 
 # Define main / dev branch
 branch=dev
@@ -699,29 +699,29 @@ kernel_menu() {
     # format: kernelpkg (repo) - Description (linux_kernel_version)
     # notes: put the recommended option at first line and mark (Recommended) in Description
 
-    if [ "$install_target" = "rock5" ]; then
-        options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-radxa-rkbsp5-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.1xx)")
-        options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.198)")
-    elif [ "$install_target" = "edge2" ]; then
-        options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.198)")
-    elif [ "$install_target" = "orangepi5" ]; then
-        options+=("linux-aarch64-orangepi5-git (7Ji) - (Recommended) Install AArch64 vendor kernel for Orange Pi 5/5B/5Plus/5Pro (Linux 5.10.1xx)")
-        options+=("linux-rockchip-joshua (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.198)")
-    elif [ "$install_target" = "zero3" ]; then
-        options+=("linux-rockchip-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-rockchip-joshua-git (7Ji) - Install Joshua Linux Rockchip Kernel (Linux 5.10.198)")
-    fi
-
-    if [ "$branch" = "dev" ]; then
-        #options+=("linux-aarch64 (alarm) - Install Linux Mainline Kernel (Linux 6.x)")
-        options+=("linux-rkbsp-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
-        #options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)")
-        #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)")
-        options+=("linux-rkbsp (7Ji) - (Experimental) Install Linux Rockchip 6.1 SDK Kernel (Linux 6.1.43)")
-    fi
+    if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+        options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+    else
+        options+=("linux-aarch64 (alarm) - Install Linux Mainline Kernel (Linux 6.x)")
+    fi 
+ 
+    if [ "$install_target" = "rock5" ]; then 
+        options+=("linux-radxa-rkbsp5-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108) (will be changed to linux-aarch64-rockchip-bsp5.10-radxa-git soon)")
+        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108) (so try this if the above one doesnt work)")
+    fi 
+ 
+    if [ "$install_target" = "orangepi5" ]; then
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji) - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji) - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
+    fi 
+ 
+    if [ "$branch" = "dev" ]; then 
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+        #options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
+        #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
+        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux 6.x)")
+        options+=("linux-joshua-git (7Ji) - Install Linux Mainline Kernel with patches for rk3588 devices with linux-git trunk of Joshua (Linux 6.x)")
+    fi 
 
     options+=("(Others) Enter custom kernel options (Experimental)")
     select_option "${options[@]}"
