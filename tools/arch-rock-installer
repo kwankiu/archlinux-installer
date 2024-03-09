@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403081
+installerver=2403082
 
 # Define main / dev branch
 branch=dev
@@ -1090,8 +1090,8 @@ sudo systemctl start bluetooth.service
 ################################################################
 # Install additional packages
 
-colorecho "$GREEN" "Starting additional packages installer ..."
-arch-rock-config install --installer
+#colorecho "$GREEN" "Starting additional packages installer ..."
+#arch-rock-config install --installer
 
 ################################################################
 # Installation clean up
