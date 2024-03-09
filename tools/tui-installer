@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-99 count on updates commited on the same day)
-installerver=24030801
+installerver=24030802
 
 # Define main / dev branch
 branch=dev
@@ -274,6 +274,7 @@ select_option() {
         #echo 'Closed menu without choice'
         #;;
     *)
+        titlelogo 
         select_option_cli "$@"
         ;;
     esac
@@ -418,7 +419,7 @@ check_installer_updates() {
         colorecho "$GREEN" "A newer version ($remote_installerver) of this installer is available, do you want to update this installer?"
         # TUI
         menu_header="Installer Updates Available"
-        menu_option_title="\Z3A newer version ($remote_installerver) of this installer is available, do you want to update this installer?\Zn"
+        menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available, do you want to update this installer?\Zn"
 
         options=("Update this Installer" "Do not update this installer")
         select_option "${options[@]}"
