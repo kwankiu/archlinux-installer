@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403083
+installerver=2403084
 
 # Define main / dev branch
 branch=dev
@@ -816,14 +816,15 @@ title "Arch Rock Installer - Installing Linux Kernel"
                     colorecho "$GREEN" "Removing Old Kernel Modules ..."
                     sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
                 else
-                    colorecho "$RED" "Error: Failed to Install Linux Kernel"
-                    colorecho "$RED" "Installation can not be continued, exiting ..."
+                    colorecho "$RED" "Error: The required linux kernel package is not installed."
+                    colorecho "$YELLOW" "Tip: Sometimes it happens when a pacman repo maintainence is in progress, please try again later."
+                    colorecho "$RED" "Installation can not be continued, exiting ... (enter the command installer to start again)"
                     exit 1
                 fi
             fi
         else
             colorecho "$RED" "Error: Package not found. Failed to Install Linux Kernel."
-            colorecho "$RED" "Installation can not be continued, exiting ..."
+            colorecho "$RED" "Installation can not be continued, exiting ... (enter the command installer to start again)"
             exit 1
         fi
     else
@@ -1030,8 +1031,8 @@ elif [ "$de_options" = 3 ]; then
 elif [ "$de_options" = 4 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie Desktop ..."
-    sudo pacman -S budgie-desktop budgie-desktop-view budgie-backgrounds budgie-extras papirus-icon-theme gdm gnome-keyring gnome-console gnome-disk-utility gnome-tweaks nautilus xdg-user-dirs --noconfirm
-    sudo systemctl enable gdm
+    sudo pacman -S budgie lightdm-gtk-greeter arc-gtk-theme papirus-icon-theme gnome-console gnome-disk-utility nautilus --noconfirm
+    sudo systemctl enable lightdm
 elif [ "$de_options" = 5 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
@@ -1050,8 +1051,8 @@ elif [ "$de_options" = 6 ]; then
 elif [ "$de_options" = 7 ]; then
     # Install XFCE
     colorecho "$GREEN" "Installing XFCE ..."
-    sudo pacman -S xfce4 xfce4-goodies sddm --noconfirm
-    sudo systemctl enable sddm
+    sudo pacman -S xfce4 xfce4-goodies lightdm-gtk-greeter lightdm-gtk-greeter-settings capitaine-cursors arc-gtk-theme leafpad galculator xdg-user-dirs-gtk --noconfirm
+    sudo systemctl enable lightdm
 elif [ "$de_options" = 8 ]; then
     # Install LXQT
     colorecho "$GREEN" "Installing LXQT ..."
