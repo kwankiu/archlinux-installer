@@ -85,6 +85,21 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;36m'
 NC='\033[0m' # No Color
 
+# Sudo override
+sudo () {
+    local command=$@
+    if [ "$(id -u)" -eq 0 ]; then
+        #echo "Running in root."
+        command "$@"
+    else
+        #echo "Running with sudo."
+        command sudo "$@"
+    fi
+}
+
+# Dialog override for debugging CLI Fallback
+# dialog () { return 1; }
+
 # Echo with colors
 colorecho() {
     color="$1"
@@ -172,7 +187,7 @@ EOF
 # CLI Select Menu
 function select_option_cli {
 
-    # little helpers for terminal print control and key input
+    # Little helpers for terminal print control and key input
     ESC=$( printf "\033")
     cursor_blink_on()  { printf "$ESC[?25h"; }
     cursor_blink_off() { printf "$ESC[?25l"; }
@@ -185,32 +200,35 @@ function select_option_cli {
                          if [[ $key = $ESC[B ]]; then echo down;  fi
                          if [[ $key = ""     ]]; then echo enter; fi; }
 
-    # initially print empty new lines (scroll down if at bottom of screen)
+    # Initially print empty new lines (scroll down if at bottom of screen)
     for opt; do printf "\n"; done
 
-    # determine current screen position for overwriting the options
+    # Determine current screen position for overwriting the options
     local lastrow=`get_cursor_row`
     local startrow=$(($lastrow - $#))
 
-    # ensure cursor and input echoing back on upon a ctrl+c during read -s
+    # Ensure cursor and input echoing back on upon a ctrl+c during read -s
     trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
     cursor_blink_off
 
     local selected=0
     while true; do
-        # print options by overwriting the last lines
+        # Print options by overwriting the last lines
         local idx=0
+        local max_width=$(tput cols)
         for opt; do
             cursor_to $(($startrow + $idx))
+            local formatted_opt="$((idx + 1)) \t $opt"
+            local formatted_opt=$(echo "$formatted_opt" | cut -c1-$((max_width - 3)))
             if [ $idx -eq $selected ]; then
-                print_selected "$opt"
+                print_selected "$formatted_opt"
             else
-                print_option "$opt"
+                print_option "$formatted_opt"
             fi
             ((idx++))
         done
 
-        # user key control
+        # User key control
         case `key_input` in
             enter) break;;
             up)    ((selected--));
@@ -220,7 +238,7 @@ function select_option_cli {
         esac
     done
 
-    # cursor position back to normal
+    # Cursor position back to normal
     cursor_to $lastrow
     printf "\n"
     cursor_blink_on
@@ -264,20 +282,52 @@ select_option() {
 
     case $? in
     0)
+        choice=$((choice - 1))
         return $choice
         ;;
-    1)
-        colorecho "$RED" "Error: Menu Cancelled"
-        exit 1
-        ;;
-    #255)
-        #echo 'Closed menu without choice'
-        #;;
     *)
-        titlelogo 
+        # CLI Fallback
+        title
+        colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/}"
+        echo "$(dash_string)"
+        colorecho "$GREEN" "${menu_option_title//\\Z[0-7bun]/}"
+        echo
         select_option_cli "$@"
         ;;
     esac
+}
+
+# TUI Info Box
+info_alert() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+    print_option()     { echo "$1"; }
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        if [[ "$menu_header" != *" - "* ]]; then 
+            dialog_title="$menu_header"
+            menu_header=" - $menu_header"
+        fi
+    else
+        dialog_title="Welcome to Arch Linux !"
+    fi
+
+    # menu option title
+    if [ -z "$menu_option_title" ]; then
+        menu_option_title="Hello World"
+    fi
+
+    for opt; do
+        ((i++))
+    done
+
+    # launch TUI using dialog
+    dialog --colors --backtitle " \Zu\Z4[$title_string$menu_header] "$'\t\t\t\t\t\t\t\t\t\t'"    12:00    "$'\t\t\t\t\t\t\t\t\t\t\t\t'"      [Waiting for Network] "  \
+        --title " $dialog_title " \
+        --infobox "\n\Zb\Z4$(titlelogo_string) \n\n                        $menu_option_title\n\n $opt \Zn" 0 0
+
 }
 
 ################################################################
@@ -292,16 +342,19 @@ check_internet() {
             if ping -q -c 3 "$server" >/dev/null 2>&1; then
                 colorecho "$GREEN" "\n Internet is available via $server."
                 internet_available=true
-
+                ckin=100
+                echo $ckin
                 return 0
-            else
-                return -1
             fi
         done
 }
 
-network_option() {
-    colorecho "$GREEN" "Network Option:"
+show_dialog()
+{
+    menu_header="Setup Network"
+    menu_option_title="\Z2Waiting for Network ...\Zn"
+    ckin=0             # status
+    date1=`date +%s`
 
     # Check if there is a Wireless Interface and get the first one
     for dev in /sys/class/net/*; do
@@ -320,6 +373,20 @@ network_option() {
             fi
         done
     fi
+
+    while [ "$ckin" != 100 ]; do
+        read -t 1 tmp && ckin=$tmp
+        elapsed="$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
+        if [ "$last_elapsed" != "$elapsed" ]; then
+            info_alert "i) Connect to a WiFi network ($iwdev) \n ii) Skip Internet Check (installation may fail) \n"
+        fi
+        last_elapsed=$elapsed
+    done
+}
+
+check_internet | show_dialog
+
+network_option() {
 
     if [ -z "$iwdev" ]; then
         echo "Press 'w' to connect to a WiFi network (No wireless interface found)"
@@ -341,7 +408,7 @@ network_option() {
     last_check=$(date +%s)
 
     while [ "$keypress" = '' ]; do
-        # Check if it's time to perform internet check
+        # Check if it's time to perform internet check  
         current_time=$(date +%s)
         if [ $((current_time - last_check)) -ge 3 ]; then
             # Check internet connectivity in the background
@@ -358,6 +425,7 @@ network_option() {
 
     # Restore terminal settings
     stty echo -raw
+    clear
 
     case $keypress in
         [wW])
@@ -415,18 +483,15 @@ check_installer_updates() {
     colorecho "$YELLOW" "Checking for installer updates..."
     remote_installerver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/tui-installer" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
     if [ "$remote_installerver" -gt "$installerver" ]; then
-        # CLI
-        colorecho "$GREEN" "A newer version ($remote_installerver) of this installer is available, do you want to update this installer?"
-        # TUI
         menu_header="Installer Updates Available"
         menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available, do you want to update this installer?\Zn"
-
         options=("Update this Installer" "Do not update this installer")
         select_option "${options[@]}"
         answer=$?
         if [ "$answer" = 0 ]; then
             # Download Installer
             colorecho "$GREEN" "Downloading Installer ..."
+            exit 1
             curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/tui-installer
 
             # Update tui-installer
@@ -538,11 +603,11 @@ select_option "${options[@]}"
 selected=$?
 
 case $selected in
-  1)
+  0)
     installer_menu
     #start_installation
     ;;
-  2)
+  1)
     clear
     echo "Coming Soon"
     exit 0
