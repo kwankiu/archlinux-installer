@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403072
+installerver=2403081
 
 # Define main / dev branch
 branch=dev
@@ -706,8 +706,7 @@ kernel_menu() {
     fi 
  
     if [ "$install_target" = "rock5" ]; then 
-        options+=("linux-radxa-rkbsp5-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108) (will be changed to linux-aarch64-rockchip-bsp5.10-radxa-git soon)")
-        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108) (so try this if the above one doesnt work)")
+        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
     fi 
  
     if [ "$install_target" = "orangepi5" ]; then
@@ -768,7 +767,7 @@ kernel_menu
 title "Arch Rock Installer - Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 echo
-options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
+options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish (Experimental)" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
 options+=("Do not install a Desktop Environment")
 
 select_option "${options[@]}"
@@ -804,7 +803,7 @@ title "Arch Rock Installer - Installing Linux Kernel"
             colorecho "$GREEN" "Installing new kernel (adrepo) ..."
             echo -e "y"  | arch-rock-config install $kernelpkg
             sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
-        else
+        elif sudo pacman -Ssy "$kernelpkg" &> /dev/null; then
             colorecho "$GREEN" "Installing new kernel ..."
             yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
 
@@ -822,6 +821,10 @@ title "Arch Rock Installer - Installing Linux Kernel"
                     exit 1
                 fi
             fi
+        else
+            colorecho "$RED" "Error: Package not found. Failed to Install Linux Kernel."
+            colorecho "$RED" "Installation can not be continued, exiting ..."
+            exit 1
         fi
     else
         colorecho "$GREEN" "Compiling and Installing new kernel from GitHub repo ..."
@@ -943,6 +946,8 @@ colorecho "$GREEN" "Performing Full System Upgrade ..."
 
 if [[ "$kernelpkg" != "linux-aarch64" ]]; then
     sudo pacman -Syyu --noconfirm --ignore linux-aarch64
+else
+    sudo pacman -Syyu --noconfirm
 fi
 
 # SBC or Kernel Specfic Post Installation
@@ -983,11 +988,11 @@ fi
 
 # Network Manager, WiFi, Bluetooth
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
-sudo pacman -S networkmanager iw iwd bluez --noconfirm
+sudo pacman -Sy networkmanager iw iwd bluez --noconfirm
 
 # Basic Fonts for Asian Characters and Emoji
 colorecho "$GREEN" "Installing fonts ..."
-sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
+sudo pacman -Sy noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
 
 ################################################################
 # Install desktop environment
@@ -1025,12 +1030,12 @@ elif [ "$de_options" = 3 ]; then
 elif [ "$de_options" = 4 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie Desktop ..."
-    sudo pacman -S budgie-desktop budgie-desktop-view budgie-backgrounds gdm gnome-keyring gnome-console gnome-disk-utility gnome-tweaks nautilus xdg-user-dirs --noconfirm
+    sudo pacman -S budgie-desktop budgie-desktop-view budgie-backgrounds budgie-extras papirus-icon-theme gdm gnome-keyring gnome-console gnome-disk-utility gnome-tweaks nautilus xdg-user-dirs--noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 5 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
-    sudo pacman -S sway wmenu i3status mako waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst --noconfirm
+    sudo pacman -S sway wmenu i3status mako waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst mako thunar --noconfirm
     sudo systemctl enable sddm
     sudo mkdir -p .config/{sway,dunst,waybar,wofi}
     sudo install -Dm755 /etc/sway/config ~/.config/sway/config
@@ -1040,38 +1045,32 @@ elif [ "$de_options" = 5 ]; then
 elif [ "$de_options" = 6 ]; then
     # Install Cutefish
     colorecho "$GREEN" "Installing Cutefish ..."
-    sudo pacman -S cutefish sddm --noconfirm
-    sudo systemctl enable sddm
+    sudo pacman -S cutefish --noconfirm
+    #sudo systemctl enable sddm
 elif [ "$de_options" = 7 ]; then
-    # Install Deepin
-    colorecho "$GREEN" "Installing Deepin ..."
-    sudo pacman -S deepin deepin-extra --noconfirm
-    echo -e "greeter-session=lightdm-deepin-greeter" | sudo tee /etc/lightdm/lightdm.conf
-    sudo systemctl enable lightdm
-elif [ "$de_options" = 8 ]; then
     # Install XFCE
     colorecho "$GREEN" "Installing XFCE ..."
-    sudo pacman -S xfce4 xfce4-goodies gdm --noconfirm
-    sudo systemctl enable gdm
-elif [ "$de_options" = 9 ]; then
+    sudo pacman -S xfce4 xfce4-goodies sddm --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 8 ]; then
     # Install LXQT
     colorecho "$GREEN" "Installing LXQT ..."
-    sudo pacman -S lxqt sddm --noconfirm
+    sudo pacman -S lxqt breeze-icons sddm --noconfirm
     sudo systemctl enable sddm
-elif [ "$de_options" = 10 ]; then
+elif [ "$de_options" = 9 ]; then
     # Install LXDE
     colorecho "$GREEN" "Installing LXDE ..."
-    sudo pacman -S lxde lxde-gtk3 --noconfirm
+    sudo pacman -S lxde xscreensaver --noconfirm
     sudo systemctl enable lxdm
-elif [ "$de_options" = 11 ]; then
+elif [ "$de_options" = 10 ]; then
     # Install MATE
     colorecho "$GREEN" "Installing MATE ..."
     sudo pacman -S mate mate-extra gdm --noconfirm
     sudo systemctl enable gdm
-elif [ "$de_options" = 12 ]; then
+elif [ "$de_options" = 11 ]; then
     # Install Cinnamon
     colorecho "$GREEN" "Installing Cinnamon ..."
-    sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-console metacity gnome-shell gdm --noconfirm
+    sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-console gdm --noconfirm
     sudo systemctl enable gdm
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
