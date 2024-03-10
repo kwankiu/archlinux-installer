@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-99 count on updates commited on the same day)
-installerver=24030901
+installerver=24030902
 
 # Define main / dev branch
 branch=dev
@@ -349,7 +349,7 @@ info_alert() {
     # launch TUI using dialog
     dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
         --title " $dialog_title " \
-        --infobox "\n\Zb\Z4$(titlelogo_string) \n\n                        $menu_option_title\n\n $opt \Zn" 0 0
+        --infobox "\n\Zb\Z4$(titlelogo_string) \n\n                          $menu_option_title\n\n $opt \Zn" 25 80
 }
 
 ################################################################
@@ -373,7 +373,7 @@ check_internet() {
 network_menu()
 {
     menu_header="Network Setup"
-    menu_option_title="\Z2Waiting for Network ...\n\ZnEnter a key:"
+    menu_option_title="\Z2Waiting for Network ...\n\n\ZnEnter a key:"
 
     # Check if there is a Wireless Interface and get the first one
     for dev in /sys/class/net/*; do
@@ -397,7 +397,7 @@ network_menu()
 
     while [[ "$ckin" != [wWsS] ]]; do
         read -t 0.1 -n 1 tmp && ckin=$tmp
-        # Check if it's time to perform internet check  
+        # Perform internet check every 3 seconds
         current_time=$(date +%s)
         if [ $((current_time - last_check)) -ge 3 ]; then
             # Check internet connectivity in the background
@@ -454,7 +454,7 @@ check_installer_updates() {
         if [ "$answer" = 0 ]; then
             # Download Installer
             colorecho "$GREEN" "Downloading Installer ..."
-            exit 1
+            exit 1 #THIS PREVENTS AN UPDATE #ONLY USED TO PREVENT DATA LOSS IN DEVELOPMENT
             curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/tui-installer
 
             # Update tui-installer
