@@ -693,6 +693,7 @@ kernel_menu() {
 
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
         options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
     else
         options+=("linux-aarch64 (alarm) - Install Linux Mainline Kernel (Linux 6.x)")
     fi 
@@ -705,9 +706,9 @@ kernel_menu() {
         options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji) - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
         options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji) - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
     fi 
- 
+
     if [ "$branch" = "dev" ]; then 
-        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+        #options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
         #options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
         #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
         options+=("linux-joshua-git (7Ji) - Install Linux Mainline Kernel with patches for rk3588 devices with linux-git trunk of Joshua (Linux 6.7.0)")
