@@ -15,7 +15,7 @@
 utilver=2402206
 
 # Define main / dev branch
-branch=dev
+branch=main
 
 # Initialize variables
 update_available=false

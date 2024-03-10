@@ -22,7 +22,7 @@
 # Define variables
 
 # Define main / dev branch
-branch=dev
+branch=main
 
 # URL for Kernel and Arch Linux Rootfs
 adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/kernel"
@@ -493,7 +493,7 @@ for arg in "$@"; do
       ;;
     -d | --dev)
       echo "Getting the latest installation script from dev ..."
-      bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) ${@:2}
+      bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) ${@:2}
       exit 1
       ;;
     --get-pkg)
