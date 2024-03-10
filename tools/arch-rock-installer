@@ -1,14 +1,24 @@
 #!/bin/bash
 
-################################################################
-#                                                              #
-#                     Arch Rock Installer                      #
-#                                                              #
-################################################################
+#################################################################
+#                    _     _      _                             #
+#     /\            | |   | |    (_)                            #
+#    /  \   _ __ ___| |__ | |     _ _ __  _   ___  __           #
+#   / /\ \ | '__/ __| '_ \| |    | | '_ \| | | \ \/ /           #
+#  / ____ \| | | (__| | | | |____| | | | | |_| |>  <            #
+# /_/    \_\_|  \___|_| |_|______|_|_| |_|\__,_/_/\_\ __        #
+#  _____           _        _ _           (  __)/  \(  _ \      #
+# |_   _|         | |      | | |           ) _)(  O ))   /      #
+#   | |  _ __  ___| |_ __ _| | | ___ _ __ (__)  \__/(__\_)      #
+#   | | | '_ \/ __| __/ _` | | |/ _ \ '__|    /__\ (  _ \( \/ ) #
+#  _| |_| | | \__ \ || (_| | | |  __/ |      /    \ )   // \/ \ #
+# |_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/ #
+#                                                               #
+#################################################################
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403071
+installerver=2403092
 
 # Define main / dev branch
 branch=main
@@ -141,10 +151,25 @@ colorecho() {
 # Title / Heading
 title() {
   clear
-  text="$1"
   echo "---------------------------------------------------------------------"
-  colorecho "$BLUE" "${text}"
+  colorecho "$BLUE" "                    _     _      _                  "
+  colorecho "$BLUE" "     /\            | |   | |    (_)                 "
+  colorecho "$BLUE" "    /  \   _ __ ___| |__ | |     _ _ __  _   ___  __"
+  colorecho "$BLUE" "   / /\ \ | '__/ __| '_ \| |    | | '_ \| | | \ \/ /"
+  colorecho "$BLUE" "  / ____ \| | | (__| | | | |____| | | | | |_| |>  < "
+  colorecho "$BLUE" " /_/    \_\_|  \___|_| |_|______|_|_| |_|\__,_/_/\_\ __"
+  colorecho "$BLUE" "  _____           _        _ _           (  __)/  \(  _ \  "
+  colorecho "$BLUE" " |_   _|         | |      | | |           ) _)(  O ))   /  "
+  colorecho "$BLUE" "   | |  _ __  ___| |_ __ _| | | ___ _ __ (__)  \__/(__\_)"
+  colorecho "$BLUE" "   | | | '_ \/ __| __/ _\` | | |/ _ \ '__|    /__\ (  _ \( \/ )"
+  colorecho "$BLUE" "  _| |_| | | \__ \ || (_| | | |  __/ |      /    \ )   // \/ \ "
+  colorecho "$BLUE" " |_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/"
   echo "---------------------------------------------------------------------"
+  if [ -n "$1" ]; then
+    text="$1"
+    colorecho "$BLUE" "${text}"
+    echo "---------------------------------------------------------------------"
+  fi
   if [ "$branch" = "dev" ]; then
     colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
   fi
@@ -355,7 +380,7 @@ add_boot_part_fstab() {
 
 init_setup() {
 
-    title "Welcome to Arch Linux!"
+    title
     colorecho "$GREEN" "Running Initial System Setup ..."
 
     # Check if the script is being run with root privileges
@@ -482,8 +507,8 @@ init_setup() {
 # About this Installer
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    colorecho "$BLUE" "Arch Rock Installer - Arch Linux Installer for Rock 5B / RK3588"
-    echo "Usage: arch-rock-installer <optional_argument>"
+    colorecho "$BLUE" "Arch Linux Installer for ARM (Aarch64)"
+    echo "Usage: arch-rock-installer / installer <optional_argument>"
 
     colorecho "$GREEN" "Options"
     echo "-h / --help : Usage and Infomation of this installer"
@@ -497,7 +522,7 @@ fi
 ################################################################
 # Installer Setup
 
-title "Welcome to Arch Linux!"
+title
 
 # Pre-init : install compiled packages
 if [ -e $compiled_pkg_folder ]; then 
@@ -537,7 +562,7 @@ fi
 
 # Check if the script is being run with root privileges
 if [[ $EUID -ne 0 ]]; then
-    title "Arch Rock Installer"
+    title
     colorecho "$GREEN" "Starting Setup ..."
 else
     colorecho "$RED" "Error : Installer must be run as user"
@@ -547,10 +572,70 @@ fi
 ################################################################
 # Time Zone
 
-title "Arch Rock Installer - Language"
+    # Full Language Choice Menu
+    langchoicemenu() {
+        title "Language (More Options)"
+        select_option "${langopt[@]}" "Skip setting Language"
+        choice=$?
+        if [ "$choice" = 0 ]; then
+            langchoice=("${langchi[@]}") # Chinese
+        elif [ "$choice" = 1 ]; then
+            langchoice=("${langeng[@]}") # English
+        elif [ "$choice" = 2 ]; then
+            langchoice=("${langspa[@]}") # Spanish
+        elif [ "$choice" = 3 ]; then
+            langchoice=("${langfre[@]}") # French
+        elif [ "$choice" = 4 ]; then
+            langchoice=("${langger[@]}") # German
+        elif [ "$choice" = 5 ]; then
+            langchoice=("${langara[@]}") # Arabic
+        elif [ "$choice" = 6 ]; then
+            title "Language (Others - sort by continents)"
+            select_option "${langcon[@]}"
+            choice=$?
+            if [ "$choice" = 0 ]; then
+                langchoice=("${langconas[@]}") # Asia
+            elif [ "$choice" = 1 ]; then
+                langchoice=("${langconeu[@]}") # Europe
+            elif [ "$choice" = 2 ]; then
+                langchoice=("${langconam[@]}") # Americas
+            elif [ "$choice" = 3 ]; then
+                langchoice=("${langconaf[@]}") # Africa
+            elif [ "$choice" = 4 ]; then
+                langchoice=("${langconother[@]}") # Others
+            fi
+        else
+            return
+        fi
+        title "Language (More Options)"
+        select_option "${langchoice[@]}"
+        choice=$?
+        title "Language Setup"
+        read -p "Confirm setting language to ${langchoice[$choice]%% (*} ? [Y/n]:" langcfm
+        if [[ $langcfm == [Yy]* ]]; then
+            arch-rock-config locale generate "${langchoice[$choice]%% (*}" -y
+        else
+            langchoicemenu
+            return
+        fi
+    }
+
+    title "Language"
 
     lclist=$(arch-rock-config locale list-available)
-    netlang=$(curl -s https://ipapi.co/languages)
+
+    lapicount=0
+    while [ $lapicount -lt 10 ]; do
+        netlang=$(curl -s https://ipapi.co/languages)
+        if echo "$netlang" | grep -q "RateLimited"; then
+            echo "Error"
+            sleep 1
+            lapicount=$((lapicount + 1))
+        else
+            break  # Exit the loop if there's no error
+        fi
+    done
+
     network_lang=()
     IFS=',' read -ra network_lang <<< "$netlang"
     colorecho "$GREEN" "Let's begin with setting up your language, is that right?"
@@ -566,53 +651,18 @@ title "Arch Rock Installer - Language"
     choice=$?
 
     if [ "$choice" = "$sgdindx" ]; then
-        title "Arch Rock Installer - Language (More Options)"
-        select_option "${langopt[@]}"
-        choice=$?
-        if [ "$choice" = 0 ]; then
-            langchoice=("${langchi[@]}") # Chinese
-        elif [ "$choice" = 1 ]; then
-            langchoice=("${langeng[@]}") # English
-        elif [ "$choice" = 2 ]; then
-            langchoice=("${langspa[@]}") # Spanish
-        elif [ "$choice" = 3 ]; then
-            langchoice=("${langfre[@]}") # French
-        elif [ "$choice" = 4 ]; then
-            langchoice=("${langger[@]}") # German
-        elif [ "$choice" = 5 ]; then
-            langchoice=("${langara[@]}") # Arabic
-        else
-            title "Arch Rock Installer - Language (Others - sort by continents)"
-            select_option "${langcon[@]}"
-            choice=$?
-            if [ "$choice" = 0 ]; then
-                langchoice=("${langconas[@]}") # Asia
-            elif [ "$choice" = 1 ]; then
-                langchoice=("${langconeu[@]}") # Europe
-            elif [ "$choice" = 2 ]; then
-                langchoice=("${langconam[@]}") # Americas
-            elif [ "$choice" = 3 ]; then
-                langchoice=("${langconaf[@]}") # Africa
-            elif [ "$choice" = 4 ]; then
-                langchoice=("${langconother[@]}") # Others
-            fi
-        fi
-        title "Arch Rock Installer - Language (More Options)"
-        select_option "${langchoice[@]}"
-        choice=$?
-        echo "Set Language to ${langchoice[$choice]%% (*}"
-        arch-rock-config locale generate ${langchoice[$choice]%% (*} -y
+        langchoicemenu
     elif [ "$choice" -ge "$sgdindx" ]; then
         echo "Skipping ..."
     else
         echo "Set Language to ${options[$choice]}"
-        arch-rock-config locale generate ${options[$choice]} -y
+        arch-rock-config locale generate "${options[$choice]}" -y
     fi
 
 ################################################################
 # Time Zone
 
-title "Arch Rock Installer - Time Zone"
+title "Time Zone"
 
     ntz=$(arch-rock-config time network-time-zone)
     colorecho "$GREEN" "Your time zone is: $ntz"
@@ -631,11 +681,11 @@ title "Arch Rock Installer - Time Zone"
 
 ################################################################
 # Select linux kernel
-
-title "Arch Rock Installer - Linux Kernel"
-colorecho "$GREEN" "Select a linux kernel to install :"
-echo
-options=()
+kernel_menu() {
+    title "Linux Kernel"
+    colorecho "$GREEN" "Select a linux kernel to install :"
+    colorecho "$GREEN" "  Linux Kernel \t\t Repo \t\t Description \t\t\t Kernel Version"
+    options=()
 
     # Kernel options for each install target
     # format: kernelpkg (repo) - Description (linux_kernel_version)
@@ -648,8 +698,7 @@ options=()
     fi 
  
     if [ "$install_target" = "rock5" ]; then 
-        options+=("linux-radxa-rkbsp5-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108) (will be changed to linux-aarch64-rockchip-bsp5.10-radxa-git soon)")
-        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108) (so try this if the above one doesnt work)")
+        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
     fi 
  
     if [ "$install_target" = "orangepi5" ]; then
@@ -661,47 +710,56 @@ options=()
         options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
         #options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
         #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
-        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux 6.x)")
-        options+=("linux-joshua-git (7Ji) - Install Linux Mainline Kernel with patches for rk3588 devices with linux-git trunk of Joshua (Linux 6.x)")
+        options+=("linux-joshua-git (7Ji) - Install Linux Mainline Kernel with patches for rk3588 devices with linux-git trunk of Joshua (Linux 6.7.0)")
+        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux 6.x latest)")
+        options+=("linux-aarch64 (7Ji) - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux 6.x latest)")
     fi 
 
-options+=("Install other kernel (Experimental)")
-select_option "${options[@]}"
-krl_options=$?
-selected_option="${options[$krl_options]}"
-kernelpkg=$(echo "$selected_option" | awk '{print $1}')
-pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
-
-if [ "$kernelpkg" = "Install" ]; then
-    options=("Enter a kernel to install from pacman" "Enter a kernel to install from adrepo" "Compile a kernel from a GitHub repo")
+    options+=("(Others) Enter custom kernel options (Experimental)")
     select_option "${options[@]}"
-    compilepkggit=$?
-    if [[ $compilepkggit = 2 ]]; then
-        read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
-        read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
-    elif [[ $compilepkggit = 1 ]]; then  
-        read -p "Enter a kernel to install from adrepo (e.g. linux-radxa-rkbsp5-git): " kernelpkg
-    elif [[ $compilepkggit = 0 ]]; then
-        read -p "Enter a kernel to install from pacman (e.g. linux-radxa-rkbsp5-git): " kernelpkg
-    else
-        echo "No option is selected, kernel may not be installed."
-    fi
-    read -p "Enter additional packages to install (e.g. linux-firmware-joshua-git or leave it blank): " firmwarepkg
-    read -p "Do you want to add a pacman repo? [Y/n or 7Ji or BredOS]: " addpacmanrepo
-    if [[ $addpacmanrepo == [Yy]* ]]; then
-        arch-rock-config add-repo
-    elif [[ $addpacmanrepo != [Nn]* ]]; then
-        arch-rock-config add-repo $addpacmanrepo
-    fi
-fi
+    krl_options=$?
+    selected_option="${options[$krl_options]}"
+    kernelpkg=$(echo "$selected_option" | awk '{print $1}')
+    pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
 
+    if [ "$kernelpkg" = "(Others)" ]; then
+        options=("Install a kernel from pacman")
+        options+=("Install a kernel from adrepo")
+        options+=("Install a kernel from source (using AGR or AUR)")
+        options+=("Return to the upper kernel menu")
+
+        select_option "${options[@]}"
+        compilepkggit=$?
+
+        if [[ $compilepkggit = 0 ]]; then
+            read -p "Enter a kernel to install from pacman (e.g. linux-aarch64): " kernelpkg
+        elif [[ $compilepkggit = 1 ]]; then  
+            read -p "Enter a kernel to install from adrepo (e.g. linux-radxa-rkbsp5-git): " kernelpkg
+        elif [[ $compilepkggit = 2 ]]; then
+            read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
+            read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
+        else
+            #colorecho "$YELLOW" "Warning: No option is selected, kernel may not be installed."
+            kernel_menu
+            return
+        fi
+        read -p "Enter additional packages to install (e.g. linux-firmware-joshua-git or leave it blank): " firmwarepkg
+        read -p "Do you want to add a pacman repo? [Y/n or 7Ji]: " addpacmanrepo
+        if [[ $addpacmanrepo == [Yy]* ]]; then
+            arch-rock-config add-repo
+        elif [[ $addpacmanrepo != [Nn]* ]]; then
+            arch-rock-config add-repo $addpacmanrepo
+        fi
+    fi
+}
+kernel_menu
 ################################################################
 # Select desktop environment
 
-title "Arch Rock Installer - Desktop Environment"
+title "Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 echo
-options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish" "Deepin" "XFCE" "LXQt" "LXDE" "MATE" "Cinnamon")
+options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish (Experimental)" "XFCE (Experimental)" "LXQt" "LXDE" "MATE" "Cinnamon")
 options+=("Do not install a Desktop Environment")
 
 select_option "${options[@]}"
@@ -709,7 +767,7 @@ de_options=$?
 
 ################################################################
 # Installation begins here
-title "Arch Rock Installer - Configuring Pacman"
+title "Configuring Pacman"
 
     colorecho "$GREEN" "Enabling ParallelDownloads for pacman ..."
     sudo sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $prldownloads/" /etc/pacman.conf
@@ -719,28 +777,25 @@ title "Arch Rock Installer - Configuring Pacman"
         arch-rock-config add-repo $pacmanrepo
     fi
 
-    if [[ "$kernelpkg" == *"-edge2"* ]]; then
-        # needed since we added BredOS instead of 7Ji
-        arch-rock-config add-repo 7Ji
-    fi
-
 ################################################################
 # Install Linux Kernel
 
-title "Arch Rock Installer - Installing Linux Kernel"
+title "Installing Linux Kernel"
 
     oldkrlrel=$(uname -r)
 
-    colorecho "$GREEN" "Removing linux-aarch64 ..."
-    yes y|sudo pacman -R linux-aarch64
-    sudo rm -rf /etc/mkinitcpio.d/*
+    if [[ "$kernelpkg" != "linux-aarch64" ]]; then
+        colorecho "$GREEN" "Removing linux-aarch64 ..."
+        yes y|sudo pacman -R linux-aarch64
+        sudo rm -rf /etc/mkinitcpio.d/*
+    fi
 
     if [[ -z "$kernelurl" ]]; then
         if [[ $compilepkggit = 1 ]]; then
             colorecho "$GREEN" "Installing new kernel (adrepo) ..."
             echo -e "y"  | arch-rock-config install $kernelpkg
             sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
-        else
+        elif sudo pacman -Ssy "$kernelpkg" &> /dev/null; then
             colorecho "$GREEN" "Installing new kernel ..."
             yes y|sudo pacman -S --overwrite \* $kernelpkg $kernelpkg-headers
 
@@ -753,11 +808,16 @@ title "Arch Rock Installer - Installing Linux Kernel"
                     colorecho "$GREEN" "Removing Old Kernel Modules ..."
                     sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
                 else
-                    colorecho "$RED" "Error: Failed to Install Linux Kernel"
-                    colorecho "$RED" "Installation can not be continued, exiting ..."
+                    colorecho "$RED" "Error: The required linux kernel package is not installed."
+                    colorecho "$YELLOW" "Tip: Sometimes it happens when a pacman repo maintainence is in progress, please try again later."
+                    colorecho "$RED" "Installation can not be continued, exiting ... (enter the command installer to start again)"
                     exit 1
                 fi
             fi
+        else
+            colorecho "$RED" "Error: Package not found. Failed to Install Linux Kernel."
+            colorecho "$RED" "Installation can not be continued, exiting ... (enter the command installer to start again)"
+            exit 1
         fi
     else
         colorecho "$GREEN" "Compiling and Installing new kernel from GitHub repo ..."
@@ -769,16 +829,18 @@ title "Arch Rock Installer - Installing Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Firmware ..." 
     if [[ "$kernelpkg" == *"-orangepi"* ]]; then
-        yes y|sudo pacman -S --overwrite \* linux-firmware-orangepi-git mali-valhall-g610-firmware
+        yes y|sudo pacman -S linux-firmware-orangepi-git mali-valhall-g610-firmware
     elif [[ "$kernelpkg" == *"-radxa"* ]]; then
         colorecho "$GREEN" "Removing linux-firmware-joshua-git ..."
         yes y|sudo pacman -R linux-firmware-joshua-git
         colorecho "$GREEN" "Installing DKMS Packages ..."
         arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
-        yes y|sudo pacman -S --overwrite \* linux-firmware-joshua-git mali-valhall-g610-firmware
+        yes y|sudo pacman -S linux-firmware-joshua-git mali-valhall-g610-firmware
+    elif [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+        yes y|sudo pacman -S linux-firmware-joshua-git mali-valhall-g610-firmware
     else
-        yes y|sudo pacman -S --overwrite \* $firmwarepkg
+        yes y|sudo pacman -S $firmwarepkg
     fi
 
     # Update extlinux.conf
@@ -837,24 +899,49 @@ title "Arch Rock Installer - Installing Linux Kernel"
 ################################################################
 # Install Graphics Acceleration
 
-title "Arch Rock Installer - Installing Graphics Acceleration"
+title "Installing Graphics Acceleration"
 
-    sudo pacman -S mesa-panfork-git libmali-valhall-g610-x11-wayland-gbm --noconfirm
+    if sudo pacman -Ssy "mesa-panfork-git" &> /dev/null; then
+        sudo pacman -S mesa-panfork-git libmali-valhall-g610-x11-wayland-gbm --noconfirm
+    else
+        sudo pacman -S mesa --noconfirm
+    fi
 
 ################################################################
 # Install Video Acceleration
 
-title "Arch Rock Installer - Installing Video Acceleration"
+title "Installing Video Acceleration"
 
-    sudo pacman -S mpp-git ffmpeg4.4-mpp ffmpeg-rockchip-git --noconfirm
+    if sudo pacman -Ssy "mpp-git" &> /dev/null; then
+        sudo pacman -S mpp-git --noconfirm
+    elif sudo pacman -Ssy "mpp" &> /dev/null; then
+        sudo pacman -S mpp --noconfirm
+    fi
+
+    if sudo pacman -Ssy "ffmpeg4.4-mpp" &> /dev/null; then
+        sudo pacman -S ffmpeg4.4-mpp --noconfirm   
+    fi
+
+    if sudo pacman -Ssy "ffmpeg-rockchip-git" &> /dev/null; then
+        sudo pacman -S ffmpeg-rockchip-git --noconfirm
+    elif sudo pacman -Ssy "ffmpeg-mpp-git" &> /dev/null; then
+        sudo pacman -S ffmpeg-mpp-git --noconfirm
+    else
+        sudo pacman -S ffmpeg--noconfirm
+    fi
 
 ################################################################
 # Post Installation
 
-title "Arch Rock Installer - Post Installation (Part 1)"
+title "Post Installation (Part 1)"
 
 colorecho "$GREEN" "Performing Full System Upgrade ..."
-sudo pacman -Syyu --noconfirm --ignore linux-aarch64
+
+if [[ "$kernelpkg" != "linux-aarch64" ]]; then
+    sudo pacman -Syyu --noconfirm --ignore linux-aarch64
+else
+    sudo pacman -Syyu --noconfirm
+fi
 
 # SBC or Kernel Specfic Post Installation
 if [ "$install_target" = "rock5" ] || [ "$install_target" = "orangepi5" ]; then
@@ -894,16 +981,16 @@ fi
 
 # Network Manager, WiFi, Bluetooth
 colorecho "$GREEN" "Installing network manager and bluetooth ..."
-sudo pacman -S networkmanager iw iwd bluez --noconfirm
+sudo pacman -Sy networkmanager iw iwd bluez --noconfirm
 
 # Basic Fonts for Asian Characters and Emoji
 colorecho "$GREEN" "Installing fonts ..."
-sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
+sudo pacman -Sy noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
 
 ################################################################
 # Install desktop environment
 
-title "Arch Rock Installer - Install desktop environment"
+title "Install desktop environment"
 
 # Install desktop environment
 if [ "$de_options" = 0 ]; then
@@ -936,12 +1023,12 @@ elif [ "$de_options" = 3 ]; then
 elif [ "$de_options" = 4 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie Desktop ..."
-    sudo pacman -S budgie-desktop budgie-desktop-view budgie-backgrounds gdm gnome-keyring gnome-console gnome-disk-utility gnome-tweaks nautilus xdg-user-dirs --noconfirm
+    sudo pacman -S budgie gdm arc-gtk-theme papirus-icon-theme gnome-console gnome-disk-utility nautilus --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 5 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
-    sudo pacman -S sway wmenu i3status mako waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst --noconfirm
+    sudo pacman -S sway wmenu i3status mako waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst mako thunar --noconfirm
     sudo systemctl enable sddm
     sudo mkdir -p .config/{sway,dunst,waybar,wofi}
     sudo install -Dm755 /etc/sway/config ~/.config/sway/config
@@ -951,38 +1038,32 @@ elif [ "$de_options" = 5 ]; then
 elif [ "$de_options" = 6 ]; then
     # Install Cutefish
     colorecho "$GREEN" "Installing Cutefish ..."
-    sudo pacman -S cutefish sddm --noconfirm
-    sudo systemctl enable sddm
+    sudo pacman -S cutefish --noconfirm
+    #sudo systemctl enable sddm
 elif [ "$de_options" = 7 ]; then
-    # Install Deepin
-    colorecho "$GREEN" "Installing Deepin ..."
-    sudo pacman -S deepin deepin-extra --noconfirm
-    echo -e "greeter-session=lightdm-deepin-greeter" | sudo tee /etc/lightdm/lightdm.conf
-    sudo systemctl enable lightdm
-elif [ "$de_options" = 8 ]; then
     # Install XFCE
     colorecho "$GREEN" "Installing XFCE ..."
-    sudo pacman -S xfce4 xfce4-goodies gdm --noconfirm
-    sudo systemctl enable gdm
-elif [ "$de_options" = 9 ]; then
+    sudo pacman -S xfce4 xfce4-goodies sddm capitaine-cursors arc-gtk-theme leafpad galculator xdg-user-dirs-gtk --noconfirm
+    sudo systemctl enable sddm
+elif [ "$de_options" = 8 ]; then
     # Install LXQT
     colorecho "$GREEN" "Installing LXQT ..."
-    sudo pacman -S lxqt sddm --noconfirm
+    sudo pacman -S lxqt breeze-icons sddm --noconfirm
     sudo systemctl enable sddm
-elif [ "$de_options" = 10 ]; then
+elif [ "$de_options" = 9 ]; then
     # Install LXDE
     colorecho "$GREEN" "Installing LXDE ..."
-    sudo pacman -S lxde lxde-gtk3 --noconfirm
+    sudo pacman -S lxde xscreensaver --noconfirm
     sudo systemctl enable lxdm
-elif [ "$de_options" = 11 ]; then
+elif [ "$de_options" = 10 ]; then
     # Install MATE
     colorecho "$GREEN" "Installing MATE ..."
     sudo pacman -S mate mate-extra gdm --noconfirm
     sudo systemctl enable gdm
-elif [ "$de_options" = 12 ]; then
+elif [ "$de_options" = 11 ]; then
     # Install Cinnamon
     colorecho "$GREEN" "Installing Cinnamon ..."
-    sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-console metacity gnome-shell gdm --noconfirm
+    sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-console gdm --noconfirm
     sudo systemctl enable gdm
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
@@ -991,7 +1072,7 @@ fi
 ################################################################
 # Post Installation
 
-title "Arch Rock Installer - Post Installation (Part 2)"
+title "Post Installation (Part 2)"
 
 colorecho "$GREEN" "Enabling network manager and bluetooth service ..."
 sudo systemctl enable NetworkManager.service
@@ -1002,13 +1083,13 @@ sudo systemctl start bluetooth.service
 ################################################################
 # Install additional packages
 
-colorecho "$GREEN" "Starting additional packages installer ..."
-arch-rock-config install --installer
+#colorecho "$GREEN" "Starting additional packages installer ..."
+#arch-rock-config install --installer
 
 ################################################################
 # Installation clean up
 
-title "Arch Rock Installer - Installation Finished"
+title "Installation Finished"
 
 # Detect the current username
 current_username=$(whoami)

@@ -1,0 +1,8 @@
+#timeout 10
+#menu title select kernel
+
+label Archlinux
+    kernel /vmlinuz-%PKGBASE%
+    initrd /initramfs-%PKGBASE%.img
+    devicetreedir /dtbs/%PKGBASE%
+    append   root=UUID=CHANGEME console=ttyFIQ0,1500000n8 quiet splash loglevel=4 rw earlycon consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1

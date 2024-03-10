@@ -1,10 +1,24 @@
 #!/bin/bash
 
-################################################################
-#                                                              #
-#       Arch Linux Installation Tool for Rock 5 / RK3588       #
-#                                                              #
-################################################################
+#################################################################
+#                    _     _      _                             #
+#     /\            | |   | |    (_)                            #
+#    /  \   _ __ ___| |__ | |     _ _ __  _   ___  __           #
+#   / /\ \ | '__/ __| '_ \| |    | | '_ \| | | \ \/ /           #
+#  / ____ \| | | (__| | | | |____| | | | | |_| |>  <            #
+# /_/    \_\_|  \___|_| |_|______|_|_| |_|\__,_/_/\_\ __        #
+#  _____           _        _ _           (  __)/  \(  _ \      #
+# |_   _|         | |      | | |           ) _)(  O ))   /      #
+#   | |  _ __  ___| |_ __ _| | | ___ _ __ (__)  \__/(__\_)      #
+#   | | | '_ \/ __| __/ _` | | |/ _ \ '__|    /__\ (  _ \( \/ ) #
+#  _| |_| | | \__ \ || (_| | | |  __/ |      /    \ )   // \/ \ #
+# |_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/ #                                                          #
+# /__ __\/  _ \/  _ \/ \                                        #
+#   / \  | / \|| / \|| |                                        #
+#   | |  | \_/|| \_/|| |_/\                                     #
+#   \_/  \____/\____/\____/                                     #
+#################################################################                    
+
 # Define variables
 
 # Define main / dev branch
@@ -469,6 +483,8 @@ for arg in "$@"; do
       echo "--kernel=<kernel_name> : Set kernel package to get from repo."
       echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
       echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
+      echo "--sbc=<model> : Set an SBC model which will be used to generate extlinux and this variable will also be passed to installer."
+      echo "--uboot=<path> : Flash u-boot to the target disk or image. The specified path must contain idbloader.img and uboot.itb"
       echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
       echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
       echo "--sbc=<model_name> : Set Installer Target SBC (install_target), (default is rock5)."
@@ -477,7 +493,7 @@ for arg in "$@"; do
       ;;
     -d | --dev)
       echo "Getting the latest installation script from dev ..."
-      bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) ${@:2}
+      bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) ${@:2}
       exit 1
       ;;
     --get-pkg)
@@ -514,6 +530,10 @@ for arg in "$@"; do
     --adrepourl=*)
       adrepo_url="${arg#*=}"
       colorecho "$RED" "Using custom package repo at ${adrepo_url}"
+      ;;
+    --uboot=*)
+      arguboot="${arg#*=}"
+      colorecho "$GREEN" "Build image with uboot from ${arguboot}"
       ;;
     --bootpartstart=*)
       argbootptst="${arg#*=}"
@@ -721,6 +741,25 @@ done
     sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
     sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
     sudo parted $drive set 2 boot on
+  fi
+
+  # Pack u-boot
+  if [ -n "$arguboot" ]; then
+    colorecho "$GREEN" "Flashing u-boot ..."
+
+    if [ -f "$arguboot/idbloader.img" ] && [ -f "$arguboot/u-boot.itb" ]; then
+        sudo dd if="$arguboot/idbloader.img" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+    elif [ -f "$arguboot/idblock.bin" ] && [ -f "$arguboot/uboot.img" ]; then 
+        sudo dd if="$arguboot/idblock.bin" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/uboot.img" of="$drive" seek=16384 conv=notrunc
+    elif [ -f "$arguboot/tpl-spl.img" ] && [ -f "$arguboot/u-boot.itb" ]; then   
+        sudo dd if="$arguboot/tpl-spl.img" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+    else
+        colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
+    fi
+    
   fi
 
   # Find the partitions

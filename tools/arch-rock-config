@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402205
+utilver=2402206
 
 # Define main / dev branch
 branch=main
@@ -1905,11 +1905,18 @@ elif [ "$1" = "--remove-arcu" ]; then
     sudo rm -rf /usr/bin/arcu
     colorecho "$GREEN" "Alias command arcu has been removed."
 
+elif [ "$1" = "--remove-this" ]; then
+    sudo rm -rf /usr/bin/arch-rock-config /usr/bin/arcu
+    colorecho "$GREEN" "Successfully removed myself from your device."
+
 elif [ ! -e "/usr/bin/arch-rock-config" ] || [ "$1" = "-u" ] || [ "$1" = "--update" ]; then
     if [ "$2" = "main" ]; then
         branch=main
     elif [ "$2" = "dev" ]; then
         branch=dev
+    elif [ "$2" = "acu" ] && [ "$branch" = "dev" ]; then
+        bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/dev/acu) -u
+        exit 1
     fi
     update_util --install
 
