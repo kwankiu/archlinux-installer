@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403092
+installerver=2403093
 
 # Define main / dev branch
 branch=dev
@@ -1039,8 +1039,8 @@ elif [ "$de_options" = 5 ]; then
 elif [ "$de_options" = 6 ]; then
     # Install Cutefish
     colorecho "$GREEN" "Installing Cutefish ..."
-    sudo pacman -S cutefish --noconfirm
-    #sudo systemctl enable sddm
+    sudo pacman -S plasma-desktop cutefish sddm --noconfirm
+    sudo systemctl enable sddm
 elif [ "$de_options" = 7 ]; then
     # Install XFCE
     colorecho "$GREEN" "Installing XFCE ..."
