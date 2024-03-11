@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-99 count on updates commited on the same day)
-installerver=24030903
+installerver=24030904
 
 # Define main / dev branch
 branch=dev
@@ -36,6 +36,7 @@ dialog_theme_config="/usr/lib/installer/dialog.conf"
 # Pacman ParallelDownloads
 prldownloads=30
 
+################################################################
 # Language options
 langopt=("Chinese" "English" "Spanish" "French" "German" "Arabic" "Others")
 
@@ -326,7 +327,6 @@ info_alert() {
 
     export DIALOGRC=$dialog_theme_config
     local i=0
-    print_option()     { echo "$1"; }
 
     # menu header
     if [ -n "$menu_header" ]; then
@@ -335,12 +335,7 @@ info_alert() {
             menu_header=" - $menu_header"
         fi
     else
-        dialog_title="Welcome to Arch Linux !"
-    fi
-
-    # menu option title
-    if [ -z "$menu_option_title" ]; then
-        menu_option_title="Hello World"
+        dialog_title="Info"
     fi
 
     for opt; do
@@ -350,7 +345,38 @@ info_alert() {
     # launch TUI using dialog
     dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
         --title " $dialog_title " \
-        --infobox "\n\Zb\Z4$(titlelogo_string) \n\n$menu_option_title\n\n $opt \Zn" 25 80
+        --infobox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0
+}
+
+# TUI Confirm Box
+confirm() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        if [[ "$menu_header" != *" - "* ]]; then 
+            dialog_title="$menu_header"
+            menu_header=" - $menu_header"
+        fi
+    else
+        dialog_title="Confirm"
+    fi
+
+    for opt; do
+        ((i++))
+    done
+
+    # launch TUI using dialog
+    if dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+        --title " $dialog_title " \
+        --yesno "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
+        return 0
+    else
+        return 1
+    fi
+    
 }
 
 ################################################################
@@ -362,7 +388,7 @@ check_internet() {
     #servers=("0.0.0.0") # debug test case: bypass internet
         for server in "${servers[@]}"; do
             if ping -q -c 3 "$server" >/dev/null 2>&1; then
-                colorecho "$GREEN" "\n Internet is available via $server."
+                internet_found_at="$server"
                 internet_available=1 # internet connected
                 ckin='s'
                 echo $ckin
@@ -376,8 +402,6 @@ check_internet() {
 network_menu()
 {
     menu_header="Network Setup"
-    network_status="                          Loading ..."
-    menu_option_title="\Z2$network_status\n\n\ZnEnter a key:"
 
     # Check if there is a Wireless Interface and get the first one
     for dev in /sys/class/net/*; do
@@ -412,14 +436,14 @@ network_menu()
         fi
         # Network Status
         if [ "$internet_available" = 1 ]; then
-            network_status="                          Internet Connected"
+            network_status="             Internet is available via $internet_found_at"
         elif [ "$internet_available" = 2 ]; then
-            network_status="                 Network Connected. Waiting for Internet ..."
+            network_status="            Network Connected. Waiting for Internet ..."
         else
-            network_status="                          Waiting for Network ..."
+            network_status="                    Waiting for Network ..."
         fi
-        menu_option_title="\Z2$network_status\n\n\ZnEnter a key:"
-        info_alert "w) Connect to a WiFi network ($wl_adapter) \n s) Skip Internet Check (Installation may fail) \n"
+        menu_option_title="\n\Z2$network_status\n\n\ZnEnter a key:\n\n"
+        info_alert "$menu_option_title w) Connect to a WiFi network ($wl_adapter) \n s) Skip Internet Check (Installation may fail)"
     done
     # Restore terminal settings
     clear
@@ -524,12 +548,45 @@ installer_menu() {
     #fi
 
 }
+################################################################
+# Main Menu
+main_menu() {
 
+    # Welcome Menu
+    menu_header=""
+    menu_option_title=""
+    options=("Install Arch Linux" "Try Arch Linux (GUI)" "Exit Installer")
+    select_option "${options[@]}"
+    selected=$?
+
+    case $selected in
+    0)
+        installer_menu
+        ;;
+    1)
+        if confirm "   This will download a 1GB image. Are you sure to continue?"; then
+            info_alert "Coming Soon"
+        else
+            info_alert "Cancelled"
+        fi
+        exit 0
+        ;;
+    *)
+        if confirm "   Are you sure to exit the installer? The system will shutdown."; then
+            info_alert "Coming Soon"
+        else
+            main_menu
+        fi
+        exit 0
+        ;;
+    esac
+}
+    #dialog --title "fselect" --fselect ~/Documents/GitHub/ 15 80
 ################################################################
 # Main Code
 title
 
-# Pre-init : install compiled packages
+# First Boot : Install Required Packages
 if [ -d "$compiled_pkg_folder" ]; then 
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
@@ -561,47 +618,11 @@ fi
 
 # Network option menu
 network_menu
+
 # Check Updates
 check_installer_updates
-# Run init setup if not yet done
-if [ ! -e "/usr/bin/acu" ] && [ ! "$1" = "--skip" ]; then
-        init_setup
-fi
 
-# Check if the script is being run with root privileges
-if [[ $EUID -ne 0 ]]; then
-    title
-    colorecho "$GREEN" "Starting TUI Installer ..."
-else
-    colorecho "$RED" "Error : Installer must be run as user"
-    exit 1
-fi
+# Start Main Menu
+main_menu
 
-# Welcome Menu
-menu_header=""
-menu_option_title=""
-options=("Install Arch Linux" "Try Arch Linux (GUI)" "Exit Installer")
-select_option "${options[@]}"
-selected=$?
-
-case $selected in
-  0)
-    installer_menu
-    #start_installation
-    ;;
-  1)
-    clear
-    echo "Coming Soon"
-    exit 0
-    ;;
-  *)
-    clear
-    echo "Exit Installer"
-    exit 0
-    ;;
-esac
-
-#if dialog --yesno  "Locate File? " 10 25; then
-    #dialog --title "fselect" --fselect ~/Documents/GitHub/ 15 80
-#fi
 ################################################################
