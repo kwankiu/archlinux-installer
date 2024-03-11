@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403094
+installerver=2403095
 
 # Define main / dev branch
 branch=dev
@@ -1029,7 +1029,7 @@ elif [ "$de_options" = 4 ]; then
 elif [ "$de_options" = 5 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
-    sudo pacman -S sway wmenu i3status mako waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland qt6-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst thunar --noconfirm
+    sudo pacman -S sway wmenu i3status waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland qt6-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst thunar --noconfirm
     sudo systemctl enable sddm
     sudo mkdir -p .config/{sway,dunst,waybar,wofi}
     sudo install -Dm755 /etc/sway/config ~/.config/sway/config
@@ -1069,8 +1069,9 @@ elif [ "$de_options" = 11 ]; then
 elif [ "$de_options" = 12 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Hyprland ..."
-    sudo pacman -S hyprland qt5-wayland xdg-desktop-portal-hyprland wofi pass dunst kitty thunar sddm --noconfirm
+    sudo pacman -S hyprland qt5-wayland xdg-desktop-portal-hyprland wofi pass dunst alacritty thunar sddm --noconfirm
     sudo systemctl enable sddm
+    sed -i 's/exec, kitty/exec, alacritty/g' ~/.config/hypr/hyprland.conf
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
 fi
