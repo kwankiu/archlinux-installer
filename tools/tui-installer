@@ -155,21 +155,21 @@ status_bar() {
 
     # Calculate the width of each item
     item_left=$(( (terminal_width - 4) / 3 ))  # Subtracting 4 for the brackets and spaces
-    item_center=$(( (terminal_width - 4) / 6 ))  # Subtracting 4 for the brackets and spaces
-    item_right=$(( (terminal_width - 4) / 2 ))  # Subtracting 4 for the brackets and spaces
+    item_center=$(( ((terminal_width - 4) / 6) + 3 ))  # Subtracting 4 for the brackets and spaces
+    item_right=$(( ((terminal_width - 4) / 2) - 3 ))  # Subtracting 4 for the brackets and spaces
 
     # Define the strings for left, center, and right items
-    #left_item="[$title_string$menu_header]"
     left_item="[$title_string$menu_header]"
-    center_item="$(date +"%b%e %H:%M")"
+    center_item="$(date +"%b %e %H:%M")"
     if [ "$internet_available" = 1 ]; then
         right_item="[Internet Connected]"
+    elif [ "$internet_available" = 2 ]; then
+        right_item="[No Internet]"
     else
         right_item="[Waiting for Network]"
     fi
-
     # Print the items with alignment
-    printf "%-${item_left}s%${item_center}s%${item_right}s\n" "$left_item" "$center_item" "$right_item "
+    printf "%-${item_left}s%${item_center}s%${item_right}s\n" "$left_item" "$center_item" "$right_item"
 }
 
 ################################################################
@@ -177,7 +177,8 @@ status_bar() {
 
 # TUI Theme (dialog)
 create_dialog_theme() {
-    sudo mkdir -p $(basename $dialog_theme_config)
+    colorecho "$GREEN" "Generating Installer Theme ..."
+    sudo mkdir -p $(dirname $dialog_theme_config)
     sudo tee "$dialog_theme_config" <<EOF
 # Arch Linux Installer for ARM
 # Run-time configuration theme for dialog
@@ -349,7 +350,7 @@ info_alert() {
     # launch TUI using dialog
     dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
         --title " $dialog_title " \
-        --infobox "\n\Zb\Z4$(titlelogo_string) \n\n                          $menu_option_title\n\n $opt \Zn" 25 80
+        --infobox "\n\Zb\Z4$(titlelogo_string) \n\n$menu_option_title\n\n $opt \Zn" 25 80
 }
 
 ################################################################
@@ -362,10 +363,12 @@ check_internet() {
         for server in "${servers[@]}"; do
             if ping -q -c 3 "$server" >/dev/null 2>&1; then
                 colorecho "$GREEN" "\n Internet is available via $server."
-                internet_available=1
+                internet_available=1 # internet connected
                 ckin='s'
                 echo $ckin
                 return
+            elif ip link show | grep "state UP"; then
+                internet_available=2 # network connected but no internet access
             fi
         done
 }
@@ -373,7 +376,8 @@ check_internet() {
 network_menu()
 {
     menu_header="Network Setup"
-    menu_option_title="\Z2Waiting for Network ...\n\n\ZnEnter a key:"
+    network_status="                          Loading ..."
+    menu_option_title="\Z2$network_status\n\n\ZnEnter a key:"
 
     # Check if there is a Wireless Interface and get the first one
     for dev in /sys/class/net/*; do
@@ -382,16 +386,6 @@ network_menu()
             break;
         fi
     done
-    # Check one more time since driver maybe not yet loaded
-    if [ -z "$iwdev" ]; then
-        sleep 3
-        for dev in /sys/class/net/*; do
-            if [ -e "$dev"/wireless ]; then
-                iwdev=${dev##*/};
-                break;
-            fi
-        done
-    fi
 
     last_check=$(date +%s)
 
@@ -404,7 +398,28 @@ network_menu()
             check_internet
             last_check=$current_time
         fi
-        info_alert "w) Connect to a WiFi network ($iwdev) \n s) Skip Internet Check (installation may fail) \n"
+        # Keep tracking for wireless adapter if not found
+        if [ -z "$iwdev" ]; then
+            for dev in /sys/class/net/*; do
+                if [ -e "$dev"/wireless ]; then
+                    iwdev=${dev##*/};
+                    break;
+                fi
+            done
+            wl_adapter="No adapter found"
+        else
+            wl_adapter=$iwdev
+        fi
+        # Network Status
+        if [ "$internet_available" = 1 ]; then
+            network_status="                          Internet Connected"
+        elif [ "$internet_available" = 2 ]; then
+            network_status="                 Network Connected. Waiting for Internet ..."
+        else
+            network_status="                          Waiting for Network ..."
+        fi
+        menu_option_title="\Z2$network_status\n\n\ZnEnter a key:"
+        info_alert "w) Connect to a WiFi network ($wl_adapter) \n s) Skip Internet Check (Installation may fail) \n"
     done
     # Restore terminal settings
     clear
@@ -512,11 +527,10 @@ installer_menu() {
 
 ################################################################
 # Main Code
-
 title
 
 # Pre-init : install compiled packages
-if [ -e $compiled_pkg_folder ]; then 
+if [ -d "$compiled_pkg_folder" ]; then 
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
         if yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.* --needed; then
@@ -538,6 +552,11 @@ if [ -e $compiled_pkg_folder ]; then
             exit 1
         fi
     fi
+fi
+
+# Create TUI Theme
+if [ ! -f "$dialog_theme_config" ]; then
+    create_dialog_theme
 fi
 
 # Network option menu
