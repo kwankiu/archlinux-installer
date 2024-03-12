@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2403121
+utilver=2403122
 
 # Define main / dev branch
 branch=dev
@@ -1545,6 +1545,8 @@ manage_user() {
             if [ -z "$new_user" ]; then
                 title "Arch Rock Configuration Utility - Add New User"
                 read -p "Enter username for the new user: " new_user
+            fi
+            if [ -z "$new_pw" ]; then
                 confirm_password
             fi
             sudo useradd -m "$new_user"
