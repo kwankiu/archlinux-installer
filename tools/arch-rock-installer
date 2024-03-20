@@ -1010,7 +1010,7 @@ if [ "$de_options" = 0 ]; then
 elif [ "$de_options" = 1 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome (Minimal) ..."
-    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-user-dirs --noconfirm
+    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-desktop-portal xdg-desktop-portal-gnome xdg-user-dirs --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
