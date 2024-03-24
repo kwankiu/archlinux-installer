@@ -94,8 +94,9 @@ colorecho() {
     pacman -Sy sudo --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
-    bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/0.0.5-dev/acu) -u --noclear
-
+    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/0.0.5-dev/acu"
+    chmod +x /usr/bin/acu
+    
     echo "Setting up user account (alarm) ..."
     acu user remove alarm
     acu user add alarm alarm
