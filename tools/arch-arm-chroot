@@ -90,6 +90,7 @@ colorecho() {
     pacman-key --populate archlinuxarm
 
     echo "Installing sudo ..."
+    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
     pacman -Sy sudo --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
@@ -104,7 +105,7 @@ END
 
     colorecho "$GREEN" "Starting chroot as user (alarm) ..."
     if [ -z "$(command -v arch-chroot)" ]; then
-        sudo chroot -u alarm $rootfs_dir
+        sudo chroot $rootfs_dir su alarm
     else
-        sudo arch-chroot -u alarm $rootfs_dir
+        sudo arch-chroot $rootfs_dir su alarm
     fi
