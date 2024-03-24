@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2403122
+utilver=2403241
 
 # Define main / dev branch
 branch=dev
@@ -1061,6 +1061,9 @@ add_repo() {
         gpg_key="BA27F219383BB875"
     elif [ "$1" = "BredOS" ]; then
         server_url="https://github.com/BredGang/bred-repo/raw/main/\$repo/\$arch"
+    elif [ "$1" = "Experimental" ]; then
+        server_url="https://github.com/kwankiu/archlinux-installer-rock5/releases/download/experimental"
+        gpg_key="B669E3B56B3DC918"
     else
         colorecho "$RED" "Invalid repo name. Aborting."
         return 1
@@ -1073,9 +1076,9 @@ add_repo() {
     colorecho "$GREEN" "Adding $repo_name to pacman.conf ..."
 
     if [ -z "$gpg_key" ]; then
-        echo -e "[$repo_name]\nServer = $server_url" | sudo tee -a /etc/pacman.conf
-    else
         echo -e "[$repo_name]\nSigLevel = Never\nServer = $server_url" | sudo tee -a /etc/pacman.conf
+    else
+        echo -e "[$repo_name]\nServer = $server_url" | sudo tee -a /etc/pacman.conf
         colorecho "$GREEN" "Adding GPG keys ..."
         sudo pacman-key --recv-keys "$gpg_key"
         sudo pacman-key --lsign "$gpg_key"
