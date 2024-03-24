@@ -18,20 +18,41 @@ colorecho() {
 }
 ################################################################
 
-rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
-rootfs_dir="rootfs"
+    rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
+    rootfs_dir="rootfs"
 
-# Check if qemu-aarch64-static is installed
-    if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
-        colorecho "$YELLOW" "qemu-aarch64-static is not found, trying to install..."
-        # Arch Linux
-        sudo pacman -S qemu-user-static --noconfirm
-    fi
-    if [ -z "$(command -v arch-chroot)" ]; then
-        sudo pacman -S arch-install-scripts --noconfirm
+    system_arch=$(uname -m)
+    colorecho "$GREEN" "System is $system_arch"
+
+    if [ "$system_arch" == "x86_64" ]; then
+        # Check if qemu-aarch64-static is installed
+        if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
+            # Check Linux distribution
+            colorecho "$YELLOW" "qemu-aarch64-static is not found, trying to install..."
+            if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+                # Debian/Ubuntu-based
+                sudo apt-get update
+                sudo apt-get install -y qemu-user-static
+            elif [ -f /etc/redhat-release ]; then
+                # Red Hat-based
+                sudo yum update
+                sudo yum install -y qemu-user-static
+            elif [ -f /etc/arch-release ]; then
+                # Arch Linux
+                sudo pacman -S qemu-user-static --noconfirm
+                if [ -z "$(command -v arch-chroot)" ]; then
+                    sudo pacman -S arch-install-scripts --noconfirm
+                fi
+            elif [ -x "$(command -v apk)" ]; then
+                # Alphine-based
+                apk add qemu-user-static
+            else
+                colorecho "$RED" "Error : qemu-aarch64-static is not installed."
+            fi
+        fi
     fi
 
-# Create directory and get rootfs
+    # Create directory and get rootfs
     if [ ! -d $rootfs_dir ]; then
         sudo mkdir -p $rootfs_dir
         # Download and extract the latest ArchLinux tarball
@@ -40,17 +61,50 @@ rootfs_dir="rootfs"
         colorecho "$GREEN" "Extracting Arch Linux AARCH64 rootfs ..."
         sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $rootfs_dir
         sudo rm -rf ArchLinuxARM-aarch64-latest.tar.gz
+        run_post_install=1
     fi
 
-    S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
-    S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:CF'
-    echo -n $S1$S2| sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
-    echo
-    sudo systemctl restart systemd-binfmt.service
+    if [ "$system_arch" == "x86_64" ]; then
+        S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
+        S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:CF'
+        echo -n $S1$S2| sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
+        echo
+        sudo systemctl restart systemd-binfmt.service
+    fi
 
-    colorecho "$GREEN" "Starting ..."
+    if [ "$run_post_install" = 1 ]; then
+        colorecho "$GREEN" "Running Post Install Setup ..."
+        sudo chroot $rootfs_dir /bin/bash <<END
+    echo "Enabling and Updating Time Sync ..."
+    systemctl enable systemd-timesyncd
+    sleep 1
+    timedatectl set-ntp false
+    timedatectl set-ntp true
+
+    echo "Adding root to wheel group ..."
+    echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+    usermod -aG wheel root
+
+    echo "Setting up alarm pacman key ..."
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+
+    echo "Installing sudo ..."
+    pacman -Sy sudo --noconfirm
+
+    echo "Installing ACU (Configuration Utility) ..."
+    bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/0.0.5-dev/acu) -u
+
+    echo "Setting up user account (alarm) ..."
+    acu user remove alarm
+    acu user add alarm alarm
+    acu user manage alarm sudopw
+END
+    fi
+
+    colorecho "$GREEN" "Starting chroot as user (alarm) ..."
     if [ -z "$(command -v arch-chroot)" ]; then
-        sudo chroot $rootfs_dir
+        sudo chroot -u alarm $rootfs_dir
     else
-        sudo arch-chroot $rootfs_dir
+        sudo arch-chroot -u alarm $rootfs_dir
     fi
