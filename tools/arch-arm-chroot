@@ -74,7 +74,7 @@ colorecho() {
 
     if [ "$run_post_install" = 1 ]; then
         colorecho "$GREEN" "Running Post Install Setup ..."
-        sudo chroot $rootfs_dir /bin/bash <<END
+        sudo arch-chroot $rootfs_dir /bin/bash <<END
     echo "Enabling and Updating Time Sync ..."
     systemctl enable systemd-timesyncd
     sleep 1
@@ -93,7 +93,7 @@ colorecho() {
     pacman -Sy sudo --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
-    bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/0.0.5-dev/acu) -u
+    bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/0.0.5-dev/acu) -u --noclear
 
     echo "Setting up user account (alarm) ..."
     acu user remove alarm
