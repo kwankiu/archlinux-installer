@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403121
+installerver=2403241
 
 # Define main / dev branch
 branch=dev
@@ -694,7 +694,7 @@ kernel_menu() {
 
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
         options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
     else
         options+=("linux-aarch64 (alarm) - Install Linux Mainline Kernel (Linux 6.x)")
     fi 
@@ -709,12 +709,12 @@ kernel_menu() {
     fi 
 
     if [ "$branch" = "dev" ]; then 
-        #options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
-        #options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
-        #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
-        options+=("linux-joshua-git (7Ji) - Install Linux Mainline Kernel with patches for rk3588 devices with linux-git trunk of Joshua (Linux 6.7.0)")
-        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux 6.x latest)")
-        options+=("linux-aarch64 (7Ji) - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux 6.x latest)")
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-bin (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel deb version (Linux 6.1.43)")
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-panthor-git (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel with Panthor (Linux 6.1.43)")
+        options+=("linux-aarch64-rk3588-collabora-git (Experimental) - Install Linux Collabora Mainline RK3588 Kernel (Linux 6.8.x)")
+        options+=("linux-aarch64-rockchip-bsp (7Ji) - (Experimental) Install wyf9661 Linux Rockchip 6.1 Kernel (Linux 6.1.57)")
+        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux mainline latest)")
+        options+=("linux-aarch64 (7Ji) - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux mainline latest)")
     fi 
 
     options+=("(Others) Enter custom kernel options (Experimental)")
@@ -761,7 +761,7 @@ kernel_menu
 title "Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 echo
-options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish (Experimental)" "XFCE (Experimental)" "LXQt" "LXDE" "MATE" "Cinnamon" "Hyprland (Experimental)")
+options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish (Experimental)" "XFCE (Experimental)" "LXQt" "LXDE" "MATE" "Cinnamon" "Hyprland")
 options+=("Do not install a Desktop Environment")
 
 select_option "${options[@]}"
@@ -777,6 +777,11 @@ title "Configuring Pacman"
     if [[ -z $addpacmanrepo ]]; then
         echo "Adding $pacmanrepo ..."
         arch-rock-config add-repo $pacmanrepo
+    fi
+
+    if [[ "$pacmanrepo" == "Experimental" ]]; then
+        echo "Adding 7Ji ..."
+        arch-rock-config add-repo 7Ji
     fi
 
 ################################################################
@@ -831,16 +836,16 @@ title "Installing Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Firmware ..." 
     if [[ "$kernelpkg" == *"-orangepi"* ]]; then
-        yes y|sudo pacman -S linux-firmware-orangepi-git mali-valhall-g610-firmware
+        yes y|sudo pacman -S linux-firmware-orangepi-git
     elif [[ "$kernelpkg" == *"-radxa"* ]]; then
         colorecho "$GREEN" "Removing linux-firmware-joshua-git ..."
         yes y|sudo pacman -R linux-firmware-joshua-git
         colorecho "$GREEN" "Installing DKMS Packages ..."
         arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
-        yes y|sudo pacman -S linux-firmware-joshua-git mali-valhall-g610-firmware
+        yes y|sudo pacman -S linux-firmware-joshua-git
     elif [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-        yes y|sudo pacman -S linux-firmware-joshua-git mali-valhall-g610-firmware
+        yes y|sudo pacman -S linux-firmware-joshua-git
     else
         yes y|sudo pacman -S $firmwarepkg
     fi
@@ -903,8 +908,13 @@ title "Installing Linux Kernel"
 
 title "Installing Graphics Acceleration"
 
-    if sudo pacman -Ssy "mesa-panfork-git" &> /dev/null; then
-        sudo pacman -S mesa-panfork-git libmali-valhall-g610-x11-wayland-gbm --noconfirm
+    if [[ "$kernelpkg" == *"-panthor"* ]] || [[ "$kernelpkg" == *"-collabora"* ]] || [[ "$kernelpkg" == "linux-aarch64-7ji" ]]; then
+        sudo pacman -S mesa-panfrost-git --noconfirm
+    elif [[ "$kernelpkg" == "linux-aarch64-rockchip-bsp" ]]; then
+        sudo pacman -S mesa-panfork-git --noconfirm
+        sudo curl -L https://raw.githubusercontent.com/JeffyCN/mirrors/libmali/firmware/g610/mali_csffw.bin -o /lib/firmware/mali_csffw.bin
+    elif sudo pacman -Ssy "mesa-panfork-git" &> /dev/null; then
+        sudo pacman -S mesa-panfork-git mali-valhall-g610-firmware libmali-valhall-g610-x11-wayland-gbm --noconfirm
     else
         sudo pacman -S mesa --noconfirm
     fi
@@ -1072,7 +1082,7 @@ elif [ "$de_options" = 12 ]; then
     colorecho "$GREEN" "Installing Hyprland ..."
     sudo pacman -S hyprland qt5-wayland xdg-desktop-portal-hyprland wofi pass dunst alacritty thunar sddm --noconfirm
     sudo systemctl enable sddm
-    sed -i 's/exec, kitty/exec, alacritty/g' ~/.config/hypr/hyprland.conf
+    sed -i 's/kitty/alacritty/g' $HOME/.config/hypr/hyprland.conf
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
 fi
