@@ -266,6 +266,8 @@ network_option() {
             fi               
              # NTP Sync for WiFi
                 if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
+                    colorecho "$GREEN" "Enabling netctl Auto Connect ..."
+                    sudo systemctl enable netctl-auto@$iwdev.service
                     colorecho "$GREEN" "Updating NTP Time Sync ..."
                     if [ -x "$(command -v sudo)" ]; then
                         sudo rm -rf /etc/systemd/network/*
