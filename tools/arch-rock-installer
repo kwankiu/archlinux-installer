@@ -977,12 +977,19 @@ if [ "$install_target" = "edge2" ]; then
     sudo chmod +x fan.sh
     sudo mv fan.sh /usr/local/bin/fan.sh
     colorecho "$GREEN" "Creating FAN control service ..."
-    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee -a /usr/lib/systemd/system/fan.service
+    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee /usr/lib/systemd/system/fan.service
     sudo systemctl enable fan.service
 fi
 
+if [ "$install_target" = "orangepi5" ]; then
+    # Enable the USB 2.0 port
+    colorecho "$GREEN" "Fix: Enable the USB 2.0 port ..."
+    echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n\n[Service]\nExecStart=/usr/bin/sh -c \"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\"\nType=oneshot\n\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
+    sudo systemctl enable enable-usb2
+fi
+
 if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
-    # For testing, to enable AP6275P bluetooth
+    # Enable AP6275P bluetooth
     colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
     curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
     sudo chmod +x brcm_patchram_plus
