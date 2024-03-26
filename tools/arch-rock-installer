@@ -695,28 +695,34 @@ kernel_menu() {
     # notes: put the recommended option at first line and mark (Recommended) in Description
 
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-        options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+        options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji)               - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)            - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+    elif [ "$install_target" = "rpi" ]; then
+        options+=("linux-rpi (alarm)        - Install Linux Raspberry Pi BSP Kernel (Linux 6.6)")
+        options+=("linux-rpi-16k (alarm)    - Install Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY (Linux 6.6)")
+        options+=("linux-aarch64 (alarm)    - Install Linux Mainline Kernel (Linux mainline latest)")
     else
-        options+=("linux-aarch64 (alarm) - Install Linux Mainline Kernel (Linux 6.x)")
+        options+=("linux-aarch64 (alarm)    - Install Linux Mainline Kernel (Linux mainline latest)")
     fi 
  
     if [ "$install_target" = "rock5" ]; then 
-        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
+        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)            - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
     fi 
  
     if [ "$install_target" = "orangepi5" ]; then
-        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji) - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
-        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji) - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji)      - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)  - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
     fi 
 
-    if [ "$branch" = "dev" ]; then 
-        options+=("linux-aarch64-rockchip-bsp6.1-joshua-bin (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel deb version (Linux 6.1.43)")
-        options+=("linux-aarch64-rockchip-bsp6.1-joshua-panthor-git (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel with Panthor (Linux 6.1.43)")
-        options+=("linux-aarch64-rk3588-collabora-git (Experimental) - Install Linux Collabora Mainline RK3588 Kernel (Linux 6.8.x)")
-        options+=("linux-aarch64-rockchip-bsp (7Ji) - (Experimental) Install wyf9661 Linux Rockchip 6.1 Kernel (Linux 6.1.57)")
-        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux mainline latest)")
-        options+=("linux-aarch64 (7Ji) - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux mainline latest)")
+    if [ "$branch" = "dev" ]; then
+        if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+            options+=("linux-aarch64-rockchip-bsp6.1-joshua-bin (Experimental)         - Install Joshua Linux Rockchip 6.1 Kernel deb version (Linux 6.1.43)")
+            options+=("linux-aarch64-rockchip-bsp6.1-joshua-panthor-git (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel with Panthor (Linux 6.1.43)")
+            options+=("linux-aarch64-rk3588-collabora-git (Experimental)               - Install Linux Collabora Mainline RK3588 Kernel (Linux 6.8.x)")
+            options+=("linux-aarch64-rockchip-bsp (7Ji)                                - (Experimental) Install wyf9661 Linux Rockchip 6.1 Kernel (Linux 6.1.57)")
+            options+=("linux-aarch64-7ji (7Ji)                                         - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux mainline latest)")
+            options+=("linux-aarch64 (7Ji)                                             - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux mainline latest)")
+        fi
     fi 
 
     options+=("(Others) Enter custom kernel options (Experimental)")
@@ -858,51 +864,53 @@ title "Installing Linux Kernel"
     if sudo test -e  "/boot/extlinux/extlinux.arch.template"; then 
         colorecho "$YELLOW" "Using extlinux.arch.template ..."
         sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
-    else
+    elif [ "$install_target" != "rpi" ]; then
         # Kernel does not provide template, get sbc template
         colorecho "$YELLOW" "Downloading extlinux template for ${install_target} ..."
         curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/${install_target}.extlinux.template
         sudo mv ${install_target}.extlinux.template /boot/extlinux/extlinux.conf
     fi        
-        
-    colorecho "$YELLOW" "Generating extlinux.conf from template ..."
-    # Get rootfs partition from the current mount point "/"
-    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
-    # Find the UUIDs of the root partition
-    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
-    echo "Root partition UUID: $root_uuid"
+    if [ "$install_target" != "rpi" ]; then    
+        colorecho "$YELLOW" "Generating extlinux.conf from template ..."
+        # Get rootfs partition from the current mount point "/"
+        rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
-    colorecho "$GREEN" "Updating extlinux.conf ..."
+        # Find the UUIDs of the root partition
+        root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+        echo "Root partition UUID: $root_uuid"
 
-    # Change pkgbase for extlinux.conf
-    if sudo test ! -e "/boot/dtbs/$kernelpkg"; then 
-        sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
-    fi
+        colorecho "$GREEN" "Updating extlinux.conf ..."
 
-    # fix rockchip overlay directory name
-    if sudo test -e "/boot/dtbs/$kernelpkg/rockchip/overlay"; then
-        sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
-    fi
+        # Change pkgbase for extlinux.conf
+        if sudo test ! -e "/boot/dtbs/$kernelpkg"; then 
+            sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
+        fi
 
-    sudo sed -i "s|%PKGBASE%|$kernelpkg|" /boot/extlinux/extlinux.conf
+        # fix rockchip overlay directory name
+        if sudo test -e "/boot/dtbs/$kernelpkg/rockchip/overlay"; then
+            sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
+        fi
 
-    # Change UUID for extlinux.conf   
-    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
-    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s|%PKGBASE%|$kernelpkg|" /boot/extlinux/extlinux.conf
 
-    # Check if /boot is mounted as a partition or directory
-    if mountpoint -q /boot; then
-        colorecho "$GREEN" "/boot is mounted as a partition"
-        colorecho "$GREEN" "Done"
-    else
-        colorecho "$GREEN" "/boot is mounted as a directory"
-        colorecho "$GREEN" "Updating paths for extlinux.conf ..."
-        sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+        # Change UUID for extlinux.conf   
+        sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+        # Check if /boot is mounted as a partition or directory
+        if mountpoint -q /boot; then
+            colorecho "$GREEN" "/boot is mounted as a partition"
+            colorecho "$GREEN" "Done"
+        else
+            colorecho "$GREEN" "/boot is mounted as a directory"
+            colorecho "$GREEN" "Updating paths for extlinux.conf ..."
+            sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+        fi
     fi
 
 ################################################################
@@ -940,6 +948,8 @@ title "Installing Video Acceleration"
         sudo pacman -S ffmpeg-rockchip-git --noconfirm
     elif sudo pacman -Ssy "ffmpeg-mpp-git" &> /dev/null; then
         sudo pacman -S ffmpeg-mpp-git --noconfirm
+    elif [ "$install_target" = "rpi" ]; then
+        sudo pacman -S ffmpeg-rpi --noconfirm
     else
         sudo pacman -S ffmpeg--noconfirm
     fi
