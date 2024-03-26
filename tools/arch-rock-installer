@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403243
+installerver=2403261
 
 # Define main / dev branch
 branch=dev
@@ -263,27 +263,9 @@ network_option() {
                 sudo wifi-menu $iwdev
             else
                 wifi-menu $iwdev
+                colorecho "$GREEN" "Enabling netctl Auto Connect ..."
+                systemctl enable netctl-auto@$iwdev.service
             fi               
-             # NTP Sync for WiFi
-                if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
-                    colorecho "$GREEN" "Enabling netctl Auto Connect ..."
-                    sudo systemctl enable netctl-auto@$iwdev.service
-                    colorecho "$GREEN" "Updating NTP Time Sync ..."
-                    if [ -x "$(command -v sudo)" ]; then
-                        sudo rm -rf /etc/systemd/network/*
-                        sudo systemctl restart systemd-networkd
-                        sleep 1
-                        sudo timedatectl set-ntp false
-                        sudo timedatectl set-ntp true
-                    else
-                        rm -rf /etc/systemd/network/*
-                        systemctl restart systemd-networkd
-                        sleep 1
-                        timedatectl set-ntp false
-                        timedatectl set-ntp true
-                    fi
-                fi
-            
             ;;
         [pP])
             if [ -x "$(command -v sudo)" ]; then
@@ -304,6 +286,24 @@ network_option() {
             fi
             ;;
     esac
+
+    # NTP Sync for WiFi
+    if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
+        colorecho "$GREEN" "Updating NTP Time Sync ..."
+        if [ -x "$(command -v sudo)" ]; then
+            sudo rm -rf /etc/systemd/network/*
+            sudo systemctl restart systemd-networkd
+            sleep 1
+            sudo timedatectl set-ntp false
+            sudo timedatectl set-ntp true
+        else
+            rm -rf /etc/systemd/network/*
+            systemctl restart systemd-networkd
+            sleep 1
+            timedatectl set-ntp false
+            timedatectl set-ntp true
+        fi
+    fi
 }
 
 # Check Installer Updates
