@@ -848,10 +848,10 @@ title "Installing Linux Kernel"
     # Update extlinux.conf
     colorecho "$YELLOW" "Generating extlinux.conf ..."
 
-    if sudo test -e  "/boot/extlinux/extlinux.arch.template"; then 
-        colorecho "$YELLOW" "Using extlinux.arch.template ..."
-        sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
-    else
+    if found_file=$(sudo ls -1 /boot/extlinux/extlinux.*.template 2>/dev/null); then
+        colorecho "$YELLOW" "Using package provided template: $found_file"
+        sudo mv "$found_file" /boot/extlinux/extlinux.conf
+    elif [ "$install_target" != "rpi" ]; then
         # Kernel does not provide template, get sbc template
         colorecho "$YELLOW" "Downloading extlinux template for ${install_target} ..."
         curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/${install_target}.extlinux.template
