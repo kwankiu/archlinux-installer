@@ -561,21 +561,70 @@ check_installer_updates() {
 # Installer Menu
 installer_menu() {
 
+    ################################################################
     # Choose Language
     lclist=$(acu locale list-available)
+
+    lapicount=0
+    while [ $lapicount -lt 10 ]; do
+        netlang=$(curl -s https://ipapi.co/languages)
+        if echo "$netlang" | grep -q "RateLimited"; then
+            echo "Error"
+            sleep 2
+            lapicount=$((lapicount + 1))
+        else
+            break  # Exit the loop if there's no error
+        fi
+    done
+    network_lang=()
+    IFS=',' read -ra network_lang <<< "$netlang"
+
+    options=()
+    for ((i = 0; i < ${#network_lang[@]}-1; i++)); do
+        options+=("${network_lang[$i]}")
+    done
+    sgdindx=$i
+    options+=("More Languages" "Skip setting Language")
+
     menu_header="Language"
     menu_option_title="\Zb          Let's begin with setting up your language, is that right?\Zn\n\nSuggested Languages:"
-    options=("English (Canada)" "French (Canada)" "More Languages")
     select_option "${options[@]}"
-    selected=$?
+    choice=$?
 
-    case $selected in
-    *)
+    if [ "$choice" = "$sgdindx" ]; then
         clear
         echo "Coming Soon"
         exit 0
-        ;;
-    esac
+    elif [ "$choice" -ge "$sgdindx" ]; then
+        echo "Skipping ..."
+    else
+        selected_lang=$(echo "${options[$choice]}" | tr '-' '_')
+        echo "Set Language to $selected_lang"
+        acu locale generate "$selected_lang" -y
+    fi
+
+    ################################################################
+    # Time Zone
+
+    menu_header="Time Zone"
+    ntz=$(acu time network-time-zone)
+    menu_option_title="\Zb          Your time zone is: $ntz, is that right?\Zn\n"
+    options=("Yes, this is correct" "No, let me correct my Time Zone" "Skip setting Time Zone")
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = 0 ]; then
+        acu "time" set-time-zone sync
+    elif [ "$choice" = 1 ]; then
+        acu "time" set-time-zone
+    fi
+
+    ################################################################
+    # Setup User Account
+    echo "Coming Soon"
+
+    ################################################################
+    # Select linux kernel
 
     #if dialog --yesno  "Locate File? " 10 25; then
         #dialog --title "fselect" --fselect ~/Documents/GitHub/ 15 80
