@@ -54,7 +54,7 @@ jobs:
 
       - name: Build Image for Edge 2
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=edge2 --addpkg=linux-firmware-joshua-git --installer=tui -c -b --image=edge2-archlinux-installer-tui.img --uboot=usr/lib/u-boot
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=edge2 --addpkg=linux-firmware-joshua-git --installer=tui -c -b --image=edge2-archlinux-installer-tui.img --uboot=usr/lib/u-boot
           cp -r out/edge2-archlinux-installer-tui.img.xz edge2-archlinux-installer-tui.img.xz
 
       - uses: ncipollo/release-action@v1
