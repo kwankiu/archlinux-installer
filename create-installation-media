@@ -883,6 +883,10 @@ done
     sudo chmod +x acu
     sudo cp -r acu "$root_mount_dir/usr/bin/acu"
     sudo rm -rf acu
+    # Download and Copy ACU Config for TUI Installer
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/config.yaml
+    sudo mkdir -p "$root_mount_dir/root/.acu/config"
+    sudo cp -r config.yaml "$root_mount_dir/root/.acu/config/config.yaml"
   fi
 
   # Copy Installer
