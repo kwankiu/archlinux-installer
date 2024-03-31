@@ -1078,7 +1078,7 @@ add_repo() {
     if [ -z "$gpg_key" ]; then
         echo -e "[$repo_name]\nSigLevel = Never\nServer = $server_url" | sudo tee -a /etc/pacman.conf
     else
-        echo -e "[$repo_name]\nSigLevel = Optional\nServer = $server_url" | sudo tee -a /etc/pacman.conf
+        echo -e "[$repo_name]\nSigLevel = Never\nServer = $server_url" | sudo tee -a /etc/pacman.conf
         colorecho "$GREEN" "Adding GPG keys ..."
         sudo pacman-key --recv-keys "$gpg_key"
         sudo pacman-key --lsign "$gpg_key"
