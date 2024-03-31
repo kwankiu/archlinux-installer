@@ -506,6 +506,9 @@ for arg in "$@"; do
       archarm_packages $2 $3
       exit 1
       ;;
+    --installer=*)
+      arginstaller="${arg#*=}"
+      ;;
     --image=*)
       argimg="${arg#*=}"
       ;;
