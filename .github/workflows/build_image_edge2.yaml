@@ -27,7 +27,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Extract U-Boot
         run: |
-          curl -L https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.2-2017.09_arm64.deb -o uboot.deb
+          curl -L https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.5-2017.09_arm64.deb -o uboot.deb
           ar xv uboot.deb
           tar -xf data.tar.xz
           ls -l

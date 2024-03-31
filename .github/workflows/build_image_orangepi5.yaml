@@ -29,19 +29,19 @@ jobs:
         run: |
           mkdir -p usr/lib/tmp
 
-          curl -L https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5_2017.09+20230704.git1f70ac3a-8_arm64.deb -o uboot.deb
+          curl -L https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5_2017.09+20230704.git1f70ac3a-9_arm64.deb -o uboot.deb
           ar x uboot.deb
           tar -xI unzstd -f data.tar.zst
           sudo mv usr/lib/u-boot usr/lib/tmp/orangepi-5
           sudo rm -rf *.deb *.zst
 
-          curl -L https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5-plus_2017.09+20230704.git1f70ac3a-8_arm64.deb -o uboot.deb
+          curl -L https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5-plus_2017.09+20230704.git1f70ac3a-9_arm64.deb -o uboot.deb
           ar x uboot.deb
           tar -xI unzstd -f data.tar.zst
           sudo mv usr/lib/u-boot usr/lib/tmp/orangepi-5-plus
           sudo rm -rf *.deb *.zst
 
-          curl -L https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5b_2017.09+20230704.git1f70ac3a-8_arm64.deb -o uboot.deb
+          curl -L https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5b_2017.09+20230704.git1f70ac3a-9_arm64.deb -o uboot.deb
           ar x uboot.deb
           tar -xI unzstd -f data.tar.zst
           sudo mv usr/lib/u-boot usr/lib/tmp/orangepi-5b
