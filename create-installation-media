@@ -870,7 +870,7 @@ done
   title
   # Download Installer
   colorecho "$GREEN" "Downloading Installer ..."
-  if [ "$arginstaller" == "cli" ] || [ -z "$arginstaller"]; then
+  if [ "$arginstaller" == "cli" ] || [ -z "$arginstaller" ]; then
     installer_name="arch-rock-installer"
     compiled_pkg_dir="/usr/lib/compiled-packages"
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/$installer_name
@@ -880,7 +880,7 @@ done
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/$installer_name
     # Download and Copy ACU
     curl -LJO https://raw.githubusercontent.com/kwankiu/acu/dev/acu
-    sudo chmod+x acu
+    sudo chmod +x acu
     sudo cp -r acu "$root_mount_dir/usr/bin/acu"
     sudo rm -rf acu
   fi
