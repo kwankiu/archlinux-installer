@@ -583,11 +583,27 @@ main_menu() {
 }
     #dialog --title "fselect" --fselect ~/Documents/GitHub/ 15 80
 ################################################################
+# About this Installer
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    colorecho "$BLUE" "Arch Linux Installer for ARM (Aarch64)"
+    echo "Usage: installer <optional_argument>"
+
+    colorecho "$GREEN" "Options"
+    echo "-h / --help : Usage and Infomation of this installer"
+    echo "--skip-install-pkg : Skip installing required packages on first boot"
+    echo "--create-init-setup-service : Create a service to auto start this installer on first boot"
+    exit 0
+elif [ "$1" = "--create-init-setup-service" ]; then
+    echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\nBefore=systemd-logind.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
+    exit 0
+fi
+################################################################
 # Main Code
 title
 
 # First Boot : Install Required Packages
-if [ -d "$compiled_pkg_folder" ]; then 
+if [ -d "$compiled_pkg_folder" ]; then
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
         if yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.* --needed; then

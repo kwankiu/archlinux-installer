@@ -1,0 +1,993 @@
+#!/bin/bash
+
+#################################################################
+#                    _     _      _                             #
+#     /\            | |   | |    (_)                            #
+#    /  \   _ __ ___| |__ | |     _ _ __  _   ___  __           #
+#   / /\ \ | '__/ __| '_ \| |    | | '_ \| | | \ \/ /           #
+#  / ____ \| | | (__| | | | |____| | | | | |_| |>  <            #
+# /_/    \_\_|  \___|_| |_|______|_|_| |_|\__,_/_/\_\ __        #
+#  _____           _        _ _           (  __)/  \(  _ \      #
+# |_   _|         | |      | | |           ) _)(  O ))   /      #
+#   | |  _ __  ___| |_ __ _| | | ___ _ __ (__)  \__/(__\_)      #
+#   | | | '_ \/ __| __/ _` | | |/ _ \ '__|    /__\ (  _ \( \/ ) #
+#  _| |_| | | \__ \ || (_| | | |  __/ |      /    \ )   // \/ \ #
+# |_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/ #
+# /__ __\/  _ \/  _ \/ \                                        #
+#   / \  | / \|| / \|| |                                        #
+#   | |  | \_/|| \_/|| |_/\                                     #
+#   \_/  \____/\____/\____/                                     #
+#################################################################
+
+# Define variables
+
+# Define main / dev branch
+branch=dev
+
+# URL for Kernel and Arch Linux Rootfs
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/kernel"
+rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
+
+################################################################
+# Tools for formatting / styling
+
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Option Picker
+function select_option {
+
+    # little helpers for terminal print control and key input
+    ESC=$( printf "\033")
+    cursor_blink_on()  { printf "$ESC[?25h"; }
+    cursor_blink_off() { printf "$ESC[?25l"; }
+    cursor_to()        { printf "$ESC[$1;${2:-1}H"; }
+    print_option()     { printf "   $1 "; }
+    print_selected()   { printf "  $ESC[7m $1 $ESC[27m"; }
+    get_cursor_row()   { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
+    key_input()        { read -s -n3 key 2>/dev/null >&2
+                         if [[ $key = $ESC[A ]]; then echo up;    fi
+                         if [[ $key = $ESC[B ]]; then echo down;  fi
+                         if [[ $key = ""     ]]; then echo enter; fi; }
+
+    # initially print empty new lines (scroll down if at bottom of screen)
+    for opt; do printf "\n"; done
+
+    # determine current screen position for overwriting the options
+    local lastrow=`get_cursor_row`
+    local startrow=$(($lastrow - $#))
+
+    # ensure cursor and input echoing back on upon a ctrl+c during read -s
+    trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
+    cursor_blink_off
+
+    local selected=0
+    while true; do
+        # print options by overwriting the last lines
+        local idx=0
+        for opt; do
+            cursor_to $(($startrow + $idx))
+            if [ $idx -eq $selected ]; then
+                print_selected "$opt"
+            else
+                print_option "$opt"
+            fi
+            ((idx++))
+        done
+
+        # user key control
+        case `key_input` in
+            enter) break;;
+            up)    ((selected--));
+                   if [ $selected -lt 0 ]; then selected=$(($# - 1)); fi;;
+            down)  ((selected++));
+                   if [ $selected -ge $# ]; then selected=0; fi;;
+        esac
+    done
+
+    # cursor position back to normal
+    cursor_to $lastrow
+    printf "\n"
+    cursor_blink_on
+
+    return $selected
+}
+
+# Echo with colors
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+
+# Title / Heading
+title() {
+  clear
+  echo "---------------------------------------------------------------------"
+  colorecho "$BLUE" "Arch Linux Installer - Create Installation Media"
+  echo "---------------------------------------------------------------------"
+}
+
+################################################################
+# Function to display a list of available disks
+
+wsl_disks() {
+    local i
+    k=1
+    wsl_drive=()
+    for i in "${output[@]}"; do
+        # Split the data
+        IFS=" " read -r part1 part2 part3 <<< "$i"
+        
+        # Calculate storage size in GB
+        part2="$((part2 / 1024 / 1024 / 1024)) GB"
+        
+        # Trim leading and trailing whitespace from part3
+        part3=$(echo "$part3" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        
+        # Construct the option string
+        option="${part1} - ${part3} (${part2})"
+
+        # Add to Drive List
+        wsl_drive+=("${part1}")
+        
+        # Add the option to the options array
+        options+=("${k}) $option")
+        k=$((k+1))
+    done
+}
+
+list_wsl() {
+  options=()
+
+  # For WSL
+  if [ ! -z "$WSL_DISTRO_NAME" ]; then
+    # Get USB Device List from PowerShell
+    IFS=$'\n' read -d '' -ra output <<< "$(powershell.exe 'GET-CimInstance -query "SELECT MODEL,SIZE from Win32_DiskDrive"')"
+    output=("${output[@]:3:${#output[@]}-5}")
+
+    wsl_disks   
+    # set i to k and adjust i to match below
+    i=$((k*3-1))
+  else
+    disks=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
+    for ((i=0; i<${#disks[@]}; i+=3)); do
+      model=${disks[i+2]//\\x20/ }  # Replace escaped spaces with actual spaces
+      options+=("$((i/3+1))) /dev/${disks[i]} - $model (${disks[i+1]})")
+    done
+  fi
+
+  options+=("Skip (if you want to create an image or already mounted a disk)")
+  select_option "${options[@]}"
+  choice=$?
+  choice=$((choice+1))
+
+  if [[ $choice =~ ^[0-99]+$ && $choice -ge 1 && $choice -le $((i/3+2)) ]]; then
+    if [[ $choice -le $((i/3)) ]]; then
+      # For WSL
+      if [ ! -z "$WSL_DISTRO_NAME" ]; then
+       colorecho "$GREEN" "Selected $((choice-1)) Disk ${wsl_drive[(choice-1)]}"
+       powershell.exe 'if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) { Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; } wsl --mount '${wsl_drive[(choice-1)]}
+      fi
+      selected_disk="/dev/${disks[((choice-1)*3)]}"
+    fi
+  else
+    colorecho "$RED" "Invalid choice $choice. Please select a valid option."
+  fi
+}
+
+list_disks() {
+  options=()
+  disks=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
+  for ((i=0; i<${#disks[@]}; i+=3)); do
+    model=${disks[i+2]//\\x20/ }  # Replace escaped spaces with actual spaces
+    options+=("$((i/3+1))) /dev/${disks[i]} - $model (${disks[i+1]})")
+  done
+  options+=("$((i/3+1))) Create an (.img) image")
+  options+=("$((i/3+2))) Enter disk path manually")
+
+  select_option "${options[@]}"
+  choice=$?
+  choice=$((choice+1))
+
+  if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le $((i/3+2)) ]]; then
+    if [[ $choice -le $((i/3)) ]]; then
+      selected_disk="/dev/${disks[((choice-1)*3)]}"
+    elif [[ $choice -eq $((i/3+1)) ]]; then
+      # Create Image
+      read -p "Image Name (default=archlinux-installer-rock5.img): " selected_disk
+      if [ -z "$selected_disk" ]; then
+        selected_disk="archlinux-installer-rock5.img"
+      else
+        selected_disk="$selected_disk"
+      fi
+      create_img
+
+    else
+      read -p "Enter the disk path: " selected_disk
+      colorecho "$YELLOW" "Manually entered disk path $selected_disk."
+    fi
+  else
+    colorecho "$RED" "Invalid choice $choice. Please select a valid option."
+  fi
+}
+
+create_img() {
+  
+  if [ ! -d "out" ]; then
+    mkdir out
+  fi
+  
+  if [ -z "$argsize" ]; then
+    img_size="4G"
+  else
+    img_size=$argsize
+  fi
+
+  if [ ! -z "$argimg" ]; then
+    selected_disk=$argimg
+  fi
+
+  if [ -z "$argmountimg" ]; then
+  # Check if out/$selected_disk exists and generate a unique name if needed
+  if [ -e "out/$selected_disk" ]; then
+      counter=0
+      base_name="${selected_disk%.img}"
+      new_name="${base_name}.img"
+
+      while [ -e "out/$new_name" ]; do
+          counter=$((counter + 1))
+          new_name="${base_name}-${counter}.img"
+      done
+
+      selected_disk="$new_name"
+      echo "Renamed to $selected_disk as file already exists."
+  fi
+
+  selected_disk="out/$selected_disk"  
+  sudo truncate -s $img_size $selected_disk
+  colorecho "$GREEN" "Image created at $selected_disk"
+  is_img=$selected_disk
+
+  if [ -z "$argdisk" ]; then
+    img_mount=$(sudo losetup -fP --show $(pwd)/$selected_disk)
+  else
+    img_mount=$argdisk
+    sudo losetup -P $img_mount $(pwd)/$selected_disk
+  fi
+
+  selected_disk=$img_mount
+
+  else
+
+  img_mount=$(sudo losetup -fP --show $argimg)
+  is_img=$argimg
+  selected_disk=$img_mount
+  
+  fi
+  colorecho "$GREEN" "Image mounted on $selected_disk"
+}
+
+
+confirm_disk() {
+    drive=$selected_disk
+    colorecho "$GREEN" "Selected disk $drive."
+    colorecho "$YELLOW" "Confirm to install Arch Linux on $drive ?"
+    colorecho "$RED" "WARNING : all data on the disk will be deleted"
+
+    options=("Confirm" "Select another disk" "Exit Installer")
+    select_option "${options[@]}"
+    answer=$?
+
+    if [ "$answer" = 1 ]; then
+      title
+      colorecho "$GREEN" "Select a disk to install or create an image:"
+      list_disks
+      title
+      confirm_disk
+    elif [ "$answer" = 2 ]; then
+      echo "Aborted. Exiting ..."
+      exit 1
+    fi
+}
+
+################################################################
+
+add_wifi_pkg() {
+  pkg_tar=()
+
+  echo -e "y" | archarm_packages wpa_supplicant-2 core
+  pkg_tar+=($(echo -e "n" | archarm_packages wpa_supplicant-2 core | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages dialog core
+  pkg_tar+=($(echo -e "n" | archarm_packages dialog core | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages pcsclite extra
+  pkg_tar+=($(echo -e "n" | archarm_packages pcsclite extra | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages duktape extra
+  pkg_tar+=($(echo -e "n" | archarm_packages duktape extra | grep .*pkg.*))
+
+  echo -e "y" | archarm_packages polkit-1 extra
+  pkg_tar+=($(echo -e "n" | archarm_packages polkit-1 extra | grep .*pkg.*))
+
+  # copy package
+  for pkg in "${pkg_tar[@]}"; do
+    sudo cp -r "$pkg" "${root_mount_dir}${compiled_pkg_dir}"
+  done
+
+  # Clean up
+  sudo rm -rf "${pkg_tar[@]}"
+}
+
+add_pkg() {
+  colorecho "$GREEN" "Downloading $argaddpkg ..."
+  echo -e "y" | ghrel_packages $argaddpkg
+
+  pkg_tar=($(echo -e "n" | ghrel_packages $argaddpkg | grep .*pkg.*))
+
+  for pkg in "${pkg_tar[@]}"; do
+    sudo cp -r "$pkg" "${root_mount_dir}${compiled_pkg_dir}"
+  done
+  
+  # Clean up
+  sudo rm -rf "${pkg_tar[@]}"
+}
+
+install_kernel() {
+  kernel_name=$1
+  pkg_tar_dir=$(mktemp -d)
+  colorecho "$GREEN" "Downloading $kernel_name ..."
+  echo -e "y" | ghrel_packages $kernel_name
+
+  pkg_tar=($(echo -e "n" | ghrel_packages $kernel_name | grep .*pkg.*))
+  non_pkg=($(echo -e "n" | ghrel_packages $kernel_name | grep $kernel_name | grep -v .*pkg.*))
+  
+  # Extract kernel
+  colorecho "$GREEN" "Extracting $kernel_name ..."
+
+  # Create folder in pkg_tar_dir
+  sudo mkdir $pkg_tar_dir/Kernel
+  sudo mkdir $pkg_tar_dir/Kernel/linux
+  sudo mkdir $pkg_tar_dir/Kernel/linux/boot
+
+  # Manually install Kernel package
+  for pkg in "${pkg_tar[@]}"; do
+    sudo tar -xf "$pkg" -C "$pkg_tar_dir/Kernel/linux/"
+  done
+
+  # Copy initramfs and vmlinuz
+  sudo cp -r initramfs-${kernel_name}.img $pkg_tar_dir/Kernel/linux/boot/initramfs-${kernel_name}.img
+  sudo cp -r $pkg_tar_dir/Kernel/linux/usr/lib/modules/*/vmlinuz $pkg_tar_dir/Kernel/linux/boot/vmlinuz-${kernel_name}
+
+  # set Boot source dir
+  boot_image=$pkg_tar_dir/Kernel/linux/boot
+
+  # Clean up
+  sudo rm -rf "${pkg_tar[@]}" "${non_pkg[@]}"
+}
+
+# Install Packages from a GitHub Release Repo
+ghrel_packages() {
+
+    if [ -z "$1" ]; then
+        colorecho "$RED" "Error: No package specified."
+        exit 1
+    else
+        dgpkg=$1
+    fi
+    
+    ghrel_url=("$adrepo_url")
+    dgpkg_list=()
+
+    for which_url in "${ghrel_url[@]}"; do
+      colorecho "$GREEN" "Fetching $which_url ..."
+      dgpkg_list+=($(curl -s "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
+    done
+
+    echo ""
+    colorecho "$BLUE" "The following packages will be downloaded:"
+    echo ""
+    for url in "${dgpkg_list[@]}"; do
+        selection=$(basename "$url")
+        echo "$selection"
+    done
+    echo ""
+    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
+    read answer
+
+    if [ "$answer" = "y" ]; then
+        for url in "${dgpkg_list[@]}"; do
+            selection=$(basename "$url")
+            echo "Downloading $selection"
+            curl -LJO "$url"
+
+            if [ ! -z "$2" ]; then
+              sudo cp -r $selection $2/$selection
+              sudo rm -rf $selection
+            fi
+
+        done
+    fi
+
+}
+
+# Download Packages from Arch Linux ARM Repo
+archarm_packages() {
+
+    if [ -z "$1" ]; then
+        colorecho "$RED" "Error: No package specified."
+        exit 1
+    else
+        dgpkg=$1
+    fi
+    
+    ghrel_url=("http://mirror.archlinuxarm.org/aarch64/$2") 
+    dgpkg_list=()
+
+    for which_url in "${ghrel_url[@]}"; do
+      colorecho "$GREEN" "Fetching $which_url ..."
+      dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o "^${dgpkg}.*")
+    done
+
+    echo ""
+    colorecho "$BLUE" "The following packages will be downloaded:"
+    echo ""
+    for url in "${dgpkg_list[@]}"; do
+        selection=$(basename "$url")
+        echo "$selection"
+    done
+    echo ""
+    echo -ne $"${BLUE}Are you sure to download the packages (y/n)?${NC}"
+    read answer
+
+    if [ "$answer" = "y" ]; then
+        for url in "${dgpkg_list[@]}"; do
+            selection=$url
+            echo "Downloading $selection"
+            curl -LJO "$which_url/$url"
+
+            if [ ! -z "$3" ]; then
+              sudo cp -r $selection $3/$selection
+              sudo rm -rf $selection
+            fi
+
+        done
+    fi
+
+}
+
+################################################################
+# Loop through the arguments
+for arg in "$@"; do
+  case "$arg" in
+    -h | --help)
+      colorecho "$BLUE" "Arch Linux Installation Tool for Rock 5 / RK3588 ($branch)"
+      echo "Usage: create-installation-media <optional_argument>"
+
+      colorecho "$GREEN" "Options"
+      echo "-h / --help : Usage and Infomation of this Installation Tool."
+      echo "-d / --dev : Use latest dev version of this Installation Tool."
+      echo "-i / --image : Create a disk image with default image name at out folder."
+      echo "-k / --kernel : Create Arch Linux using default kernel option."
+      echo "-b / --bootpart : Create Arch Linux with a seperated boot partition."
+      echo "-c / --compress : Compress the Disk Image to .img.xz"
+      echo "-m / --mtimg : Skip partitioning and use an image instead. (When this argument is used, --image=<image_name> will become the image to be used)"
+      echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
+      echo "--size=<image_size> : Set disk image size (default is 4G)."
+      echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
+      echo "--kernel=<kernel_name> : Set kernel package to get from repo."
+      echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
+      echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
+      echo "--sbc=<model> : Set an SBC model which will be used to generate extlinux and this variable will also be passed to installer."
+      echo "--uboot=<path> : Flash u-boot to the target disk or image. The specified path must contain idbloader.img and uboot.itb"
+      echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
+      echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
+      echo "--installer=<type> : Set which Installer to use (options: cli, tui)."
+  
+      exit 1
+      ;;
+    -d | --dev)
+      echo "Getting the latest installation script from dev ..."
+      bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) ${@:2}
+      exit 1
+      ;;
+    --get-pkg)
+      colorecho "$RED" "For debug only."
+      ghrel_packages $2 $3
+      exit 1
+      ;;
+    --arch-pkg)
+      colorecho "$RED" "For debug only."
+      archarm_packages $2 $3
+      exit 1
+      ;;
+    --image=*)
+      argimg="${arg#*=}"
+      ;;
+    --disk=*)
+      argdisk="${arg#*=}"
+      ;;
+    --size=*)
+      argsize="${arg#*=}"
+      ;;
+    --kernel=*)
+      argkrl="${arg#*=}"
+      colorecho "$GREEN" "Build image with kernel: ${argkrl}"
+      ;;
+    --sbc=*)
+      argsbc="${arg#*=}"
+      colorecho "$GREEN" "Build image for target device: ${argsbc}"
+      ;;
+    --addpkg=*)
+      argaddpkg="${arg#*=}"
+      colorecho "$GREEN" "Get extra packages that matches: ${argaddpkg}"
+      ;;
+    --adrepourl=*)
+      adrepo_url="${arg#*=}"
+      colorecho "$RED" "Using custom package repo at ${adrepo_url}"
+      ;;
+    --uboot=*)
+      arguboot="${arg#*=}"
+      colorecho "$GREEN" "Build image with uboot from ${arguboot}"
+      ;;
+    --bootpartstart=*)
+      argbootptst="${arg#*=}"
+      ;;    
+    --bootpartend=*)
+      argbootpted="${arg#*=}"
+      ;;
+    -i | --image)
+      argimg="archlinux-installer-rock5.img"
+      ;;
+    -k | --kernel)
+      argkrl="rkbsp"
+      ;;
+    -b | --bootpart)
+      argbootpt=1
+      ;;
+    -c | --compress)
+      argxz=1
+      ;;
+    -m | --mtimg)
+      argmountimg=1
+      ;;
+    -*)
+      colorecho "$RED" "Invalid command or argument."
+      exit 1
+      ;;
+  esac
+done
+
+  ################################################################
+  # Main Program
+  title
+
+# Install required packages
+
+  # For WSL
+  if [ ! -z "$WSL_DISTRO_NAME" ]; then
+    colorecho "$YELLOW" "Warning: Running on WSL2 is experimental."
+    if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ] || [ -x "$(command -v apt)" ]; then
+      colorecho "$YELLOW" "Make sure this is your default WSL distro, else it wont works."
+    else
+      colorecho "$RED" "Error: Only Debian / Ubuntu Based Distro on WSL2 are supported. Disk listed below will NOT work."
+      colorecho "$GREEN" "However, you can still create an image."
+    fi
+  fi
+
+  # Check if parted is installed
+  if ! [ -x "$(command -v parted)" ]; then
+    # Check Linux distribution
+    colorecho "$YELLOW" "Parted is not found, trying to install..."
+    if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+      # Debian/Ubuntu-based
+      sudo apt-get update
+      sudo apt-get install -y parted
+    elif [ -f /etc/redhat-release ]; then
+      # Red Hat-based
+      sudo yum update
+      sudo yum install -y parted
+    elif [ -f /etc/arch-release ]; then
+      # Arch Linux
+      sudo pacman -S parted --noconfirm
+    elif [ -x "$(command -v apk)" ]; then
+      # Alphine-based
+      apk add parted
+    else
+      colorecho "$RED" "Error : We cant find or install parted on your system. Exiting..."
+      exit 1
+    fi
+  fi
+
+  # Check if parted is installed
+  if ! [ -x "$(command -v bsdtar)" ]; then
+    # Check Linux distribution
+    colorecho "$YELLOW" "bsdtar command not found, trying to install..."
+    if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+      # Debian/Ubuntu-based
+      sudo apt-get update
+      sudo apt-get install -y libarchive-tools
+    elif [ -f /etc/redhat-release ]; then
+      # Red Hat-based
+      sudo yum update
+      sudo yum install -y libarchive-tools
+    elif [ -x "$(command -v apk)" ]; then
+      # Alphine-based
+      apk add libarchive-tools
+    else
+      colorecho "$RED" "Error : We cant find or install bsdtar on your system. Exiting..."
+      exit 1
+    fi
+  fi
+
+  # Check if mkfs.vat is installed
+  if ! [ -x "$(command -v mkfs.vfat)" ]; then
+    # Check Linux distribution
+    colorecho "$YELLOW" "mkfs.vat command not found, trying to install..."
+    if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+      # Debian/Ubuntu-based
+      sudo apt-get update
+      sudo apt-get install -y dosfstools
+    elif [ -f /etc/redhat-release ]; then
+      # Red Hat-based
+      sudo yum update
+      sudo yum install -y dosfstools
+    elif [ -f /etc/arch-release ]; then
+      # Arch Linux
+      sudo pacman -S dosfstools --noconfirm
+    elif [ -x "$(command -v apk)" ]; then
+      # Alphine-based
+      apk add parted dosfstools
+    else
+      colorecho "$RED" "Error : We cant find or install dosfstools (mkfs.vfat) on your system. Exiting..."
+      exit 1
+    fi
+  fi
+
+  ################################################################
+  # This runs when there is no parameters specified
+
+  # Choose drive to install / create .img image
+  if [ -z "$argimg" ] && [ -z "$argdisk" ]; then
+    if [ ! -z "$WSL_DISTRO_NAME" ]; then
+      colorecho "$GREEN" "Mount a Disk to Continue:"
+      list_wsl
+      colorecho "$GREEN" "If you sees an error, it is normal when your disk doesnt have a windows supported partiton."
+      colorecho "$GREEN" "Just Pick the disk that we just mounted."
+      colorecho "$GREEN" "Select a disk to install or create an image:"
+      list_disks
+    else
+      colorecho "$GREEN" "Select a disk to install or create an image:"
+      list_disks
+    fi
+
+    # Confirm Disk
+    title
+    confirm_disk
+  elif [ -z "$argimg" ]; then
+    drive=$argdisk
+  else
+    create_img
+    drive=$selected_disk
+  fi
+
+  # Install boot partition and kernel
+  if [ -z "$argkrl" ]; then
+      title
+      colorecho "$GREEN" "Select a kernel to install:"
+      options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(WIP) Install other Kernel from repo")
+      select_option "${options[@]}"
+      answer=$?
+  else
+      answer=99
+  fi
+
+  if [ "$answer" = 0 ] || [ "$argkrl" = "rkbsp" ]; then
+    install_kernel "linux-radxa-rkbsp5"
+  else
+    if [ -z "$argkrl" ]; then
+      read -p "Enter kernel package name:" answer
+    else
+      answer=$argkrl
+    fi
+    install_kernel $answer
+  fi
+
+  ################################################################
+  # Main Setup
+  title
+  root_mount_dir=$(mktemp -d)
+
+  if [ "$argbootpt" = 1 ]; then
+    boot_mount_dir=$(mktemp -d)
+  fi
+
+  if [ -z "$argmountimg" ]; then
+  # Unmount all partitions of the specified drive
+  colorecho "$GREEN" "Unmounting disk ..."
+  partitions=$(ls ${drive}* 2>/dev/null)
+  if [ "$partitions" ]; then
+    for partition in $partitions; do
+      sudo umount $partition 2>/dev/null || true
+    done
+  fi
+
+  # Create GPT table and partitions
+  colorecho "$GREEN" "Formatting and partitioning disk ..."
+  echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
+
+  if [ -z "$argbootptst" ]; then
+    argbootptst="16MiB"
+  fi
+
+  if [ -z "$argbootpted" ]; then
+    if [ "$argbootpt" = 1 ]; then
+      argbootpted="500MiB"
+    else
+      argbootpted="32MiB"
+    fi
+  fi
+
+  if [ "$argbootpt" = 1 ]; then
+    sudo parted $drive mkpart boot fat32 $argbootptst $argbootpted
+    sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
+    sudo parted $drive set 1 boot on
+  else
+    sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
+    sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
+    sudo parted $drive set 2 boot on
+  fi
+
+  # Pack u-boot
+  if [ -n "$arguboot" ]; then
+    colorecho "$GREEN" "Flashing u-boot ..."
+
+    if [ -f "$arguboot/idbloader.img" ] && [ -f "$arguboot/u-boot.itb" ]; then
+        sudo dd if="$arguboot/idbloader.img" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+    elif [ -f "$arguboot/idblock.bin" ] && [ -f "$arguboot/uboot.img" ]; then 
+        sudo dd if="$arguboot/idblock.bin" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/uboot.img" of="$drive" seek=16384 conv=notrunc
+    elif [ -f "$arguboot/tpl-spl.img" ] && [ -f "$arguboot/u-boot.itb" ]; then   
+        sudo dd if="$arguboot/tpl-spl.img" of="$drive" seek=64 conv=notrunc
+        sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+    else
+        colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
+    fi
+    
+  fi
+
+  # Find the partitions
+  if [ -e $drive"1" ]; then
+    root_partition=$drive"2"
+    boot_partition=$drive"1"
+  else
+    root_partition=$drive"p2"
+    boot_partition=$drive"p1"	
+  fi
+
+  # Format the partitions
+  echo -e 'y' |sudo mkfs.ext4 $root_partition 
+  sudo mkfs.vfat -F32 $boot_partition
+  else
+
+  # Find the partitions
+  if [ -e $drive"1" ]; then
+    root_partition=$drive"2"
+    boot_partition=$drive"1"
+  else
+    root_partition=$drive"p2"
+    boot_partition=$drive"p1"	
+  fi
+
+  fi
+
+  title
+  # Mount the partitions
+  colorecho "$GREEN" "Mounting partition for install ..."
+  sudo mount -o rw $root_partition $root_mount_dir
+
+  if [ "$argbootpt" = 1 ]; then
+    sudo mount $boot_partition $boot_mount_dir
+  fi
+
+  # Download and extract the latest ArchLinux tarball
+  colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
+  curl -LJO $rootfs_url
+
+  colorecho "$GREEN" "Copying Arch Linux rootfs ..."
+  sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
+  sudo rm -rf $root_mount_dir/boot/*
+
+  if [ "$argbootpt" = 1 ]; then
+    # Copy contents to boot partition
+    colorecho "$GREEN" "Copying Boot Partition ..."
+    sudo cp -r "$boot_image"/* "$boot_mount_dir"
+    sudo rm -rf "$boot_image"/*
+  fi
+  
+    # Copy kernel files
+    colorecho "$GREEN" "Copying Linux Kernel ..."
+    sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
+  
+  title
+  colorecho "$GREEN" "Generating extlinux.conf ..."
+
+  if [ ! "$argbootpt" = 1 ]; then
+    boot_mount_dir=$root_mount_dir/boot
+  fi
+
+  # Find the UUIDs of the root partition
+  root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
+  root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
+
+  # Create extlinux.conf
+  if [ -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
+    colorecho "$YELLOW" "Skipped. extlinux.conf already exists."
+  elif [ -e "$boot_mount_dir/extlinux/extlinux.arch.template" ]; then
+    sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
+  elif [ ! -z "$argsbc" ]; then
+    colorecho "$GREEN" "Getting ${argsbc}.extlinux.template from repo ..."
+    echo -e "y" | ghrel_packages "${argsbc}.extlinux.template"
+
+    # Check if the extlinux directory exists, create it if it doesn't
+    if [ ! -d "$boot_mount_dir/extlinux" ]; then
+        sudo mkdir -p "$boot_mount_dir/extlinux"
+    fi
+
+    sudo cp -r ${argsbc}.extlinux.template $boot_mount_dir/extlinux/extlinux.conf
+    sudo rm -rf ${argsbc}.extlinux.template
+  else
+    colorecho "$RED" "Error, neither sbc nor extlinux template were specified. Unable to generate extlinux.conf. You may need to create extlinux.conf manually."
+  fi
+
+  echo "Updating extlinux.conf ..."
+  # Update pkgbase for extlinux.conf
+  sudo sed -i "s|%PKGBASE%|$argkrl|" $boot_mount_dir/extlinux/extlinux.conf
+  # Update UUID for extlinux.conf
+  sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+  sudo sed -i "s|UUID=CHANGEME|$root_uuid|" $boot_mount_dir/extlinux/extlinux.conf
+
+  if [ ! "$argbootpt" = 1 ]; then
+    sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" $boot_mount_dir/extlinux/extlinux.conf
+    sudo sed -i "s| /initramfs| /boot/initramfs|" $boot_mount_dir/extlinux/extlinux.conf
+    sudo sed -i "s| /initrd| /boot/initrd|" $boot_mount_dir/extlinux/extlinux.conf
+    sudo sed -i "s| /dtbs| /boot/dtbs|" $boot_mount_dir/extlinux/extlinux.conf
+    sudo sed -i "s| /dtbo| /boot/dtbo|" $boot_mount_dir/extlinux/extlinux.conf
+  fi
+
+  echo "Info : Root partition UUID: $root_uuid"
+  echo "Info : Root partition PARTUUID: $root_part_uuid"
+
+  title
+  # Download Installer
+  colorecho "$GREEN" "Downloading Installer ..."
+  if [ "$arginstaller" == "cli" ] || [ -z "$arginstaller"]; then
+    installer_name="arch-rock-installer"
+    compiled_pkg_dir="/usr/lib/compiled-packages"
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/$installer_name
+  elif [ "$arginstaller" == "tui" ]; then
+    installer_name="tui-installer"
+    compiled_pkg_dir="/usr/lib/installer/packages"
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/$installer_name
+  fi
+
+  # Copy Installer
+  colorecho "$GREEN" "Copying Installer ..."
+  sudo chmod +x $installer_name
+  sudo cp -r "$installer_name" "$root_mount_dir/usr/bin/installer"
+  if [ ! -z "$argsbc" ]; then
+    sudo sed -i "s/install_target=\"rock5\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer"
+  fi
+
+  if [ ! -z "$is_img" ]; then
+    colorecho "$GREEN" "Downloading growpart ..."
+    curl -LJO https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart
+    colorecho "$GREEN" "Copying growpart ..."
+    sudo chmod +x growpart
+    sudo cp -r "growpart" "$root_mount_dir/usr/bin/growpart"
+  fi
+
+  # Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
+  sudo mkdir -p "${root_mount_dir}${compiled_pkg_dir}"
+  add_wifi_pkg
+  if [ ! -z "$argaddpkg" ]; then
+    add_pkg
+  fi
+  ls "${root_mount_dir}${compiled_pkg_dir}" #DEBUG
+  # Remove the temporary directory
+  sudo rm -rf "$pkg_tar_dir"
+  sudo rm -rf $installer_name
+
+  system_arch=$(uname -m)
+  echo "System is $system_arch"
+
+  if [ "$system_arch" == "x86_64" ]; then
+    colorecho "$YELLOW" "(chroot from non-aarch64 is experimental) Chroot into system ..."
+
+    # Check if qemu-aarch64-static is installed
+    if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
+      # Check Linux distribution
+      colorecho "$YELLOW" "qemu-aarch64-static is not found, trying to install..."
+      if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+        # Debian/Ubuntu-based
+        sudo apt-get update
+        sudo apt-get install -y qemu-user-static
+      elif [ -f /etc/redhat-release ]; then
+        # Red Hat-based
+        sudo yum update
+        sudo yum install -y qemu-user-static
+      elif [ -f /etc/arch-release ]; then
+        # Arch Linux
+        sudo pacman -S qemu-user-static --noconfirm
+      elif [ -x "$(command -v apk)" ]; then
+        # Alphine-based
+        apk add qemu-user-static
+      else
+        colorecho "$RED" "Error : qemu-aarch64-static is not installed."
+      fi
+    fi
+
+    S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
+    S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:CF'
+    echo -n $S1$S2| sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
+    echo
+    sudo systemctl restart systemd-binfmt.service
+    sudo chroot $root_mount_dir /bin/bash <<END
+    /usr/bin/installer --create-init-setup-service
+END
+  elif [ "$system_arch" = "aarch64" ] || [ "$system_arch" = "arm64" ] || [ "$system_arch" = "armv8" ]; then
+    colorecho "$GREEN" "Chroot into system ..."
+    sudo chroot $root_mount_dir /bin/bash <<END
+    /usr/bin/installer --create-init-setup-service
+END
+  else
+    colorecho "$YELLOW" "System Architecture not supported. Skipping Chroot..."
+  fi
+
+  # Unmount the boot and root partitions
+  sudo umount $root_mount_dir
+
+  if [ "$argbootpt" = 1 ]; then
+    sudo umount $boot_mount_dir
+    sudo rm -rf $boot_mount_dir
+  fi
+
+  # Clean up
+  colorecho "$YELLOW" "Cleaning up temporary files ..."
+  sudo rm -rf $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz growpart
+
+  title
+
+  if [ ! -z "$is_img" ]; then
+    sudo losetup --detach $drive
+    colorecho "$YELLOW" "Tips: Check if the image loop device is unmounted successfully."
+    if [ "$argxz" = 1 ]; then
+      colorecho "$GREEN" "Compressing Image (this may take some time, grab a coffee) ..."
+      sudo xz -T 0 $is_img
+      is_img="${is_img}.xz"
+    fi
+  elif [ ! -z "$WSL_DISTRO_NAME" ]; then
+    wsl.exe --unmount \\$drive
+    colorecho "$YELLOW" "Tips: Check if your disk is unmounted with WSL successfully."
+  fi
+
+  if [ ! -z "$is_img" ]; then
+    colorecho "$GREEN" "Created Arch Linux Installer at $(pwd)/$is_img."
+    colorecho "$GREEN" "You may now flash the image to your storage device."
+    if [ ! -z "$WSL_DISTRO_NAME" ]; then
+      explorer.exe out
+    fi
+  else
+    colorecho "$GREEN" "Created Arch Linux Installer at $drive."
+    colorecho "$YELLOW" "Tips: Check if your disk is unmounted successfully before you unplug it."
+    colorecho "$GREEN" "You may now boot into $drive for installation."
+  fi
+  echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
+
+################################################################
