@@ -1,0 +1,79 @@
+#   __    ___  _  _     ___  __   __ _  ____  __  ___  _  _  ____   __  ____  __  __   __ _  ____ 
+#  / _\  / __)/ )( \   / __)/  \ (  ( \(  __)(  )/ __)/ )( \(  _ \ / _\(_  _)(  )/  \ (  ( \/ ___)
+# /    \( (__ ) \/ (  ( (__(  O )/    / ) _)  )(( (_ \) \/ ( )   //    \ )(   )((  O )/    /\___ \
+# \_/\_/ \___)\____/   \___)\__/ \_)__)(__)  (__)\___/\____/(__\_)\_/\_/(__) (__)\__/ \_)__)(____/
+# ACU configurations for TUI Installer
+configurations:
+
+  # ACU Theme
+  # Theme Name displayed in ACU Settings (Optional)
+  THEME_NAME: Installer
+
+  # Theme Color
+  THEME: $LTBLUE
+
+  # Warning Messages Color
+  #WARNING: $YELLOW
+
+  # Debug Messages Color
+  #DEBUG: $LTGREY
+
+  # Theme with Background Color (Experimental)
+  # If BACKGROUND value is set, the above THEME value (Theme Color) will be ignored
+  BACKGROUND: $BGWHITE
+
+  ## ACU Configurable Variables ##
+
+  # load device configuration determined by tags (e.g. rock-5b)
+  #device_config: generic-aarch64
+
+  # do not confirm when installing a package using pacman -S / -U or makepkg -si
+  #no_confirm: 1
+
+  # do not print warning ($WARNING) messages
+  no_warning: 1
+
+  # do not clear terminal outputs
+  #no_clear: 1
+
+  # print debug ($DEBUG) messages
+  #debug_log: 1
+
+  # auto update acu when launch without asking
+  #auto_update: 1
+
+  ## ACU Configurable Files and Path ##
+
+  # archive repo url for downgrading packages
+  # Arch Linux ARM Archive repo
+  alaa_url: https://alaa.ad24.cz
+
+  # directory for storing source files
+  source_repo_dir: .acu/sources
+
+  # Repositories List
+  # repositories_file - file (or url) to load repositories list
+  # repositories_url - Sync local file from url when fetching updates (optional)
+  repositories_file: .acu/config/repo.yaml
+  #repositories_url: https://raw.githubusercontent.com/kwankiu/acu/dev/example/repo.yaml
+
+  # Tags List
+  # tags_file - file to load tags list
+  # tags_url - Sync local file from url when fetching updates (optional)
+  tags_file: .acu/config/tags.yaml
+  tags_url: https://raw.githubusercontent.com/kwankiu/acu/dev/example/tags.yaml
+
+  # Kernel List
+  # kernel_file - file to load kernel list
+  # kernel_url - Sync local file from url when fetching updates (optional)
+  kernel_file: https://raw.githubusercontent.com/kwankiu/acu/dev/example/kernel.yaml
+
+  # Bootloader List
+  # bootloader_file - file to load bootloader list
+  # bootloader_url - Sync local file from url when fetching updates (optional)
+  bootloader_file: https://raw.githubusercontent.com/kwankiu/acu/dev/example/bootloader.yaml
+
+  # Apps List
+  # apps_file - file to load apps list
+  # apps_url - Sync local file from url when fetching updates (optional)
+  apps_file: https://raw.githubusercontent.com/kwankiu/acu/dev/example/apps.yaml
