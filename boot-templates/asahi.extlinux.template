@@ -4,5 +4,5 @@
 label Archlinux
     kernel /vmlinuz-%PKGBASE%
     initrd /initramfs-%PKGBASE%.img
-    devicetreedir /dtbs/%PKGBASE%
+    devicetreedir /usr/lib/asahi-boot/dtb
     append   root=UUID=CHANGEME rw
