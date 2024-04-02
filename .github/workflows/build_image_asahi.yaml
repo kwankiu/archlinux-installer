@@ -1,0 +1,39 @@
+name: Build Arch Linux Installer for Asahi (Apple)
+
+# Controls when the workflow will run
+on:
+  push:
+    tags:
+      - 'b*'
+      - 'd*asahi'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Runs a set of commands using the runners shell
+      - name: Build Image for MacbookPro17,1
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-asahi --sbc=j293 -c --image=mbp171-archlinux-installer.img
+          cp -r out/mbp171-archlinux-installer.img.xz mbp171-archlinux-installer.img.xz
+
+      - uses: ncipollo/release-action@v1
+        with:
+            artifacts: "*-archlinux-installer.img.xz"
+            makeLatest: false
+            prerelease: true
+            allowUpdates: true
+            omitBody: true
