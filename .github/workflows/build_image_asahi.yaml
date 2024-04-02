@@ -25,10 +25,10 @@ jobs:
       - uses: actions/checkout@v3
 
       # Runs a set of commands using the runners shell
-      - name: Build Image for MacbookPro17,1
+      - name: Build Image for Asahi
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-asahi --sbc=j293 -c --image=mbp171-archlinux-installer.img
-          cp -r out/mbp171-archlinux-installer.img.xz mbp171-archlinux-installer.img.xz
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-asahi --sbc=asahi -c --image=asahi-archlinux-installer.img
+          cp -r out/asahi-archlinux-installer.img.xz asahi-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1
         with:
