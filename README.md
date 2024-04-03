@@ -35,7 +35,7 @@ You can build your own image or flash our Installer to your disk directly by exe
 
 ```bash
 
-bash  <(curl  -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
+bash  <(curl  -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/create-installation-media)
 
 ```
 

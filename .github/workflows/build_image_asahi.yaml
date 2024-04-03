@@ -27,7 +27,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build Image for Asahi
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) --kernel=linux-asahi --sbc=asahi -c --image=asahi-archlinux-installer.img
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-asahi --sbc=asahi -c --image=asahi-archlinux-installer.img
           cp -r out/asahi-archlinux-installer.img.xz asahi-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1
