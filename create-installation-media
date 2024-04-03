@@ -835,8 +835,8 @@ done
   elif [ -e "$boot_mount_dir/extlinux/extlinux.arch.template" ]; then
     sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
   elif [ ! -z "$argsbc" ]; then
-    colorecho "$GREEN" "Getting ${argsbc}.extlinux.template from repo ..."
-    echo -e "y" | ghrel_packages "${argsbc}.extlinux.template"
+    colorecho "$GREEN" "Getting ${argsbc}.extlinux.template ..."
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/boot-templates/${argsbc}.extlinux.template
 
     # Check if the extlinux directory exists, create it if it doesn't
     if [ ! -d "$boot_mount_dir/extlinux" ]; then
