@@ -488,7 +488,7 @@ for arg in "$@"; do
       echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
       echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
       echo "--installer=<type> : Set which Installer to use (options: cli, tui)."
-  
+      echo "--script=<path> : Run an additional script in chroot."
       exit 1
       ;;
     -d | --dev)
@@ -508,6 +508,9 @@ for arg in "$@"; do
       ;;
     --installer=*)
       arginstaller="${arg#*=}"
+      ;;
+    --script=*)
+      argscripts="${arg#*=}"
       ;;
     --image=*)
       argimg="${arg#*=}"
@@ -903,6 +906,12 @@ done
     colorecho "$GREEN" "Copying growpart ..."
     sudo chmod +x growpart
     sudo cp -r "growpart" "$root_mount_dir/usr/bin/growpart"
+  
+  # Copy Script
+  if [ -n "$argscripts" ]; then
+    colorecho "$GREEN" "Copying Script ..."
+    sudo chmod +x "$argscripts"
+    sudo cp -r "$argscripts" "$root_mount_dir/usr/bin/script.sh" 
   fi
 
   # Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
@@ -966,10 +975,18 @@ done
       fi
     fi
 
-    colorecho "$GREEN" "Chroot into system ..."
-    sudo arch-chroot $root_mount_dir /bin/bash <<END
-    /usr/bin/installer --create-init-setup-service
+    if [ -n "$argscripts" ]; then
+      colorecho "$GREEN" "Chroot into system ..."
+      sudo arch-chroot $root_mount_dir /bin/bash <<END
+      /usr/bin/installer --create-init-setup-service
+      /usr/bin/script.sh
 END
+    else
+      colorecho "$GREEN" "Chroot into system ..."
+      sudo arch-chroot $root_mount_dir /bin/bash <<END
+      /usr/bin/installer --create-init-setup-service
+END
+    fi
   else
     colorecho "$YELLOW" "System Architecture not supported. Skipping Chroot..."
   fi
