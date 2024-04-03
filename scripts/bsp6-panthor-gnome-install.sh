@@ -66,9 +66,19 @@
     echo "Upgrade system"
     pacman -Syyu --noconfirm
 
+    echo "Installing network and fonts"
+    pacman -Sy networkmanager iw iwd bluez --noconfirm
+    pacman -Sy noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
+
     echo "Install DE"
     pacman -Sy gnome --noconfirm
+
+    echo "Enable services"
     systemctl enable gdm
+    systemctl enable NetworkManager.service
+    systemctl start NetworkManager.service
+    systemctl enable bluetooth.service
+    systemctl start bluetooth.service
 
     echo "Finishing ..."
     sed -i "s|#CheckSpace|CheckSpace|" /etc/pacman.conf
