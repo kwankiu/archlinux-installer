@@ -1,6 +1,10 @@
 #!/bin/bash
 # Installs a Gnome (Full) System with Boogie's 6.1 Panthor Kernel
 
+    echo "Remove the created init setup service as we are installing directly ..."
+    systemctl disable init-setup.service
+    rm -rf /etc/systemd/system/init-setup.service
+
     echo "Enabling and Updating Time Sync ..."
     systemctl enable systemd-timesyncd
     sleep 1
@@ -45,7 +49,14 @@
 
     # Update extlinux.conf
     echo "Updating extlinux.conf ..."
+
     sed -i "s|linux-rockchip-joshua-git|$kernelpkg|" /boot/extlinux/extlinux.conf
+
+    # fix rockchip overlay directory name
+    if -e "/boot/dtbs/$kernelpkg/rockchip/overlay"; then
+        sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
+    fi
+
     echo "Done"
     cat /boot/extlinux/extlinux.conf
 
