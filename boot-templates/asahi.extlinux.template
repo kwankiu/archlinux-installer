@@ -5,4 +5,4 @@ label Archlinux
     kernel /vmlinuz-%PKGBASE%
     initrd /initramfs-%PKGBASE%.img
     devicetreedir /usr/lib/asahi-boot/dtb
-    append   root=UUID=CHANGEME rw
+    append   root=UUID=CHANGEME rw quiet splash

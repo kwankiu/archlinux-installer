@@ -5,4 +5,4 @@ label Archlinux
     kernel /vmlinuz-%PKGBASE%
     initrd /initramfs-%PKGBASE%.img
     devicetreedir /dtbs/%PKGBASE%
-    append   root=UUID=CHANGEME rw
+    append   root=UUID=CHANGEME rw quiet splash

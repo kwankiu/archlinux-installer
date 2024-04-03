@@ -6,4 +6,4 @@ label Archlinux
     initrd /initramfs-%PKGBASE%.img
     fdt /dtbs/%PKGBASE%/rockchip/rk3588s-orangepi-5.dtb
     fdtoverlays	%PKGBASE%
-    append   root=UUID=CHANGEME rw
+    append   root=UUID=CHANGEME rw quiet splash
