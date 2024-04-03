@@ -1,6 +1,8 @@
 #!/bin/bash
 # Installs a Gnome (Minimal) System with Boogie's 6.1 Panthor Kernel
 
+    install_target=$1
+
     echo "Remove the created init setup service as we are installing directly ..."
     systemctl disable init-setup.service
     rm -rf /etc/systemd/system/init-setup.service
@@ -53,9 +55,7 @@
     sed -i "s|linux-rockchip-joshua-git|$kernelpkg|" /boot/extlinux/extlinux.conf
 
     # fix rockchip overlay directory name
-    if -e "/boot/dtbs/$kernelpkg/rockchip/overlay"; then
-        sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
-    fi
+    sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
 
     echo "Done"
     cat /boot/extlinux/extlinux.conf
@@ -73,6 +73,16 @@
     echo "Set iwd to default"
     mkdir -p /etc/NetworkManager/conf.d
     echo -e "[device]\nwifi.backend=iwd" | tee /etc/NetworkManager/conf.d/wifi_backend.conf
+
+    if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
+        curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+        chmod +x brcm_patchram_plus
+        mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
+        echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error: Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info: ${wifi_chip}"\n    echo "BT Status: ${bt_status}"\nfi' | tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
+        chmod +x /usr/local/bin/bt_ap6275p.sh
+        echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/sudo /usr/local/bin/bt_ap6275p.sh\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | tee /usr/lib/systemd/system/bt_ap6275p.service
+        systemctl enable bt_ap6275p.service
+    fi
 
     echo "Install DE"
     pacman -Sy gnome-shell gdm gnome-keyring gnome-control-center gnome-initial-setup gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-desktop-portal xdg-desktop-portal-gnome xdg-user-dirs librsvg --noconfirm

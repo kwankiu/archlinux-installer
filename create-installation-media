@@ -980,7 +980,7 @@ done
       colorecho "$GREEN" "Chroot into system ..."
       sudo arch-chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-init-setup-service
-    /usr/bin/script.sh
+    /usr/bin/script.sh "$argsbc"
 END
     else
       colorecho "$GREEN" "Chroot into system ..."
