@@ -39,7 +39,7 @@
     echo "Install new kernel"
     yes y|pacman -R linux-aarch64
     rm -rf /etc/mkinitcpio.d/*
-    rm -rf /boot/*
+    rm -rf /boot/vmlinu* /boot/initr* /boot/dtbs
     kernelpkg="linux-aarch64-rockchip-bsp6.1-joshua-panthor-git"
     yes y|pacman -S --overwrite \* $kernelpkg $kernelpkg-headers linux-firmware-joshua-git
 
