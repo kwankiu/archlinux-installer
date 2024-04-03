@@ -975,18 +975,10 @@ done
       fi
     fi
 
-    if [ -n "$argscripts" ]; then
-      colorecho "$GREEN" "Chroot into system ..."
-      sudo arch-chroot $root_mount_dir /bin/bash <<END
-    /usr/bin/installer --create-init-setup-service
-    /usr/bin/script.sh
-END
-    else
-      colorecho "$GREEN" "Chroot into system ..."
-      sudo arch-chroot $root_mount_dir /bin/bash <<END
+    colorecho "$GREEN" "Chroot into system ..."
+    sudo arch-chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-init-setup-service
 END
-    fi
 
   else
     colorecho "$YELLOW" "System Architecture not supported. Skipping Chroot..."
