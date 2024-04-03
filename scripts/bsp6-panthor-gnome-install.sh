@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs a Gnome (Full) System with Boogie's 6.1 Panthor Kernel
+# Installs a Gnome (Minimal) System with Boogie's 6.1 Panthor Kernel
 
     echo "Remove the created init setup service as we are installing directly ..."
     systemctl disable init-setup.service
@@ -70,8 +70,12 @@
     pacman -Sy networkmanager iw iwd bluez --noconfirm
     pacman -Sy noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
 
+    echo "Set iwd to default"
+    mkdir -p /etc/NetworkManager/conf.d
+    echo -e "[device]\nwifi.backend=iwd" | tee /etc/NetworkManager/conf.d/wifi_backend.conf
+
     echo "Install DE"
-    pacman -Sy gnome --noconfirm
+    pacman -Sy gnome-shell gdm gnome-keyring gnome-control-center gnome-initial-setup gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-desktop-portal xdg-desktop-portal-gnome xdg-user-dirs librsvg --noconfirm
 
     echo "Enable services"
     systemctl enable gdm
