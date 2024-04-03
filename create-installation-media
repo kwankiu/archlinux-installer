@@ -835,8 +835,9 @@ done
   # Create extlinux.conf
   if [ -e "$boot_mount_dir/extlinux/extlinux.conf" ]; then
     colorecho "$YELLOW" "Skipped. extlinux.conf already exists."
-  elif [ -e "$boot_mount_dir/extlinux/extlinux.arch.template" ]; then
-    sudo mv $boot_mount_dir/extlinux/extlinux.arch.template $boot_mount_dir/extlinux/extlinux.conf
+  elif found_file=$(sudo ls -1 $boot_mount_dir/extlinux/extlinux.*.template 2>/dev/null); then
+        colorecho "$YELLOW" "Using package provided template: $found_file"
+        sudo mv "$found_file" $boot_mount_dir/extlinux/extlinux.conf
   elif [ ! -z "$argsbc" ]; then
     colorecho "$GREEN" "Getting ${argsbc}.extlinux.template ..."
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/boot-templates/${argsbc}.extlinux.template
@@ -865,6 +866,11 @@ done
     sudo sed -i "s| /initrd| /boot/initrd|" $boot_mount_dir/extlinux/extlinux.conf
     sudo sed -i "s| /dtbs| /boot/dtbs|" $boot_mount_dir/extlinux/extlinux.conf
     sudo sed -i "s| /dtbo| /boot/dtbo|" $boot_mount_dir/extlinux/extlinux.conf
+  fi
+
+  # fix rockchip overlay directory name
+  if [ -e "$boot_mount_dir/dtbs/$argkrl/rockchip/overlay" ]; then
+      sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" $boot_mount_dir/extlinux/extlinux.conf
   fi
 
   echo "Info : Root partition UUID: $root_uuid"
