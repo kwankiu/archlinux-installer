@@ -24,8 +24,8 @@ Images for Radxa Rock 5 series are available on the [RPI Imager repository](http
 
 Images for Khadas Edge 2 are available on [OOWOW](https://docs.khadas.com/software/oowow/getting-started) (coming soon).
 
-### For all devices
-You may also download our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest) and flash it (using [RPI Imager](https://www.raspberrypi.com/software/), [balenaEtcher](https://etcher.balena.io/), etc) to your storage device.
+### For other devices
+Our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest) are available for downloads, you can flash it (using [RPI Imager](https://www.raspberrypi.com/software/), [balenaEtcher](https://etcher.balena.io/), etc) to your storage device.
 
   More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer-rock5/wiki/Get-the-installer).
 
@@ -58,9 +58,9 @@ More details can be found at our [wiki](https://github.com/kwankiu/archlinux-ins
 
 1. If you get stuck while rebooting, unplug the power and power it on manually.
 
-2. WiFi support is experimental. This is only tested on RTL8852BE, other WiFi adapter may not work properly, refer to armbian firmware for supported WiFi adapter.
+2. For WiFi supported hardware, please refer to mainline linux firmware and armbian firmware (for rockchip SBCs) for supported WiFi adapter.
 
-3. After the inital setup, the device will reboot, and you will need to connect to WiFi again after a reboot.
+3. After the inital setup, the device will reboot, and you may need to connect to WiFi again after a reboot.
 
 4. After the installation, you will need to connect to WiFi again.
 
