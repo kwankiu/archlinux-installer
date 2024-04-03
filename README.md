@@ -31,9 +31,9 @@ Our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releas
 
   More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer-rock5/wiki/Get-the-installer).
 
-## Running the script (Advanced)
+## The `create-installation-media` tool (Advanced)
 
-You can build your own image or flash our Installer to your disk directly by executing the following command:
+You can build your own image or flash the Installer to your disk directly by executing the following command:
 
 ```bash
 
