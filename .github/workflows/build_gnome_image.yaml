@@ -34,7 +34,7 @@ jobs:
       - name: Build Image for Rock 5B
         run: |
           curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/bsp6-panthor-gnome-install.sh
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --script=bsp6-panthor-gnome-install.sh --image=rock-5b-archlinux-gnome.img --uboot=usr/lib/u-boot/rock-5b
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --script=bsp6-panthor-gnome-install.sh --size=8G --image=rock-5b-archlinux-gnome.img --uboot=usr/lib/u-boot/rock-5b
           cp -r out/rock-5b-archlinux-gnome.img.xz rock-5b-archlinux-gnome.img.xz
 
       - uses: ncipollo/release-action@v1
