@@ -33,9 +33,27 @@
     echo -e "[experimental]\nSigLevel = Never\nServer = https://github.com/kwankiu/PKGBUILDs/releases/download/experimental" | tee -a /etc/pacman.conf
     acu rem add pacman "7Ji"
 
-    echo "WIP"
-    pacman -Sy mesa-panfrost-git
-    pacman -Sy gnome
+    echo "Install new kernel"
+    yes y|pacman -R linux-aarch64
+    rm -rf /etc/mkinitcpio.d/*
+    rm -rf /boot/*
+    kernelpkg="linux-aarch64-rockchip-bsp6.1-joshua-panthor-git"
+    yes y|pacman -S --overwrite \* $kernelpkg $kernelpkg-headers linux-firmware-joshua-git
+
+    # Update extlinux.conf
+    echo "Updating extlinux.conf ..."
+    sed -i "s|linux-rockchip-joshua-git|$kernelpkg|" /boot/extlinux/extlinux.conf
+    echo "Done"
+    cat /boot/extlinux/extlinux.conf
+
+    echo "Install hw acc driver"
+    pacman -Sy mesa-panfrost-git mpp-git ffmpeg-mpp-git --noconfirm
+
+    echo "Upgrade system"
+    pacman -Syyu --noconfirm
+
+    echo "Install DE"
+    pacman -Sy gnome --noconfirm
     systemctl enable gdm
 
     echo "Finishing ..."
