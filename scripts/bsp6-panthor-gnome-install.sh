@@ -18,8 +18,11 @@
     pacman-key --init
     pacman-key --populate archlinuxarm
 
-    echo "Installing sudo ..."
+    echo "set pacman config for chroot and faster downloads ..."
     sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
+    sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = 200/" /etc/pacman.conf
+
+    echo "Installing sudo ..."
     pacman -Sy sudo --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
