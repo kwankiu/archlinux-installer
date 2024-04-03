@@ -1,5 +1,4 @@
 # Arch Linux Installer for ARM (Aarch64)
-### With main focus on the Radxa Rock 5 and RK3588
 
 ![alt archlinux-arm logo](https://archlinuxarm.org/public/images/alarm.png)
 
@@ -7,8 +6,11 @@ a community-built Arch Linux Installer for ARM (Aarch64) based devices.
 
 ### Supported devices:
 - Radxa Rock 5 series (Rock 5A and Rock 5B)
-- Orange Pi 5 series ([Needs Testing](https://github.com/kwankiu/archlinux-installer-rock5/discussions))
-- Khadas Edge 2 ([Known Issues](https://github.com/kwankiu/archlinux-installer-rock5/wiki/General#known-issues))
+- (Testing) Radxa Zero 3 Series (Zero 3E and Zero 3W)
+- Orange Pi 5 series (Orange Pi 5, 5 Plus and 5B)
+- Khadas Edge 2
+- (Testing) Raspberry Pi (Pi 4B, 5B, Zero 2W, and other aarch64 model)
+- (Testing) Asahi (Apple Silicon Macs)
 
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
 
@@ -58,7 +60,7 @@ More details can be found at our [wiki](https://github.com/kwankiu/archlinux-ins
 
 1. If you get stuck while rebooting, unplug the power and power it on manually.
 
-2. For WiFi supported hardware, please refer to mainline linux firmware and armbian firmware (for rockchip SBCs) for supported WiFi adapter.
+2. For WiFi support, please refer to mainline linux firmware and armbian firmware (for rockchip SBCs) for supported WiFi adapter.
 
 3. After the inital setup, the device will reboot, and you may need to connect to WiFi again after a reboot.
 
