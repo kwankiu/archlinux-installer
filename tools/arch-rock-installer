@@ -694,7 +694,7 @@ kernel_menu() {
     # format: kernelpkg (repo) - Description (linux_kernel_version)
     # notes: put the recommended option at first line and mark (Recommended) in Description
 
-    if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+    if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
         options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji)               - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
         options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)            - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
     elif [ "$install_target" = "rpi" ]; then
@@ -705,7 +705,7 @@ kernel_menu() {
         options+=("linux-aarch64 (alarm)    - Install Linux Mainline Kernel (Linux mainline latest)")
     fi 
  
-    if [ "$install_target" = "rock5" ]; then 
+    if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
         options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)            - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
     fi 
  
@@ -852,7 +852,7 @@ title "Installing Linux Kernel"
         arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
         yes y|sudo pacman -S linux-firmware-joshua-git
-    elif [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+    elif [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
         yes y|sudo pacman -S linux-firmware-joshua-git
     else
         yes y|sudo pacman -S $firmwarepkg
