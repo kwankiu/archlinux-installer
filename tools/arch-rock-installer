@@ -1054,7 +1054,7 @@ elif [ "$de_options" = 3 ]; then
 elif [ "$de_options" = 4 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie Desktop ..."
-    sudo pacman -S budgie gdm arc-gtk-theme papirus-icon-theme gnome-console gnome-disk-utility nautilus --noconfirm
+    sudo pacman -S budgie gdm arc-gtk-theme papirus-icon-theme gnome-console gnome-disk-utility nautilus librsvg --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 5 ]; then
     # Install Sway
