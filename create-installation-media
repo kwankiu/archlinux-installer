@@ -906,6 +906,7 @@ done
     colorecho "$GREEN" "Copying growpart ..."
     sudo chmod +x growpart
     sudo cp -r "growpart" "$root_mount_dir/usr/bin/growpart"
+  fi
   
   # Copy Script
   if [ -n "$argscripts" ]; then
