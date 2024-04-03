@@ -920,8 +920,6 @@ done
   echo "System is $system_arch"
 
   if [ "$system_arch" == "x86_64" ]; then
-    colorecho "$YELLOW" "(chroot from non-aarch64 is experimental) Chroot into system ..."
-
     # Check if qemu-aarch64-static is installed
     if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
       # Check Linux distribution
@@ -950,12 +948,26 @@ done
     echo -n $S1$S2| sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
     echo
     sudo systemctl restart systemd-binfmt.service
-    sudo chroot $root_mount_dir /bin/bash <<END
-    /usr/bin/installer --create-init-setup-service
-END
-  elif [ "$system_arch" = "aarch64" ] || [ "$system_arch" = "arm64" ] || [ "$system_arch" = "armv8" ]; then
+  fi
+
+  if [ "$system_arch" = "aarch64" ] || [ "$system_arch" = "arm64" ] || [ "$system_arch" = "armv8" ] || [ "$system_arch" == "x86_64" ]; then
+    # Check if arch-install-scripts is installed
+    if [ -z "$(command -v arch-chroot)" ]; then
+      # Check Linux distribution
+      colorecho "$YELLOW" "arch-chroot is not found, trying to install arch-install-scripts ..."
+      if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+        # Debian/Ubuntu-based
+        sudo apt-get install -y arch-install-scripts
+      elif [ -f /etc/arch-release ]; then
+        # Arch Linux
+        sudo pacman -S arch-install-scripts --noconfirm
+      else
+        colorecho "$RED" "Error : arch-install-scripts is not installed."
+      fi
+    fi
+
     colorecho "$GREEN" "Chroot into system ..."
-    sudo chroot $root_mount_dir /bin/bash <<END
+    sudo arch-chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-init-setup-service
 END
   else
