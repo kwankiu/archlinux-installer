@@ -37,10 +37,10 @@ jobs:
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5b-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5b
           cp -r out/rock-5b-archlinux-installer.img.xz rock-5b-archlinux-installer.img.xz
 
-      - name: Build Image for Rock 5B Plus
-        run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5b-plus-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5b-plus
-          cp -r out/rock-5b-plus-archlinux-installer.img.xz rock-5b-plus-archlinux-installer.img.xz
+#      - name: Build Image for Rock 5B Plus
+#        run: |
+#          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5b-plus-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5b-plus
+#          cp -r out/rock-5b-plus-archlinux-installer.img.xz rock-5b-plus-archlinux-installer.img.xz
 
       - name: Build Image for Rock 5 ITX
         run: |
@@ -79,20 +79,20 @@ jobs:
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5a-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5a
           cp -r out/rock-5a-archlinux-installer.img.xz rock-5a-archlinux-installer.img.xz
 
-      - name: Build Image for Rock 5C
-        run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5c-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5c
-          cp -r out/rock-5c-archlinux-installer.img.xz rock-5c-archlinux-installer.img.xz
+#      - name: Build Image for Rock 5C
+#        run: |
+#          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5c-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5c
+#          cp -r out/rock-5c-archlinux-installer.img.xz rock-5c-archlinux-installer.img.xz
 
       - name: Build Image for Radxa CM5
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=radxa-cm5-archlinux-installer.img --uboot=usr/lib/u-boot/radxa-cm5-io
           cp -r out/radxa-cm5-archlinux-installer.img.xz radxa-cm5-archlinux-installer.img.xz
 
-      - name: Build Image for Radxa CM5 (RPI CM4 IO)
-        run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=radxa-cm5-rpi-cm4-io-archlinux-installer.img --uboot=usr/lib/u-boot/radxa-cm5-rpi-cm4-io
-          cp -r out/radxa-cm5-rpi-cm4-io-archlinux-installer.img.xz radxa-cm5-rpi-cm4-io-archlinux-installer.img.xz
+#      - name: Build Image for Radxa CM5 (RPI CM4 IO)
+#        run: |
+#          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=radxa-cm5-rpi-cm4-io-archlinux-installer.img --uboot=usr/lib/u-boot/radxa-cm5-rpi-cm4-io
+#          cp -r out/radxa-cm5-rpi-cm4-io-archlinux-installer.img.xz radxa-cm5-rpi-cm4-io-archlinux-installer.img.xz
 
       - name: Build Image for Radxa NX5
         run: |
