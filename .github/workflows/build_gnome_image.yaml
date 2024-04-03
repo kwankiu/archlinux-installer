@@ -1,0 +1,46 @@
+name: Build Arch Linux Gnome Image
+
+# Controls when the workflow will run
+on:
+  push:
+    tags:
+      - 'd*gnome'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Runs a set of commands using the runners shell
+      - name: Extract U-Boot
+        run: |
+          curl -L https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-10-52701b7_arm64.deb -o uboot.deb
+          ar xv uboot.deb
+          tar -xf data.tar.xz
+          ls -l
+
+      - name: Build Image for Rock 5B
+        run: |
+          curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/bsp6-panthor-gnome-install.sh
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --script=bsp6-panthor-gnome-install.sh --image=rock-5b-archlinux-gnome.img --uboot=usr/lib/u-boot/rock-5b
+          cp -r out/rock-5b-archlinux-gnome.img.xz rock-5b-archlinux-gnome.img.xz
+
+      - uses: ncipollo/release-action@v1
+        with:
+            artifacts: "*-archlinux-gnome.img.xz"
+            makeLatest: false
+            prerelease: true
+            allowUpdates: true
+            omitBody: true
