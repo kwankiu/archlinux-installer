@@ -530,7 +530,7 @@ title
 if [ -e $compiled_pkg_folder ]; then 
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
-        if yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.* --needed; then
+        if pacman -U --overwrite \* $compiled_pkg_folder/*.pkg.tar.* --needed --noconfirm; then
 
             echo "Removing packages archives ..."
             rm -rf $compiled_pkg_folder
