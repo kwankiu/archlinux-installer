@@ -66,6 +66,7 @@ jobs:
 
       - name: Build Image for Edge 2
         run: |
+          curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/bsp6-panthor-gnome-install.sh
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=edge2 --addpkg=linux-firmware-joshua-git -c -b --script=bsp6-panthor-gnome-install.sh --size=8G --image=edge2-archlinux-gnome.img --uboot=usr/lib/u-boot
           cp -r out/edge2-archlinux-gnome.img.xz edge2-archlinux-gnome.img.xz
 
