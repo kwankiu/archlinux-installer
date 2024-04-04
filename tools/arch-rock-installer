@@ -694,6 +694,7 @@ kernel_menu() {
     # format: kernelpkg (repo) - Description (linux_kernel_version)
     # notes: put the recommended option at first line and mark (Recommended) in Description
 
+    # options to show in all images
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
         options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji)                     - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
         options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)                  - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
@@ -706,7 +707,7 @@ kernel_menu() {
     fi 
  
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
-        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)                  - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
+        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)                  - Install Linux Radxa Rockchip BSP 5.10 Kernel (Linux 5.10-rkr4.1)")
     fi 
  
     if [ "$install_target" = "orangepi5" ]; then
@@ -714,11 +715,18 @@ kernel_menu() {
         options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)        - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
     fi 
 
+    # options to show only in dev images
     if [ "$branch" = "dev" ]; then
+
+        if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
+            options+=("linux-aarch64-rockchip-bsp5.10-radxa-bin (Experimental)         - Install Linux Radxa Rockchip BSP 5.10 Kernel (Linux 5.10.110)")
+            options+=("linux-aarch64-rockchip-bsp6.1-radxa-bin (Experimental)          - Install Linux Radxa Rockchip BSP 6.1 Kernel (Linux 6.1.43)")
+        fi
+
         if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
             options+=("linux-aarch64-rockchip-bsp6.1-joshua-bin (Experimental)         - Install Joshua Linux Rockchip 6.1 Kernel deb version (Linux 6.1.43)")
             options+=("linux-aarch64-rockchip-bsp6.1-joshua-panthor-git (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel with Panthor (Linux 6.1.43)")
-            options+=("linux-aarch64-rk3588-collabora-git (Experimental)               - Install Linux Collabora Mainline RK3588 Kernel (Linux 6.8.x)")
+            options+=("linux-aarch64-rk3588-collabora-git (Experimental)               - Install Linux Collabora Mainline RK3588 Kernel (Linux 6.9)")
             options+=("linux-aarch64-rockchip-bsp (7Ji)                                - (Experimental) Install wyf9661 Linux Rockchip 6.1 Kernel (Linux 6.1.57)")
             options+=("linux-aarch64-7ji (7Ji)                                         - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux mainline latest)")
             options+=("linux-aarch64 (7Ji)                                             - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux mainline latest)")
