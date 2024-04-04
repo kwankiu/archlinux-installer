@@ -45,6 +45,7 @@
 
     echo "Install new kernel"
     yes y|acu install $kernelpkg --usepm=pacman
+    yes y|pacman -Sy $kernelpkg-headers
     yes y|pacman -Sy linux-firmware-joshua-git
 
     echo "Debug: extlinux.conf"
