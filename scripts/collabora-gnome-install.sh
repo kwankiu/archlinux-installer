@@ -1,10 +1,7 @@
 #!/bin/bash
 
     install_target=$1
-
-    echo "Remove the created init setup service as we are installing directly ..."
-    systemctl disable init-setup.service
-    rm -rf /etc/systemd/system/init-setup.service
+    kernelpkg="linux-aarch64-rk3588-collabora-git"
 
     echo "Enabling and Updating Time Sync ..."
     systemctl enable systemd-timesyncd
@@ -47,7 +44,7 @@
     rm -rf /etc/mkinitcpio.d/*
 
     echo "Install new kernel"
-    yes y|acu install linux-aarch64-rk3588-collabora-git --usepm=pacman
+    yes y|acu install $kernelpkg --usepm=pacman
     yes y|pacman -Sy linux-firmware-joshua-git
 
     echo "Debug: extlinux.conf"
@@ -87,6 +84,15 @@
     systemctl enable bluetooth.service
     systemctl start bluetooth.service
 
+    echo "Replacing installer with a minimal first boot setup script ..."
+    rm -rf /usr/lib/compiled-packages
+    rm -rf /usr/bin/installer
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/init-setup.sh
+    chmod +x init-setup.sh
+    cp -r init-setup.sh /usr/bin/installer
+    rm -rf init-setup.sh
+
     echo "Finishing ..."
     sed -i "s|#CheckSpace|CheckSpace|" /etc/pacman.conf
-    rm -rf /usr/bin/installer /usr/lib/compiled-packages /usr/bin/script.sh
+    sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = 50/" /etc/pacman.conf
+    rm -rf /usr/bin/script.sh

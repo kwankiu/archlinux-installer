@@ -1,11 +1,7 @@
 #!/bin/bash
-# Installs a Gnome (Minimal) System with Boogie's 6.1 Panthor Kernel
 
     install_target=$1
-
-    echo "Remove the created init setup service as we are installing directly ..."
-    systemctl disable init-setup.service
-    rm -rf /etc/systemd/system/init-setup.service
+    kernelpkg="linux-aarch64-rockchip-bsp6.1-joshua-panthor-git"
 
     echo "Enabling and Updating Time Sync ..."
     systemctl enable systemd-timesyncd
@@ -17,22 +13,19 @@
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
-    echo "Installing required packages ..."
-    pacman -U --overwrite \* /usr/lib/compiled-packages/*.pkg.tar.* --needed --noconfirm
-
     echo "Setting up alarm pacman key ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
 
     echo "set pacman config for chroot and faster downloads ..."
     sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
-    sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = 200/" /etc/pacman.conf
+    sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = 500/" /etc/pacman.conf
 
     echo "Installing sudo ..."
     pacman -Sy sudo --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
-    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/0.0.6-dev/acu"
+    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/dev/acu"
     chmod +x /usr/bin/acu
     
     echo "Removing default user account (alarm) ..."
@@ -42,22 +35,19 @@
     echo -e "[experimental]\nSigLevel = Never\nServer = https://github.com/kwankiu/PKGBUILDs/releases/download/experimental" | tee -a /etc/pacman.conf
     acu rem add pacman "7Ji"
 
-    echo "Install new kernel"
+    echo "Remove all kernels"
     yes y|pacman -R linux-aarch64
+    rm -rf /boot/vmlinu* 
+    rm -rf /boot/initr*
+    rm -rf /boot/dtbs
+    rm -rf /usr/lib/modules/*
     rm -rf /etc/mkinitcpio.d/*
-    rm -rf /boot/vmlinu* /boot/initr* /boot/dtbs
-    kernelpkg="linux-aarch64-rockchip-bsp6.1-joshua-panthor-git"
-    yes y|pacman -S --overwrite \* $kernelpkg $kernelpkg-headers linux-firmware-joshua-git
 
-    # Update extlinux.conf
-    echo "Updating extlinux.conf ..."
+    echo "Install new kernel"
+    yes y|acu install $kernelpkg --usepm=pacman
+    yes y|pacman -Sy linux-firmware-joshua-git
 
-    sed -i "s|linux-rockchip-joshua-git|$kernelpkg|" /boot/extlinux/extlinux.conf
-
-    # fix rockchip overlay directory name
-    sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
-
-    echo "Done"
+    echo "Debug: extlinux.conf"
     cat /boot/extlinux/extlinux.conf
 
     echo "Install hw acc driver"
@@ -70,11 +60,11 @@
     pacman -Sy networkmanager iw iwd bluez --noconfirm
     pacman -Sy noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
 
-    echo "Set iwd to default"
-    mkdir -p /etc/NetworkManager/conf.d
-    echo -e "[device]\nwifi.backend=iwd" | tee /etc/NetworkManager/conf.d/wifi_backend.conf
-
     if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
+        echo "Fix: Set iwd to default"
+        mkdir -p /etc/NetworkManager/conf.d
+        echo -e "[device]\nwifi.backend=iwd" | tee /etc/NetworkManager/conf.d/wifi_backend.conf
+        echo "Post Install: AP6275P Bluetooth"
         curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
         chmod +x brcm_patchram_plus
         mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
@@ -94,6 +84,15 @@
     systemctl enable bluetooth.service
     systemctl start bluetooth.service
 
+    echo "Replacing installer with a minimal first boot setup script ..."
+    rm -rf /usr/lib/compiled-packages
+    rm -rf /usr/bin/installer
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/init-setup.sh
+    chmod +x init-setup.sh
+    cp -r init-setup.sh /usr/bin/installer
+    rm -rf init-setup.sh
+
     echo "Finishing ..."
     sed -i "s|#CheckSpace|CheckSpace|" /etc/pacman.conf
-    rm -rf /usr/bin/installer /usr/lib/compiled-packages /usr/bin/script.sh
+    sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = 50/" /etc/pacman.conf
+    rm -rf /usr/bin/script.sh
