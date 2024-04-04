@@ -687,7 +687,7 @@ title "Time Zone"
 kernel_menu() {
     title "Linux Kernel"
     colorecho "$GREEN" "Select a linux kernel to install :"
-    colorecho "$GREEN" "  Linux Kernel \t\t Repo \t\t Description \t\t\t Kernel Version"
+    colorecho "$GREEN" "  Linux Kernel \t\t (Repo) \t\t\t\t Description \t\t\t Kernel Version"
     options=()
 
     # Kernel options for each install target
@@ -695,23 +695,23 @@ kernel_menu() {
     # notes: put the recommended option at first line and mark (Recommended) in Description
 
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-        options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji)               - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)            - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+        options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji)                     - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)                  - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
     elif [ "$install_target" = "rpi" ]; then
-        options+=("linux-rpi (alarm)        - Install Linux Raspberry Pi BSP Kernel (Linux 6.6)")
-        options+=("linux-rpi-16k (alarm)    - Install Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY (Linux 6.6)")
-        options+=("linux-aarch64 (alarm)    - Install Linux Mainline Kernel (Linux mainline latest)")
+        options+=("linux-rpi (alarm)                                               - Install Linux Raspberry Pi BSP Kernel (Linux 6.6)")
+        options+=("linux-rpi-16k (alarm)                                           - Install Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY (Linux 6.6)")
+        options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
     else
-        options+=("linux-aarch64 (alarm)    - Install Linux Mainline Kernel (Linux mainline latest)")
+        options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
     fi 
  
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
-        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)            - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
+        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)                  - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
     fi 
  
     if [ "$install_target" = "orangepi5" ]; then
-        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji)      - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
-        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)  - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji)            - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)        - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
     fi 
 
     if [ "$branch" = "dev" ]; then
