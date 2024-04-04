@@ -702,6 +702,9 @@ kernel_menu() {
         options+=("linux-rpi (alarm)                                               - Install Linux Raspberry Pi BSP Kernel (Linux 6.6)")
         options+=("linux-rpi-16k (alarm)                                           - Install Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY (Linux 6.6)")
         options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
+    elif [ "$install_target" = "asahi" ]; then
+        options+=("linux-asahi (Experimental)                                      - Install Linux Asahi Kernel (Linux 6.6)")
+        options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
     else
         options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
     fi 
