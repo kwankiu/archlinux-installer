@@ -1,0 +1,186 @@
+#!/bin/bash
+
+################################################################
+# Tools for formatting / styling
+
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Echo with colors
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+################################################################
+
+    rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz" # Aarch64
+    rootfs_dir="rootfs"
+    rootfs_user="user"
+
+    system_arch=$(uname -m)
+    colorecho "$GREEN" "System is $system_arch"
+
+    # Loop through the arguments
+    for arg in "$@"; do
+        case "$arg" in
+            --rootfs=*)
+                colorecho "$GREEN" "Create rootfs using ${arg#*=}"
+                if [ "${arg#*=}" = "x86_64" ] || [ "${arg#*=}" = "amd64" ]; then
+                    rootfs_url="http://mirrors.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz"
+                elif [[ "${arg#*=}" = "http://"* ]] || [[ "${arg#*=}" = "http://"* ]]; then
+                    rootfs_url="${arg#*=}"
+                elif [ "${arg#*=}" != "aarch64" ] && [ "${arg#*=}" != "arm64" ]; then
+                    colorecho "$RED" "Invalid rootfs type or url."
+                    exit 1
+                fi
+                ;;
+            --dir=*)
+                colorecho "$GREEN" "Create rootfs in ${arg#*=}"
+                rootfs_dir="${arg#*=}"
+                ;;
+            --user=*)
+                rootfs_user="${arg#*=}"
+                ;;
+            -*)
+                colorecho "$RED" "Invalid command or argument."
+                exit 1
+                ;;
+        esac
+    done
+
+    if [ "$system_arch" == "x86_64" ] && [[ "$rootfs_url" = *"aarch64"* ]]; then
+        # Check if qemu-aarch64-static is installed
+        if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
+            # Check Linux distribution
+            colorecho "$YELLOW" "qemu-aarch64-static is not found, trying to install..."
+            if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+                # Debian/Ubuntu-based
+                sudo apt-get update
+                sudo apt-get install -y qemu-user-static
+            elif [ -f /etc/arch-release ]; then
+                # Arch Linux
+                sudo pacman -S qemu-user-static --noconfirm
+            else
+                colorecho "$RED" "Error : qemu-aarch64-static is not installed."
+                exit 1
+            fi
+        fi
+    fi
+
+    # Check if arch-install-scripts is installed
+    if [ -z "$(command -v arch-chroot)" ]; then
+      # Check Linux distribution
+      colorecho "$YELLOW" "arch-chroot is not found, trying to install arch-install-scripts ..."
+      if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+        # Debian/Ubuntu-based
+        sudo apt-get install -y arch-install-scripts
+      elif [ -f /etc/arch-release ]; then
+        # Arch Linux
+        sudo pacman -S arch-install-scripts --noconfirm
+      else
+        colorecho "$RED" "Error : arch-install-scripts is not installed."
+        exit 1
+      fi
+    fi
+
+    # Create directory and get rootfs
+    if [ ! -d $rootfs_dir ]; then
+        sudo mkdir -p $rootfs_dir
+        # Download and extract the latest ArchLinux tarball
+        colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
+        curl -LJO $rootfs_url
+        colorecho "$GREEN" "Extracting Arch Linux rootfs ..."
+        sudo bsdtar -xpf $(basename $rootfs_url) -C $rootfs_dir
+        sudo rm -rf $(basename $rootfs_url)
+        run_post_install=1
+    fi
+
+    if [ "$system_arch" == "x86_64" ]; then
+        S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
+        S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:CF'
+        echo -n $S1$S2| sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
+        echo
+        sudo systemctl restart systemd-binfmt.service
+    fi
+
+    if [ "$run_post_install" = 1 ] && [[ "$rootfs_url" = *"aarch64"* ]]; then
+        colorecho "$GREEN" "Running Post Install Setup ..."
+        sudo arch-chroot $rootfs_dir /bin/bash <<END
+    echo "Enabling and Updating Time Sync ..."
+    systemctl enable systemd-timesyncd
+    sleep 1
+    timedatectl set-ntp false
+    timedatectl set-ntp true
+
+    echo "Adding root to wheel group ..."
+    echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+    usermod -aG wheel root
+
+    echo "Setting up alarm pacman key ..."
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+
+    echo "Installing sudo ..."
+    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
+    pacman -Sy sudo --noconfirm
+
+    echo "Installing ACU (Configuration Utility) ..."
+    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/0.0.6-dev/acu"
+    chmod +x /usr/bin/acu
+    
+    echo "Removing default alarm account"
+    acu user remove alarm
+
+    echo "Setting up user account ..."
+    acu user add user 1234
+    acu user manage user sudopw
+END
+        colorecho "$GREEN" "Created a user account with username: user / password: 1234"
+    elif [ "$run_post_install" = 1 ]; then
+        colorecho "$GREEN" "Running Post Install Setup ..."
+        sudo arch-chroot $rootfs_dir /bin/bash <<END
+    echo "Enabling and Updating Time Sync ..."
+    systemctl enable systemd-timesyncd
+    sleep 1
+    timedatectl set-ntp false
+    timedatectl set-ntp true
+
+    echo "Adding root to wheel group ..."
+    echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+    usermod -aG wheel root
+
+    echo "Setting up pacman key ..."
+    pacman-key --init
+    pacman-key --populate archlinux
+
+    echo "Installing sudo ..."
+    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
+    pacman -Sy sudo --noconfirm
+
+    echo "Installing ACU (Configuration Utility) ..."
+    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/0.0.6-dev/acu"
+    chmod +x /usr/bin/acu
+    
+    echo "Setting up user account ..."
+    acu user add user 1234
+    acu user manage user sudopw
+END
+        colorecho "$GREEN" "Created a user account with username: user / password: 1234"
+    fi
+
+    colorecho "$GREEN" "Starting chroot as user: $rootfs_user ..."
+
+    if [ -z "$1" ] || [[ "$1" = "-"* ]]; then
+        sudo arch-chroot $rootfs_dir su $rootfs_user
+    else
+        sudo cp -r $1 $rootfs_dir/usr/bin/script.sh
+        sudo chmod +x $rootfs_dir/usr/bin/script.sh
+        sudo arch-chroot $rootfs_dir su $rootfs_user /bin/bash <<END
+    /usr/bin/script.sh
+END
+    fi
