@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-99 count on updates commited on the same day)
-installerver=24033101
+installerver=24041101
 
 # required ACU version
 acuver="0.0.6-dev"
@@ -304,7 +304,7 @@ select_option() {
     # launch TUI using dialog
     choice=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
         --title " $dialog_title " --ok-label "Next" --nocancel \
-        --menu "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \Zn" 25 80 0 "${options_string[@]}" \
+        --menu "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \Zn" 0 0 0 "${options_string[@]}" \
     3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
     )
 
@@ -380,6 +380,76 @@ confirm() {
         return 1
     fi
     
+}
+
+# TUI Input Box
+input() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        if [[ "$menu_header" != *" - "* ]]; then 
+            dialog_title="$menu_header"
+            menu_header=" - $menu_header"
+        fi
+    else
+        dialog_title="Enter an input"
+    fi
+
+    for opt; do
+        ((i++))
+    done
+
+    # launch TUI using dialog
+    local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+        --title " $dialog_title " --nocancel \
+        --inputbox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0 \
+    3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
+    )
+
+    echo $value
+    
+}
+
+# TUI Form Input Menu
+form() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+    print_option()     { echo "$1"; }
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        dialog_title="$menu_header"
+        menu_header=" - $menu_header"
+    else
+        dialog_title="Welcome to Arch Linux !"
+    fi
+
+    # menu option title
+    if [ -z "$menu_option_title" ]; then
+        menu_option_title="Select an option:"
+    fi
+
+    # Create options string for dialog
+    declare -a options_string=()
+    for opt; do
+        options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "5")
+        #"Form Label 1:" 1 1 "Value 1" 1 25 25 30
+        ((i++))
+    done
+
+    # launch TUI using dialog
+    local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+        --title " $dialog_title " --ok-label "Next" --nocancel \
+        --form "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \Zn" 0 0 0 \
+        "${options_string[@]}" \
+    3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
+    )
+
+    echo $value
 }
 
 ################################################################
@@ -563,6 +633,57 @@ installer_menu() {
 
     ################################################################
     # Choose Language
+
+    # Full Language Choice Menu
+    langchoicemenu() {
+        menu_header="Language (More Options)"
+        menu_option_title="Choose a language category:"
+        select_option "${langopt[@]}" "Skip setting Language"
+        choice=$?
+        if [ "$choice" = 0 ]; then
+            langchoice=("${langchi[@]}") # Chinese
+        elif [ "$choice" = 1 ]; then
+            langchoice=("${langeng[@]}") # English
+        elif [ "$choice" = 2 ]; then
+            langchoice=("${langspa[@]}") # Spanish
+        elif [ "$choice" = 3 ]; then
+            langchoice=("${langfre[@]}") # French
+        elif [ "$choice" = 4 ]; then
+            langchoice=("${langger[@]}") # German
+        elif [ "$choice" = 5 ]; then
+            langchoice=("${langara[@]}") # Arabic
+        elif [ "$choice" = 6 ]; then
+            title "Language (Others - sort by continents)"
+            select_option "${langcon[@]}"
+            choice=$?
+            if [ "$choice" = 0 ]; then
+                langchoice=("${langconas[@]}") # Asia
+            elif [ "$choice" = 1 ]; then
+                langchoice=("${langconeu[@]}") # Europe
+            elif [ "$choice" = 2 ]; then
+                langchoice=("${langconam[@]}") # Americas
+            elif [ "$choice" = 3 ]; then
+                langchoice=("${langconaf[@]}") # Africa
+            elif [ "$choice" = 4 ]; then
+                langchoice=("${langconother[@]}") # Others
+            fi
+        else
+            return
+        fi
+        menu_header="Language (More Options)"
+        menu_option_title="Choose a language:"
+        select_option "${langchoice[@]}"
+        choice=$?
+        menu_header="Language Setup"
+        selected_lang="${langchoice[$choice]%% (*}"
+        if confirm "                 Confirm setting language to $selected_lang ?"; then
+            acu locale generate "$selected_lang" -y
+        else
+            langchoicemenu
+            return
+        fi
+    }
+
     lclist=$(acu locale list-available)
 
     lapicount=0
@@ -592,9 +713,7 @@ installer_menu() {
     choice=$?
 
     if [ "$choice" = "$sgdindx" ]; then
-        clear
-        echo "Coming Soon"
-        exit 0
+        langchoicemenu
     elif [ "$choice" -ge "$sgdindx" ]; then
         echo "Skipping ..."
     else
@@ -607,7 +726,7 @@ installer_menu() {
     # Time Zone
 
     menu_header="Time Zone"
-    ntz=$(acu time network-time-zone)
+    ntz="$(acu time network-time-zone  | tr -d '\033[0-9]')"
     menu_option_title="\Zb          Your time zone is: $ntz, is that right?\Zn\n"
     options=("Yes, this is correct" "No, let me correct my Time Zone" "Skip setting Time Zone")
     select_option "${options[@]}"
@@ -615,21 +734,139 @@ installer_menu() {
 
     if [ "$choice" = 0 ]; then
         acu "time" set-time-zone sync
+        stz=$ntz
     elif [ "$choice" = 1 ]; then
-        acu "time" set-time-zone
+        stz=$(input "Enter new time zone (e.g., Asia/Tokyo)")
+        acu "time" set-time-zone $stz
+    else
+        echo "Skipping ..."
     fi
 
     ################################################################
     # Setup User Account
-    echo "Coming Soon"
+    user_setup() {
+        menu_header="User Account"
+        menu_option_title="Create a new user account:"
+        menu_form_value=("user" "" "" "y")
+        local result=($(form "Username" "Password" "Confirm Password" "Disable Root Login? [Y/n]"))
+        if [ "${#result[@]}" -gt 4 ]; then
+            info_alert "Username / Password can not contain space."
+            sleep 1
+            user_setup
+        elif [ "${result[1]}" != "${result[2]}" ]; then
+            info_alert "Confirm password does not match."
+            sleep 1
+            user_setup
+        elif [ "${#result[@]}" -lt 4 ]; then
+            info_alert "Fields can not be empty."
+            sleep 1
+            user_setup
+        elif [[ "${result[3]}" != [YyNn] ]]; then
+            info_alert "Please answer y or n to [Y/n] questions."
+            sleep 1
+            user_setup
+        else
+            user_acc=(${result[@]})
+        fi
+    }
+    user_setup
 
     ################################################################
     # Select linux kernel
+    kernel_menu() {
+        menu_header="Linux Kernel"
+        menu_option_title="Select a linux kernel to install :\n\n\Zb\Z2           Linux Kernel           (Repo)                                     Description                (Kernel Version)"
+        options=()
 
-    #if dialog --yesno  "Locate File? " 10 25; then
-        #dialog --title "fselect" --fselect ~/Documents/GitHub/ 15 80
-    #fi
+        # Kernel options for each install target
+        # format: kernelpkg (repo) - Description (linux_kernel_version)
+        # notes: put the recommended option at first line and mark (Recommended) in Description
 
+        # options to show in all images
+        if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+            options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji)                     - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+            options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)                  - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+        elif [ "$install_target" = "rpi" ]; then
+            options+=("linux-rpi (alarm)                                               - Install Linux Raspberry Pi BSP Kernel (Linux 6.6)")
+            options+=("linux-rpi-16k (alarm)                                           - Install Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY (Linux 6.6)")
+            options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
+        elif [ "$install_target" = "asahi" ]; then
+            options+=("linux-asahi (Experimental)                                      - Install Linux Asahi Kernel (Linux 6.6)")
+            options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
+        else
+            options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
+        fi 
+    
+        if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
+            options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)                  - Install Linux Radxa Rockchip BSP 5.10 Kernel (Linux 5.10-rkr4.1)")
+        fi 
+    
+        if [ "$install_target" = "orangepi5" ]; then
+            options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji)            - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
+            options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)        - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
+        fi 
+
+        # options to show only in dev images
+        if [ "$branch" = "dev" ]; then
+
+            if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
+                options+=("linux-aarch64-rockchip-bsp5.10-radxa-bin (Experimental)         - Install Linux Radxa Rockchip BSP 5.10 Kernel (Linux 5.10.110)")
+                options+=("linux-aarch64-rockchip-bsp6.1-radxa-bin (Experimental)          - Install Linux Radxa Rockchip BSP 6.1 Kernel (Linux 6.1.43)")
+            fi
+
+            if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+                options+=("linux-aarch64-rockchip-bsp6.1-joshua-bin (Experimental)         - Install Joshua Linux Rockchip 6.1 Kernel deb version (Linux 6.1.43)")
+                options+=("linux-aarch64-rockchip-bsp6.1-joshua-panthor-git (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel with Panthor (Linux 6.1.43)")
+                options+=("linux-aarch64-rk3588-collabora-git (Experimental)               - Install Linux Collabora Mainline RK3588 Kernel (Linux 6.9)")
+                options+=("linux-aarch64-rockchip-bsp (7Ji)                                - (Experimental) Install wyf9661 Linux Rockchip 6.1 Kernel (Linux 6.1.57)")
+                options+=("linux-aarch64-7ji (7Ji)                                         - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux mainline latest)")
+                options+=("linux-aarch64 (7Ji)                                             - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux mainline latest)")
+            fi
+        fi 
+
+        options+=("(Others) Enter custom kernel options (Coming Soon)")
+        select_option "${options[@]}"
+        krl_options=$?
+        selected_option="${options[$krl_options]}"
+        kernelpkg=$(echo "$selected_option" | awk '{print $1}')
+        pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
+
+        if [ "$kernelpkg" = "(Others)" ]; then
+            kernel_menu
+            #return
+        fi
+    }
+    kernel_menu
+
+    ################################################################
+    # Select desktop environment
+
+    menu_header="Desktop Environment"
+    menu_option_title="Select a desktop environment to install :"
+    options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish (Experimental)" "XFCE (Experimental)" "LXQt" "LXDE" "MATE" "Cinnamon" "Hyprland")
+    options+=("Do not install a Desktop Environment")
+
+    select_option "${options[@]}"
+    de_options=$?
+    selected_de=${options[de_options]}
+
+    ################################################################
+    # Select additional packages
+    menu_header="Additional Packages"
+    menu_option_title="Select additional packages to install :"
+    options=()
+    #select_option "${options[@]}"
+    #apps_options=$?
+    #echo "Coming Soon"
+
+    ################################################################
+    # Installation Summary
+    menu_header="Installation Summary"
+    if confirm "Confirm to install with the following configurations? \n\n Language: $selected_lang \n Time Zone: $stz \n Username: ${user_acc[0]} \n Password: ${user_acc[1]} \n Disable Root Account: ${user_acc[3]} \n Linux Kernel: $kernelpkg \n Desktop Environment: $selected_de \n \n"; then
+        echo "Coming Soon"
+    else
+        main_menu
+    fi
 }
 ################################################################
 # Main Menu
@@ -647,16 +884,18 @@ main_menu() {
         installer_menu
         ;;
     1)
-        if confirm "   This will download a 1GB image. Are you sure to continue?"; then
+        if confirm "   This will download a 1GB image. Are you sure to continue (Coming Soon)?"; then
             info_alert "Coming Soon"
+            sleep 3
+            main_menu
         else
-            info_alert "Cancelled"
+            main_menu
         fi
         exit 0
         ;;
     *)
         if confirm "   Are you sure to exit the installer? The system will shutdown."; then
-            info_alert "Coming Soon"
+            shutdown now
         else
             main_menu
         fi
@@ -678,7 +917,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "--create-init-setup-service : Create a service to auto start this installer on first boot"
     exit 0
 elif [ "$1" = "--create-init-setup-service" ]; then
-    echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\nBefore=systemd-logind.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
+    echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
     exit 0
 fi
 ################################################################
