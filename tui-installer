@@ -866,7 +866,7 @@ main_menu() {
     # Welcome Menu
     menu_header=""
     menu_option_title=""
-    options=("Install Arch Linux" "Try Arch Linux (GUI)" "Exit Installer")
+    options=("Install Arch Linux" "Try Arch Linux (GUI)" "About this Installer" "Exit Installer")
     select_option "${options[@]}"
     selected=$?
 
@@ -882,6 +882,12 @@ main_menu() {
         else
             main_menu
         fi
+        exit 0
+        ;;
+    2)
+        info_alert "\n Installer Version: $installerver \n ACU Version: $acuver"
+        sleep 3
+        main_menu
         exit 0
         ;;
     *)
