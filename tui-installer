@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-99 count on updates commited on the same day)
-installerver=24041106
+installerver=24041201
 
 # required ACU version
 acuver=0.0.6-dev
@@ -617,6 +617,7 @@ add_boot_part_fstab() {
 }
 
 install_part1() {
+    menu_header="Installation - Part 1"
     info_alert "Running Initial System Setup ..."
 
     # Get rootfs partition from the current mount point "/"
@@ -682,7 +683,7 @@ install_part1() {
 ################################################################
 # Installation - Part 2 (in user)
 install_part2() {
-
+    menu_header="Installation - Part 2"
     ################################################################
     # Handle install config
     for arg in "$@"; do
@@ -812,12 +813,6 @@ install_part2() {
     info_alert "Installing network manager and bluetooth ..."
     sudo pacman -Sy networkmanager iw iwd bluez --noconfirm
 
-    info_alert "Enabling network manager and bluetooth service ..."
-    sudo systemctl enable NetworkManager.service
-    sudo systemctl start NetworkManager.service
-    sudo systemctl enable bluetooth.service
-    sudo systemctl start bluetooth.service
-
     # Basic Fonts for Asian Characters and Emoji
     info_alert "Installing fonts ..."
     sudo pacman -Sy noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
@@ -904,7 +899,12 @@ install_part2() {
     fi
 
     ################################################################
-    # Installation clean up
+    # Post Installation
+    info_alert "Enabling network manager and bluetooth service ..."
+    sudo systemctl enable NetworkManager.service
+    sudo systemctl start NetworkManager.service
+    sudo systemctl enable bluetooth.service
+    sudo systemctl start bluetooth.service
 
     # Detect the current username
     current_username=$(whoami)
@@ -1208,7 +1208,7 @@ main_menu() {
         ;;
     *)
         if confirm "   Are you sure to exit the installer? The system will shutdown."; then
-            shutdown now
+            sudo shutdown -h now
         else
             main_menu
         fi
@@ -1233,9 +1233,6 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     exit 0
 elif [ "$1" = "--create-installer-service" ]; then
     echo -e "[Unit]\nDescription=Arch Linux Installer for ARM\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/installer.service && systemctl enable installer.service
-    exit 0
-elif [ "$1" = "part2" ] && [ ! "$(id -u)" -eq 0 ]; then
-    install_part2
     exit 0
 fi
 ################################################################
@@ -1278,6 +1275,12 @@ network_menu
 check_installer_updates
 
 # Start Main Menu
-main_menu
+if [ "$1" = "part2" ] && [ ! "$(id -u)" -eq 0 ]; then
+    install_part2
+else
+    export HOME="/root"
+    main_menu
+fi
+
 
 ################################################################
