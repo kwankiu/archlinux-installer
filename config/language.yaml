@@ -1,0 +1,35 @@
+# Chinese
+langchi=("cmn_TW (Taiwan)" "zh_CN (China)" "zh_HK (Hong Kong)" "zh_TW (Taiwan)" "zh_MO (Macau)" "zh_SG (Singapore)"  "zu_ZA (South Africa)" "yue_HK (Hong Kong)" "hak_TW (Taiwan)")
+
+# English
+langeng=("en_AG (Antigua and Barbuda)" "en_AU (Australia)" "en_BW (Botswana)" "en_CA (Canada)" "en_DK (Denmark)" "en_GB (United Kingdom)" "en_HK (Hong Kong)" "en_IE (Ireland)" "en_IL (Israel)" "en_IN (India)" "en_NG (Nigeria)" "en_NZ (New Zealand)" "en_PH (Philippines)" "en_SC (Seychelles)" "en_SG (Singapore)" "en_US (United States)" "en_ZA (South Africa)" "en_ZM (Zambia)" "en_ZW (Zimbabwe)")
+
+# Spanish
+langspa=("es_AR (Argentina)" "es_BO (Bolivia)" "es_CL (Chile)" "es_CO (Colombia)" "es_CR (Costa Rica)" "es_CU (Cuba)" "es_DO (Dominican Republic)" "es_EC (Ecuador)" "es_ES (Spain)" "es_GT (Guatemala)" "es_HN (Honduras)" "es_MX (Mexico)" "es_NI (Nicaragua)" "es_PA (Panama)" "es_PE (Peru)" "es_PR (Puerto Rico)" "es_PY (Paraguay)" "es_SV (El Salvador)" "es_US (United States)" "es_UY (Uruguay)" "es_VE (Venezuela)")
+
+# French
+langfre=("fr_BE (Belgium)" "fr_CA (Canada)" "fr_CH (Switzerland)" "fr_FR (France)" "fr_LU (Luxembourg)")
+
+# German
+langger=("de_AT (Austria)" "de_BE (Belgium)" "de_CH (Switzerland)" "de_DE (Germany)" "de_IT (Italy)" "de_LI (Liechtenstein)" "de_LU (Luxembourg)")
+
+# Arabic
+langara=("ar_AE (United Arab Emirates)" "ar_BH (Bahrain)" "ar_DZ (Algeria)" "ar_EG (Egypt)" "ar_IN (India)" "ar_IQ (Iraq)" "ar_JO (Jordan)" "ar_KW (Kuwait)" "ar_LB (Lebanon)" "ar_LY (Libya)" "ar_MA (Morocco)" "ar_OM (Oman)" "ar_QA (Qatar)" "ar_SA (Saudi Arabia)" "ar_SD (Sudan)" "ar_SS (South Sudan)" "ar_SY (Syria)" "ar_TN (Tunisia)" "ar_YE (Yemen)")
+
+# Sort by Continent
+langcon=("Asia" "Europe" "Americas" "Africa" "Others")
+
+# Asia
+langconas=("az_AZ (Azerbaijan)" "az_IR (Iran)" "as_IN (India)" "bhb_IN (India)" "bho_IN (India)" "bho_NP (Nepal)" "bo_CN (China)" "bo_IN (India)" "dz_BT (Bhutan)" "fa_IR (Iran)" "hi_IN (India)" "he_IL (Israel)" "id_ID (Indonesia)" "ja_JP (Japan)" "ka_GE (Georgia)" "kk_KZ (Kazakhstan)" "km_KH (Cambodia)" "kn_IN (India)" "ko_KR (Korea)" "th_TH (Thailand)" "ta_SG (Singapore)" "vi_VN (Vietnam)" "saq_KE (Kenya)" "ml_IN (India)" "ug_CN (China)" "or_IN (India)" "sw_KE (Kenya)" "ta_MY (Malaysia)" "ta_IN (India)" "brx_IN (India)" "pa_IN (India)" "ug_IR (Iran)" "pa_PK (Pakistan)" "ur_PK (Pakistan)")
+
+# Europe
+langconeu=("bg_BG (Bulgaria)" "ca_IT (Italy)" "ca_AD (Andorra)" "ca_ES (Spain)" "ast_ES (Spain)" "ca_FR (France)" "br_FR (France)" "oc_FR (France)" "cs_CZ (Czech Republic)" "csb_PL (Poland)" "da_DK (Denmark)" "dsb_DE (Germany)" "el_GR (Greece)" "el_CY (Cyprus)" "et_EE (Estonia)" "eu_ES (Spain)" "fi_FI (Finland)" "fur_IT (Italy)" "fy_NL (Netherlands)" "fy_DE (Germany)" "ga_IE (Ireland)" "gl_ES (Spain)" "hr_HR (Croatia)" "hsb_DE (Germany)" "ia_FR (France)" "is_IS (Iceland)" "it_CH (Switzerland)" "it_IT (Italy)" "lv_LV (Latvia)" "mk_MK (North Macedonia)" "mt_MT (Malta)" "nb_NO (Norway)" "nl_BE (Belgium)" "nl_NL (Netherlands)" "nn_NO (Norway)" "no_NO (Norway)" "pl_PL (Poland)" "pt_PT (Portugal)" "ro_RO (Romania)" "sk_SK (Slovakia)" "sl_SI (Slovenia)" "sq_AL (Albania)" "sv_FI (Finland)" "sv_SE (Sweden)" "tr_TR (Turkey)" "uk_UA (Ukraine)" "crh_UA (Ukraine)" "gd_GB (United Kingdom)" "gv_GB (United Kingdom)" "cy_GB (United Kingdom)" "se_NO (Norway)")
+
+# Americas
+langconam=("ayc_PE (Peru)" "qu_PE (Peru)" "chr_US (United States)" "iu_CA (Canada)" "pt_BR (Brazil)" "hif_FJ (Fiji)" "ik_CA (Canada)")
+
+# Africa
+langconaf=("aa_DJ (Djibouti)" "aa_ER (Eritrea)" "aa_ET (Ethiopia)" "ber_DZ (Algeria)" "ber_MA (Morocco)" "gez_ER (Eritrea)" "gez_ET (Ethiopia)" "am_ET (Ethiopia)" "kab_DZ (Algeria)" "sid_ET (Ethiopia)" "sn_ZW (Zimbabwe)" "so_SO (Somalia)" "shi_MA (Morocco)" "shi_Tfng_MA (Morocco)" "rw_RW (Rwanda)" "nso_ZA (South Africa)" "yo_NG (Nigeria)" "xog_UG (Uganda)")
+
+# Others
+langconother=("ru_RU (Russia)" "cv_RU (Russia)" "ta_LK (Sri Lanka)" "ak_GH (Ghana)" "si_LK (Sri Lanka)" "dv_MV (Maldives)" "uz_UZ (Uzbekistan)" "sr_RS (Serbia)" "tk_TM (Turkmenistan)" "bi_VU (Vanuatu)" "sw_TZ (Tanzania)" "ce_RU (Russia)" "sah_RU (Russia)" "sr_CS (Serbia and Montenegro)" "tg_TJ (Tajikistan)" "ps_AF (Afghanistan)" "me_ME (Montenegro)" "ckb_IQ (Iraq)" "be_BY (Belarus)" "kl_GL (Greenland)" "bs_BA (Bosnia and Herzegovina)" "ug_UZ (Uzbekistan)")

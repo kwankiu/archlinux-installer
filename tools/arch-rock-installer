@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2404041
+installerver=2404111
 
 # Define main / dev branch
 branch=dev
@@ -516,7 +516,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "-h / --help : Usage and Infomation of this installer"
     echo "--skip-init-setup : Skip init setup (use only if the corresponding setup has been done)"
     exit 1
-elif [ "$1" = "--create-init-setup-service" ]; then
+elif [ "$1" = "--create-init-setup-service" ] || [ "$1" = "--create-installer-service" ]; then
     echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
     exit 1
 fi

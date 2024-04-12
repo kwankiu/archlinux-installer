@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-99 count on updates commited on the same day)
-installerver=24041103
+installerver=24041104
 
 # required ACU version
 acuver=0.0.6-dev
@@ -36,8 +36,11 @@ compiled_pkg_folder="/usr/lib/installer/packages"
 # Dialog Theme config file path
 dialog_theme_config="/usr/lib/installer/dialog.conf"
 
+# Install using the generated configurations
+install_config="/usr/lib/installer/install.yaml"
+
 # Pacman ParallelDownloads
-prldownloads=30
+prldownloads=50
 
 ################################################################
 # Language options
@@ -619,6 +622,105 @@ check_installer_updates() {
 }
 
 ################################################################
+# Installation - Part 1 (in root)
+
+add_boot_part_fstab() {
+    echo "Updating fstab ..."
+    boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
+
+    # Check if the boot_partition is not empty
+    if [ -z "$boot_partition" ]; then
+        echo "Unable to determine boot partition on $rootfs_disk"
+        exit 1
+    fi
+
+    # Add the line to /etc/fstab
+    new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
+
+    # Check if the line already exists in /etc/fstab
+    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+        echo "boot partition seems already configured in /etc/fstab to manage by system."
+    else
+        # Add the line to /etc/fstab
+        echo "$new_line" >> /etc/fstab
+        # Check if the addition was successful
+        if [ $? -eq 0 ]; then
+            cat /etc/fstab
+            echo "Line added to /etc/fstab successfully"
+        else
+            echo "Error adding line to /etc/fstab"
+        fi
+    fi
+}
+
+install_part1() {
+    echo "Running Initial System Setup ..."
+
+    # Check if the script is being run with root privileges
+    if [[ $EUID -ne 0 ]]; then
+        echo "Error : Initial System Setup must be run as root"
+        exit 1
+    fi
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Get disk path using rootfs partition path
+    rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
+    rootfs_disk="${rootfs_disk%p*}"
+
+    if [ ! -e "/boot/extlinux/extlinux.conf" ]; then 
+        add_boot_part_fstab
+    fi
+
+    echo "Resizing File System ..."
+    growpart $rootfs_disk 2
+    resize2fs $rootfs_partition
+
+    # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+    colorecho "$GREEN" "Setting up pacman ..."
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+
+    colorecho "$GREEN" "Installing sudo ..."
+    pacman -Sy sudo --noconfirm
+
+    colorecho "$GREEN" "Removing default account ..."
+    arch-rock-config user remove alarm
+
+    colorecho "$GREEN" "Setting up new user account ..."
+    arch-rock-config user add ${user_acc[0]} ${user_acc[1]}
+    arch-rock-config user manage ${user_acc[0]} sudopw
+
+    hostname=$(hostnamectl --static)
+    echo "${user_acc[0]} $hostname =NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl halt,/usr/bin/systemctl reboot" | tee -a "/etc/sudoers" >/dev/null
+
+    if [[ "${user_acc[3]}" != [Yy] ]]; then
+        passwd -l root
+    fi
+
+    if [ -e "/etc/systemd/system/installer.service" ]; then 
+        systemctl disable installer.service
+        rm -rf /etc/systemd/system/installer.service
+    fi
+
+    mkdir -p /etc/systemd/system/getty@tty1.service.d
+    echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin ${user_acc[0]} %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    echo "installer --install=install.yaml" | tee -a /home/${user_acc[0]}/.bashrc
+
+    info_alert "System will reboot now."
+    if ! reboot --force; then
+        echo "Unable to reboot automatically, please reboot your device manually."
+    fi 
+}
+
+################################################################
+# Installation - Part 2 (in user)
+install_part2() {
+    echo
+}
+
+################################################################
 # Installer Menu
 installer_menu() {
 
@@ -717,7 +819,7 @@ installer_menu() {
     # Time Zone
 
     menu_header="Time Zone"
-    ntz="$(acu time network-time-zone  | tr -d '\033[0-9]')"
+    ntz="$(acu time network-time-zone  | sed 's/\x1b[0-9]//g')"
     menu_option_title="\Zb          Your time zone is: $ntz, is that right?\Zn\n"
     options=("Yes, this is correct" "No, let me correct my Time Zone" "Skip setting Time Zone")
     select_option "${options[@]}"
@@ -853,8 +955,8 @@ installer_menu() {
     ################################################################
     # Installation Summary
     menu_header="Installation Summary"
-    if confirm "Confirm to install with the following configurations? \n\n Language: $selected_lang \n Time Zone: $stz \n Username: ${user_acc[0]} \n Password: ${user_acc[1]} \n Disable Root Account: ${user_acc[3]} \n Linux Kernel: $kernelpkg \n Desktop Environment: $selected_de \n \n"; then
-        echo "Coming Soon"
+    if confirm " Confirm to install with the following configurations? \n Note: System will reboot several times during installation. \n\n <Localization> \n Language: $selected_lang \n Time Zone: $stz \n <User Account> \n Username: ${user_acc[0]} \n Password: ${user_acc[1]} \n Disable Root Account: ${user_acc[3]} \n <System / Packages> \n Linux Kernel: $kernelpkg \n Repositories: 7Ji Experimental \n Graphics Acceleration: mesa \n Video Acceleration: ffmpeg \n Other Packages: iw iwd bluez \n Desktop Environment: $selected_de \n"; then
+        install_part1
     else
         main_menu
     fi
@@ -906,15 +1008,17 @@ main_menu() {
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     colorecho "$BLUE" "Arch Linux Installer for ARM (Aarch64)"
+    colorecho "$GREEN" "Installer Version: $installerver"
+    colorecho "$GREEN" "Required ACU Version: $acuver ($(echo $(acu -v | sed 's/\x1b\[[0-9;]*[mGKHF]//g') | grep -o '[0-9].[0-9].[0-9].*') Installed)"
     echo "Usage: installer <optional_argument>"
 
     colorecho "$GREEN" "Options"
     echo "-h / --help : Usage and Infomation of this installer"
     echo "--skip-install-pkg : Skip installing required packages on first boot"
-    echo "--create-init-setup-service : Create a service to auto start this installer on first boot"
+    echo "--create-installer-service : Create a service to auto start this installer on first boot"
     exit 0
-elif [ "$1" = "--create-init-setup-service" ]; then
-    echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
+elif [ "$1" = "--create-installer-service" ]; then
+    echo -e "[Unit]\nDescription=Arch Linux Installer for ARM\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/installer.service && systemctl enable installer.service
     exit 0
 fi
 ################################################################
