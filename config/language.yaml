@@ -1,35 +1,258 @@
-# Chinese
-langchi=("cmn_TW (Taiwan)" "zh_CN (China)" "zh_HK (Hong Kong)" "zh_TW (Taiwan)" "zh_MO (Macau)" "zh_SG (Singapore)"  "zu_ZA (South Africa)" "yue_HK (Hong Kong)" "hak_TW (Taiwan)")
+#  __     __   __ _   ___  _  _   __    ___  ____  ____ 
+# (  )   / _\ (  ( \ / __)/ )( \ / _\  / __)(  __)/ ___)
+# / (_/\/    \/    /( (_ \) \/ (/    \( (_ \ ) _) \___ \
+# \____/\_/\_/\_)__) \___/\____/\_/\_/ \___/(____)(____/
+# List of all locales / language code
+languages:
 
-# English
-langeng=("en_AG (Antigua and Barbuda)" "en_AU (Australia)" "en_BW (Botswana)" "en_CA (Canada)" "en_DK (Denmark)" "en_GB (United Kingdom)" "en_HK (Hong Kong)" "en_IE (Ireland)" "en_IL (Israel)" "en_IN (India)" "en_NG (Nigeria)" "en_NZ (New Zealand)" "en_PH (Philippines)" "en_SC (Seychelles)" "en_SG (Singapore)" "en_US (United States)" "en_ZA (South Africa)" "en_ZM (Zambia)" "en_ZW (Zimbabwe)")
+########################################################################
+  # Sort by Languages
+- langopt: Chinese
+  langopt: English
+  langopt: Spanish
+  langopt: French
+  langopt: German
+  langopt: Arabic
+  langopt: Others
 
-# Spanish
-langspa=("es_AR (Argentina)" "es_BO (Bolivia)" "es_CL (Chile)" "es_CO (Colombia)" "es_CR (Costa Rica)" "es_CU (Cuba)" "es_DO (Dominican Republic)" "es_EC (Ecuador)" "es_ES (Spain)" "es_GT (Guatemala)" "es_HN (Honduras)" "es_MX (Mexico)" "es_NI (Nicaragua)" "es_PA (Panama)" "es_PE (Peru)" "es_PR (Puerto Rico)" "es_PY (Paraguay)" "es_SV (El Salvador)" "es_US (United States)" "es_UY (Uruguay)" "es_VE (Venezuela)")
+  # Chinese
+  langchi: cmn_TW (Taiwan)
+  langchi: zh_CN (China)
+  langchi: zh_HK (Hong Kong)
+  langchi: zh_TW (Taiwan)
+  langchi: zh_MO (Macau)
+  langchi: zh_SG (Singapore)
+  langchi: zu_ZA (South Africa)
+  langchi: yue_HK (Hong Kong)
+  langchi: hak_TW (Taiwan)
 
-# French
-langfre=("fr_BE (Belgium)" "fr_CA (Canada)" "fr_CH (Switzerland)" "fr_FR (France)" "fr_LU (Luxembourg)")
+  # English
+  langeng: en_AG (Antigua and Barbuda)
+  langeng: en_AU (Australia)
+  langeng: en_BW (Botswana)
+  langeng: en_CA (Canada)
+  langeng: en_DK (Denmark)
+  langeng: en_GB (United Kingdom)
+  langeng: en_HK (Hong Kong)
+  langeng: en_IE (Ireland)
+  langeng: en_IL (Israel)
+  langeng: en_IN (India)
+  langeng: en_NG (Nigeria)
+  langeng: en_NZ (New Zealand)
+  langeng: en_PH (Philippines)
+  langeng: en_SC (Seychelles)
+  langeng: en_SG (Singapore)
+  langeng: en_US (United States)
+  langeng: en_ZA (South Africa)
+  langeng: en_ZM (Zambia)
+  langeng: en_ZW (Zimbabwe)
 
-# German
-langger=("de_AT (Austria)" "de_BE (Belgium)" "de_CH (Switzerland)" "de_DE (Germany)" "de_IT (Italy)" "de_LI (Liechtenstein)" "de_LU (Luxembourg)")
+  # Spanish
+  langspa: es_AR (Argentina)
+  langspa: es_BO (Bolivia)
+  langspa: es_CL (Chile)
+  langspa: es_CO (Colombia)
+  langspa: es_CR (Costa Rica)
+  langspa: es_CU (Cuba)
+  langspa: es_DO (Dominican Republic)
+  langspa: es_EC (Ecuador)
+  langspa: es_ES (Spain)
+  langspa: es_GT (Guatemala)
+  langspa: es_HN (Honduras)
+  langspa: es_MX (Mexico)
+  langspa: es_NI (Nicaragua)
+  langspa: es_PA (Panama)
+  langspa: es_PE (Peru)
+  langspa: es_PR (Puerto Rico)
+  langspa: es_PY (Paraguay)
+  langspa: es_SV (El Salvador)
+  langspa: es_US (United States)
+  langspa: es_UY (Uruguay)
+  langspa: es_VE (Venezuela)
 
-# Arabic
-langara=("ar_AE (United Arab Emirates)" "ar_BH (Bahrain)" "ar_DZ (Algeria)" "ar_EG (Egypt)" "ar_IN (India)" "ar_IQ (Iraq)" "ar_JO (Jordan)" "ar_KW (Kuwait)" "ar_LB (Lebanon)" "ar_LY (Libya)" "ar_MA (Morocco)" "ar_OM (Oman)" "ar_QA (Qatar)" "ar_SA (Saudi Arabia)" "ar_SD (Sudan)" "ar_SS (South Sudan)" "ar_SY (Syria)" "ar_TN (Tunisia)" "ar_YE (Yemen)")
+  # French
+  langfre: fr_BE (Belgium)
+  langfre: fr_CA (Canada)
+  langfre: fr_CH (Switzerland)
+  langfre: fr_FR (France)
+  langfre: fr_LU (Luxembourg)
 
-# Sort by Continent
-langcon=("Asia" "Europe" "Americas" "Africa" "Others")
+  # German
+  langger: de_AT (Austria)
+  langger: de_BE (Belgium)
+  langger: de_CH (Switzerland)
+  langger: de_DE (Germany)
+  langger: de_IT (Italy)
+  langger: de_LI (Liechtenstein)
+  langger: de_LU (Luxembourg)
 
-# Asia
-langconas=("az_AZ (Azerbaijan)" "az_IR (Iran)" "as_IN (India)" "bhb_IN (India)" "bho_IN (India)" "bho_NP (Nepal)" "bo_CN (China)" "bo_IN (India)" "dz_BT (Bhutan)" "fa_IR (Iran)" "hi_IN (India)" "he_IL (Israel)" "id_ID (Indonesia)" "ja_JP (Japan)" "ka_GE (Georgia)" "kk_KZ (Kazakhstan)" "km_KH (Cambodia)" "kn_IN (India)" "ko_KR (Korea)" "th_TH (Thailand)" "ta_SG (Singapore)" "vi_VN (Vietnam)" "saq_KE (Kenya)" "ml_IN (India)" "ug_CN (China)" "or_IN (India)" "sw_KE (Kenya)" "ta_MY (Malaysia)" "ta_IN (India)" "brx_IN (India)" "pa_IN (India)" "ug_IR (Iran)" "pa_PK (Pakistan)" "ur_PK (Pakistan)")
+  # Arabic
+  langara: ar_AE (United Arab Emirates)
+  langara: ar_BH (Bahrain)
+  langara: ar_DZ (Algeria)
+  langara: ar_EG (Egypt)
+  langara: ar_IN (India)
+  langara: ar_IQ (Iraq)
+  langara: ar_JO (Jordan)
+  langara: ar_KW (Kuwait)
+  langara: ar_LB (Lebanon)
+  langara: ar_LY (Libya)
+  langara: ar_MA (Morocco)
+  langara: ar_OM (Oman)
+  langara: ar_QA (Qatar)
+  langara: ar_SA (Saudi Arabia)
+  langara: ar_SD (Sudan)
+  langara: ar_SS (South Sudan)
+  langara: ar_SY (Syria)
+  langara: ar_TN (Tunisia)
+  langara: ar_YE (Yemen)
 
-# Europe
-langconeu=("bg_BG (Bulgaria)" "ca_IT (Italy)" "ca_AD (Andorra)" "ca_ES (Spain)" "ast_ES (Spain)" "ca_FR (France)" "br_FR (France)" "oc_FR (France)" "cs_CZ (Czech Republic)" "csb_PL (Poland)" "da_DK (Denmark)" "dsb_DE (Germany)" "el_GR (Greece)" "el_CY (Cyprus)" "et_EE (Estonia)" "eu_ES (Spain)" "fi_FI (Finland)" "fur_IT (Italy)" "fy_NL (Netherlands)" "fy_DE (Germany)" "ga_IE (Ireland)" "gl_ES (Spain)" "hr_HR (Croatia)" "hsb_DE (Germany)" "ia_FR (France)" "is_IS (Iceland)" "it_CH (Switzerland)" "it_IT (Italy)" "lv_LV (Latvia)" "mk_MK (North Macedonia)" "mt_MT (Malta)" "nb_NO (Norway)" "nl_BE (Belgium)" "nl_NL (Netherlands)" "nn_NO (Norway)" "no_NO (Norway)" "pl_PL (Poland)" "pt_PT (Portugal)" "ro_RO (Romania)" "sk_SK (Slovakia)" "sl_SI (Slovenia)" "sq_AL (Albania)" "sv_FI (Finland)" "sv_SE (Sweden)" "tr_TR (Turkey)" "uk_UA (Ukraine)" "crh_UA (Ukraine)" "gd_GB (United Kingdom)" "gv_GB (United Kingdom)" "cy_GB (United Kingdom)" "se_NO (Norway)")
+########################################################################
+  # Sort by Contenients
+  langcon: Asia
+  langcon: Europe
+  langcon: Americas
+  langcon: Africa
+  langcon: Others
 
-# Americas
-langconam=("ayc_PE (Peru)" "qu_PE (Peru)" "chr_US (United States)" "iu_CA (Canada)" "pt_BR (Brazil)" "hif_FJ (Fiji)" "ik_CA (Canada)")
+  # Asia
+  langconas: az_AZ (Azerbaijan)
+  langconas: az_IR (Iran)
+  langconas: as_IN (India)
+  langconas: bhb_IN (India)
+  langconas: bho_IN (India)
+  langconas: bho_NP (Nepal)
+  langconas: bo_CN (China)
+  langconas: bo_IN (India)
+  langconas: dz_BT (Bhutan)
+  langconas: fa_IR (Iran)
+  langconas: hi_IN (India)
+  langconas: he_IL (Israel)
+  langconas: id_ID (Indonesia)
+  langconas: ja_JP (Japan)
+  langconas: ka_GE (Georgia)
+  langconas: kk_KZ (Kazakhstan)
+  langconas: km_KH (Cambodia)
+  langconas: kn_IN (India)
+  langconas: ko_KR (Korea)
+  langconas: th_TH (Thailand)
+  langconas: ta_SG (Singapore)
+  langconas: vi_VN (Vietnam)
+  langconas: saq_KE (Kenya)
+  langconas: ml_IN (India)
+  langconas: ug_CN (China)
+  langconas: or_IN (India)
+  langconas: sw_KE (Kenya)
+  langconas: ta_MY (Malaysia)
+  langconas: ta_IN (India)
+  langconas: brx_IN (India)
+  langconas: pa_IN (India)
+  langconas: ug_IR (Iran)
+  langconas: pa_PK (Pakistan)
+  langconas: ur_PK (Pakistan)
 
-# Africa
-langconaf=("aa_DJ (Djibouti)" "aa_ER (Eritrea)" "aa_ET (Ethiopia)" "ber_DZ (Algeria)" "ber_MA (Morocco)" "gez_ER (Eritrea)" "gez_ET (Ethiopia)" "am_ET (Ethiopia)" "kab_DZ (Algeria)" "sid_ET (Ethiopia)" "sn_ZW (Zimbabwe)" "so_SO (Somalia)" "shi_MA (Morocco)" "shi_Tfng_MA (Morocco)" "rw_RW (Rwanda)" "nso_ZA (South Africa)" "yo_NG (Nigeria)" "xog_UG (Uganda)")
+  # Europe
+  langconeu: bg_BG (Bulgaria)
+  langconeu: ca_IT (Italy)
+  langconeu: ca_AD (Andorra)
+  langconeu: ca_ES (Spain)
+  langconeu: ast_ES (Spain)
+  langconeu: ca_FR (France)
+  langconeu: br_FR (France)
+  langconeu: oc_FR (France)
+  langconeu: cs_CZ (Czech Republic)
+  langconeu: csb_PL (Poland)
+  langconeu: da_DK (Denmark)
+  langconeu: dsb_DE (Germany)
+  langconeu: el_GR (Greece)
+  langconeu: el_CY (Cyprus)
+  langconeu: et_EE (Estonia)
+  langconeu: eu_ES (Spain)
+  langconeu: fi_FI (Finland)
+  langconeu: fur_IT (Italy)
+  langconeu: fy_NL (Netherlands)
+  langconeu: fy_DE (Germany)
+  langconeu: ga_IE (Ireland)
+  langconeu: gl_ES (Spain)
+  langconeu: hr_HR (Croatia)
+  langconeu: hsb_DE (Germany)
+  langconeu: ia_FR (France)
+  langconeu: is_IS (Iceland)
+  langconeu: it_CH (Switzerland)
+  langconeu: it_IT (Italy)
+  langconeu: lv_LV (Latvia)
+  langconeu: mk_MK (North Macedonia)
+  langconeu: mt_MT (Malta)
+  langconeu: nb_NO (Norway)
+  langconeu: nl_BE (Belgium)
+  langconeu: nl_NL (Netherlands)
+  langconeu: nn_NO (Norway)
+  langconeu: no_NO (Norway)
+  langconeu: pl_PL (Poland)
+  langconeu: pt_PT (Portugal)
+  langconeu: ro_RO (Romania)
+  langconeu: sk_SK (Slovakia)
+  langconeu: sl_SI (Slovenia)
+  langconeu: sq_AL (Albania)
+  langconeu: sv_FI (Finland)
+  langconeu: sv_SE (Sweden)
+  langconeu: tr_TR (Turkey)
+  langconeu: uk_UA (Ukraine)
+  langconeu: crh_UA (Ukraine)
+  langconeu: gd_GB (United Kingdom)
+  langconeu: gv_GB (United Kingdom)
+  langconeu: cy_GB (United Kingdom)
+  langconeu: se_NO (Norway)
 
-# Others
-langconother=("ru_RU (Russia)" "cv_RU (Russia)" "ta_LK (Sri Lanka)" "ak_GH (Ghana)" "si_LK (Sri Lanka)" "dv_MV (Maldives)" "uz_UZ (Uzbekistan)" "sr_RS (Serbia)" "tk_TM (Turkmenistan)" "bi_VU (Vanuatu)" "sw_TZ (Tanzania)" "ce_RU (Russia)" "sah_RU (Russia)" "sr_CS (Serbia and Montenegro)" "tg_TJ (Tajikistan)" "ps_AF (Afghanistan)" "me_ME (Montenegro)" "ckb_IQ (Iraq)" "be_BY (Belarus)" "kl_GL (Greenland)" "bs_BA (Bosnia and Herzegovina)" "ug_UZ (Uzbekistan)")
+  # Americas
+  langconam: ayc_PE (Peru)
+  langconam: qu_PE (Peru)
+  langconam: chr_US (United States)
+  langconam: iu_CA (Canada)
+  langconam: pt_BR (Brazil)
+  langconam: hif_FJ (Fiji)
+  langconam: ik_CA (Canada)
+
+  # Africa
+  langconaf: aa_DJ (Djibouti)
+  langconaf: aa_ER (Eritrea)
+  langconaf: aa_ET (Ethiopia)
+  langconaf: ber_DZ (Algeria)
+  langconaf: ber_MA (Morocco)
+  langconaf: gez_ER (Eritrea)
+  langconaf: gez_ET (Ethiopia)
+  langconaf: am_ET (Ethiopia)
+  langconaf: kab_DZ (Algeria)
+  langconaf: sid_ET (Ethiopia)
+  langconaf: sn_ZW (Zimbabwe)
+  langconaf: so_SO (Somalia)
+  langconaf: shi_MA (Morocco)
+  langconaf: shi_Tfng_MA (Morocco)
+  langconaf: rw_RW (Rwanda)
+  langconaf: nso_ZA (South Africa)
+  langconaf: yo_NG (Nigeria)
+  langconaf: xog_UG (Uganda)
+
+  # Others
+  langconother: ru_RU (Russia)
+  langconother: cv_RU (Russia)
+  langconother: ta_LK (Sri Lanka)
+  langconother: ak_GH (Ghana)
+  langconother: si_LK (Sri Lanka)
+  langconother: dv_MV (Maldives)
+  langconother: uz_UZ (Uzbekistan)
+  langconother: sr_RS (Serbia)
+  langconother: tk_TM (Turkmenistan)
+  langconother: bi_VU (Vanuatu)
+  langconother: sw_TZ (Tanzania)
+  langconother: ce_RU (Russia)
+  langconother: sah_RU (Russia)
+  langconother: sr_CS (Serbia and Montenegro)
+  langconother: tg_TJ (Tajikistan)
+  langconother: ps_AF (Afghanistan)
+  langconother: me_ME (Montenegro)
+  langconother: ckb_IQ (Iraq)
+  langconother: be_BY (Belarus)
+  langconother: kl_GL (Greenland)
+  langconother: bs_BA (Bosnia and Herzegovina)
+  langconother: ug_UZ (Uzbekistan)

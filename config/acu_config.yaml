@@ -32,6 +32,9 @@ configurations:
   # do not print warning ($WARNING) messages
   no_warning: 1
 
+  # disable color or cursor position in output
+  no_color_echo: 1
+
   # do not clear terminal outputs
   #no_clear: 1
 
