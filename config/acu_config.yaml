@@ -10,7 +10,7 @@ configurations:
   THEME_NAME: Installer
 
   # Theme Color
-  THEME: $LTBLUE
+  THEME: $CYAN
 
   # Warning Messages Color
   #WARNING: $YELLOW
@@ -24,7 +24,7 @@ configurations:
   ## ACU Configurable Variables ##
 
   # load device configuration determined by tags (e.g. rock-5b)
-  #device_config: generic-aarch64
+  #device_config: generic
 
   # do not confirm when installing a package using pacman -S / -U or makepkg -si
   #no_confirm: 1

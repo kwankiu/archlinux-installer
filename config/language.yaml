@@ -7,7 +7,7 @@ languages:
 
 ########################################################################
   # Sort by Languages
-- langopt: Chinese
+  langopt: Chinese
   langopt: English
   langopt: Spanish
   langopt: French
