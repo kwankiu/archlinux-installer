@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-99 count on updates commited on the same day)
-installerver=24041104
+installerver=24041105
 
 # required ACU version
 acuver=0.0.6-dev
@@ -654,13 +654,7 @@ add_boot_part_fstab() {
 }
 
 install_part1() {
-    echo "Running Initial System Setup ..."
-
-    # Check if the script is being run with root privileges
-    if [[ $EUID -ne 0 ]]; then
-        echo "Error : Initial System Setup must be run as root"
-        exit 1
-    fi
+    info_alert "Running Initial System Setup ..."
 
     # Get rootfs partition from the current mount point "/"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
@@ -673,24 +667,32 @@ install_part1() {
         add_boot_part_fstab
     fi
 
-    echo "Resizing File System ..."
+    info_alert "Resizing File System ..."
     growpart $rootfs_disk 2
     resize2fs $rootfs_partition
 
     # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
-    colorecho "$GREEN" "Setting up pacman ..."
+    info_alert "Configuring pacman (populate alarm keys) ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
 
-    colorecho "$GREEN" "Installing sudo ..."
+    info_alert "Configuring pacman (adding repositories) ..."
+    for ((i = 0; i < ${#pacmanrepo[@]}; i++)); do
+        acu rem set pacman "${pacmanrepo[i]}"
+    done
+
+    info_alert "Configuring pacman (enabling ParallelDownloads)..."
+    sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $prldownloads/" /etc/pacman.conf
+
+    info_alert "Installing sudo ..."
     pacman -Sy sudo --noconfirm
 
-    colorecho "$GREEN" "Removing default account ..."
-    arch-rock-config user remove alarm
+    info_alert "Removing default account ..."
+    acu user remove alarm
 
-    colorecho "$GREEN" "Setting up new user account ..."
-    arch-rock-config user add ${user_acc[0]} ${user_acc[1]}
-    arch-rock-config user manage ${user_acc[0]} sudopw
+    info_alert "Setting up new user account ..."
+    acu user add ${user_acc[0]} ${user_acc[1]}
+    acu user manage ${user_acc[0]} sudopw
 
     hostname=$(hostnamectl --static)
     echo "${user_acc[0]} $hostname =NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl halt,/usr/bin/systemctl reboot" | tee -a "/etc/sudoers" >/dev/null
@@ -706,18 +708,265 @@ install_part1() {
 
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin ${user_acc[0]} %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
-    echo "installer --install=install.yaml" | tee -a /home/${user_acc[0]}/.bashrc
+    echo "installer part2 --kernel=$kernelpkg --de=$de_options" | tee -a /home/${user_acc[0]}/.bashrc
 
     info_alert "System will reboot now."
     if ! reboot --force; then
         echo "Unable to reboot automatically, please reboot your device manually."
-    fi 
+    fi
 }
 
 ################################################################
 # Installation - Part 2 (in user)
 install_part2() {
-    echo
+
+    ################################################################
+    # Handle install config
+    for arg in "$@"; do
+        case "$arg" in
+            --kernel=*)
+                kernelpkg="${arg#*=}"
+                ;;
+            --de=*)
+                de_options="${arg#*=}"
+                ;;
+        esac
+    done
+
+    ################################################################
+    # Install Kernel
+    info_alert "Removing existing kernels ..."
+    yes y|sudo pacman -R linux-aarch64
+    sudo rm -rf /boot/vmlinu* 
+    sudo rm -rf /boot/initr*
+    sudo rm -rf /boot/dtbs
+    sudo rm -rf /usr/lib/modules/*
+    sudo rm -rf /etc/mkinitcpio.d/*
+
+    info_alert "Installing linux kernel ..."
+    oldkrlrel=$(uname -r)
+    acu -y install $kernelpkg $kernelpkg-headers #--overwrite
+    sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+
+    info_alert "Installing Linux Firmware ..." 
+    if [[ "$kernelpkg" == *"-orangepi"* ]]; then
+        yes y|sudo pacman -S linux-firmware-orangepi-git
+    elif [[ "$kernelpkg" == *"-radxa"* ]] && [ "$install_target" = "rock5" ]; then
+        info_alert "Removing linux-firmware-joshua-git ..."
+        yes y|sudo pacman -R linux-firmware-joshua-git
+        info_alert "Installing DKMS Packages ..."
+        acu -y install "8852bu-dkms-git" "8852be-dkms-git"
+    elif [[ "$kernelpkg" == *"-joshua"* ]]; then
+        yes y|sudo pacman -S linux-firmware-joshua-git
+    elif [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+        yes y|sudo pacman -S linux-firmware-joshua-git
+    fi
+
+    ################################################################
+    # Install Graphics Acceleration
+    info_alert "Installing Graphics Acceleration"
+    if [[ "$kernelpkg" == *"-panthor"* ]] || [[ "$kernelpkg" == *"-collabora"* ]] || [[ "$kernelpkg" == "linux-aarch64-7ji" ]]; then
+        sudo pacman -S mesa-panfrost-git --noconfirm
+    elif [[ "$kernelpkg" == "linux-aarch64-rockchip-bsp" ]]; then
+        sudo pacman -S mesa-panfork-git --noconfirm
+        sudo curl -L https://raw.githubusercontent.com/JeffyCN/mirrors/libmali/firmware/g610/mali_csffw.bin -o /lib/firmware/mali_csffw.bin
+    elif sudo pacman -Ssy "mesa-panfork-git" &> /dev/null; then
+        sudo pacman -S mesa-panfork-git mali-valhall-g610-firmware libmali-valhall-g610-x11-wayland-gbm --noconfirm
+    else
+        sudo pacman -S mesa --noconfirm
+    fi
+
+    ################################################################
+    # Install Video Acceleration
+    info_alert "Installing Video Acceleration"
+    if sudo pacman -Ssy "mpp-git" &> /dev/null; then
+        sudo pacman -S mpp-git --noconfirm
+    elif sudo pacman -Ssy "mpp" &> /dev/null; then
+        sudo pacman -S mpp --noconfirm
+    fi
+
+    if sudo pacman -Ssy "ffmpeg4.4-mpp" &> /dev/null; then
+        sudo pacman -S ffmpeg4.4-mpp --noconfirm   
+    fi
+
+    if sudo pacman -Ssy "ffmpeg-rockchip-git" &> /dev/null; then
+        sudo pacman -S ffmpeg-rockchip-git --noconfirm
+    elif sudo pacman -Ssy "ffmpeg-mpp-git" &> /dev/null; then
+        sudo pacman -S ffmpeg-mpp-git --noconfirm
+    elif [ "$install_target" = "rpi" ]; then
+        sudo pacman -S ffmpeg-rpi --noconfirm
+    else
+        sudo pacman -S ffmpeg--noconfirm
+    fi
+
+    ################################################################
+    # Post Installation
+    info_alert "Performing Full System Upgrade ..."
+    sudo pacman -Syyu --noconfirm
+
+    # SBC or Kernel Specfic Post Installation
+    if [ "$install_target" = "rock5" ] || [ "$install_target" = "orangepi5" ]; then
+        # Disable Sleep
+        info_alert "Post Install: Disable suspend ..."
+        sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
+        echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
+    fi
+
+    if [ "$install_target" = "edge2" ]; then
+        info_alert "Fix : Switch WiFi backend to iwd ..."
+        sudo mkdir -p /etc/NetworkManager/conf.d
+        echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
+        # FAN control for Edge 2
+        info_alert "Installing FAN control for Edge 2 ..."
+        curl -LJO https://raw.githubusercontent.com/BredOS/sbc-pkgbuilds/main/edge2-post-install/fan.sh
+        sudo chmod +x fan.sh
+        sudo mv fan.sh /usr/local/bin/fan.sh
+        info_alert "Creating FAN control service ..."
+        echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee /usr/lib/systemd/system/fan.service
+        sudo systemctl enable fan.service
+    fi
+
+    if [ "$install_target" = "orangepi5" ]; then
+        # Enable the USB 2.0 port
+        info_alert "Fix: Enable the USB 2.0 port ..."
+        echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n\n[Service]\nExecStart=/usr/bin/sh -c \"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\"\nType=oneshot\n\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
+        sudo systemctl enable enable-usb2
+    fi
+
+    if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
+        # Enable AP6275P bluetooth
+        info_alert "Fix : AP6275P Bluetooth ..."
+        curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+        sudo chmod +x brcm_patchram_plus
+        sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
+        echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error: Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info: ${wifi_chip}"\n    echo "BT Status: ${bt_status}"\nfi' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
+        sudo chmod +x /usr/local/bin/bt_ap6275p.sh
+        echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/sudo /usr/local/bin/bt_ap6275p.sh\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
+        sudo systemctl enable bt_ap6275p.service
+    fi
+
+    # Network Manager, WiFi, Bluetooth
+    info_alert "Installing network manager and bluetooth ..."
+    sudo pacman -Sy networkmanager iw iwd bluez --noconfirm
+
+    info_alert "Enabling network manager and bluetooth service ..."
+    sudo systemctl enable NetworkManager.service
+    sudo systemctl start NetworkManager.service
+    sudo systemctl enable bluetooth.service
+    sudo systemctl start bluetooth.service
+
+    # Basic Fonts for Asian Characters and Emoji
+    info_alert "Installing fonts ..."
+    sudo pacman -Sy noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
+
+    ################################################################
+    # Install desktop environment
+
+    title "Install desktop environment"
+
+    # Install desktop environment
+    if [ "$de_options" = 0 ]; then
+        # Install Gnome
+        info_alert "Installing Gnome (Full) ..."
+        sudo pacman -S gnome --noconfirm
+        sudo systemctl enable gdm
+    elif [ "$de_options" = 1 ]; then
+        # Install Gnome
+        info_alert "Installing Gnome (Minimal) ..."
+        sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-desktop-portal xdg-desktop-portal-gnome xdg-user-dirs librsvg --noconfirm
+        sudo systemctl enable gdm
+    elif [ "$de_options" = 2 ]; then
+        # Install KDE Plasma
+        info_alert "Installing KDE Plasma (Full) ..."
+        sudo pacman -S plasma-meta sddm kde-applications-meta --noconfirm
+        sudo systemctl enable sddm
+    elif [ "$de_options" = 3 ]; then
+        # Install KDE Plasma
+        info_alert "Installing KDE Plasma (No KDE Apps) ..."
+        sudo pacman -S plasma-meta sddm konsole --noconfirm
+        sudo systemctl enable sddm
+    elif [ "$de_options" = 4 ]; then
+        # Install Budgie
+        info_alert "Installing Budgie Desktop ..."
+        sudo pacman -S budgie gdm arc-gtk-theme papirus-icon-theme gnome-console gnome-disk-utility nautilus librsvg --noconfirm
+        sudo systemctl enable gdm
+    elif [ "$de_options" = 5 ]; then
+        # Install Sway
+        info_alert "Installing Sway ..."
+        sudo pacman -S sway wmenu i3status waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland qt6-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst thunar --noconfirm
+        sudo systemctl enable sddm
+        sudo mkdir -p .config/{sway,dunst,waybar,wofi}
+        sudo install -Dm755 /etc/sway/config ~/.config/sway/config
+        sudo install -Dm755 /etc/dunst/dunstrc ~/.config/dunst/dunstrc
+        sudo touch ~/.config/waybar/config
+        sudo touch ~/.config/wofi/config
+    elif [ "$de_options" = 6 ]; then
+        # Install Cutefish
+        info_alert "Installing Cutefish ..."
+        sudo pacman -S plasma-desktop cutefish sddm --noconfirm
+        sudo systemctl enable sddm
+    elif [ "$de_options" = 7 ]; then
+        # Install XFCE
+        info_alert "Installing XFCE ..."
+        sudo pacman -S xfce4 xfce4-goodies sddm capitaine-cursors arc-gtk-theme leafpad galculator xdg-user-dirs-gtk --noconfirm
+        sudo systemctl enable sddm
+    elif [ "$de_options" = 8 ]; then
+        # Install LXQT
+        info_alert "Installing LXQT ..."
+        sudo pacman -S lxqt breeze-icons sddm --noconfirm
+        sudo systemctl enable sddm
+    elif [ "$de_options" = 9 ]; then
+        # Install LXDE
+        info_alert "Installing LXDE ..."
+        sudo pacman -S lxde xscreensaver --noconfirm
+        sudo systemctl enable lxdm
+    elif [ "$de_options" = 10 ]; then
+        # Install MATE
+        info_alert "Installing MATE ..."
+        sudo pacman -S mate mate-extra gdm --noconfirm
+        sudo systemctl enable gdm
+    elif [ "$de_options" = 11 ]; then
+        # Install Cinnamon
+        info_alert "Installing Cinnamon ..."
+        sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-console gdm --noconfirm
+        sudo systemctl enable gdm
+    elif [ "$de_options" = 12 ]; then
+        # Install Sway
+        info_alert "Installing Hyprland ..."
+        sudo pacman -S hyprland qt5-wayland xdg-desktop-portal-hyprland wofi pass dunst alacritty thunar sddm --noconfirm
+        sudo systemctl enable sddm
+        sed -i 's/kitty/alacritty/g' $HOME/.config/hypr/hyprland.conf
+    else
+        info_alert "Skipping install desktop environment ..."
+    fi
+
+    ################################################################
+    # Installation clean up
+
+    # Detect the current username
+    current_username=$(whoami)
+
+    # Check if "installer" exists in .bashrc
+    if sudo grep -q "installer" /home/$current_username/.bashrc; then
+        # Remove "installer" from .bashrc
+        sudo sed -i '/installer/d' /home/$current_username/.bashrc
+        sudo rm -rf /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    fi
+
+    info_alert "Installation Finished. We will reboot your system in 5 seconds."
+    sleep 5
+
+    info_alert "Removing this installer ..."
+    sudo rm -rf /usr/bin/installer
+    acu user manage $current_username sudopw
+
+    info_alert "Rebooting system ..."
+    if ! sudo systemctl reboot; then
+        if ! sudo reboot; then
+            echo "Unable to reboot automatically, please reboot your device manually."
+        fi
+    fi
+
 }
 
 ################################################################
@@ -795,7 +1044,7 @@ installer_menu() {
 
     options=()
     for ((i = 0; i < ${#network_lang[@]}-1; i++)); do
-        options+=("${network_lang[$i]}")
+        options+=("${network_lang[i]}")
     done
     sgdindx=$i
     options+=("More Languages" "Skip setting Language")
@@ -908,7 +1157,7 @@ installer_menu() {
             fi
 
             if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-                options+=("linux-aarch64-rockchip-bsp6.1-joshua-bin (Experimental)         - Install Joshua Linux Rockchip 6.1 Kernel deb version (Linux 6.1.43)")
+                options+=("linux-aarch64-rockchip-bsp6.1-joshua-bin (7Ji,Experimental)         - Install Joshua Linux Rockchip 6.1 Kernel deb version (Linux 6.1.43)")
                 options+=("linux-aarch64-rockchip-bsp6.1-joshua-panthor-git (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel with Panthor (Linux 6.1.43)")
                 options+=("linux-aarch64-rk3588-collabora-git (Experimental)               - Install Linux Collabora Mainline RK3588 Kernel (Linux 6.9)")
                 options+=("linux-aarch64-rockchip-bsp (7Ji)                                - (Experimental) Install wyf9661 Linux Rockchip 6.1 Kernel (Linux 6.1.57)")
@@ -922,7 +1171,7 @@ installer_menu() {
         krl_options=$?
         selected_option="${options[$krl_options]}"
         kernelpkg=$(echo "$selected_option" | awk '{print $1}')
-        pacmanrepo=$(echo "$selected_option" | awk '{print $2}' | tr -d '()')
+        pacmanrepo=($(echo "$selected_option" | awk '{print $2}' | tr -d '()' | tr ',' ' '))
 
         if [ "$kernelpkg" = "(Others)" ]; then
             kernel_menu
@@ -955,7 +1204,8 @@ installer_menu() {
     ################################################################
     # Installation Summary
     menu_header="Installation Summary"
-    if confirm " Confirm to install with the following configurations? \n Note: System will reboot several times during installation. \n\n <Localization> \n Language: $selected_lang \n Time Zone: $stz \n <User Account> \n Username: ${user_acc[0]} \n Password: ${user_acc[1]} \n Disable Root Account: ${user_acc[3]} \n <System / Packages> \n Linux Kernel: $kernelpkg \n Repositories: 7Ji Experimental \n Graphics Acceleration: mesa \n Video Acceleration: ffmpeg \n Other Packages: iw iwd bluez \n Desktop Environment: $selected_de \n"; then
+    repostring="${pacmanrepo[@]}"
+    if confirm " Confirm to install with the following configurations? \n Note: System will reboot several times during installation. \n\n <Localization> \n Language: $selected_lang \n Time Zone: $stz \n <User Account> \n Username: ${user_acc[0]} \n Password: ${user_acc[1]} \n Disable Root Account: ${user_acc[3]} \n <System / Packages> \n Linux Kernel: $kernelpkg \n Repositories: $repostring \n Graphics Acceleration: mesa \n Video Acceleration: ffmpeg \n Desktop Environment: $selected_de \n"; then
         install_part1
     else
         main_menu
@@ -1019,6 +1269,9 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     exit 0
 elif [ "$1" = "--create-installer-service" ]; then
     echo -e "[Unit]\nDescription=Arch Linux Installer for ARM\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/installer.service && systemctl enable installer.service
+    exit 0
+elif [ "$1" = "part2" ] || [ ! "$(id -u)" -eq 0 ]; then
+    install_part2
     exit 0
 fi
 ################################################################
