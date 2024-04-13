@@ -7,7 +7,7 @@ kernel:
   # Kernel List
   - items:
 ########################################################################
-  # Items Usage / Examples
+#      #Items Usage / Examples
 #      - base: Kernel base package
 #        description: Description of the kernel package
 #        version: Linux kernel version
@@ -58,7 +58,6 @@ kernel:
         video:
           - ffmpeg
         others: null
-        commands: null
 
       # Linux Raspberry Pi Kernel
       - base: linux-rpi
@@ -76,7 +75,6 @@ kernel:
         video:
           - ffmpeg-rpi
         others: null
-        commands: null
 
       # Linux Raspberry Pi 16K Kernel
       - base: linux-rpi-16k
@@ -94,7 +92,6 @@ kernel:
         video:
           - ffmpeg-rpi
         others: null
-        commands: null
 
       # Linux Asahi Kernel
       - base: linux-asahi
@@ -113,7 +110,6 @@ kernel:
         video:
           - ffmpeg
         others: null
-        commands: null
 
       # Joshua's Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-joshua
@@ -153,7 +149,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # Joshua's Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-git
@@ -183,7 +178,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # Joshua's Rockchip 6.1 BIN Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-bin
@@ -213,7 +207,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # Joshua's Rockchip 6.1 Panthor Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-panthor-git
@@ -241,7 +234,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # Radxa Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-radxa-git
@@ -269,7 +261,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # Radxa Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-radxa-bin
@@ -297,7 +288,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # Radxa Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-radxa-bin
@@ -325,7 +315,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # Orange Pi Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi
@@ -351,7 +340,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # Orange Pi Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git
@@ -374,7 +362,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # wyf9661's Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp
@@ -402,8 +389,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: |
-          sudo curl -L https://raw.githubusercontent.com/JeffyCN/mirrors/libmali/firmware/g610/mali_csffw.bin -o /lib/firmware/mali_csffw.bin
 
       # Collabora RK3588 Hardware Enablement Kernel
       - base: linux-aarch64-rk3588-collabora-git
@@ -424,7 +409,6 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
       # 7Ji's Mainline Kernel
       - base: linux-aarch64-7ji
@@ -451,6 +435,5 @@ kernel:
         video:
           - ffmpeg-rockchip-git
         others: null
-        commands: null
 
 ########################################################################
