@@ -592,7 +592,7 @@ network_menu()
         if [ "$answer" = 1 ]; then
             alert "System will reboot now."
             if ! reboot --force; then
-                echo "Unable to reboot automatically, please reboot your device manually."
+                alert "Unable to reboot automatically, please reboot your device manually."
             fi
         fi
     fi
@@ -626,7 +626,7 @@ check_installer_updates() {
                 # Reboot
                 alert "Installer updated. System will reboot now."
                 if ! sudo reboot --force; then
-                    echo "Unable to reboot automatically, please reboot your device manually."
+                    alert "Unable to reboot automatically, please reboot your device manually."
                 fi
             else
                 alert "An Error is occurred. Installer is not updated."
@@ -728,7 +728,7 @@ install_part1() {
 
     alert "System will reboot now."
     if ! reboot --force; then
-        echo "Unable to reboot automatically, please reboot your device manually."
+        alert "Unable to reboot automatically, please reboot your device manually."
     fi
 }
 
@@ -965,7 +965,7 @@ install_part2() {
     alert "Rebooting system ..."
     if ! sudo systemctl reboot; then
         if ! sudo reboot; then
-            echo "Unable to reboot automatically, please reboot your device manually."
+            alert "Unable to reboot automatically, please reboot your device manually."
         fi
     fi
 
@@ -1305,7 +1305,7 @@ if [ -d "$compiled_pkg_folder" ] && [ -z "$skip_install_pkg" ]; then
 
             alert "System will reboot now."
             if ! reboot --force; then
-                echo "Unable to reboot automatically, please reboot your device manually."
+                alert "Unable to reboot automatically, please reboot your device manually."
             fi 
         else
             alert "Failed to install Required Packages. The image may be broken, try flashing the image again."
