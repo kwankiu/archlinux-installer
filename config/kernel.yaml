@@ -9,11 +9,27 @@ kernel:
 ########################################################################
   # Items Usage / Examples
 #      - base: Kernel base package
-#        description: Description of the kernel package 
+#        description: Description of the kernel package
+#        version: Linux kernel version
+#        repo:
+#          - Repositories to be added to pacman, supported formats are
+#          - REPO_NAME
+#          - REPO_NAME,REPO_URL
+#          - REPO_NAME,REPO_URL,GPG_KEY
 #        compatible:
-#          - Device tag list that this package is compatible with (this is optional when a package is suitable for any devices)
-#        packages:
-#          - Packages to be installed (this will be passed to acu install before running commands)
+#          - Device tags that this package is compatible with (or set to null if none)
+#        recommended:
+#          - Device tags that this package is the recommended option for that device (or set to null if none)
+#        experimental:
+#          - Device tags that this package is experimentally compatible with (or set to null if none)
+#        firmware:
+#          - linux firmware packages to install
+#        graphics:
+#          - graphics acceleration packages to install
+#        video:
+#          - video acceleration packages to install
+#        others:
+#          - other packages to install
 #        commands: |
 #          # Commands to run when installing this packages
 #          # This can be multiple lines
@@ -22,11 +38,25 @@ kernel:
       # Linux Mainline Kernel
       - base: linux-aarch64
         description: Linux Mainline Kernel
-        version: 6.x
+        version: latest stable
         repo: null
-        compatible: null
-        firmware:
-          - linux-firmware
+        compatible:
+          - generic
+          - asahi
+          - rpi
+        recommended: null
+        experimental:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - edge2
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        firmware: null
         graphics:
           - mesa
         video:
@@ -34,5 +64,397 @@ kernel:
         others: null
         commands: null
 
+      # Linux Raspberry Pi Kernel
+      - base: linux-rpi
+        description: Linux Raspberry Pi BSP Kernel
+        version: 6.6
+        repo: null
+        compatible:
+          - rpi
+        recommended:
+          - rpi
+        experimental: null
+        firmware: null
+        graphics:
+          - mesa
+        video:
+          - ffmpeg-rpi
+        others: null
+        commands: null
+
+      # Linux Raspberry Pi 16K Kernel
+      - base: linux-rpi-16k
+        description: Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY
+        version: 6.6
+        repo: null
+        compatible:
+          - rpi
+        recommended:
+          - rpi
+        experimental: null
+        firmware: null
+        graphics:
+          - mesa
+        video:
+          - ffmpeg-rpi
+        others: null
+        commands: null
+
+      # Linux Asahi Kernel
+      - base: linux-asahi
+        description: Linux Asahi Kernel
+        version: 6.6
+        repo:
+          - Experimental
+        compatible:
+          - asahi
+        recommended:
+          - asahi
+        experimental: null
+        firmware: null
+        graphics:
+          - mesa-asahi-edge
+        video:
+          - ffmpeg
+        others: null
+        commands: null
+
+      # Joshua's Rockchip 5.10 Kernel
+      - base: linux-aarch64-rockchip-bsp5.10-joshua
+        description: Joshua Linux Rockchip BSP Kernel
+        version: 5.10.160
+        repo:
+          - 7Ji
+        compatible:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - edge2
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        recommended:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - edge2
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        experimental: null
+        firmware:
+          - linux-firmware-joshua-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # Joshua's Rockchip 6.1 Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-joshua-git
+        description: Joshua Linux Rockchip BSP Kernel
+        version: 6.1.43
+        repo:
+          - 7Ji
+        compatible:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - edge2
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        recommended: null
+        experimental: null
+        firmware:
+          - linux-firmware-joshua-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # Joshua's Rockchip 6.1 BIN Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-joshua-bin
+        description: Joshua Linux Rockchip BSP Kernel
+        version: 6.1.43
+        repo:
+          - Experimental
+        compatible: null
+        recommended: null
+        experimental:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - edge2
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        firmware:
+          - linux-firmware-joshua-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # Joshua's Rockchip 6.1 Panthor Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-joshua-panthor-git
+        description: Boogie's Joshua Linux Rockchip BSP Kernel with Panthor support
+        version: 6.1.43
+        repo:
+          - Experimental
+        compatible: null
+        recommended: null
+        experimental:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - edge2
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        firmware:
+          - linux-firmware-joshua-git
+        graphics:
+          - mesa-panfrost-git
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # Radxa Rockchip 5.10 Kernel
+      - base: linux-aarch64-rockchip-bsp5.10-radxa-git
+        description: Radxa Linux Rockchip BSP Kernel
+        version: 5.10-rkr4.1
+        repo:
+          - 7Ji
+        compatible:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - rock-2a
+        recommended: null
+        experimental: null
+        firmware:
+          - 8852bu-dkms-git
+          - 8852be-dkms-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # Radxa Rockchip 5.10 Kernel
+      - base: linux-aarch64-rockchip-bsp5.10-radxa-bin
+        description: Radxa Linux Rockchip BSP Kernel
+        version: 5.10.110
+        repo:
+          - Experimental
+        compatible: null
+        recommended: null
+        experimental:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - rock-2a
+        firmware:
+          - 8852bu-dkms-git
+          - 8852be-dkms-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # Radxa Rockchip 6.1 Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-radxa-bin
+        description: Radxa Linux Rockchip BSP Kernel
+        version: 6.1.43
+        repo:
+          - Experimental
+        compatible: null
+        recommended: null
+        experimental:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - rock-2a
+        firmware:
+          - 8852bu-dkms-git
+          - 8852be-dkms-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # Orange Pi Rockchip 5.10 Kernel
+      - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi
+        description: Orange Pi fork of Linux Rockchip BSP Kernel
+        version: 5.10.110
+        repo:
+          - 7Ji
+        compatible:
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        recommended:
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        experimental: null
+        firmware:
+          - linux-firmware-orangepi-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # Orange Pi Rockchip 5.10 Kernel
+      - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git
+        description: Orange Pi fork of Linux Rockchip BSP Kernel
+        version: 5.10.160
+        repo:
+          - 7Ji
+        compatible:
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        recommended: null
+        experimental: null
+        firmware:
+          - linux-firmware-orangepi-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # wyf9661's Rockchip 6.1 Kernel
+      - base: linux-aarch64-rockchip-bsp
+        description: wyf9661's Linux Rockchip BSP Kernel
+        version: 6.1.57
+        repo:
+          - Experimental
+        compatible: null
+        recommended: null
+        experimental:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - edge2
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        firmware:
+          - linux-firmware-joshua-git
+        graphics:
+          - mesa-panfork-git
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: |
+          sudo curl -L https://raw.githubusercontent.com/JeffyCN/mirrors/libmali/firmware/g610/mali_csffw.bin -o /lib/firmware/mali_csffw.bin
+
+      # Collabora RK3588 Hardware Enablement Kernel
+      - base: linux-aarch64-rk3588-collabora-git
+        description: Collabora RK3588 Hardware Enablement Linux Kernel
+        version: 6.9
+        repo:
+          - Experimental
+        compatible: null
+        recommended: null
+        experimental:
+          - rock-5a
+          - rock-5b
+          - edge2
+        firmware:
+          - linux-firmware-joshua-git
+        graphics:
+          - mesa-panfrost-git
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
+
+      # 7Ji's Mainline Kernel
+      - base: linux-aarch64-7ji
+        description: 7Ji's Linux Mainline Kernel with patches for Amlogic devices and RK3588
+        version: lastest stable
+        repo:
+          - 7Ji
+        compatible: null
+        recommended: null
+        experimental:
+          - rock-5a
+          - rock-5b
+          - rock-5c
+          - rock-5-itx
+          - radxa-cm5
+          - zero-3
+          - edge2
+          - orangepi-5
+          - orangepi-5b
+          - orangepi-5-plus
+        firmware: null
+        graphics:
+          - mesa-panfork-git
+        video:
+          - ffmpeg-rockchip-git
+        others: null
+        commands: null
 
 ########################################################################
