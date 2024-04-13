@@ -22,7 +22,7 @@
 installerver=24041201
 
 # Required ACU version
-acuver=0.0.6-dev
+acuver=dev
 
 # Installer Branch / Tag
 branch=dev
