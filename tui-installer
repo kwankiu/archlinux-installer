@@ -39,6 +39,9 @@ dialog_theme_config="/usr/lib/installer/dialog.conf"
 # Install using the generated configurations
 install_config="/usr/lib/installer/install.yaml"
 
+# Temporary home for installer to run as a service
+tmp_home="/usr/lib/installer"
+
 # Full Language list
 lang_file="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/config/language.yaml"
 
@@ -1278,7 +1281,7 @@ check_installer_updates
 if [ "$1" = "part2" ] && [ ! "$(id -u)" -eq 0 ]; then
     install_part2
 else
-    export HOME="/root"
+    export HOME=$tmp_home
     main_menu
 fi
 
