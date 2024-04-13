@@ -1,0 +1,250 @@
+#  ____  ____  ____  __ _  ____  __  ____    ____  __ _  _  _  __  ____   __   __ _  _  _  ____  __ _  ____ 
+# (    \(  __)/ ___)(  / )(_  _)/  \(  _ \  (  __)(  ( \/ )( \(  )(  _ \ /  \ (  ( \( \/ )(  __)(  ( \(_  _)
+#  ) D ( ) _) \___ \ )  (   )( (  O )) __/   ) _) /    /\ \/ / )(  )   /(  O )/    // \/ \ ) _) /    /  )(  
+# (____/(____)(____/(__\_) (__) \__/(__)    (____)\_)__) \__/ (__)(__\_) \__/ \_)__)\_)(_/(____)\_)__) (__) 
+# List of Desktop Environment
+apps:
+########################################################################
+  # Category List
+  - categories:
+      - category_name: Desktop
+        category_description: Install a Desktop Environment
+########################################################################
+  # Apps List
+  - items:
+########################################################################
+  # Items Usage / Examples
+#      - package_name: Name to identify the package (small letter no space) (used for: acu install <package>)
+#        app_name: Name to be shown on the app list (can contain capital letter and space) (used for: acu apps)
+#        category: Specific a category that this package belongs to from the category_name of the list above
+#        description: Description of the package 
+#        compatible:
+#          - Device tag list that this package is compatible with (this is optional when a package is suitable for any devices)
+#        packages:
+#          - Packages to be installed (this will be passed to acu install before running commands)
+#        commands: |
+#          # Commands to run when installing this packages
+#          # This can be multiple lines
+#          # This is mostly used for post install, which is optional
+
+      # Gnome (Full)
+      - package_name: gnome-full
+        app_name: Gnome (Full)
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - gnome
+        commands: |
+          sudo systemctl enable gdm
+
+      # Gnome (Minimal)
+      - package_name: gnome-minimal
+        app_name: Gnome (Minimal)
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - gnome-shell
+          - gdm gnome-keyring
+          - gnome-control-center
+          - gnome-console
+          - gnome-disk-utility
+          - gnome-tweaks
+          - gnome-backgrounds
+          - nautilus
+          - xdg-desktop-portal
+          - xdg-desktop-portal-gnome
+          - xdg-user-dirs
+          - librsvg
+        commands: |
+          sudo systemctl enable gdm
+
+      # KDE Plasma (Full)
+      - package_name: plasma-full
+        app_name: KDE Plasma (Full)
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - plasma-meta
+          - sddm
+          - kde-applications-meta
+        commands: |
+          sudo systemctl enable sddm
+
+      # KDE Plasma (Minimal)
+      - package_name: plasma-minimal
+        app_name: KDE Plasma (Minimal)
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - plasma-desktop
+          - sddm
+          - konsole
+        commands: |
+          sudo systemctl enable sddm
+
+      # Budgie Desktop
+      - package_name: budgie
+        app_name: Budgie Desktop
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - budgie
+          - gdm
+          - arc-gtk-theme
+          - papirus-icon-theme
+          - gnome-console
+          - gnome-disk-utility
+          - nautilus
+          - librsvg
+        commands: |
+          sudo systemctl enable gdm
+
+      # Cutefish Desktop
+      - package_name: cutefish
+        app_name: Cutefish Desktop
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - plasma-desktop
+          - sddm
+          - cutefish
+        commands: |
+          sudo systemctl enable sddm
+
+      # XFCE
+      - package_name: xfce
+        app_name: XFCE
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - xfce4
+          - xfce4-goodies
+          - capitaine-cursors
+          - arc-gtk-theme
+          - leafpad
+          - galculator
+          - xdg-user-dirs-gtk
+          - sddm
+        commands: |
+          sudo systemctl enable sddm
+
+      # LXQT
+      - package_name: lxqt
+        app_name: LXQT
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - lxqt
+          - breeze-icons
+          - sddm
+        commands: |
+          sudo systemctl enable sddm
+
+      # LXDE
+      - package_name: lxde
+        app_name: LXDE
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - lxde
+          - xscreensaver
+        commands: |
+          sudo systemctl enable lxdm
+
+      # MATE
+      - package_name: mate
+        app_name: MATE
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - mate
+          - mate-extra
+          - gdm
+        commands: |
+          sudo systemctl enable gdm
+
+      # Cinnamon
+      - package_name: cinnamon
+        app_name: Cinnamon
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - cinnamon
+          - cinnamon-translations
+          - nemo-fileroller
+          - nemo-image-converter
+          - nemo-preview
+          - xed
+          - xreader
+          - gnome-console
+          - gdm
+        commands: |
+          sudo systemctl enable gdm
+
+      # Sway
+      - package_name: sway
+        app_name: Sway
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - sway
+          - wmenu
+          - i3status
+          - waybar
+          - swayidle
+          - swaylock
+          - swaybg
+          - sddm
+          - foot
+          - xorg-xwayland
+          - qt5-wayland
+          - qt6-wayland
+          - wofi
+          - lxappearance
+          - qt5ct
+          - python-pywal
+          - pcmanfm-qt
+          - pass
+          - dunst
+          - thunar
+        commands: |
+          sudo systemctl enable sddm
+          sudo mkdir -p .config/{sway,dunst,waybar,wofi}
+          sudo install -Dm755 /etc/sway/config ~/.config/sway/config
+          sudo install -Dm755 /etc/dunst/dunstrc ~/.config/dunst/dunstrc
+          sudo touch ~/.config/waybar/config
+          sudo touch ~/.config/wofi/config
+
+      # Hyprland
+      - package_name: hyprland
+        app_name: Hyprland
+        category: Desktop
+        description: A Desktop Environment
+        compatible: null
+        packages:
+          - hyprland
+          - qt5-wayland
+          - xdg-desktop-portal-hyprland
+          - wofi
+          - pass
+          - dunst
+          - alacritty
+          - thunar
+          - sddm
+        commands: |
+          sudo systemctl enable sddm
+          sed -i 's/kitty/alacritty/g' ~/.config/hypr/hyprland.conf
+
+########################################################################

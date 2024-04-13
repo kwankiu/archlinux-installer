@@ -10,14 +10,14 @@ configurations:
 #  dtb_overlays:
 #    - path to the dtb overlay file
 #  cmdline: cmdline for kernel to boot
-#  tags:
+#  compatible:
 #    - device tag
 
 # Generic
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
   cmdline: rw quiet splash
-  tags:
+  compatible:
     - generic
 
 # Rock 5
@@ -25,33 +25,33 @@ configurations:
   dtb_overlays:
     - /dtbs/%PKGBASE%/rockchip/overlays/rk3588-uart7-m2.dtbo
   cmdline: earlycon=uart8250,mmio32,0xfeb50000 console=ttyFIQ0 console=tty1 consoleblank=0 loglevel=0 panic=10 rootwait rw init=/sbin/init rootfstype=ext4 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 irqchip.gicv3_pseudo_nmi=0 switolb=1 coherent_pool=2M
-  tags:
+  compatible:
     - rock5
 
 # Zero 3
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
   cmdline: console=ttyFIQ0,1500000n8 quiet splash loglevel=4 rw earlycon consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1
-  tags:
+  compatible:
     - zero3
 
 # Orange Pi 5
 - dtb: /dtbs/%PKGBASE%/rockchip/rk3588s-orangepi-5.dtb
   dtb_overlays: null
   cmdline: rw quiet splash
-  tags:
+  compatible:
     - orangepi5
   
 # Edge 2
 - dtb: /dtbs/%PKGBASE%/rockchip/rk3588s-khadas-edge2.dtb
   dtb_overlays: null
   cmdline: earlycon=uart8250,mmio32,0xfeb50000 console=ttyFIQ0 console=tty0 irqchip.gicv3_pseudo_nmi=0 lcd_panel=${lcd_panel} fan=auto consoleblank=0 loglevel=0 panic=10 rootwait rw init=/sbin/init rootfstype=ext4 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 switolb=1 coherent_pool=2M
-  tags:
+  compatible:
     - edge2
 
 # Asahi
 - dtb: /usr/lib/asahi-boot/dtb
   dtb_overlays: null
   cmdline: rw quiet splash
-  tags:
+  compatible:
     - asahi
