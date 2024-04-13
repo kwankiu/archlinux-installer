@@ -544,7 +544,7 @@ network_menu()
 
     case $ckin in
         [wW])
-            echo "Connecting to a WiFi network..."
+            alert "Connecting to a WiFi network..."
             if [ -z "$iwdev" ]; then
                 read -p "Please specify the network device (e.g. wlan0): " iwdev
             fi
@@ -552,7 +552,7 @@ network_menu()
                 sudo wifi-menu $iwdev
             else
                 wifi-menu $iwdev
-                colorecho "$GREEN" "Enabling netctl Auto Connect ..."
+                alert "Enabling netctl Auto Connect ..."
                 systemctl enable netctl-auto@$iwdev.service
             fi               
             ;;
@@ -561,10 +561,10 @@ network_menu()
     # Loop until curl is successful or max attempts reached
     attempt=0
     until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 5 ]; do
-        colorecho "$RED" "Establishing SSL internet connection ..."
+        alert "Establishing SSL internet connection ..."
         # NTP Sync
         if [ "$attempt" -eq 1 ]; then
-            colorecho "$GREEN" "Updating NTP Time Sync ..."
+            alert "Updating NTP Time Sync ..."
             if [ -x "$(command -v sudo)" ]; then
                 sudo rm -rf /etc/systemd/network/*
                 sudo systemctl restart systemd-networkd
@@ -585,13 +585,12 @@ network_menu()
 
     if [ "$attempt" -ge 5 ]; then
         systemctl status systemd-timesyncd # for debugging
-        colorecho "$RED" "Failed to establish SSL internet connection after $attempt attempts."
-        colorecho "$YELLOW" "Restart your device and try again or press Ctrl+C to exit this installer for manual operation."
+        alert "Failed to establish SSL internet connection after $attempt attempts. \n\n Restart your device and try again or press Ctrl+C to exit this installer for manual operation."
         options=("Continue Anyway (may break)" "Restart Now")
         select_option "${options[@]}"
         answer=$?
         if [ "$answer" = 1 ]; then
-            colorecho "$GREEN" "System will reboot now."
+            alert "System will reboot now."
             if ! reboot --force; then
                 echo "Unable to reboot automatically, please reboot your device manually."
             fi
@@ -601,7 +600,7 @@ network_menu()
 
 # Check Installer Updates
 check_installer_updates() {
-    colorecho "$YELLOW" "Checking for installer updates..."
+    alert "Checking for installer updates..."
     remote_installerver=$(curl -s "$remote_installer_url" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
     remote_acuver=$(curl -s "$remote_installer_url" | grep -o 'acuver=[0-9]*' | cut -d= -f2) #TODO
     if [ "$remote_installerver" -gt "$installerver" ]; then
@@ -612,10 +611,10 @@ check_installer_updates() {
         answer=$?
         if [ "$answer" = 0 ]; then
             # Updating Installer
-            colorecho "$GREEN" "Downloading Installer ..."
+            alert "Downloading Installer ..."
             local response_code=$(sudo curl --write-out '%{response_code}' -LJO "$remote_installer_url")
             if [ "$response_code" = 200 ]; then
-                colorecho "$GREEN" "Updating Installer ..."
+                alert "Updating Installer ..."
                 sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" tui-installer
                 sudo chmod +x tui-installer
                 sudo cp -r tui-installer /usr/bin/installer
@@ -625,12 +624,12 @@ check_installer_updates() {
                 sudo curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
                 sudo chmod +x /usr/bin/acu
                 # Reboot
-                colorecho "$GREEN" "Installer updated. System will reboot now."
+                alert "Installer updated. System will reboot now."
                 if ! sudo reboot --force; then
                     echo "Unable to reboot automatically, please reboot your device manually."
                 fi
             else
-                colorecho "$RED" "An Error is occurred. Installer is not updated."
+                alert "An Error is occurred. Installer is not updated."
                 sleep 3
             fi
         fi
@@ -1292,25 +1291,24 @@ for arg in "$@"; do
 done
 ################################################################
 # Main Code
-title
-
+alert "$title_string"
 # First Boot : Install Required Packages
 if [ -d "$compiled_pkg_folder" ] && [ -z "$skip_install_pkg" ]; then
-        colorecho "$GREEN" "Installing Required Packages ..."
+        alert "Installing Required Packages ..."
         if pacman -U --overwrite \* $compiled_pkg_folder/*.pkg.tar.* --needed --noconfirm; then
             echo "Removing packages archives ..."
             rm -rf $compiled_pkg_folder
 
             # Ensure SSL (Sync Clock)
-            colorecho "$GREEN" "Enabling Time Sync ..."
+            alert "Enabling Time Sync ..."
             systemctl enable systemd-timesyncd
 
-            colorecho "$GREEN" "System will reboot now."
+            alert "System will reboot now."
             if ! reboot --force; then
                 echo "Unable to reboot automatically, please reboot your device manually."
             fi 
         else
-            colorecho "$RED" "Failed to install Required Packages. The image may be broken, try flashing the image again."
+            alert "Failed to install Required Packages. The image may be broken, try flashing the image again."
             sleep 5
             exit 1
         fi
