@@ -685,19 +685,6 @@ install_part1() {
 install_part2() {
     menu_header="Installation - Part 2"
     ################################################################
-    # Handle install config
-    for arg in "$@"; do
-        case "$arg" in
-            --kernel=*)
-                kernelpkg="${arg#*=}"
-                ;;
-            --de=*)
-                de_options="${arg#*=}"
-                ;;
-        esac
-    done
-
-    ################################################################
     # Install Kernel
     info_alert "Removing existing kernels ..."
     yes y|sudo pacman -R linux-aarch64
@@ -1218,30 +1205,44 @@ main_menu() {
 }
     #dialog --title "fselect" --fselect ~/Documents/GitHub/ 15 80
 ################################################################
-# About this Installer
-
-if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    colorecho "$BLUE" "Arch Linux Installer for ARM (Aarch64)"
-    colorecho "$GREEN" "Installer Version: $installerver"
-    colorecho "$GREEN" "Required ACU Version: $acuver ($(echo $(acu -v | sed 's/\x1b\[[0-9;]*[mGKHF]//g') | grep -o '[0-9].[0-9].[0-9].*') Installed)"
-    echo "Usage: installer <optional_argument>"
-
-    colorecho "$GREEN" "Options"
-    echo "-h / --help : Usage and Infomation of this installer"
-    echo "--skip-install-pkg : Skip installing required packages on first boot"
-    echo "--create-installer-service : Create a service to auto start this installer on first boot"
-    exit 0
-elif [ "$1" = "--create-installer-service" ]; then
-    echo -e "[Unit]\nDescription=Arch Linux Installer for ARM\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/installer.service && systemctl enable installer.service
-    exit 0
-fi
+# Handle Installer agruments
+for arg in "$@"; do
+    case "$arg" in
+        -h | --help)
+            colorecho "$BLUE" "Arch Linux Installer for ARM (Aarch64)"
+            colorecho "$GREEN" "Installer Version: $installerver"
+            colorecho "$GREEN" "Required ACU Version: $acuver ($(echo $(acu -v | sed 's/\x1b\[[0-9;]*[mGKHF]//g') | grep -o '[0-9].[0-9].[0-9].*') Installed)"
+            echo
+            echo "Usage: installer <optional_argument>"
+            colorecho "$GREEN" "Options"
+            echo "-h / --help : Usage and Infomation of this installer"
+            echo "--skip-install-pkg : Skip installing required packages on first boot"
+            echo "--create-installer-service : Create a service to auto start this installer on first boot"
+            echo "--confirm : Skip the confirm prompt and proceed to installation"
+            exit 0
+            ;;
+        --create-installer-service)
+            echo -e "[Unit]\nDescription=Arch Linux Installer for ARM\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/installer.service && systemctl enable installer.service
+            exit 0
+            ;;
+        --skip-install-pkg)
+            skip_install_pkg=1
+            ;;
+        --confirm)
+            confirm_install=1
+            ;;
+        -*)
+            colorecho "$RED" "Invalid command or argument."
+            exit 1
+            ;;
+    esac
+done
 ################################################################
 # Main Code
 title
 
 # First Boot : Install Required Packages
-if [ -d "$compiled_pkg_folder" ]; then
-    if [ ! "$1" = "--skip-install-pkg" ]; then
+if [ -d "$compiled_pkg_folder" ] && [ -z "$skip_install_pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
         if pacman -U --overwrite \* $compiled_pkg_folder/*.pkg.tar.* --needed --noconfirm; then
             echo "Removing packages archives ..."
@@ -1260,7 +1261,6 @@ if [ -d "$compiled_pkg_folder" ]; then
             sleep 5
             exit 1
         fi
-    fi
 fi
 
 # Create TUI Theme
