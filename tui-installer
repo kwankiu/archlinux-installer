@@ -52,7 +52,16 @@ install_config="$installer_home/install.yaml"
 remote_installer_url="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tui-installer"
 
 # Full Language list
-lang_file="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/config/language.yaml"
+lang_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/language.yaml"
+
+# Full Kernel list
+kernel_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/kernel.yaml"
+
+# Full Desktop Environment list
+de_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/desktop.yaml"
+
+# Full Post Install list
+postinstall_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/post-install.yaml"
 
 # Pacman ParallelDownloads
 prldownloads=50
@@ -982,7 +991,7 @@ installer_menu() {
     langchoicemenu() {
         menu_header="Language (More Options)"
         menu_option_title="Choose a language category:"
-        eval $(acu parse $lang_file " ")
+        eval $(acu parse $lang_list " ")
         select_option "${langopt[@]}" "Skip setting Language"
         choice=$?
         if [ "$choice" = 0 ]; then

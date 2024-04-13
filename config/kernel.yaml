@@ -30,10 +30,6 @@ kernel:
 #          - video acceleration packages to install
 #        others:
 #          - other packages to install
-#        commands: |
-#          # Commands to run when installing this packages
-#          # This can be multiple lines
-#          # This is mostly used for post install, which is optional
 
       # Linux Mainline Kernel
       - base: linux-aarch64
