@@ -15,38 +15,68 @@
 # |_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/ #
 #                                                               #
 #################################################################
-# Version of this script 
-# (For developer : Update whenever there is a change in this file or its related files)
-# format of Version Number is YYMMDDN which N is 1-99 count on updates commited on the same day)
+## Version Control ##
+
+# Installer Version
+# format : YYMMDDNN which NN is 01-99 of commits on the same day
 installerver=24041201
 
-# required ACU version
+# Required ACU version
 acuver=0.0.6-dev
 
-# Define main / dev branch
+# Installer Branch / Tag
 branch=dev
+
+################################################################
+## Installer variables ##
+
+# Installer name string
+title_string="Arch Linux Installer for ARM"
 
 # Target Device for Installation
 install_target="rock5"
 
-################################################################
+# Temporary home directory for installer
+installer_home="/usr/lib/installer"
+
 # Compiled Packages folder path
-compiled_pkg_folder="/usr/lib/installer/packages"
+compiled_pkg_folder="$installer_home/packages"
 
 # Dialog Theme config file path
-dialog_theme_config="/usr/lib/installer/dialog.conf"
+dialog_theme_config="$installer_home/dialog.conf"
 
 # Install using the generated configurations
-install_config="/usr/lib/installer/install.yaml"
+install_config="$installer_home/install.yaml"
 
-# Temporary home for installer to run as a service
-tmp_home="/usr/lib/installer"
+# Remote Installer URL
+remote_installer_url="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tui-installer"
 
 # Full Language list
 lang_file="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/config/language.yaml"
 
 # Pacman ParallelDownloads
 prldownloads=50
+
+# Ping server list for internet check
+# ping Google, Cloudflare and China Mobile DNS (for China users)
+ping_servers=("google.com" "1.1.1.1" "114.114.114.114") 
+
+################################################################
+## Debug variable overrides ##
+# (FOR DEVELOPMENT USE ONLY, MAKE SURE ALL OVERRIDES ARE COMMENTED FOR PRODUCTION USE)
+
+# Remote Installer URL
+#remote_installer_url="https://invalid.example" # use an invalid remote installer url to prevent accidental updates
+
+# Use out folder of current directory as temporary home directory for installer
+installer_home="$(pwd)/out" 
+
+# Dialog override for debugging CLI Fallback
+#dialog () { return 1; }
+
+# Ping server list for internet check
+#ping_servers=("invalid.example") # debug test case: simulate no internet 
+#ping_servers=("0.0.0.0") # debug test case: bypass internet
 
 ################################################################
 # Tools for formatting / styling
@@ -70,17 +100,12 @@ sudo () {
     fi
 }
 
-# Dialog override for debugging CLI Fallback
-# dialog () { return 1; }
-
 # Echo with colors
 colorecho() {
     color="$1"
     text="$2"
     echo -e "${color}${text}${NC}"
 }
-
-title_string="Arch Linux Installer for ARM"
 
 # Title Logo
 titlelogo_string() {
@@ -295,7 +320,7 @@ select_option() {
 }
 
 # TUI Info Box
-info_alert() {
+alert() {
 
     export DIALOGRC=$dialog_theme_config
     local i=0
@@ -425,10 +450,7 @@ form() {
 # Internet Connection & Updates Check
 internet_available=0
 check_internet() {
-    servers=("google.com" "1.1.1.1" "114.114.114.114") # ping Google, Cloudflare and China Mobile DNS (for China users)
-    #servers=("invalid.example") # debug test case: simulate no internet 
-    #servers=("0.0.0.0") # debug test case: bypass internet
-        for server in "${servers[@]}"; do
+        for server in "${ping_servers[@]}"; do
             if ping -q -c 3 "$server" >/dev/null 2>&1; then
                 internet_found_at="$server"
                 internet_available=1 # internet connected
@@ -487,7 +509,7 @@ network_menu()
         fi
         menu_option_title="\n\Z2$network_status\n\n\ZnEnter a key:\n\n"
         if [ $((current_time - last_check)) -ge 6 ] || [ "$last_internet" != "$internet_available" ]; then
-            info_alert "$menu_option_title w) Connect to a WiFi network ($wl_adapter) \n s) Skip Internet Check (Installation may fail)"
+            alert "$menu_option_title w) Connect to a WiFi network ($wl_adapter) \n s) Skip Internet Check (Installation may fail)"
             last_internet=$internet_available
         fi
     done
@@ -554,8 +576,8 @@ network_menu()
 # Check Installer Updates
 check_installer_updates() {
     colorecho "$YELLOW" "Checking for installer updates..."
-    remote_installerver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tui-installer" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
-    remote_acuver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tui-installer" | grep -o 'acuver=[0-9]*' | cut -d= -f2) #TODO
+    remote_installerver=$(curl -s "$remote_installer_url" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
+    remote_acuver=$(curl -s "$remote_installer_url" | grep -o 'acuver=[0-9]*' | cut -d= -f2) #TODO
     if [ "$remote_installerver" -gt "$installerver" ]; then
         menu_header="Installer Updates Available"
         menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available. \n\Zn Do you want to update this installer?"
@@ -563,26 +585,28 @@ check_installer_updates() {
         select_option "${options[@]}"
         answer=$?
         if [ "$answer" = 0 ]; then
-            # Download Installer
+            # Updating Installer
             colorecho "$GREEN" "Downloading Installer ..."
-            #exit 1 #THIS PREVENTS AN UPDATE #ONLY USED TO PREVENT DATA LOSS IN DEVELOPMENT
-            curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tui-installer
-
-            # Update tui-installer
-            colorecho "$GREEN" "Updating Installer ..."
-            sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" tui-installer
-            sudo chmod +x tui-installer
-            sudo cp -r tui-installer /usr/bin/installer
-            sudo rm -rf tui-installer
-            colorecho "$GREEN" "Installer updated. System will reboot now."
-            if ! sudo reboot --force; then
-                echo "Unable to reboot automatically, please reboot your device manually."
+            local response_code=$(sudo curl --write-out '%{response_code}' -LJO "$remote_installer_url")
+            if [ "$response_code" = 200 ]; then
+                colorecho "$GREEN" "Updating Installer ..."
+                sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" tui-installer
+                sudo chmod +x tui-installer
+                sudo cp -r tui-installer /usr/bin/installer
+                sudo rm -rf tui-installer
+                # Update ACU
+                echo "Updating ACU (Configuration Utility) ..."
+                sudo curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
+                sudo chmod +x /usr/bin/acu
+                # Reboot
+                colorecho "$GREEN" "Installer updated. System will reboot now."
+                if ! sudo reboot --force; then
+                    echo "Unable to reboot automatically, please reboot your device manually."
+                fi
+            else
+                colorecho "$RED" "An Error is occurred. Installer is not updated."
+                sleep 3
             fi
-
-            # Update ACU
-            echo "Updating ACU (Configuration Utility) ..."
-            curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
-            chmod +x /usr/bin/acu
         fi
     fi
 }
@@ -621,7 +645,7 @@ add_boot_part_fstab() {
 
 install_part1() {
     menu_header="Installation - Part 1"
-    info_alert "Running Initial System Setup ..."
+    alert "Running Initial System Setup ..."
 
     # Get rootfs partition from the current mount point "/"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
@@ -634,30 +658,30 @@ install_part1() {
         add_boot_part_fstab
     fi
 
-    info_alert "Resizing File System ..."
+    alert "Resizing File System ..."
     growpart $rootfs_disk 2
     resize2fs $rootfs_partition
 
     # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
-    info_alert "Configuring pacman (populate alarm keys) ..."
+    alert "Configuring pacman (populate alarm keys) ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
 
-    info_alert "Configuring pacman (adding repositories) ..."
+    alert "Configuring pacman (adding repositories) ..."
     for ((i = 0; i < ${#pacmanrepo[@]}; i++)); do
         acu rem set pacman "${pacmanrepo[i]}"
     done
 
-    info_alert "Configuring pacman (enabling ParallelDownloads)..."
+    alert "Configuring pacman (enabling ParallelDownloads)..."
     sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $prldownloads/" /etc/pacman.conf
 
-    info_alert "Installing sudo ..."
+    alert "Installing sudo ..."
     pacman -Sy sudo --noconfirm
 
-    info_alert "Removing default account ..."
+    alert "Removing default account ..."
     acu user remove alarm
 
-    info_alert "Setting up new user account ..."
+    alert "Setting up new user account ..."
     acu user add ${user_acc[0]} ${user_acc[1]}
     acu user manage ${user_acc[0]} sudopw
 
@@ -677,7 +701,7 @@ install_part1() {
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin ${user_acc[0]} %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo "installer part2 --kernel=$kernelpkg --de=$de_options" | tee -a /home/${user_acc[0]}/.bashrc
 
-    info_alert "System will reboot now."
+    alert "System will reboot now."
     if ! reboot --force; then
         echo "Unable to reboot automatically, please reboot your device manually."
     fi
@@ -689,7 +713,7 @@ install_part2() {
     menu_header="Installation - Part 2"
     ################################################################
     # Install Kernel
-    info_alert "Removing existing kernels ..."
+    alert "Removing existing kernels ..."
     yes y|sudo pacman -R linux-aarch64
     sudo rm -rf /boot/vmlinu* 
     sudo rm -rf /boot/initr*
@@ -697,18 +721,18 @@ install_part2() {
     sudo rm -rf /usr/lib/modules/*
     sudo rm -rf /etc/mkinitcpio.d/*
 
-    info_alert "Installing linux kernel ..."
+    alert "Installing linux kernel ..."
     oldkrlrel=$(uname -r)
     acu -y install $kernelpkg $kernelpkg-headers --device=$install_target #--overwrite
     sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
 
-    info_alert "Installing Linux Firmware ..." 
+    alert "Installing Linux Firmware ..." 
     if [[ "$kernelpkg" == *"-orangepi"* ]]; then
         yes y|sudo pacman -S linux-firmware-orangepi-git
     elif [[ "$kernelpkg" == *"-radxa"* ]] && [ "$install_target" = "rock5" ]; then
-        info_alert "Removing linux-firmware-joshua-git ..."
+        alert "Removing linux-firmware-joshua-git ..."
         yes y|sudo pacman -R linux-firmware-joshua-git
-        info_alert "Installing DKMS Packages ..."
+        alert "Installing DKMS Packages ..."
         acu -y install "8852bu-dkms-git" "8852be-dkms-git"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
         yes y|sudo pacman -S linux-firmware-joshua-git
@@ -718,7 +742,7 @@ install_part2() {
 
     ################################################################
     # Install Graphics Acceleration
-    info_alert "Installing Graphics Acceleration"
+    alert "Installing Graphics Acceleration"
     if [[ "$kernelpkg" == *"-panthor"* ]] || [[ "$kernelpkg" == *"-collabora"* ]] || [[ "$kernelpkg" == "linux-aarch64-7ji" ]]; then
         sudo pacman -S mesa-panfrost-git --noconfirm
     elif [[ "$kernelpkg" == "linux-aarch64-rockchip-bsp" ]]; then
@@ -732,7 +756,7 @@ install_part2() {
 
     ################################################################
     # Install Video Acceleration
-    info_alert "Installing Video Acceleration"
+    alert "Installing Video Acceleration"
     if sudo pacman -Ssy "mpp-git" &> /dev/null; then
         sudo pacman -S mpp-git --noconfirm
     elif sudo pacman -Ssy "mpp" &> /dev/null; then
@@ -755,41 +779,41 @@ install_part2() {
 
     ################################################################
     # Post Installation
-    info_alert "Performing Full System Upgrade ..."
+    alert "Performing Full System Upgrade ..."
     sudo pacman -Syyu --noconfirm
 
     # SBC or Kernel Specfic Post Installation
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "orangepi5" ]; then
         # Disable Sleep
-        info_alert "Post Install: Disable suspend ..."
+        alert "Post Install: Disable suspend ..."
         sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
         echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
     fi
 
     if [ "$install_target" = "edge2" ]; then
-        info_alert "Fix : Switch WiFi backend to iwd ..."
+        alert "Fix : Switch WiFi backend to iwd ..."
         sudo mkdir -p /etc/NetworkManager/conf.d
         echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
         # FAN control for Edge 2
-        info_alert "Installing FAN control for Edge 2 ..."
+        alert "Installing FAN control for Edge 2 ..."
         curl -LJO https://raw.githubusercontent.com/BredOS/sbc-pkgbuilds/main/edge2-post-install/fan.sh
         sudo chmod +x fan.sh
         sudo mv fan.sh /usr/local/bin/fan.sh
-        info_alert "Creating FAN control service ..."
+        alert "Creating FAN control service ..."
         echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee /usr/lib/systemd/system/fan.service
         sudo systemctl enable fan.service
     fi
 
     if [ "$install_target" = "orangepi5" ]; then
         # Enable the USB 2.0 port
-        info_alert "Fix: Enable the USB 2.0 port ..."
+        alert "Fix: Enable the USB 2.0 port ..."
         echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n\n[Service]\nExecStart=/usr/bin/sh -c \"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\"\nType=oneshot\n\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
         sudo systemctl enable enable-usb2
     fi
 
     if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
         # Enable AP6275P bluetooth
-        info_alert "Fix : AP6275P Bluetooth ..."
+        alert "Fix : AP6275P Bluetooth ..."
         curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
         sudo chmod +x brcm_patchram_plus
         sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
@@ -800,11 +824,11 @@ install_part2() {
     fi
 
     # Network Manager, WiFi, Bluetooth
-    info_alert "Installing network manager and bluetooth ..."
+    alert "Installing network manager and bluetooth ..."
     sudo pacman -Sy networkmanager iw iwd bluez --noconfirm
 
     # Basic Fonts for Asian Characters and Emoji
-    info_alert "Installing fonts ..."
+    alert "Installing fonts ..."
     sudo pacman -Sy noto-fonts noto-fonts-cjk noto-fonts-emoji --noconfirm
 
     ################################################################
@@ -815,32 +839,32 @@ install_part2() {
     # Install desktop environment
     if [ "$de_options" = 0 ]; then
         # Install Gnome
-        info_alert "Installing Gnome (Full) ..."
+        alert "Installing Gnome (Full) ..."
         sudo pacman -S gnome --noconfirm
         sudo systemctl enable gdm
     elif [ "$de_options" = 1 ]; then
         # Install Gnome
-        info_alert "Installing Gnome (Minimal) ..."
+        alert "Installing Gnome (Minimal) ..."
         sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-desktop-portal xdg-desktop-portal-gnome xdg-user-dirs librsvg --noconfirm
         sudo systemctl enable gdm
     elif [ "$de_options" = 2 ]; then
         # Install KDE Plasma
-        info_alert "Installing KDE Plasma (Full) ..."
+        alert "Installing KDE Plasma (Full) ..."
         sudo pacman -S plasma-meta sddm kde-applications-meta --noconfirm
         sudo systemctl enable sddm
     elif [ "$de_options" = 3 ]; then
         # Install KDE Plasma
-        info_alert "Installing KDE Plasma (No KDE Apps) ..."
+        alert "Installing KDE Plasma (No KDE Apps) ..."
         sudo pacman -S plasma-meta sddm konsole --noconfirm
         sudo systemctl enable sddm
     elif [ "$de_options" = 4 ]; then
         # Install Budgie
-        info_alert "Installing Budgie Desktop ..."
+        alert "Installing Budgie Desktop ..."
         sudo pacman -S budgie gdm arc-gtk-theme papirus-icon-theme gnome-console gnome-disk-utility nautilus librsvg --noconfirm
         sudo systemctl enable gdm
     elif [ "$de_options" = 5 ]; then
         # Install Sway
-        info_alert "Installing Sway ..."
+        alert "Installing Sway ..."
         sudo pacman -S sway wmenu i3status waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland qt6-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst thunar --noconfirm
         sudo systemctl enable sddm
         sudo mkdir -p .config/{sway,dunst,waybar,wofi}
@@ -850,47 +874,47 @@ install_part2() {
         sudo touch ~/.config/wofi/config
     elif [ "$de_options" = 6 ]; then
         # Install Cutefish
-        info_alert "Installing Cutefish ..."
+        alert "Installing Cutefish ..."
         sudo pacman -S plasma-desktop cutefish sddm --noconfirm
         sudo systemctl enable sddm
     elif [ "$de_options" = 7 ]; then
         # Install XFCE
-        info_alert "Installing XFCE ..."
+        alert "Installing XFCE ..."
         sudo pacman -S xfce4 xfce4-goodies sddm capitaine-cursors arc-gtk-theme leafpad galculator xdg-user-dirs-gtk --noconfirm
         sudo systemctl enable sddm
     elif [ "$de_options" = 8 ]; then
         # Install LXQT
-        info_alert "Installing LXQT ..."
+        alert "Installing LXQT ..."
         sudo pacman -S lxqt breeze-icons sddm --noconfirm
         sudo systemctl enable sddm
     elif [ "$de_options" = 9 ]; then
         # Install LXDE
-        info_alert "Installing LXDE ..."
+        alert "Installing LXDE ..."
         sudo pacman -S lxde xscreensaver --noconfirm
         sudo systemctl enable lxdm
     elif [ "$de_options" = 10 ]; then
         # Install MATE
-        info_alert "Installing MATE ..."
+        alert "Installing MATE ..."
         sudo pacman -S mate mate-extra gdm --noconfirm
         sudo systemctl enable gdm
     elif [ "$de_options" = 11 ]; then
         # Install Cinnamon
-        info_alert "Installing Cinnamon ..."
+        alert "Installing Cinnamon ..."
         sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-console gdm --noconfirm
         sudo systemctl enable gdm
     elif [ "$de_options" = 12 ]; then
         # Install Sway
-        info_alert "Installing Hyprland ..."
+        alert "Installing Hyprland ..."
         sudo pacman -S hyprland qt5-wayland xdg-desktop-portal-hyprland wofi pass dunst alacritty thunar sddm --noconfirm
         sudo systemctl enable sddm
         sed -i 's/kitty/alacritty/g' $HOME/.config/hypr/hyprland.conf
     else
-        info_alert "Skipping install desktop environment ..."
+        alert "Skipping install desktop environment ..."
     fi
 
     ################################################################
     # Post Installation
-    info_alert "Enabling network manager and bluetooth service ..."
+    alert "Enabling network manager and bluetooth service ..."
     sudo systemctl enable NetworkManager.service
     sudo systemctl start NetworkManager.service
     sudo systemctl enable bluetooth.service
@@ -906,14 +930,14 @@ install_part2() {
         sudo rm -rf /etc/systemd/system/getty@tty1.service.d/autologin.conf
     fi
 
-    info_alert "Installation Finished. We will reboot your system in 5 seconds."
+    alert "Installation Finished. We will reboot your system in 5 seconds."
     sleep 5
 
-    info_alert "Removing this installer ..."
+    alert "Removing this installer ..."
     sudo rm -rf /usr/bin/installer
     acu user manage $current_username sudopw
 
-    info_alert "Rebooting system ..."
+    alert "Rebooting system ..."
     if ! sudo systemctl reboot; then
         if ! sudo reboot; then
             echo "Unable to reboot automatically, please reboot your device manually."
@@ -1046,19 +1070,19 @@ installer_menu() {
         menu_form_value=("user" "" "" "y")
         local result=($(form "Username" "Password" "Confirm Password" "Disable Root Login? [Y/n]"))
         if [ "${#result[@]}" -gt 4 ]; then
-            info_alert "Username / Password can not contain space."
+            alert "Username / Password can not contain space."
             sleep 1
             user_setup
         elif [ "${result[1]}" != "${result[2]}" ]; then
-            info_alert "Confirm password does not match."
+            alert "Confirm password does not match."
             sleep 1
             user_setup
         elif [ "${#result[@]}" -lt 4 ]; then
-            info_alert "Fields can not be empty."
+            alert "Fields can not be empty."
             sleep 1
             user_setup
         elif [[ "${result[3]}" != [YyNn] ]]; then
-            info_alert "Please answer y or n to [Y/n] questions."
+            alert "Please answer y or n to [Y/n] questions."
             sleep 1
             user_setup
         else
@@ -1182,7 +1206,7 @@ main_menu() {
         ;;
     1)
         if confirm "   This will download a 1GB image. Are you sure to continue (Coming Soon)?"; then
-            info_alert "Coming Soon"
+            alert "Coming Soon"
             sleep 3
             main_menu
         else
@@ -1191,7 +1215,7 @@ main_menu() {
         exit 0
         ;;
     2)
-        info_alert "\n Installer Version: $installerver \n ACU Version: $acuver"
+        alert "\n Installer Version: $installerver \n ACU Version: $acuver"
         sleep 3
         main_menu
         exit 0
@@ -1281,7 +1305,7 @@ check_installer_updates
 if [ "$1" = "part2" ] && [ ! "$(id -u)" -eq 0 ]; then
     install_part2
 else
-    export HOME=$tmp_home
+    export HOME=$installer_home
     main_menu
 fi
 
