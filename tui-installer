@@ -69,7 +69,7 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 #remote_installer_url="https://invalid.example" # use an invalid remote installer url to prevent accidental updates
 
 # Use out folder of current directory as temporary home directory for installer
-installer_home="$(pwd)/out" 
+#installer_home="$(pwd)/out" 
 
 # Dialog override for debugging CLI Fallback
 #dialog () { return 1; }
@@ -88,6 +88,13 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;36m'
 NC='\033[0m' # No Color
 
+# Echo with colors
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+
 # Sudo override
 sudo () {
     local command=$@
@@ -100,14 +107,7 @@ sudo () {
     fi
 }
 
-# Echo with colors
-colorecho() {
-    color="$1"
-    text="$2"
-    echo -e "${color}${text}${NC}"
-}
-
-# Title Logo
+# Generate Title Logo
 titlelogo_string() {
     # Check if the argument count is provided
     if [ -z "$1" ]; then
@@ -123,6 +123,7 @@ titlelogo_string() {
     echo "$logostring"
 }
 
+# Generates Dash Lines
 dash_string() {
     # Check if the argument count is provided
     if [ -z "$1" ]; then
@@ -136,17 +137,7 @@ dash_string() {
     done
 }
 
-title() {
-  clear
-  text="$1"
-  echo "$(dash_string)"
-  colorecho "$BLUE" "$(titlelogo_string)"
-  echo "$(dash_string)"
-  if [ "$branch" = "dev" ]; then
-    colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
-  fi
-}
-
+# Generate Status Bar
 status_bar() {
     # Get the terminal width
     terminal_width=$(tput cols)
@@ -168,6 +159,19 @@ status_bar() {
     fi
     # Print the items with alignment
     printf "%-${item_left}s%${item_center}s%${item_right}s\n" "$left_item" "$center_item" "$right_item"
+}
+
+# Print Title Logo
+title() {
+  clear
+  text="$1"
+  colorecho "$BLUE" "$(status_bar)"
+  echo "$(dash_string)"
+  colorecho "$BLUE" "$(titlelogo_string)"
+  echo "$(dash_string)"
+  if [ "$branch" = "dev" ]; then
+    colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
+  fi
 }
 
 ################################################################
@@ -339,10 +343,15 @@ alert() {
         ((i++))
     done
 
-    # launch TUI using dialog
-    dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
-        --title " $dialog_title " \
-        --infobox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0
+        # launch TUI using dialog
+    if ! dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+            --title " $dialog_title " \
+            --infobox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
+        # CLI Fallback
+        title
+        colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${opt//\\Z[0-7bun]/}"
+    fi
+        
 }
 
 # TUI Confirm Box
@@ -350,6 +359,7 @@ confirm() {
 
     export DIALOGRC=$dialog_theme_config
     local i=0
+    local cfm
 
     # menu header
     if [ -n "$menu_header" ]; then
@@ -370,6 +380,16 @@ confirm() {
         --title " $dialog_title " \
         --yesno "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
         return 0
+    elif [ ! -x "$(command -v dialog)" ]; then
+        # CLI Fallback
+        title
+        local p="$(colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${opt//\\Z[0-7bun]/}") [Y/n]: "
+        read -p "$p" cfm
+        if [[ "$cfm" == [Yy] ]]; then
+            return 0
+        else
+            return 1
+        fi
     else
         return 1
     fi
@@ -397,11 +417,17 @@ input() {
     done
 
     # launch TUI using dialog
-    local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+    if ! local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
         --title " $dialog_title " --nocancel \
         --inputbox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0 \
     3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
-    )
+    ); then
+        # CLI Fallback
+        local value
+        title
+        local p="$(colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${opt//\\Z[0-7bun]/}"): "
+        read -p "$p" value
+    fi
 
     echo $value
     
