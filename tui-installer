@@ -632,7 +632,7 @@ check_installer_updates() {
             local response_code=$(sudo curl --write-out '%{response_code}' -LJO "$remote_installer_url")
             if [ "$response_code" = 200 ]; then
                 alert "Updating Installer ..."
-                sudo sed -i "s/install_target=\"rock5\"/install_target=\"$install_target\"/g" tui-installer
+                sudo sed -i "s/install_target=\"generic\"/install_target=\"$install_target\"/g" tui-installer
                 sudo chmod +x tui-installer
                 sudo cp -r tui-installer /usr/bin/installer
                 sudo rm -rf tui-installer
