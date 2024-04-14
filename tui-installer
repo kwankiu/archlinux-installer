@@ -78,7 +78,10 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 #remote_installer_url="https://invalid.example" # use an invalid remote installer url to prevent accidental updates
 
 # Use out folder of current directory as temporary home directory for installer
-installer_home="$(pwd)/out" 
+#installer_home="$(pwd)/out" 
+
+# Override Target Device for Installation
+#install_target="rock-5b"
 
 # Dialog override for debugging CLI Fallback
 #dialog () { return 1; }
