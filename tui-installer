@@ -63,9 +63,6 @@ de_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$br
 # Full Post Install list
 postinstall_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/post-install.yaml"
 
-# Pacman ParallelDownloads
-prldownloads=50
-
 # Ping server list for internet check
 # ping Google, Cloudflare and China Mobile DNS (for China users)
 ping_servers=("google.com" "1.1.1.1" "114.114.114.114") 
@@ -78,7 +75,10 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 #remote_installer_url="https://invalid.example" # use an invalid remote installer url to prevent accidental updates
 
 # Use out folder of current directory as temporary home directory for installer
-#installer_home="$(pwd)/out" 
+#installer_home="$(pwd)/out"
+
+# Install using the generated configurations
+#install_config="$installer_home/install.yaml"
 
 # Override Target Device for Installation
 #install_target="rock-5b"
@@ -655,7 +655,6 @@ check_installer_updates() {
 
 ################################################################
 # Installation - Part 1 (in root)
-
 add_boot_part_fstab() {
     echo "Updating fstab ..."
     boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
@@ -988,6 +987,26 @@ install_part2() {
 
 }
 
+# Start Installation
+start_installation() {
+    # Load Installation File
+    local installation_file=$1
+    if [ -f "$installation_file"]; then
+        eval $(acu parse $installation_file " ")
+    else
+        alert "Error: The installation file is invalid / does not exist."
+        return 1
+    fi
+    # Confirm begin installation
+    menu_header="Installation Summary"
+    menu_confirm_label=("Install" "Cancel")
+    if confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Localization\Zn \n Language: ${selected_lang:-"(skipped)"} \n Time Zone: ${stz:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: ${user_acc[0]} \n Password: *** \n Disable Root Account: ${user_acc[3]} \n \Zb\Z4System / Packages\Zn \n Linux Kernel: $kernelpkg \n Repositories: $pacmanrepo \n Firmware: $firmwarepkg \n Graphics Acceleration: $graphicspkg \n Video Acceleration: $videopkg \n Kernel Additional: $kerneladditionalpkg \n Desktop Environment: ${selected_de:-"(skipped)"} \n Additional Packages: ${additionalpkg:-"(skipped)"} \n"; then 
+        install_part1
+    else
+        return 1
+    fi
+}
+
 ################################################################
 # Installer Menu
 installer_menu() {
@@ -1144,27 +1163,56 @@ installer_menu() {
         options=()
         local i
         local j
+        local k
+        # Append Kernel List
         for ((i = 0; i < ${#kernel_base[@]}; i++)); do
             # Add Kernel tags
             kernel_tags=(${kernel_compatible[i]})
             for ((j = 0; j < ${#kernel_tags[@]}; j++)); do
                 if [ "${kernel_tags[j]}" == "$install_target" ]; then
+                    is_rmd_kernel=(${kernel_recommended[i]})
+                    for ((k = 0; k < ${#is_rmd_kernel[@]}; k++)); do
+                        if [ "${is_rmd_kernel[k]}" == "$install_target" ]; then
+                            is_rmd_kernel="(Recommended) "
+                            break
+                        else
+                            is_rmd_kernel=""
+                        fi
+                    done
                     kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "alarm" || echo "${kernel_repo[i]}"))"
                     kernel_string=$(printf "%-64s" "$kernel_string")
-                    options+=("$kernel_string - Install ${kernel_description[i]} (Linux ${kernel_version[i]})")
+                    options+=("$kernel_string - ${is_rmd_kernel}Install ${kernel_description[i]} (Linux ${kernel_version[i]})")
                 fi
             done
         done
-        select_option "${options[@]}"
-        krl_options=$?
-        selected_option="${options[$krl_options]}"
-        kernelpkg=$(echo "$selected_option" | awk '{print $1}')
-        pacmanrepo=($(echo "$selected_option" | awk '{print $2}' | tr -d '()' | tr ',' ' '))
-
-        if [ "$kernelpkg" = "(Others)" ]; then
-            kernel_menu
-            #return
+        # Append Experimental Kernel List
+        if [ "$branch" = "dev" ]; then
+            for ((i = 0; i < ${#kernel_base[@]}; i++)); do
+                # Add Kernel tags
+                kernel_tags=(${kernel_experimental[i]})
+                for ((j = 0; j < ${#kernel_tags[@]}; j++)); do
+                    if [ "${kernel_tags[j]}" == "$install_target" ]; then
+                        kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "alarm" || echo "${kernel_repo[i]}"))"
+                        kernel_string=$(printf "%-64s" "$kernel_string")
+                        options+=("$kernel_string - (Experimental) Install ${kernel_description[i]} (Linux ${kernel_version[i]})")
+                    fi
+                done
+            done
         fi
+        select_option "${options[@]}"
+        selected=$? # get selected index
+        kernelpkg=$(echo "${options[selected]}" | awk '{print $1}') # get selected kernel package
+        # Find the base package in kernel list
+        for ((i = 0; i < ${#kernel_base[@]}; i++)); do
+            if [ "${kernel_base[i]}" = "$kernelpkg" ]; then
+                pacmanrepo=${kernel_repo[i]}
+                firmwarepkg=${kernel_firmware[i]}
+                graphicspkg=${kernel_graphics[i]}
+                videopkg=${kernel_video[i]}
+                kerneladditionalpkg=${kernel_additional[i]}
+                break
+            fi
+        done
     }
     kernel_menu
 
@@ -1172,32 +1220,88 @@ installer_menu() {
     # Select desktop environment
 
     menu_header="Desktop Environment"
-    menu_option_title="Select a desktop environment to install :"
-    options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish (Experimental)" "XFCE (Experimental)" "LXQt" "LXDE" "MATE" "Cinnamon" "Hyprland")
-    options+=("Do not install a Desktop Environment")
-
-    select_option "${options[@]}"
+    menu_option_title="Select a desktop environment to install :\n\n\Zb\Z2          Desktop Environment           Description"
+    # Process Desktop Environment List
+    eval $(acu parse $de_list)
+    options=()
+    for ((i = 0; i < ${#desktop_package_name[@]}; i++)); do
+        padded_name=$(printf "%-24s" "${desktop_pretty_name[i]}")
+        options+=("$padded_name - ${desktop_description[i]}")
+    done
+    select_option "${options[@]}" "Do not install a Desktop Environment"
     de_options=$?
-    selected_de=${options[de_options]}
+    selected_de=${desktop_package_name[de_options]}
 
     ################################################################
-    # Select additional packages
-    menu_header="Additional Packages"
-    menu_option_title="Select additional packages to install :"
-    options=()
+    # Select additional packages #TODO
+    #menu_header="Additional Packages"
+    #menu_option_title="Select additional packages to install :"
+    #options=()
     #select_option "${options[@]}"
     #apps_options=$?
-    #echo "Coming Soon"
+
+    # Default Additional Packages and System Services
+    additionalpkg="networkmanager iw iwd bluez noto-fonts noto-fonts-cjk noto-fonts-emoji"
+    enableservices="NetworkManager.service bluetooth.service"
+    startservices="NetworkManager.service bluetooth.service"
+    # Pacman ParallelDownloads
+    prldownloads=50
 
     ################################################################
-    # Installation Summary
-    menu_header="Installation Summary"
-    menu_confirm_label=("Install" "Cancel")
-    repostring="${pacmanrepo[@]}"
-    if confirm "\Zb\Z2 Confirm to install with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Localization\Zn \n Language: ${selected_lang:-"(skipped)"} \n Time Zone: ${stz:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: ${user_acc[0]} \n Password: *** \n Disable Root Account: ${user_acc[3]} \n \Zb\Z4System / Packages\Zn \n Linux Kernel: $kernelpkg \n Repositories: $repostring \n Graphics Acceleration: mesa \n Video Acceleration: ffmpeg \n Desktop Environment: $selected_de \n"; then
-        install_part1
-    else
-        main_menu
+    # Generate Installation File
+    alert "Generating Installation File ..."
+
+    ## Installation File Header ##
+    echo -e "#$(titlelogo_string | sed 's/\\n/\\n#/g')" | tee "$install_config" >/dev/null
+    echo "# Installation File - Arch Linux Installer for ARM" | tee -a "$install_config" >/dev/null
+    echo "install:" | tee -a "$install_config" >/dev/null
+    echo " " | tee -a "$install_config" >/dev/null
+
+    ## Localization ##
+    echo "# Localization" | tee -a "$install_config" >/dev/null
+    # Language
+    echo "  language: ${selected_lang:-"null"}" | tee -a "$install_config" >/dev/null
+    # Time Zone
+    echo "  time_zone: ${stz:-"null"}" | tee -a "$install_config" >/dev/null
+
+    ## User Account ##
+    echo "# User Account" | tee -a "$install_config" >/dev/null
+    # Username
+    echo "  username: ${user_acc[0]}" | tee -a "$install_config" >/dev/null
+    # Password
+    echo "  password: ${user_acc[1]}" | tee -a "$install_config" >/dev/null
+    # Disable Root Account
+    echo "  disable_root_account: ${user_acc[3]}" | tee -a "$install_config" >/dev/null
+
+    ## System / Packages ##
+    echo "# System / Packages" | tee -a "$install_config" >/dev/null
+    # Pacman Repositories
+    echo "  repo: ${pacmanrepo:-"null"}" | tee -a "$install_config" >/dev/null
+    # Pacman ParallelDownloads
+    echo "  parallel_downloads: ${prldownloads:-"null"}" | tee -a "$install_config" >/dev/null
+    # Kernel Package
+    echo "  kernel: ${kernelpkg}" | tee -a "$install_config" >/dev/null
+    # Firmware Package
+    echo "  firmware: ${firmwarepkg:-"null"}" | tee -a "$install_config" >/dev/null
+    # Graphics Package
+    echo "  graphics: ${graphicspkg:-"null"}" | tee -a "$install_config" >/dev/null
+    # Video Package
+    echo "  video: ${videopkg:-"null"}" | tee -a "$install_config" >/dev/null
+    # Kernel Additional Package
+    echo "  kernel_additional: ${kerneladditionalpkg:-"null"}" | tee -a "$install_config" >/dev/null
+    # Desktop Environment
+    echo "  desktop_environment: ${selected_de:-"null"}" | tee -a "$install_config" >/dev/null
+    # Additional Packages
+    echo "  additional_packages: ${additionalpkg:-"null"}" | tee -a "$install_config" >/dev/null
+    # Systemd Services
+    echo "  enable_services: ${enableservices:-"null"}" | tee -a "$install_config" >/dev/null
+    echo "  start_services: ${startservices:-"null"}" | tee -a "$install_config" >/dev/null
+    ## Line ending ##
+    echo " " | tee -a "$install_config" >/dev/null
+    ################################################################
+    # Start Installation
+    if ! start_installation; then
+        main_menu # Back to main menu if installation cancelled
     fi
 }
 ################################################################
