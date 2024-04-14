@@ -386,7 +386,7 @@ confirm() {
 
     # launch TUI using dialog
     if dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
-        --title " $dialog_title " \
+        --title " $dialog_title " --yes-label "${menu_confirm_label[0]:-"Yes"}" --no-label "${menu_confirm_label[1]:-"No"}" \
         --yesno "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
         return 0
     elif [ ! -x "$(command -v dialog)" ]; then
@@ -465,15 +465,20 @@ form() {
     # Create options string for dialog
     declare -a options_string=()
     for opt; do
-        options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "5")
-        #"Form Label 1:" 1 1 "Value 1" 1 25 25 30
+        if [ -n "${menu_form_type[i]}" ]; then
+            options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "5" "${menu_form_type[i]}")
+        else
+            options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "5" "0")
+        fi
         ((i++))
     done
+    # Reset form type list
+    menu_form_type=()
 
     # launch TUI using dialog
     local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
-        --title " $dialog_title " --ok-label "Next" --nocancel \
-        --form "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \Zn" 0 0 0 \
+        --title " $dialog_title " --ok-label "Next" --nocancel --insecure \
+        --mixedform "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \n\Zn (Use arrow key to switch column, press enter to confirm)" 0 0 0 \
         "${options_string[@]}" \
     3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
     )
@@ -486,7 +491,7 @@ form() {
 internet_available=0
 check_internet() {
         for server in "${ping_servers[@]}"; do
-            if ping -q -c 3 "$server" >/dev/null 2>&1; then
+            if ping -q -c 1 "$server" >/dev/null 2>&1; then
                 internet_found_at="$server"
                 internet_available=1 # internet connected
                 ckin='s'
@@ -510,14 +515,14 @@ network_menu()
         fi
     done
 
-    local last_check=$(date +%s)
+    local last_check=$(( $(date +%s) - 2 ))
     local last_internet
 
     while [[ "$ckin" != [wWsS] ]]; do
         read -t 0.1 -n 1 tmp && ckin=$tmp
-        # Perform internet check every 3 seconds
+        # Perform internet check every 2 seconds
         current_time=$(date +%s)
-        if [ $((current_time - last_check)) -ge 3 ]; then
+        if [ $((current_time - last_check)) -ge 2 ]; then
             # Check internet connectivity in the background
             check_internet
             last_check=$current_time
@@ -543,7 +548,7 @@ network_menu()
             network_status="                    Waiting for Network ..."
         fi
         menu_option_title="\n\Z2$network_status\n\n\ZnEnter a key:\n\n"
-        if [ $((current_time - last_check)) -ge 6 ] || [ "$last_internet" != "$internet_available" ]; then
+        if [ $((current_time - last_check)) -ge 4 ] || [ "$last_internet" != "$internet_available" ]; then
             alert "$menu_option_title w) Connect to a WiFi network ($wl_adapter) \n s) Skip Internet Check (Installation may fail)"
             last_internet=$internet_available
         fi
@@ -569,7 +574,7 @@ network_menu()
 
     # Loop until curl is successful or max attempts reached
     attempt=0
-    until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 5 ]; do
+    until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 15 ]; do
         alert "Establishing SSL internet connection ..."
         # NTP Sync
         if [ "$attempt" -eq 1 ]; then
@@ -588,7 +593,7 @@ network_menu()
                 timedatectl set-ntp true
             fi
         fi
-        sleep 5
+        sleep 2
         ((attempt++))
     done
 
@@ -611,7 +616,7 @@ network_menu()
 check_installer_updates() {
     alert "Checking for installer updates..."
     remote_installerver=$(curl -s "$remote_installer_url" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
-    remote_acuver=$(curl -s "$remote_installer_url" | grep -o 'acuver=[0-9]*' | cut -d= -f2) #TODO
+    remote_acuver=$(curl -s "$remote_installer_url" | grep -o 'acuver=[0-9]*' | cut -d= -f2)
     if [ "$remote_installerver" -gt "$installerver" ]; then
         menu_header="Installer Updates Available"
         menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available. \n\Zn Do you want to update this installer?"
@@ -1080,7 +1085,7 @@ installer_menu() {
     # Time Zone
 
     menu_header="Time Zone"
-    ntz="$(acu time network-time-zone  | sed 's/\x1b[0-9]//g')"
+    ntz="$(acu time network-time-zone)"
     menu_option_title="\Zb          Your time zone is: $ntz, is that right?\Zn\n"
     options=("Yes, this is correct" "No, let me correct my Time Zone" "Skip setting Time Zone")
     select_option "${options[@]}"
@@ -1102,6 +1107,7 @@ installer_menu() {
         menu_header="User Account"
         menu_option_title="Create a new user account:"
         menu_form_value=("user" "" "" "y")
+        menu_form_type=("" "1" "1")
         local result=($(form "Username" "Password" "Confirm Password" "Disable Root Login? [Y/n]"))
         if [ "${#result[@]}" -gt 4 ]; then
             alert "Username / Password can not contain space."
@@ -1216,8 +1222,9 @@ installer_menu() {
     ################################################################
     # Installation Summary
     menu_header="Installation Summary"
+    menu_confirm_label=("Install" "Cancel")
     repostring="${pacmanrepo[@]}"
-    if confirm " Confirm to install with the following configurations? \n Note: System will reboot several times during installation. \n\n <Localization> \n Language: $selected_lang \n Time Zone: $stz \n <User Account> \n Username: ${user_acc[0]} \n Password: ${user_acc[1]} \n Disable Root Account: ${user_acc[3]} \n <System / Packages> \n Linux Kernel: $kernelpkg \n Repositories: $repostring \n Graphics Acceleration: mesa \n Video Acceleration: ffmpeg \n Desktop Environment: $selected_de \n"; then
+    if confirm "\Zb\Z2 Confirm to install with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Localization\Zn \n Language: ${selected_lang:-"(skipped)"} \n Time Zone: ${stz:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: ${user_acc[0]} \n Password: *** \n Disable Root Account: ${user_acc[3]} \n \Zb\Z4System / Packages\Zn \n Linux Kernel: $kernelpkg \n Repositories: $repostring \n Graphics Acceleration: mesa \n Video Acceleration: ffmpeg \n Desktop Environment: $selected_de \n"; then
         install_part1
     else
         main_menu
@@ -1272,9 +1279,10 @@ for arg in "$@"; do
         -h | --help)
             colorecho "$BLUE" "Arch Linux Installer for ARM (Aarch64)"
             colorecho "$GREEN" "Installer Version: $installerver"
-            colorecho "$GREEN" "Required ACU Version: $acuver ($(echo $(acu -v | sed 's/\x1b\[[0-9;]*[mGKHF]//g') | grep -o '[0-9].[0-9].[0-9].*') Installed)"
+            colorecho "$GREEN" "Required ACU Version: $acuver ($(acu -v --nocolorecho | grep -o '[0-9].[0-9].[0-9].*') Installed)"
             echo
-            echo "Usage: installer <optional_argument>"
+            echo "Usage: $0 <install_config(optional)> <arguments(optional)>"
+            echo
             colorecho "$GREEN" "Options"
             echo "-h / --help : Usage and Infomation of this installer"
             echo "--skip-install-pkg : Skip installing required packages on first boot"
