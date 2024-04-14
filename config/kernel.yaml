@@ -28,7 +28,7 @@ kernel:
 #          - graphics acceleration packages to install
 #        video:
 #          - video acceleration packages to install
-#        others:
+#        additional:
 #          - other packages to install
 
       # Linux Mainline Kernel
@@ -57,7 +57,7 @@ kernel:
           - mesa
         video:
           - ffmpeg
-        others: null
+        additional: null
 
       # Linux Raspberry Pi Kernel
       - base: linux-rpi
@@ -74,7 +74,7 @@ kernel:
           - mesa
         video:
           - ffmpeg-rpi
-        others: null
+        additional: null
 
       # Linux Raspberry Pi 16K Kernel
       - base: linux-rpi-16k
@@ -91,7 +91,7 @@ kernel:
           - mesa
         video:
           - ffmpeg-rpi
-        others: null
+        additional: null
 
       # Linux Asahi Kernel
       - base: linux-asahi
@@ -109,7 +109,7 @@ kernel:
           - mesa-asahi-edge
         video:
           - ffmpeg
-        others: null
+        additional: null
 
       # Joshua's Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-joshua
@@ -148,7 +148,7 @@ kernel:
           - libmali-valhall-g610-x11-wayland-gbm
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Joshua's Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-git
@@ -177,7 +177,7 @@ kernel:
           - libmali-valhall-g610-x11-wayland-gbm
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Joshua's Rockchip 6.1 BIN Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-bin
@@ -206,7 +206,7 @@ kernel:
           - libmali-valhall-g610-x11-wayland-gbm
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Joshua's Rockchip 6.1 Panthor Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-panthor-git
@@ -233,7 +233,7 @@ kernel:
           - mesa-panfrost-git
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Radxa Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-radxa-git
@@ -260,7 +260,7 @@ kernel:
           - libmali-valhall-g610-x11-wayland-gbm
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Radxa Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-radxa-bin
@@ -287,7 +287,7 @@ kernel:
           - libmali-valhall-g610-x11-wayland-gbm
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Radxa Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-radxa-bin
@@ -314,7 +314,7 @@ kernel:
           - libmali-valhall-g610-x11-wayland-gbm
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Orange Pi Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi
@@ -339,7 +339,7 @@ kernel:
           - libmali-valhall-g610-x11-wayland-gbm
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Orange Pi Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git
@@ -361,7 +361,7 @@ kernel:
           - libmali-valhall-g610-x11-wayland-gbm
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # wyf9661's Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp
@@ -388,7 +388,7 @@ kernel:
           - mesa-panfork-git
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # Collabora RK3588 Hardware Enablement Kernel
       - base: linux-aarch64-rk3588-collabora-git
@@ -408,7 +408,7 @@ kernel:
           - mesa-panfrost-git
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
       # 7Ji's Mainline Kernel
       - base: linux-aarch64-7ji
@@ -434,6 +434,6 @@ kernel:
           - mesa-panfork-git
         video:
           - ffmpeg-rockchip-git
-        others: null
+        additional: null
 
 ########################################################################
