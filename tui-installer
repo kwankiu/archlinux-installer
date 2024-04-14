@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24041201
+installerver=24041301
 
 # Required ACU version
 acuver=dev
@@ -34,7 +34,7 @@ branch=dev
 title_string="Arch Linux Installer for ARM"
 
 # Target Device for Installation
-install_target="rock5"
+install_target="generic"
 
 # Temporary home directory for installer
 installer_home="/usr/lib/installer"
@@ -78,7 +78,7 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 #remote_installer_url="https://invalid.example" # use an invalid remote installer url to prevent accidental updates
 
 # Use out folder of current directory as temporary home directory for installer
-#installer_home="$(pwd)/out" 
+installer_home="$(pwd)/out" 
 
 # Dialog override for debugging CLI Fallback
 #dialog () { return 1; }
@@ -1136,55 +1136,22 @@ installer_menu() {
     kernel_menu() {
         menu_header="Linux Kernel"
         menu_option_title="Select a linux kernel to install :\n\n\Zb\Z2           Linux Kernel           (Repo)                                     Description                (Kernel Version)"
+        # Process Kernel List
+        eval $(acu parse $kernel_list)
         options=()
-
-        # Kernel options for each install target
-        # format: kernelpkg (repo) - Description (linux_kernel_version)
-        # notes: put the recommended option at first line and mark (Recommended) in Description
-
-        # options to show in all images
-        if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-            options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji)                     - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-            options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)                  - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
-        elif [ "$install_target" = "rpi" ]; then
-            options+=("linux-rpi (alarm)                                               - Install Linux Raspberry Pi BSP Kernel (Linux 6.6)")
-            options+=("linux-rpi-16k (alarm)                                           - Install Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY (Linux 6.6)")
-            options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
-        elif [ "$install_target" = "asahi" ]; then
-            options+=("linux-asahi (Experimental)                                      - Install Linux Asahi Kernel (Linux 6.6)")
-            options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
-        else
-            options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
-        fi 
-    
-        if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
-            options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)                  - Install Linux Radxa Rockchip BSP 5.10 Kernel (Linux 5.10-rkr4.1)")
-        fi 
-    
-        if [ "$install_target" = "orangepi5" ]; then
-            options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji)            - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
-            options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)        - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
-        fi 
-
-        # options to show only in dev images
-        if [ "$branch" = "dev" ]; then
-
-            if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
-                options+=("linux-aarch64-rockchip-bsp5.10-radxa-bin (Experimental)         - Install Linux Radxa Rockchip BSP 5.10 Kernel (Linux 5.10.110)")
-                options+=("linux-aarch64-rockchip-bsp6.1-radxa-bin (Experimental)          - Install Linux Radxa Rockchip BSP 6.1 Kernel (Linux 6.1.43)")
-            fi
-
-            if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-                options+=("linux-aarch64-rockchip-bsp6.1-joshua-bin (7Ji,Experimental)         - Install Joshua Linux Rockchip 6.1 Kernel deb version (Linux 6.1.43)")
-                options+=("linux-aarch64-rockchip-bsp6.1-joshua-panthor-git (Experimental) - Install Joshua Linux Rockchip 6.1 Kernel with Panthor (Linux 6.1.43)")
-                options+=("linux-aarch64-rk3588-collabora-git (Experimental)               - Install Linux Collabora Mainline RK3588 Kernel (Linux 6.9)")
-                options+=("linux-aarch64-rockchip-bsp (7Ji)                                - (Experimental) Install wyf9661 Linux Rockchip 6.1 Kernel (Linux 6.1.57)")
-                options+=("linux-aarch64-7ji (7Ji)                                         - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux mainline latest)")
-                options+=("linux-aarch64 (7Ji)                                             - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux mainline latest)")
-            fi
-        fi 
-
-        options+=("(Others) Enter custom kernel options (Coming Soon)")
+        local i
+        local j
+        for ((i = 0; i < ${#kernel_base[@]}; i++)); do
+            # Add Kernel tags
+            kernel_tags=(${kernel_compatible[i]})
+            for ((j = 0; j < ${#kernel_tags[@]}; j++)); do
+                if [ "${kernel_tags[j]}" == "$install_target" ]; then
+                    kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "alarm" || echo "${kernel_repo[i]}"))"
+                    kernel_string=$(printf "%-64s" "$kernel_string")
+                    options+=("$kernel_string - Install ${kernel_description[i]} (Linux ${kernel_version[i]})")
+                fi
+            done
+        done
         select_option "${options[@]}"
         krl_options=$?
         selected_option="${options[$krl_options]}"

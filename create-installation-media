@@ -900,7 +900,7 @@ done
   sudo chmod +x $installer_name
   sudo cp -r "$installer_name" "$root_mount_dir/usr/bin/installer"
   if [ ! -z "$argsbc" ]; then
-    sudo sed -i "s/install_target=\"rock5\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer"
+    sudo sed -i "s/install_target=\"generic\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer"
   fi
 
   if [ ! -z "$is_img" ]; then
