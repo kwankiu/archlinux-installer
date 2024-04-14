@@ -881,7 +881,7 @@ done
     compiled_pkg_dir="/usr/lib/compiled-packages"
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/$installer_name
   elif [ "$arginstaller" == "tui" ]; then
-    installer_name="tui-installer"
+    installer_name="arch-installer"
     compiled_pkg_dir="/usr/lib/installer/packages"
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/$installer_name
     # Download and Copy ACU
