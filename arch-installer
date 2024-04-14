@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24041401
+installerver=24041402
 
 # Required ACU version
 acuver=dev
@@ -574,7 +574,8 @@ network_menu()
                 wifi-menu $iwdev
                 alert "Enabling netctl Auto Connect ..."
                 systemctl enable netctl-auto@$iwdev.service
-            fi               
+            fi
+            check_internet             
             ;;
     esac
 
@@ -760,6 +761,12 @@ install_part1() {
 install_part2() {
     local installation_file=$1
     menu_header="Installation (Part 2)"
+
+    ################################################################
+    # Copy Installer ACU Config to ACU HOME
+    mkdir -p ~/.acu/config
+    cp /usr/lib/installer/.acu/config/config.yaml ~/.acu/config/config.yaml
+    sudo chmod +x ~/.acu/config/config.yaml
 
     ################################################################
     # Set Time Zone
@@ -1204,7 +1211,7 @@ main_menu() {
     # Welcome Menu
     menu_header=""
     menu_option_title=""
-    options=("Install Arch Linux" "Try Arch Linux (GUI)" "About this Installer" "Exit Installer")
+    options=("Install Arch Linux (TUI/CLI)" "About this Installer" "Exit Installer") #TODO: Try / Install Arch Linux (GUI)
     select_option "${options[@]}"
     selected=$?
 
@@ -1212,17 +1219,17 @@ main_menu() {
     0)
         installer_menu
         ;;
+    #1) #TODO
+    #    if confirm "   This will download a 1GB image. Are you sure to continue (Coming Soon)?"; then
+    #        alert "Coming Soon"
+    #        sleep 3
+    #        main_menu
+    #    else
+    #        main_menu
+    #    fi
+    #    exit 0
+    #    ;;
     1)
-        if confirm "   This will download a 1GB image. Are you sure to continue (Coming Soon)?"; then
-            alert "Coming Soon"
-            sleep 3
-            main_menu
-        else
-            main_menu
-        fi
-        exit 0
-        ;;
-    2)
         alert "\n Installer Version: $installerver \n ACU Version: $acuver"
         sleep 3
         main_menu
@@ -1238,7 +1245,7 @@ main_menu() {
         ;;
     esac
 }
-    #dialog --title "fselect" --fselect ~/Documents/GitHub/ 15 80
+
 ################################################################
 # Handle Installer agruments
 for arg in "$@"; do
