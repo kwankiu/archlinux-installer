@@ -770,13 +770,13 @@ install_part2() {
 
     ################################################################
     # Set Time Zone
-    if [ "$install_time_zone" != "null" ];
+    if [ "$install_time_zone" != "null" ]; then
         acu "time" set-time-zone $install_time_zone
     fi
 
     ################################################################
     # Set Language
-    if [ "$install_language" != "null" ];
+    if [ "$install_language" != "null" ]; then
         acu locale generate "$install_language" -y
     fi
 
@@ -798,28 +798,28 @@ install_part2() {
     ################################################################
     # Install Kernel Additional Packages
     alert "Installing Kernel Additional Packages ..."
-    if [ "$install_kernel_additional" != "null" ];
+    if [ "$install_kernel_additional" != "null" ]; then
         acu -y install $install_kernel_additional
     fi
 
     ################################################################
     # Install Linux Firmware
     alert "Installing Linux Firmware ..."
-    if [ "$install_firmware" != "null" ];
+    if [ "$install_firmware" != "null" ]; then
         acu -y install $install_firmware
     fi
 
     ################################################################
     # Install Graphics Acceleration
     alert "Installing Graphics Acceleration"
-    if [ "$install_graphics" != "null" ];
+    if [ "$install_graphics" != "null" ]; then
         acu -y install $install_graphics
     fi
 
     ################################################################
     # Install Video Acceleration
     alert "Installing Video Acceleration"
-    if [ "$install_video" != "null" ];    
+    if [ "$install_video" != "null" ]; then
         acu -y install $install_video
     fi
 
@@ -831,21 +831,21 @@ install_part2() {
     ################################################################
     # Post Installation
     alert "Performing Post Installation"
-    #if [ "$install_graphics" != "null" ];
+    #if [ "$install_graphics" != "null" ]; then
         acu -y install device-post-install
     #fi
 
     ################################################################
     # Install desktop environment
     alert "Installing Desktop environment"
-    if [ "$install_desktop_environment" != "null" ];
+    if [ "$install_desktop_environment" != "null" ]; then
         acu -y install $install_desktop_environment
     fi
 
     ################################################################
     # Install Additional Packages
     alert "Installing Additional Packages"
-    if [ "$install_additional_packages" != "null" ];
+    if [ "$install_additional_packages" != "null" ]; then
         acu -y install $install_additional_packages
     fi
 
