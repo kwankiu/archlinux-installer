@@ -3,19 +3,19 @@
 #  ) D ( ) _) \___ \ )  (   )( (  O )) __/   ) _) /    /\ \/ / )(  )   /(  O )/    // \/ \ ) _) /    /  )(  
 # (____/(____)(____/(__\_) (__) \__/(__)    (____)\_)__) \__/ (__)(__\_) \__/ \_)__)\_)(_/(____)\_)__) (__) 
 # List of Desktop Environment
-apps:
+desktop:
 ########################################################################
   # Category List
   - categories:
       - category_name: Desktop
         category_description: Install a Desktop Environment
 ########################################################################
-  # Apps List
+  # Desktop Environment List
   - items:
 ########################################################################
   # Items Usage / Examples
 #      - package_name: Name to identify the package (small letter no space) (used for: acu install <package>)
-#        app_name: Name to be shown on the app list (can contain capital letter and space) (used for: acu apps)
+#        pretty_name: Name to be shown on the app list (can contain capital letter and space) (used for: acu apps)
 #        category: Specific a category that this package belongs to from the category_name of the list above
 #        description: Description of the package 
 #        compatible:
@@ -29,7 +29,7 @@ apps:
 
       # Gnome (Full)
       - package_name: gnome-full
-        app_name: Gnome (Full)
+        pretty_name: Gnome (Full)
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -40,7 +40,7 @@ apps:
 
       # Gnome (Minimal)
       - package_name: gnome-minimal
-        app_name: Gnome (Minimal)
+        pretty_name: Gnome (Minimal)
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -62,7 +62,7 @@ apps:
 
       # KDE Plasma (Full)
       - package_name: plasma-full
-        app_name: KDE Plasma (Full)
+        pretty_name: KDE Plasma (Full)
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -75,7 +75,7 @@ apps:
 
       # KDE Plasma (Minimal)
       - package_name: plasma-minimal
-        app_name: KDE Plasma (Minimal)
+        pretty_name: KDE Plasma (Minimal)
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -88,7 +88,7 @@ apps:
 
       # Budgie Desktop
       - package_name: budgie
-        app_name: Budgie Desktop
+        pretty_name: Budgie Desktop
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -106,7 +106,7 @@ apps:
 
       # Cutefish Desktop
       - package_name: cutefish
-        app_name: Cutefish Desktop
+        pretty_name: Cutefish Desktop
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -119,7 +119,7 @@ apps:
 
       # XFCE
       - package_name: xfce
-        app_name: XFCE
+        pretty_name: XFCE
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -137,7 +137,7 @@ apps:
 
       # LXQT
       - package_name: lxqt
-        app_name: LXQT
+        pretty_name: LXQT
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -150,7 +150,7 @@ apps:
 
       # LXDE
       - package_name: lxde
-        app_name: LXDE
+        pretty_name: LXDE
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -162,7 +162,7 @@ apps:
 
       # MATE
       - package_name: mate
-        app_name: MATE
+        pretty_name: MATE
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -175,7 +175,7 @@ apps:
 
       # Cinnamon
       - package_name: cinnamon
-        app_name: Cinnamon
+        pretty_name: Cinnamon
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -194,7 +194,7 @@ apps:
 
       # Sway
       - package_name: sway
-        app_name: Sway
+        pretty_name: Sway
         category: Desktop
         description: A Desktop Environment
         compatible: null
@@ -229,7 +229,7 @@ apps:
 
       # Hyprland
       - package_name: hyprland
-        app_name: Hyprland
+        pretty_name: Hyprland
         category: Desktop
         description: A Desktop Environment
         compatible: null
