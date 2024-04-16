@@ -45,8 +45,9 @@ desktop:
         description: A Desktop Environment
         compatible: null
         packages:
+          - gdm
           - gnome-shell
-          - gdm gnome-keyring
+          - gnome-keyring
           - gnome-control-center
           - gnome-console
           - gnome-disk-utility
