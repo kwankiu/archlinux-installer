@@ -3,7 +3,7 @@
 #  ) _ ((  O )(  O ) )(    ( (__(  O )/    / ) _)  )(( (_ \
 # (____/ \__/  \__/ (__)    \___)\__/ \_)__)(__)  (__)\___/
 # Boot Config for each target device
-configurations:
+boot:
 
 # Example
 #- dtb: path to dtb directory or the dtb file
