@@ -33,9 +33,6 @@ branch=dev
 # Installer name string
 title_string="Arch Linux Installer for ARM"
 
-# Target Device for Installation
-install_target="generic"
-
 # Temporary home directory for installer
 installer_home="/usr/lib/installer"
 
@@ -64,6 +61,9 @@ de_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$br
 # ping Google, Cloudflare and China Mobile DNS (for China users)
 ping_servers=("google.com" "1.1.1.1" "114.114.114.114") 
 
+# (Optional) Target Device for Installation (comment this to auto detect from devicetree)
+#install_target="radxa-rock-5b"
+
 ################################################################
 ## Debug variable overrides ##
 # (FOR DEVELOPMENT USE ONLY, MAKE SURE ALL OVERRIDES ARE COMMENTED FOR PRODUCTION USE)
@@ -82,9 +82,6 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 
 # Install using the generated configurations
 #install_config="$installer_home/install.yaml"
-
-# Override Target Device for Installation
-#install_target="rock-5b"
 
 # Dialog override for debugging CLI Fallback
 #dialog () { return 1; }
@@ -636,7 +633,10 @@ check_installer_updates() {
             local response_code=$(sudo curl --write-out '%{response_code}' -LJO "$remote_installer_url")
             if [ "$response_code" = 200 ]; then
                 alert "Updating Installer ..."
-                sudo sed -i "s/install_target=\"generic\"/install_target=\"$install_target\"/g" arch-installer
+                # If install_target is set
+                if [ -n "$install_target" ]; then
+                    sudo sed -i "s/^#install_target=\".*\"/install_target=\"$install_target\"/g" arch-installer
+                fi
                 sudo chmod +x arch-installer
                 sudo cp -r arch-installer /usr/bin/installer
                 sudo rm -rf arch-installer
@@ -660,7 +660,7 @@ check_installer_updates() {
 ################################################################
 # Installation - Part 1 (in root)
 add_boot_part_fstab() {
-    echo "Updating fstab ..."
+    alert "Updating fstab ..."
     boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
 
     # Check if the boot_partition is not empty
@@ -691,7 +691,10 @@ add_boot_part_fstab() {
 install_part1() {
     local installation_file=$1
     menu_header="Installation (Part 1)"
-    alert "Running Initial System Setup ..."
+
+    # Set Hostname
+    alert "Setting hostname ..."
+    hostnamectl set-hostname $install_hostname
 
     # Get rootfs partition from the current mount point "/"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
@@ -700,7 +703,7 @@ install_part1() {
     rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
     rootfs_disk="${rootfs_disk%p*}"
 
-    if [ ! -e "/boot/extlinux/extlinux.conf" ]; then 
+    if [ ! -e "/boot/extlinux/extlinux.conf" ]; then
         add_boot_part_fstab
     fi
 
@@ -715,8 +718,8 @@ install_part1() {
 
     alert "Configuring pacman (adding repositories) ..."
     for ((i = 0; i < ${#install_repo[@]}; i++)); do
-        local repo="${install_repo[i]//,/ }"
-        acu rem set pacman "$repo"
+        local repo=("${install_repo[i]//,/ }")
+        acu rem set "$repo" pacman
     done
 
     if [ -n "$install_parallel_downloads" ]; then 
@@ -734,10 +737,9 @@ install_part1() {
     acu user add "$install_username" "$install_password"
     acu user manage "$install_username" sudopw
 
-    hostname=$(hostnamectl --static)
-    echo "$install_username $hostname =NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl halt,/usr/bin/systemctl reboot" | tee -a "/etc/sudoers" >/dev/null
+    echo "$install_username $install_hostname =NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl halt,/usr/bin/systemctl reboot" | tee -a "/etc/sudoers" >/dev/null
 
-    if [[ "$install_disable_root_account" == [Yy] ]]; then
+    if [ "$install_disable_root_account" = 1 ]; then
         passwd -l root
     fi
 
@@ -903,7 +905,7 @@ start_installation() {
     menu_confirm_label=("Install" "Cancel")
     if [ "$install_run_part2" = 1 ] && [ ! "$(id -u)" -eq 0 ]; then
         install_part2 "$installation_file"
-    elif [ "$install_confirm" = 1 ] || confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Localization\Zn \n Language: ${selected_lang:-"(skipped)"} \n Time Zone: ${stz:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: ${user_acc[0]} \n Password: *** \n Disable Root Account: ${user_acc[3]} \n \Zb\Z4System / Packages\Zn \n Linux Kernel: $kernelpkg \n Repositories: $pacmanrepo \n Firmware: $firmwarepkg \n Graphics Acceleration: $graphicspkg \n Video Acceleration: $videopkg \n Kernel Additional: $kerneladditionalpkg \n Desktop Environment: ${selected_de:-"(skipped)"} \n Additional Packages: ${additionalpkg:-"(skipped)"} \n"; then 
+    elif [ "$install_confirm" = 1 ] || confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Config\Zn \n Target: $install_target \n \Zb\Z4Localization\Zn \n Language: ${install_language:-"(skipped)"} \n Time Zone: ${install_time_zone:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: $install_username \n Password: *** \n Disable Root Account: $install_disable_root_account \n \Zb\Z4System / Packages\Zn \n Hostname: $install_hostname \n Repositories: ${install_repo:-"(default)"} \n Linux Kernel: $install_kernel \n Firmware: ${install_firmware:-"(none)"} \n Graphics Acceleration: ${install_graphics:-"(none)"} \n Video Acceleration: ${install_video:-"(none)"} \n Kernel Additional: ${install_kernel_additional:-"(none)"} \n Desktop Environment: ${install_desktop_environment:-"(skipped)"} \n Additional Packages: ${install_additional_packages:-"(none)"} \n"; then 
         install_part1 "$installation_file"
     else
         return 1
@@ -913,6 +915,17 @@ start_installation() {
 ################################################################
 # Installer Menu
 installer_menu() {
+
+    ################################################################
+    # Auto detect install target from devicetree
+    if [ -z "$install_target" ]; then
+        if [ -f "/proc/device-tree/compatible" ]; then
+            install_target="$(sed 's/\x00/ /g; s/,/ /g' /proc/device-tree/compatible | awk '{print $1, $2}' | tr ' ' '-')"
+        fi
+        if [ -z "$install_target" ]; then
+            install_target="generic"
+        fi
+    fi
 
     ################################################################
     # Choose Language
@@ -1023,6 +1036,13 @@ installer_menu() {
     fi
 
     ################################################################
+    # Hostname
+    menu_header="Hostname"
+    menu_option_title="Set a hostname: \n (Can not contain space)"
+    menu_form_value=("alarm")
+    sethostname="$(form "Hostname")"
+
+    ################################################################
     # Setup User Account
     user_setup() {
         menu_header="User Account"
@@ -1068,7 +1088,7 @@ installer_menu() {
             # Add Kernel tags
             kernel_tags=(${kernel_compatible[i]})
             for ((j = 0; j < ${#kernel_tags[@]}; j++)); do
-                if [ "${kernel_tags[j]}" == "$install_target" ]; then
+                if [ "${kernel_tags[j]}" == "$install_target" ] || ([[ "${kernel_tags[j]}" == *"*" ]] && [[ "$install_target" = "${kernel_tags[j]%?}"* ]]); then
                     is_rmd_kernel=(${kernel_recommended[i]})
                     for ((k = 0; k < ${#is_rmd_kernel[@]}; k++)); do
                         if [ "${is_rmd_kernel[k]}" == "$install_target" ]; then
@@ -1078,7 +1098,7 @@ installer_menu() {
                             is_rmd_kernel=""
                         fi
                     done
-                    kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "alarm" || echo "${kernel_repo[i]}"))"
+                    kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "core" || echo "${kernel_repo[i]}" | awk '{print $1;}'))"
                     kernel_string=$(printf "%-64s" "$kernel_string")
                     options+=("$kernel_string - ${is_rmd_kernel}Install ${kernel_description[i]} (Linux ${kernel_version[i]})")
                 fi
@@ -1090,8 +1110,8 @@ installer_menu() {
                 # Add Kernel tags
                 kernel_tags=(${kernel_experimental[i]})
                 for ((j = 0; j < ${#kernel_tags[@]}; j++)); do
-                    if [ "${kernel_tags[j]}" == "$install_target" ]; then
-                        kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "alarm" || echo "${kernel_repo[i]}"))"
+                    if [ "${kernel_tags[j]}" == "$install_target" ] || ([[ "${kernel_tags[j]}" == *"*" ]] && [[ "$install_target" = "${kernel_tags[j]%?}"* ]]); then
+                        kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "core" || echo "${kernel_repo[i]}" | awk '{print $1;}'))"
                         kernel_string=$(printf "%-64s" "$kernel_string")
                         options+=("$kernel_string - (Experimental) Install ${kernel_description[i]} (Linux ${kernel_version[i]})")
                     fi
@@ -1156,12 +1176,20 @@ installer_menu() {
     echo "install:" | tee -a "$install_config" >/dev/null
     echo " " | tee -a "$install_config" >/dev/null
 
+    ## Config ##
+    echo "# Config" | tee -a "$install_config" >/dev/null
+    # Install Target
+    echo "  target: $install_target" | tee -a "$install_config" >/dev/null
     ## Localization ##
     echo "# Localization" | tee -a "$install_config" >/dev/null
     # Language
-    echo "  language: ${selected_lang:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$selected_lang" ]; then
+        echo "  language: $selected_lang" | tee -a "$install_config" >/dev/null
+    fi
     # Time Zone
-    echo "  time_zone: ${stz:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$stz" ]; then
+        echo "  time_zone: $stz" | tee -a "$install_config" >/dev/null
+    fi
 
     ## User Account ##
     echo "# User Account" | tee -a "$install_config" >/dev/null
@@ -1170,31 +1198,56 @@ installer_menu() {
     # Password
     echo "  password: ${user_acc[1]}" | tee -a "$install_config" >/dev/null
     # Disable Root Account
-    echo "  disable_root_account: ${user_acc[3]}" | tee -a "$install_config" >/dev/null
+    if [[ "${user_acc[3]}" = [Yy] ]]; then
+        echo "  disable_root_account: 1" | tee -a "$install_config" >/dev/null
+    fi
 
     ## System / Packages ##
     echo "# System / Packages" | tee -a "$install_config" >/dev/null
+    # Hostname
+    echo "  hostname: $sethostname" | tee -a "$install_config" >/dev/null
     # Pacman Repositories
-    echo "  repo: ${pacmanrepo:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$pacmanrepo" ] && [ "$pacmanrepo" != "null" ]; then
+        echo "  repo: $pacmanrepo" | tee -a "$install_config" >/dev/null
+    fi
     # Pacman ParallelDownloads
-    echo "  parallel_downloads: ${prldownloads:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$prldownloads" ]; then
+        echo "  parallel_downloads: $prldownloads" | tee -a "$install_config" >/dev/null
+    fi
     # Kernel Package
-    echo "  kernel: ${kernelpkg}" | tee -a "$install_config" >/dev/null
+    echo "  kernel: $kernelpkg" | tee -a "$install_config" >/dev/null
     # Firmware Package
-    echo "  firmware: ${firmwarepkg:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$firmwarepkg" ] && [ "$firmwarepkg" != "null" ]; then
+        echo "  firmware: $firmwarepkg" | tee -a "$install_config" >/dev/null
+    fi
     # Graphics Package
-    echo "  graphics: ${graphicspkg:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$graphicspkg" ] && [ "$graphicspkg" != "null" ]; then
+        echo "  graphics: $graphicspkg" | tee -a "$install_config" >/dev/null
+    fi
     # Video Package
-    echo "  video: ${videopkg:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$videopkg" ] && [ "$videopkg" != "null" ]; then
+        echo "  video: $videopkg" | tee -a "$install_config" >/dev/null
+    fi
     # Kernel Additional Package
-    echo "  kernel_additional: ${kerneladditionalpkg:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$kerneladditionalpkg" ] && [ "$kerneladditionalpkg" != "null" ]; then
+        echo "  kernel_additional: $kerneladditionalpkg" | tee -a "$install_config" >/dev/null
+    fi
     # Desktop Environment
-    echo "  desktop_environment: ${selected_de:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$selected_de" ]; then
+        echo "  desktop_environment: $selected_de" | tee -a "$install_config" >/dev/null
+    fi
     # Additional Packages
-    echo "  additional_packages: ${additionalpkg:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$additionalpkg" ]; then
+        echo "  additional_packages: $additionalpkg" | tee -a "$install_config" >/dev/null
+    fi
     # Systemd Services
-    echo "  enable_services: ${enableservices:-"null"}" | tee -a "$install_config" >/dev/null
-    echo "  start_services: ${startservices:-"null"}" | tee -a "$install_config" >/dev/null
+    if [ -n "$enableservices" ]; then
+        echo "  enable_services: $enableservices" | tee -a "$install_config" >/dev/null
+    fi
+    if [ -n "$startservices" ]; then
+        echo "  start_services: $startservices" | tee -a "$install_config" >/dev/null
+    fi
+
     ## Line ending ##
     echo " " | tee -a "$install_config" >/dev/null
     ################################################################

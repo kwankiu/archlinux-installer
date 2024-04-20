@@ -36,11 +36,8 @@ postinstall:
         category: Post-Install
         description: SBC Post Install
         compatible:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
+          - radxa-rock-5*
+          - radxa-cm5*
         commands: |
           #1 Disable Sleep
           echo "Disable suspend ..."
@@ -53,7 +50,7 @@ postinstall:
         category: Post-Install
         description: SBC Post Install
         compatible:
-          - edge2
+          - khadas-edge*
         commands: |
           #1 Switch Network Manager to iwd
           echo "Fix : Switch WiFi backend to iwd ..."
@@ -83,9 +80,8 @@ postinstall:
         category: Post-Install
         description: SBC Post Install
         compatible:
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         commands: |
           #1 Disable Sleep
           echo "Disable suspend ..."

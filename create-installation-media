@@ -901,7 +901,7 @@ done
   sudo cp -r "$installer_name" "$root_mount_dir/usr/bin/installer"
   if [ ! -z "$argsbc" ]; then
     sudo sed -i "s/install_target=\"rock5\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer" # old installer
-    sudo sed -i "s/install_target=\"generic\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer" # new installer
+    #sudo sed -i "s/^#install_target=\".*\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer" # new installer (optional)
   fi
 
   if [ ! -z "$is_img" ]; then

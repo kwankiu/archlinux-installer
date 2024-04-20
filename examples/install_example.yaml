@@ -14,21 +14,20 @@
 # Installation File - Arch Linux Installer for ARM
 install:
  
+# Config
+  target: generic
 # Localization
   language: en_US
-  time_zone: null
 # User Account
   username: user
   password: 1234
-  disable_root_account: y
+  disable_root_account: 1
 # System / Packages
-  repo: null
+  hostname: alarm
   parallel_downloads: 50
   kernel: linux-aarch64
-  firmware: null
   graphics: mesa
   video: ffmpeg
-  kernel_additional: null
   desktop_environment: gnome-minimal
   additional_packages:
     - networkmanager
