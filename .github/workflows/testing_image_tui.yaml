@@ -32,12 +32,19 @@ jobs:
           tar -xf data.tar.xz
           ls -l
 
-      - name: Build Image for Rock 5B 
+      - name: Build Image for Rock 5B
         run: |
-          echo "skip"
-          #bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git --installer=tui -c --image=rock-5b-archlinux-installer-tui.img --uboot=usr/lib/u-boot/rock-5b
-          #cp -r out/rock-5b-archlinux-installer-tui.img.xz rock-5b-archlinux-installer-tui.img.xz
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git --installer=tui -c --image=rock-5b-archlinux-installer-tui.img --uboot=usr/lib/u-boot/rock-5b
+          cp -r out/rock-5b-archlinux-installer-tui.img.xz rock-5b-archlinux-installer-tui.img.xz
 
+      - uses: ncipollo/release-action@v1
+        with:
+            artifacts: "*-archlinux-installer-tui.img.xz"
+            makeLatest: false
+            prerelease: true
+            allowUpdates: true
+            omitBody: true
+            
       - name: Extract U-Boot Edge 2
         run: |
           sudo rm -rf *
