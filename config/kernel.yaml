@@ -38,20 +38,16 @@ kernel:
         repo: null
         compatible:
           - generic
-          - asahi
-          - rpi
+          - apple*
+          - raspberrypi*
         recommended: null
         experimental:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - edge2
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         firmware: null
         graphics:
           - mesa
@@ -65,9 +61,9 @@ kernel:
         version: 6.6
         repo: null
         compatible:
-          - rpi
+          - raspberrypi*
         recommended:
-          - rpi
+          - raspberrypi*
         experimental: null
         firmware: null
         graphics:
@@ -82,9 +78,9 @@ kernel:
         version: 6.6
         repo: null
         compatible:
-          - rpi
+          - raspberrypi*
         recommended:
-          - rpi
+          - raspberrypi*
         experimental: null
         firmware: null
         graphics:
@@ -100,9 +96,9 @@ kernel:
         repo:
           - Experimental
         compatible:
-          - asahi
+          - apple*
         recommended:
-          - asahi
+          - apple*
         experimental: null
         firmware: null
         graphics:
@@ -118,27 +114,19 @@ kernel:
         repo:
           - 7Ji
         compatible:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - edge2
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         recommended:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - edge2
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         experimental: null
         firmware:
           - linux-firmware-joshua-git
@@ -157,16 +145,12 @@ kernel:
         repo:
           - 7Ji
         compatible:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - edge2
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         recommended: null
         experimental: null
         firmware:
@@ -189,16 +173,12 @@ kernel:
         compatible: null
         recommended: null
         experimental:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - edge2
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -219,16 +199,12 @@ kernel:
         compatible: null
         recommended: null
         experimental:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - edge2
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -244,13 +220,10 @@ kernel:
         repo:
           - 7Ji
         compatible:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - rock-2a
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - radxa-rock-2a
         recommended: null
         experimental: null
         firmware:
@@ -274,13 +247,10 @@ kernel:
         compatible: null
         recommended: null
         experimental:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - rock-2a
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - radxa-rock-2a
         firmware:
           - 8852bu-dkms-git
           - 8852be-dkms-git
@@ -302,13 +272,10 @@ kernel:
         compatible: null
         recommended: null
         experimental:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - rock-2a
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - radxa-rock-2a
         firmware:
           - 8852bu-dkms-git
           - 8852be-dkms-git
@@ -327,13 +294,11 @@ kernel:
         repo:
           - 7Ji
         compatible:
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         recommended:
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         experimental: null
         firmware:
           - linux-firmware-orangepi-git
@@ -352,9 +317,8 @@ kernel:
         repo:
           - 7Ji
         compatible:
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         recommended: null
         experimental: null
         firmware:
@@ -377,16 +341,12 @@ kernel:
         compatible: null
         recommended: null
         experimental:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - edge2
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -405,9 +365,9 @@ kernel:
         compatible: null
         recommended: null
         experimental:
-          - rock-5a
-          - rock-5b
-          - edge2
+          - radxa-rock-5a
+          - radxa-rock-5b
+          - khadas-edge*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -425,16 +385,12 @@ kernel:
         compatible: null
         recommended: null
         experimental:
-          - rock-5a
-          - rock-5b
-          - rock-5c
-          - rock-5-itx
-          - radxa-cm5
-          - zero-3
-          - edge2
-          - orangepi-5
-          - orangepi-5b
-          - orangepi-5-plus
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
         firmware: null
         graphics:
           - mesa-panfork-git
