@@ -185,6 +185,7 @@ kernel:
         version: 6.1.43
         repo:
           - Experimental
+          - 7Ji
         compatible: null
         recommended: null
         experimental:
@@ -214,6 +215,7 @@ kernel:
         version: 6.1.43
         repo:
           - Experimental
+          - 7Ji
         compatible: null
         recommended: null
         experimental:
@@ -268,6 +270,7 @@ kernel:
         version: 5.10.110
         repo:
           - Experimental
+          - 7Ji
         compatible: null
         recommended: null
         experimental:
@@ -295,6 +298,7 @@ kernel:
         version: 6.1.43
         repo:
           - Experimental
+          - 7Ji
         compatible: null
         recommended: null
         experimental:
@@ -369,6 +373,7 @@ kernel:
         version: 6.1.57
         repo:
           - Experimental
+          - 7Ji
         compatible: null
         recommended: null
         experimental:
@@ -396,6 +401,7 @@ kernel:
         version: 6.9
         repo:
           - Experimental
+          - 7Ji
         compatible: null
         recommended: null
         experimental:
