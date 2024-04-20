@@ -112,7 +112,7 @@ kernel:
         description: Joshua Linux Rockchip BSP Kernel
         version: 5.10.160
         repo:
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible:
           - radxa-rock-5*
           - radxa-cm5*
@@ -143,7 +143,7 @@ kernel:
         description: Joshua Linux Rockchip BSP Kernel
         version: 6.1.43
         repo:
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible:
           - radxa-rock-5*
           - radxa-cm5*
@@ -169,7 +169,7 @@ kernel:
         version: 6.1.43
         repo:
           - Experimental
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible: null
         recommended: null
         experimental:
@@ -195,7 +195,7 @@ kernel:
         version: 6.1.43
         repo:
           - Experimental
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible: null
         recommended: null
         experimental:
@@ -218,7 +218,7 @@ kernel:
         description: Radxa Linux Rockchip BSP Kernel
         version: 5.10-rkr4.1
         repo:
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible:
           - radxa-rock-5*
           - radxa-cm5*
@@ -243,7 +243,7 @@ kernel:
         version: 5.10.110
         repo:
           - Experimental
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible: null
         recommended: null
         experimental:
@@ -268,7 +268,7 @@ kernel:
         version: 6.1.43
         repo:
           - Experimental
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible: null
         recommended: null
         experimental:
@@ -292,7 +292,7 @@ kernel:
         description: Orange Pi fork of Linux Rockchip BSP Kernel
         version: 5.10.110
         repo:
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible:
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
@@ -315,7 +315,7 @@ kernel:
         description: Orange Pi fork of Linux Rockchip BSP Kernel
         version: 5.10.160
         repo:
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible:
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
@@ -337,7 +337,7 @@ kernel:
         version: 6.1.57
         repo:
           - Experimental
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible: null
         recommended: null
         experimental:
@@ -361,7 +361,7 @@ kernel:
         version: 6.9
         repo:
           - Experimental
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible: null
         recommended: null
         experimental:
@@ -381,7 +381,7 @@ kernel:
         description: 7Ji's Linux Mainline Kernel with patches for Amlogic devices and RK3588
         version: lastest stable
         repo:
-          - 7Ji
+          - 7Ji,https://github.com/7Ji/archrepo/releases/download/\$arch,BA27F219383BB875
         compatible: null
         recommended: null
         experimental:
