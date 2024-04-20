@@ -5,6 +5,9 @@
 # List of Desktop Environment
 desktop:
 ########################################################################
+  # Minimum ACU Version
+  - min_acu_verion: 0.0.7
+########################################################################
   # Category List
   - categories:
       - category_name: Desktop
