@@ -19,10 +19,10 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24041402
+installerver=24042001
 
 # Required ACU version
-acuver=dev
+acuver=tmp
 
 # Installer Branch / Tag
 branch=dev
@@ -717,10 +717,14 @@ install_part1() {
     pacman-key --populate archlinuxarm
 
     alert "Configuring pacman (adding repositories) ..."
-    for ((i = 0; i < ${#install_repo[@]}; i++)); do
-        local repo=("${install_repo[i]//,/ }")
-        acu rem set "$repo" pacman
-    done
+    #Workaround: Add all repo
+    acu rem set 7Ji https://github.com/7Ji/archrepo/releases/download/\$arch pacman
+    acu rem set Experimental https://github.com/kwankiu/PKGBUILDs/releases/download/experimental pacman
+    #TODO: Add necessary repo
+    #for ((i = 0; i < ${#install_repo[@]}; i++)); do
+        #local repo=("${install_repo[i]//,/ }")
+        #acu rem set "$repo" pacman
+    #done
 
     if [ -n "$install_parallel_downloads" ]; then 
         alert "Configuring pacman (enabling ParallelDownloads)..."
@@ -736,8 +740,7 @@ install_part1() {
     alert "Setting up new user account ..."
     acu user add "$install_username" "$install_password"
     acu user manage "$install_username" sudopw
-
-    echo "$install_username $install_hostname =NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl halt,/usr/bin/systemctl reboot" | tee -a "/etc/sudoers" >/dev/null
+    acu user manage "$install_username" rebootpw
 
     if [ "$install_disable_root_account" = 1 ]; then
         passwd -l root
@@ -765,12 +768,6 @@ install_part2() {
     menu_header="Installation (Part 2)"
 
     ################################################################
-    # Copy Installer ACU Config to ACU HOME
-    mkdir -p ~/.acu/config
-    cp /usr/lib/installer/.acu/config/config.yaml ~/.acu/config/config.yaml
-    sudo chmod +x ~/.acu/config/config.yaml
-
-    ################################################################
     # Set Time Zone
     if [ "$install_time_zone" != "null" ]; then
         acu "time" set-time-zone $install_time_zone
@@ -781,6 +778,11 @@ install_part2() {
     if [ "$install_language" != "null" ]; then
         acu locale generate "$install_language" -y
     fi
+
+    ################################################################
+    # Sync Repository Database
+    alert "Syncing Repository Database ..."
+    acu update
 
     ################################################################
     # Install Kernel
@@ -1374,6 +1376,8 @@ check_installer_updates
 
 # Start Installation / Main Menu
 if [ -f "$1" ]; then
+    sudo chown -R $(whoami) $installer_home 
+    export HOME=$installer_home
     start_installation "$1"
 else
     export HOME=$installer_home

@@ -1,0 +1,28 @@
+#   __    ___  _  _    ____  ____  ____   __   ____  __  ____  __  ____  __  ____  ____ 
+#  / _\  / __)/ )( \  (  _ \(  __)(  _ \ /  \ / ___)(  )(_  _)/  \(  _ \(  )(  __)/ ___)
+# /    \( (__ ) \/ (   )   / ) _)  ) __/(  O )\___ \ )(   )( (  O ))   / )(  ) _) \___ \
+# \_/\_/ \___)\____/  (__\_)(____)(__)   \__/ (____/(__) (__) \__/(__\_)(__)(____)(____/
+# List of package repositories managed by acu
+repositories:
+ 
+#- repo_name: example
+#  repo_type: git #available types are acu, agr and git.
+#  repo_url: https://example.com #url format PROTOCOL://HOST/SUBTREE:BRANCH
+ 
+- repo_name: apps
+  repo_type: acu
+  repo_url: https://raw.githubusercontent.com/kwankiu/acu/dev/example/apps.yaml
+ 
+- repo_name: desktop
+  repo_type: acu
+  repo_url: https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/config/desktop.yaml
+
+- repo_name: postinstall
+  repo_type: acu
+  repo_url: https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/config/postinstall.yaml
+
+- repo_name: AUR
+  repo_type: git
+  repo_url: https://aur.archlinux.org
+ 
+ 
