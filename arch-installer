@@ -57,6 +57,9 @@ kernel_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5
 # Full Desktop Environment list
 de_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/desktop.yaml"
 
+# Full Post Install list
+postinstall_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/postinstall.yaml"
+
 # Ping server list for internet check
 # ping Google, Cloudflare and China Mobile DNS (for China users)
 ping_servers=("google.com" "1.1.1.1" "114.114.114.114") 
@@ -748,14 +751,13 @@ install_part1() {
     pacman-key --populate archlinuxarm
 
     alert "Configuring pacman (adding repositories) ..."
-    #Workaround: Add all repo
-    acu rem set 7Ji https://github.com/7Ji/archrepo/releases/download/\$arch pacman
-    acu rem set Experimental https://github.com/kwankiu/PKGBUILDs/releases/download/experimental pacman
-    #TODO: Add necessary repo
-    #for ((i = 0; i < ${#install_repo[@]}; i++)); do
-        #local repo=("${install_repo[i]//,/ }")
-        #acu rem set "$repo" pacman
-    #done
+    for ((i = 0; i < ${#install_repo[@]}; i++)); do
+        if [ "${install_repo[i]}" = "7Ji" ]; then
+            acu rem set 7Ji https://github.com/7Ji/archrepo/releases/download/\$arch pacman
+        elif [ "${install_repo[i]}" = "Experimental" ]; then
+            acu rem set Experimental https://github.com/kwankiu/PKGBUILDs/releases/download/experimental pacman
+        fi
+    done
 
     if [ -n "$install_parallel_downloads" ]; then 
         alert "Configuring pacman (enabling ParallelDownloads)..."
@@ -862,13 +864,6 @@ install_part2() {
     # Full System Upgrade
     alert "Performing Full System Upgrade ..."
     sudo pacman -Syyu --noconfirm
-
-    ################################################################
-    # Post Installation
-    alert "Performing Post Installation"
-    if [ -n "$install_post_install" ]; then
-        acu -y install device-post-install
-    fi
 
     ################################################################
     # Install desktop environment
@@ -1194,8 +1189,26 @@ installer_menu() {
     #select_option "${options[@]}"
     #apps_options=$?
 
+    ################################################################
+    # Add the post install package
+    eval $(acu parse $postinstall_list)
+    local i
+    local j
+    for ((i = 0; i < ${#postinstall_package_name[@]}; i++)); do
+        # Add tags
+        local tags=(${postinstall_compatible[i]})
+        alert "$tags"
+        sleep 3
+        for ((j = 0; j < ${#tags[@]}; j++)); do
+            if [ "${tags[j]}" == "$install_target" ] || ([[ "${tags[j]}" == *"*" ]] && [[ "$install_target" = "${tags[j]%?}"* ]]); then
+                additionalpkg="${postinstall_package_name[i]} "
+                break
+            fi
+        done
+    done
+
     # Default Additional Packages and System Services
-    additionalpkg="networkmanager iw iwd bluez noto-fonts noto-fonts-cjk noto-fonts-emoji"
+    additionalpkg+="networkmanager iw iwd bluez noto-fonts noto-fonts-cjk noto-fonts-emoji"
     enableservices="NetworkManager.service bluetooth.service"
     startservices="NetworkManager.service bluetooth.service"
     # Pacman ParallelDownloads
