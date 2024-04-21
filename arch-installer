@@ -977,6 +977,7 @@ installer_menu() {
         menu_header="Language Setup"
         selected_lang="${langchoice[$choice]%% (*}"
         if ! confirm "                 Confirm setting language to $selected_lang ?"; then
+            selected_lang="" # To handle case that user chosen skip afterwards
             langchoicemenu
             return
         fi
