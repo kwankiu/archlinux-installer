@@ -769,13 +769,13 @@ install_part2() {
 
     ################################################################
     # Set Time Zone
-    if [ "$install_time_zone" != "null" ]; then
+    if [ -n "$install_time_zone" ]; then
         acu "time" set-time-zone $install_time_zone
     fi
 
     ################################################################
     # Set Language
-    if [ "$install_language" != "null" ]; then
+    if [ -n "$install_language" ]; then
         acu locale generate "$install_language" -y
     fi
 
@@ -802,28 +802,28 @@ install_part2() {
     ################################################################
     # Install Kernel Additional Packages
     alert "Installing Kernel Additional Packages ..."
-    if [ "$install_kernel_additional" != "null" ]; then
+    if [ -n "$install_kernel_additional" ]; then
         acu -y install $install_kernel_additional
     fi
 
     ################################################################
     # Install Linux Firmware
     alert "Installing Linux Firmware ..."
-    if [ "$install_firmware" != "null" ]; then
+    if [ -n "$install_firmware" ]; then
         acu -y install $install_firmware
     fi
 
     ################################################################
     # Install Graphics Acceleration
     alert "Installing Graphics Acceleration"
-    if [ "$install_graphics" != "null" ]; then
+    if [ -n "$install_graphics" ]; then
         acu -y install $install_graphics
     fi
 
     ################################################################
     # Install Video Acceleration
     alert "Installing Video Acceleration"
-    if [ "$install_video" != "null" ]; then
+    if [ -n "$install_video" ]; then
         acu -y install $install_video
     fi
 
@@ -835,21 +835,21 @@ install_part2() {
     ################################################################
     # Post Installation
     alert "Performing Post Installation"
-    #if [ "$install_graphics" != "null" ]; then
+    if [ -n "$install_post_install" ]; then
         acu -y install device-post-install
-    #fi
+    fi
 
     ################################################################
     # Install desktop environment
     alert "Installing Desktop environment"
-    if [ "$install_desktop_environment" != "null" ]; then
+    if [ -n "$install_desktop_environment" ]; then
         acu -y install $install_desktop_environment
     fi
 
     ################################################################
     # Install Additional Packages
     alert "Installing Additional Packages"
-    if [ "$install_additional_packages" != "null" ]; then
+    if [ -n "$install_additional_packages" ]; then
         acu -y install $install_additional_packages
     fi
 
@@ -875,7 +875,8 @@ install_part2() {
     sudo rm -rf /usr/bin/installer
     sudo rm -rf ~/.acu
     # Reset bashrc and disable autologin and enable sudo password
-    cp /etc/skel/.bashrc ~
+    sudo rm -rf ~/.bashrc
+    cp -r /etc/skel/.bashrc ~
     sudo rm -rf /etc/systemd/system/getty@tty1.service.d/autologin.conf
     acu user manage $(whoami) sudopw
 
@@ -1317,6 +1318,7 @@ for arg in "$@"; do
             echo "--skip-install-pkg : Skip installing required packages on first boot"
             echo "--create-installer-service : Create a service to auto start this installer on first boot"
             echo "--confirm : Skip the confirm prompt and proceed to installation"
+            echo "--part2 : Run installation part2 (use this only if you have already done part1 installation)"
             exit 0
             ;;
         --create-installer-service)
