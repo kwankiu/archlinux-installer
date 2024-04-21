@@ -135,7 +135,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Joshua's Rockchip 6.1 Kernel
@@ -160,7 +160,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Joshua's Rockchip 6.1 BIN Kernel
@@ -186,7 +186,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Joshua's Rockchip 6.1 Panthor Kernel
@@ -210,7 +210,7 @@ kernel:
         graphics:
           - mesa-panfrost-git
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Radxa Rockchip 5.10 Kernel
@@ -234,7 +234,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Radxa Rockchip 5.10 Kernel
@@ -259,7 +259,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Radxa Rockchip 6.1 Kernel
@@ -284,7 +284,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Orange Pi Rockchip 5.10 Kernel
@@ -309,7 +309,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Orange Pi Rockchip 5.10 Kernel
@@ -331,7 +331,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # wyf9661's Rockchip 6.1 Kernel
@@ -355,7 +355,7 @@ kernel:
         graphics:
           - mesa-panfork-git
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Collabora RK3588 Hardware Enablement Kernel
@@ -376,7 +376,7 @@ kernel:
         graphics:
           - mesa-panfrost-git
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # 7Ji's Mainline Kernel
@@ -398,7 +398,7 @@ kernel:
         graphics:
           - mesa-panfork-git
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
       # Armbian's Edge Mainline Kernel
@@ -419,7 +419,7 @@ kernel:
         graphics:
           - mesa-panfork-git
         video:
-          - ffmpeg-rockchip-git
+          - ffmpeg-mpp-git
         additional: null
 
 ########################################################################
