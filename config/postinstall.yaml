@@ -80,6 +80,7 @@ postinstall:
         category: Post-Install
         description: SBC Post Install
         compatible:
+          - xunlong-orangepi-5*
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
         commands: |
