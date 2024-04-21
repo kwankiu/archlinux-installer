@@ -135,6 +135,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -160,6 +161,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -186,6 +188,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -210,6 +213,7 @@ kernel:
         graphics:
           - mesa-panfrost-git
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -234,6 +238,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -259,6 +264,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -284,6 +290,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -309,6 +316,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -331,6 +339,7 @@ kernel:
           - mali-valhall-g610-firmware
           - libmali-valhall-g610-x11-wayland-gbm
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -355,6 +364,7 @@ kernel:
         graphics:
           - mesa-panfork-git
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -376,6 +386,7 @@ kernel:
         graphics:
           - mesa-panfrost-git
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -398,6 +409,7 @@ kernel:
         graphics:
           - mesa-panfork-git
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
@@ -419,6 +431,7 @@ kernel:
         graphics:
           - mesa-panfork-git
         video:
+          - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
