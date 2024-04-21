@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24042101
+installerver=24042102
 
 # Required ACU version
 acuver=tmp
