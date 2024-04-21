@@ -899,10 +899,9 @@ install_part2() {
     # Remove installer used directories
     sudo rm -rf $installation_file
     sudo rm -rf /usr/bin/installer
-    sudo rm -rf ~/.acu
+    sudo rm -rf /usr/lib/installer
     # Reset bashrc and disable autologin and enable sudo password
-    sudo rm -rf ~/.bashrc
-    cp -r /etc/skel/.bashrc ~
+    cp -r /etc/skel/.bashrc /home/$(whoami)
     sudo rm -rf /etc/systemd/system/getty@tty1.service.d/autologin.conf
     acu user manage $(whoami) sudopw
 
