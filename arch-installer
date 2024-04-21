@@ -429,20 +429,21 @@ input() {
     done
 
     # launch TUI using dialog
-    if ! local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+    local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
         --title " $dialog_title " --nocancel \
         --inputbox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0 \
     3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
-    ); then
+    )
+
+    if [ -z "$value" ]; then
         # CLI Fallback
         local value
-        title
+        title  > /dev/tty
         local p="$(colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${opt//\\Z[0-7bun]/}"): "
         read -p "$p" value
     fi
 
     echo $value
-    
 }
 
 # TUI Form Input Menu
@@ -469,9 +470,9 @@ form() {
     declare -a options_string=()
     for opt; do
         if [ -n "${menu_form_type[i]}" ]; then
-            options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "5" "${menu_form_type[i]}")
+            options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "0" "${menu_form_type[i]}")
         else
-            options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "5" "0")
+            options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "0" "0")
         fi
         ((i++))
     done
@@ -485,6 +486,36 @@ form() {
         "${options_string[@]}" \
     3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
     )
+
+    if [ -z "$value" ]; then
+        ## CLI Fallback
+        local value
+        title > /dev/tty
+        for ((i = 0; i < ${#options_string[@]}; i+=9)); do
+            local p="$(colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${options_string[i]}")"
+            if [ -n "${options_string[i+3]}" ]; then
+                local dvalp="(${options_string[i+3]})"
+            else
+                local dvalp=""
+            fi
+            if [ "${options_string[i+8]}" = "0" ]; then
+                # Normal input
+                read -p "${p}: " input_value
+            elif [ "${options_string[i+8]}" = "1" ]; then
+                # Password input
+                read -s -p "${p}: " input_value
+                echo > /dev/tty
+            elif [ "${options_string[i+8]}" = "2" ]; then
+                # Readonly
+                echo -e "${p}: $dvalp" > /dev/tty
+            fi
+            if [ -z "$value" ]; then
+                value="$input_value"
+            else
+                value+=" $input_value"
+            fi
+        done
+    fi
 
     echo $value
 }
