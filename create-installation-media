@@ -876,11 +876,8 @@ done
   title
   # Download Installer
   colorecho "$GREEN" "Downloading Installer ..."
-  if [ "$arginstaller" == "cli" ] || [ -z "$arginstaller" ]; then
-    installer_name="arch-rock-installer"
-    compiled_pkg_dir="/usr/lib/compiled-packages"
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/$installer_name
-  elif [ "$arginstaller" == "tui" ]; then
+
+  if [ "$arginstaller" == "tui" ] || [ -z "$arginstaller" ]; then
     installer_name="arch-installer"
     compiled_pkg_dir="/usr/lib/installer/packages"
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/$installer_name
@@ -893,6 +890,10 @@ done
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/acu_config.yaml
     sudo mkdir -p "$root_mount_dir/usr/lib/installer/.acu/config"
     sudo cp -r acu_config.yaml "$root_mount_dir/usr/lib/installer/.acu/config/config.yaml"
+  elif [ "$arginstaller" == "legacy" ]; then
+    installer_name="arch-rock-installer"
+    compiled_pkg_dir="/usr/lib/compiled-packages"
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/$installer_name
   fi
 
   # Copy Installer
