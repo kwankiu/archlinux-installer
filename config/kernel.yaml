@@ -46,8 +46,8 @@ kernel:
           - radxa-cm5*
           - radxa-zero-3*
           - khadas-edge*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
         firmware: null
         graphics:
           - mesa
@@ -118,15 +118,15 @@ kernel:
           - radxa-cm5*
           - radxa-zero-3*
           - khadas-edge*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
         recommended:
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-zero-3*
           - khadas-edge*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
         experimental: null
         firmware:
           - linux-firmware-joshua-git
@@ -149,8 +149,8 @@ kernel:
           - radxa-cm5*
           - radxa-zero-3*
           - khadas-edge*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
         recommended: null
         experimental: null
         firmware:
@@ -177,8 +177,8 @@ kernel:
           - radxa-cm5*
           - radxa-zero-3*
           - khadas-edge*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -203,8 +203,8 @@ kernel:
           - radxa-cm5*
           - radxa-zero-3*
           - khadas-edge*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -294,9 +294,11 @@ kernel:
         repo:
           - 7Ji
         compatible:
+          - xunlong-orangepi-5*
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
         recommended:
+          - xunlong-orangepi-5*
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
         experimental: null
@@ -317,6 +319,7 @@ kernel:
         repo:
           - 7Ji
         compatible:
+          - xunlong-orangepi-5*
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
         recommended: null
@@ -345,8 +348,8 @@ kernel:
           - radxa-cm5*
           - radxa-zero-3*
           - khadas-edge*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -367,7 +370,7 @@ kernel:
         experimental:
           - radxa-rock-5a
           - radxa-rock-5b
-          - khadas-edge*
+          - khadas-edge2
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -378,7 +381,7 @@ kernel:
 
       # 7Ji's Mainline Kernel
       - base: linux-aarch64-7ji
-        description: 7Ji's Linux Mainline Kernel with patches for Amlogic devices and RK3588
+        description: 7Ji Linux Mainline Kernel with patches for Amlogic and RK3588
         version: lastest stable
         repo:
           - 7Ji
@@ -389,8 +392,29 @@ kernel:
           - radxa-cm5*
           - radxa-zero-3*
           - khadas-edge*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
+        firmware: null
+        graphics:
+          - mesa-panfork-git
+        video:
+          - ffmpeg-rockchip-git
+        additional: null
+
+      # Armbian's Edge Mainline Kernel
+      - base: linux-aarch64-rockchip-armbian-git
+        description: Armbian Linux Mainline kernel with patches for rk3588
+        version: lastest stable
+        repo:
+          - 7Ji
+        compatible: null
+        recommended: null
+        experimental:
+          - radxa-rock-5*
+          - radxa-cm5*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
         firmware: null
         graphics:
           - mesa-panfork-git
