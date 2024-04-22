@@ -103,15 +103,16 @@ colorecho() {
 
 # Title / Heading
 title() {
-  clear
-  echo "---------------------------------------------------------------------"
-  colorecho "$BLUE" "Arch Linux Installer - Create Installation Media"
-  echo "---------------------------------------------------------------------"
+    clear
+    echo "---------------------------------------------------------------------"
+    colorecho "$BLUE" "Arch Linux Installer - Create Installation Media"
+    echo "---------------------------------------------------------------------"
 }
 
 ################################################################
-# Function to display a list of available disks
+# Functions for Selecting disk to install and creating new image
 
+# get list of available disks for WSL (Windows)
 wsl_disks() {
     local i
     k=1
@@ -138,6 +139,7 @@ wsl_disks() {
     done
 }
 
+# List available disks for WSL (Windows)
 list_wsl() {
   options=()
 
@@ -177,6 +179,7 @@ list_wsl() {
   fi
 }
 
+# List available disks
 list_disks() {
   options=()
   disks=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
@@ -213,6 +216,7 @@ list_disks() {
   fi
 }
 
+# Create a disk image
 create_img() {
   
   if [ ! -d "out" ]; then
@@ -229,47 +233,42 @@ create_img() {
     selected_disk=$argimg
   fi
 
+  # if $argmountimg is not set, create a disk image, else use the specified image as base
   if [ -z "$argmountimg" ]; then
-  # Check if out/$selected_disk exists and generate a unique name if needed
-  if [ -e "out/$selected_disk" ]; then
-      counter=0
-      base_name="${selected_disk%.img}"
-      new_name="${base_name}.img"
+    # Check if out/$selected_disk exists and generate a unique name if needed
+    if [ -e "out/$selected_disk" ]; then
+        counter=0
+        base_name="${selected_disk%.img}"
+        new_name="${base_name}.img"
 
-      while [ -e "out/$new_name" ]; do
-          counter=$((counter + 1))
-          new_name="${base_name}-${counter}.img"
-      done
+        while [ -e "out/$new_name" ]; do
+            counter=$((counter + 1))
+            new_name="${base_name}-${counter}.img"
+        done
 
-      selected_disk="$new_name"
-      echo "Renamed to $selected_disk as file already exists."
-  fi
-
-  selected_disk="out/$selected_disk"  
-  sudo truncate -s $img_size $selected_disk
-  colorecho "$GREEN" "Image created at $selected_disk"
-  is_img=$selected_disk
-
-  if [ -z "$argdisk" ]; then
-    img_mount=$(sudo losetup -fP --show $(pwd)/$selected_disk)
+        selected_disk="$new_name"
+        echo "Renamed to $selected_disk as file already exists."
+    fi
+    selected_disk="out/$selected_disk"  
+    sudo truncate -s $img_size $selected_disk
+    colorecho "$GREEN" "Image created at $selected_disk"
+    is_img=$selected_disk
+    if [ -z "$argdisk" ]; then
+      img_mount=$(sudo losetup -fP --show $(pwd)/$selected_disk)
+    else
+      img_mount=$argdisk
+      sudo losetup -P $img_mount $(pwd)/$selected_disk
+    fi
+    selected_disk=$img_mount
   else
-    img_mount=$argdisk
-    sudo losetup -P $img_mount $(pwd)/$selected_disk
-  fi
-
-  selected_disk=$img_mount
-
-  else
-
-  img_mount=$(sudo losetup -fP --show $argimg)
-  is_img=$argimg
-  selected_disk=$img_mount
-  
+    img_mount=$(sudo losetup -fP --show $argimg)
+    is_img=$argimg
+    selected_disk=$img_mount
   fi
   colorecho "$GREEN" "Image mounted on $selected_disk"
 }
 
-
+# Confirm selected disk
 confirm_disk() {
     drive=$selected_disk
     colorecho "$GREEN" "Selected disk $drive."
@@ -293,7 +292,9 @@ confirm_disk() {
 }
 
 ################################################################
+# Functions to Get Packages
 
+# Download wifi related packages to $compiled_pkg_folder
 add_wifi_pkg() {
   pkg_tar=()
 
@@ -321,6 +322,7 @@ add_wifi_pkg() {
   sudo rm -rf "${pkg_tar[@]}"
 }
 
+# Download additional packages to $compiled_pkg_folder
 add_pkg() {
   colorecho "$GREEN" "Downloading $argaddpkg ..."
   echo -e "y" | ghrel_packages $argaddpkg
@@ -335,6 +337,7 @@ add_pkg() {
   sudo rm -rf "${pkg_tar[@]}"
 }
 
+# Install the linux kernel (manually)
 install_kernel() {
   kernel_name=$1
   pkg_tar_dir=$(mktemp -d)
@@ -368,7 +371,7 @@ install_kernel() {
   sudo rm -rf "${pkg_tar[@]}" "${non_pkg[@]}"
 }
 
-# Install Packages from a GitHub Release Repo
+# Download Packages from a GitHub Release Repo
 ghrel_packages() {
 
     if [ -z "$1" ]; then
@@ -455,7 +458,6 @@ archarm_packages() {
 
         done
     fi
-
 }
 
 ################################################################
@@ -469,7 +471,7 @@ for arg in "$@"; do
       colorecho "$GREEN" "Options"
       echo "-h / --help : Usage and Infomation of this Installation Tool."
       echo "-d / --dev : Use latest dev version of this Installation Tool."
-      echo "-i / --image : Create a disk image with default image name at out folder."
+      echo "-i / --image : Create a disk image with default image name (<model>-archlinux-<installer>.<image_format>) at out folder."
       echo "-k / --kernel : Create Arch Linux using default kernel option."
       echo "-b / --bootpart : Create Arch Linux with a seperated boot partition."
       echo "-c / --compress : Compress the Disk Image to .img.xz"
@@ -480,11 +482,11 @@ for arg in "$@"; do
       echo "--kernel=<kernel_name> : Set kernel package to get from repo."
       echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
       echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
-      echo "--sbc=<model> : Set an SBC model which will be used to generate extlinux and this variable will also be passed to installer."
+      echo "--model=<model> : Set a device model to generate boot config for."
       echo "--uboot=<path> : Flash u-boot to the target disk or image. The specified path must contain idbloader.img and uboot.itb"
       echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
-      echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 500MiB for Config or 32MiB for Boot)."
-      echo "--installer=<type> : Set which Installer to use (options: cli, tui)."
+      echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 32MiB for Config or 500MiB for Boot)."
+      echo "--installer=<type> : Set which Installer to use (options: installer (default), legacy)."
       echo "--script=<path> : Run an additional script in chroot."
       exit 1
       ;;
@@ -522,9 +524,9 @@ for arg in "$@"; do
       argkrl="${arg#*=}"
       colorecho "$GREEN" "Build image with kernel: ${argkrl}"
       ;;
-    --sbc=*)
-      argsbc="${arg#*=}"
-      colorecho "$GREEN" "Build image for target device: ${argsbc}"
+    --model=* | --sbc=*)
+      argmodel="${arg#*=}"
+      colorecho "$GREEN" "Build image for target device: ${argmodel}"
       ;;
     --addpkg=*)
       argaddpkg="${arg#*=}"
@@ -545,7 +547,7 @@ for arg in "$@"; do
       argbootpted="${arg#*=}"
       ;;
     -i | --image)
-      argimg="archlinux-installer-rock5.img"
+      argimg="aarch64-archlinux-installer.img"
       ;;
     -k | --kernel)
       argkrl="rkbsp"
@@ -566,13 +568,11 @@ for arg in "$@"; do
   esac
 done
 
-  ################################################################
+################################################################
   # Main Program
   title
 
-# Install required packages
-
-  # For WSL
+  # Check if system is WSL (Windows)
   if [ ! -z "$WSL_DISTRO_NAME" ]; then
     colorecho "$YELLOW" "Warning: Running on WSL2 is experimental."
     if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ] || [ -x "$(command -v apt)" ]; then
@@ -607,7 +607,7 @@ done
     fi
   fi
 
-  # Check if parted is installed
+  # Check if bsdtar is installed
   if ! [ -x "$(command -v bsdtar)" ]; then
     # Check Linux distribution
     colorecho "$YELLOW" "bsdtar command not found, trying to install..."
@@ -653,7 +653,7 @@ done
   fi
 
   ################################################################
-  # This runs when there is no parameters specified
+  # Show interactive menu if no corresponding arguments were set
 
   # Choose drive to install / create .img image
   if [ -z "$argimg" ] && [ -z "$argdisk" ]; then
@@ -702,92 +702,92 @@ done
   fi
 
   ################################################################
-  # Main Setup
+  # Start creating the installation media
   title
-  root_mount_dir=$(mktemp -d)
+  root_mount_dir=$(mktemp -d) #create tmp dir for rootfs partition
 
+  # if boot part argument is set, make a boot partition, else we will use the /boot of rootfs
   if [ "$argbootpt" = 1 ]; then
-    boot_mount_dir=$(mktemp -d)
+    boot_mount_dir=$(mktemp -d) #create tmp dir for boot partition
   fi
 
+  # if $argmountimg is not set, format and partition the image/disk, else use the specified image as base
   if [ -z "$argmountimg" ]; then
-  # Unmount all partitions of the specified drive
-  colorecho "$GREEN" "Unmounting disk ..."
-  partitions=$(ls ${drive}* 2>/dev/null)
-  if [ "$partitions" ]; then
-    for partition in $partitions; do
-      sudo umount $partition 2>/dev/null || true
-    done
-  fi
+    # Unmount all partitions of the specified drive
+    colorecho "$GREEN" "Unmounting disk ..."
+    partitions=$(ls ${drive}* 2>/dev/null)
+    if [ "$partitions" ]; then
+      for partition in $partitions; do
+        sudo umount $partition 2>/dev/null || true
+      done
+    fi
 
-  # Create GPT table and partitions
-  colorecho "$GREEN" "Formatting and partitioning disk ..."
-  echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
+    # Create GPT table and partitions
+    colorecho "$GREEN" "Formatting and partitioning disk ..."
+    echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
 
-  if [ -z "$argbootptst" ]; then
-    argbootptst="16MiB"
-  fi
+    if [ -z "$argbootptst" ]; then
+      argbootptst="16MiB"
+    fi
 
-  if [ -z "$argbootpted" ]; then
+    if [ -z "$argbootpted" ]; then
+      if [ "$argbootpt" = 1 ]; then
+        argbootpted="500MiB"
+      else
+        argbootpted="32MiB"
+      fi
+    fi
+
     if [ "$argbootpt" = 1 ]; then
-      argbootpted="500MiB"
+      sudo parted $drive mkpart boot fat32 $argbootptst $argbootpted
+      sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
+      sudo parted $drive set 1 boot on
     else
-      argbootpted="32MiB"
+      sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
+      sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
+      sudo parted $drive set 2 boot on
     fi
-  fi
 
-  if [ "$argbootpt" = 1 ]; then
-    sudo parted $drive mkpart boot fat32 $argbootptst $argbootpted
-    sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
-    sudo parted $drive set 1 boot on
-  else
-    sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
-    sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
-    sudo parted $drive set 2 boot on
-  fi
+    # Pack u-boot
+    if [ -n "$arguboot" ]; then
+      colorecho "$GREEN" "Flashing u-boot ..."
 
-  # Pack u-boot
-  if [ -n "$arguboot" ]; then
-    colorecho "$GREEN" "Flashing u-boot ..."
+      if [ -f "$arguboot/idbloader.img" ] && [ -f "$arguboot/u-boot.itb" ]; then
+          sudo dd if="$arguboot/idbloader.img" of="$drive" seek=64 conv=notrunc
+          sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+      elif [ -f "$arguboot/idblock.bin" ] && [ -f "$arguboot/uboot.img" ]; then 
+          sudo dd if="$arguboot/idblock.bin" of="$drive" seek=64 conv=notrunc
+          sudo dd if="$arguboot/uboot.img" of="$drive" seek=16384 conv=notrunc
+      elif [ -f "$arguboot/tpl-spl.img" ] && [ -f "$arguboot/u-boot.itb" ]; then   
+          sudo dd if="$arguboot/tpl-spl.img" of="$drive" seek=64 conv=notrunc
+          sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+      else
+          colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
+      fi
+      
+    fi
 
-    if [ -f "$arguboot/idbloader.img" ] && [ -f "$arguboot/u-boot.itb" ]; then
-        sudo dd if="$arguboot/idbloader.img" of="$drive" seek=64 conv=notrunc
-        sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
-    elif [ -f "$arguboot/idblock.bin" ] && [ -f "$arguboot/uboot.img" ]; then 
-        sudo dd if="$arguboot/idblock.bin" of="$drive" seek=64 conv=notrunc
-        sudo dd if="$arguboot/uboot.img" of="$drive" seek=16384 conv=notrunc
-    elif [ -f "$arguboot/tpl-spl.img" ] && [ -f "$arguboot/u-boot.itb" ]; then   
-        sudo dd if="$arguboot/tpl-spl.img" of="$drive" seek=64 conv=notrunc
-        sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+    # Find the partitions
+    if [ -e $drive"1" ]; then
+      root_partition=$drive"2"
+      boot_partition=$drive"1"
     else
-        colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
+      root_partition=$drive"p2"
+      boot_partition=$drive"p1"	
     fi
-    
-  fi
 
-  # Find the partitions
-  if [ -e $drive"1" ]; then
-    root_partition=$drive"2"
-    boot_partition=$drive"1"
+    # Format the partitions
+    echo -e 'y' |sudo mkfs.ext4 $root_partition 
+    sudo mkfs.vfat -F32 $boot_partition
   else
-    root_partition=$drive"p2"
-    boot_partition=$drive"p1"	
-  fi
-
-  # Format the partitions
-  echo -e 'y' |sudo mkfs.ext4 $root_partition 
-  sudo mkfs.vfat -F32 $boot_partition
-  else
-
-  # Find the partitions
-  if [ -e $drive"1" ]; then
-    root_partition=$drive"2"
-    boot_partition=$drive"1"
-  else
-    root_partition=$drive"p2"
-    boot_partition=$drive"p1"	
-  fi
-
+    # Find the partitions
+    if [ -e $drive"1" ]; then
+      root_partition=$drive"2"
+      boot_partition=$drive"1"
+    else
+      root_partition=$drive"p2"
+      boot_partition=$drive"p1"	
+    fi
   fi
 
   title
@@ -835,17 +835,17 @@ done
   elif found_file=$(sudo ls -1 $boot_mount_dir/extlinux/extlinux.*.template 2>/dev/null); then
         colorecho "$YELLOW" "Using package provided template: $found_file"
         sudo mv "$found_file" $boot_mount_dir/extlinux/extlinux.conf
-  elif [ ! -z "$argsbc" ]; then
-    colorecho "$GREEN" "Getting ${argsbc}.extlinux.template ..."
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/boot-templates/${argsbc}.extlinux.template
+  elif [ ! -z "$argmodel" ]; then
+    colorecho "$GREEN" "Getting ${argmodel}.extlinux.template ..."
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/boot-templates/${argmodel}.extlinux.template
 
     # Check if the extlinux directory exists, create it if it doesn't
     if [ ! -d "$boot_mount_dir/extlinux" ]; then
         sudo mkdir -p "$boot_mount_dir/extlinux"
     fi
 
-    sudo cp -r ${argsbc}.extlinux.template $boot_mount_dir/extlinux/extlinux.conf
-    sudo rm -rf ${argsbc}.extlinux.template
+    sudo cp -r ${argmodel}.extlinux.template $boot_mount_dir/extlinux/extlinux.conf
+    sudo rm -rf ${argmodel}.extlinux.template
   else
     colorecho "$RED" "Error, neither sbc nor extlinux template were specified. Unable to generate extlinux.conf. You may need to create extlinux.conf manually."
   fi
@@ -900,9 +900,9 @@ done
   colorecho "$GREEN" "Copying Installer ..."
   sudo chmod +x $installer_name
   sudo cp -r "$installer_name" "$root_mount_dir/usr/bin/installer"
-  if [ ! -z "$argsbc" ]; then
-    sudo sed -i "s/install_target=\"rock5\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer" # old installer
-    #sudo sed -i "s/^#install_target=\".*\"/install_target=\"$argsbc\"/g" "$root_mount_dir/usr/bin/installer" # new installer (optional)
+  if [ ! -z "$argmodel" ]; then
+    sudo sed -i "s/install_target=\"rock5\"/install_target=\"$argmodel\"/g" "$root_mount_dir/usr/bin/installer" # old installer
+    #sudo sed -i "s/^#install_target=\".*\"/install_target=\"$argmodel\"/g" "$root_mount_dir/usr/bin/installer" # new installer (optional)
   fi
 
   if [ ! -z "$is_img" ]; then
@@ -985,7 +985,7 @@ done
       colorecho "$GREEN" "Chroot into system ..."
       sudo arch-chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-installer-service
-    /usr/bin/script.sh "$argsbc"
+    /usr/bin/script.sh "$argmodel"
 END
     else
       colorecho "$GREEN" "Chroot into system ..."
