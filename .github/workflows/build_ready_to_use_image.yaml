@@ -34,7 +34,7 @@ jobs:
       - name: Build Collabora Gnome Image for Rock 5B
         run: |
           curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/collabora-gnome-install.sh
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 -c --script=collabora-gnome-install.sh --size=8G --image=rock-5b-archlinux-gnome-collabora.img --uboot=usr/lib/u-boot/rock-5b
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --model=rock5 -c --script=collabora-gnome-install.sh --size=8G --image=rock-5b-archlinux-gnome-collabora.img --uboot=usr/lib/u-boot/rock-5b
           cp -r out/rock-5b-archlinux-gnome-collabora.img.xz rock-5b-archlinux-gnome-collabora.img.xz
 
       - uses: ncipollo/release-action@v1
@@ -66,7 +66,7 @@ jobs:
       - name: Build BSP6 Panthor Gnome Image for Rock 5B
         run: |
           curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/bsp6-panthor-gnome-install.sh
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=rock5 -c --script=bsp6-panthor-gnome-install.sh --size=8G --image=rock-5b-archlinux-gnome-bsp6-panthor.img --uboot=usr/lib/u-boot/rock-5b
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --model=rock5 -c --script=bsp6-panthor-gnome-install.sh --size=8G --image=rock-5b-archlinux-gnome-bsp6-panthor.img --uboot=usr/lib/u-boot/rock-5b
           cp -r out/rock-5b-archlinux-gnome-bsp6-panthor.img.xz rock-5b-archlinux-gnome-bsp6-panthor.img.xz
 
       - uses: ncipollo/release-action@v1
@@ -98,7 +98,7 @@ jobs:
       - name: Build BSP6 Panthor Gnome Image for Edge 2
         run: |
           curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/bsp6-panthor-gnome-install.sh
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=edge2 -c --script=bsp6-panthor-gnome-install.sh --size=8G --image=edge2-archlinux-gnome-bsp6-panthor.img --uboot=usr/lib/u-boot
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --model=edge2 -c --script=bsp6-panthor-gnome-install.sh --size=8G --image=edge2-archlinux-gnome-bsp6-panthor.img --uboot=usr/lib/u-boot
           cp -r out/edge2-archlinux-gnome-bsp6-panthor.img.xz edge2-archlinux-gnome-bsp6-panthor.img.xz
 
       - name: Add meta data to Image for Edge 2

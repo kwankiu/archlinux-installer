@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Image for Edge 2
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --sbc=edge2 --addpkg=linux-firmware-joshua-git -c --image=edge2-archlinux-installer.img --uboot=usr/lib/u-boot
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rockchip-joshua-git --model=edge2 --addpkg=linux-firmware-joshua-git -c --image=edge2-archlinux-installer.img --uboot=usr/lib/u-boot
           cp -r out/edge2-archlinux-installer.img.xz edge2-archlinux-installer.img.xz
 
       - name: Add meta data to Image for Edge 2

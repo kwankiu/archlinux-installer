@@ -26,7 +26,7 @@ jobs:
 
       - name: Build Image for Raspberry Pi
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rpi --addpkg=firmware-raspberrypi --sbc=rpi -c -b --bootpartstart=4MiB --image=rpi-archlinux-installer.img
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-rpi --addpkg=firmware-raspberrypi --model=rpi -c -b --bootpartstart=4MiB --image=rpi-archlinux-installer.img
           cp -r out/rpi-archlinux-installer.img.xz rpi-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1

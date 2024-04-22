@@ -27,7 +27,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build Image for AArch64
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --sbc=generic -c --image=aarch64-archlinux-installer.img
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --model=generic -c --image=aarch64-archlinux-installer.img
           cp -r out/aarch64-archlinux-installer.img.xz aarch64-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1

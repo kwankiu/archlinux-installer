@@ -35,7 +35,7 @@ jobs:
 
       - name: Build Image for Zero 3
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-aarch64-rockchip-bsp5.10-radxa --sbc=zero3 --addpkg=linux-firmware-joshua-git -c --image=zero-3-archlinux-installer.img --uboot=usr/lib/u-boot/radxa-zero3
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-aarch64-rockchip-bsp5.10-radxa --model=zero3 --addpkg=linux-firmware-joshua-git -c --image=zero-3-archlinux-installer.img --uboot=usr/lib/u-boot/radxa-zero3
           cp -r out/zero-3-archlinux-installer.img.xz zero-3-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1
@@ -67,7 +67,7 @@ jobs:
 
       - name: Build Image for Rock 2A
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-aarch64-rockchip-bsp5.10-radxa --sbc=rock2 --addpkg=linux-firmware-joshua-git -c --image=rock-2a-archlinux-installer.img --uboot=usr/lib/u-boot/rock-2a
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --kernel=linux-aarch64-rockchip-bsp5.10-radxa --model=rock2 --addpkg=linux-firmware-joshua-git -c --image=rock-2a-archlinux-installer.img --uboot=usr/lib/u-boot/rock-2a
           cp -r out/rock-2a-archlinux-installer.img.xz rock-2a-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1
