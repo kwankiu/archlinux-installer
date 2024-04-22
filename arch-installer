@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24042103
+installerver=24042201
 
 # Required ACU version
 acuver=0.0.7-dev
@@ -751,10 +751,11 @@ install_part1() {
     pacman-key --populate archlinuxarm
 
     alert "Configuring pacman (adding repositories) ..."
-    for ((i = 0; i < ${#install_repo[@]}; i++)); do
-        if [ "${install_repo[i]}" = "7Ji" ]; then
+    local install_repo_list=($install_repo)
+    for ((i = 0; i < ${#install_repo_list[@]}; i++)); do
+        if [ "${install_repo_list[i]}" = "7Ji" ]; then
             acu rem set 7Ji https://github.com/7Ji/archrepo/releases/download/\$arch pacman
-        elif [ "${install_repo[i]}" = "Experimental" ]; then
+        elif [ "${install_repo_list[i]}" = "Experimental" ]; then
             acu rem set Experimental https://github.com/kwankiu/PKGBUILDs/releases/download/experimental pacman
         fi
     done
