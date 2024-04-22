@@ -880,7 +880,7 @@ title
 # Download Installer
 colorecho "$GREEN" "Downloading Installer ..."
 
-if [ "$arginstaller" == "tui" ] || [ -z "$arginstaller" ]; then
+if [ "$arginstaller" == "installer" ] || [ -z "$arginstaller" ]; then
     installer_name="arch-installer"
     compiled_pkg_dir="/usr/lib/installer/packages"
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/$installer_name
