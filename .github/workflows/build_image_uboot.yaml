@@ -128,6 +128,20 @@ jobs:
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer.img -c $args
           cp -r out/*-archlinux-*.img.xz .
 
+      - name: Add meta data to Image (OOWOW)
+        if: startsWith(matrix.model_name, 'khadas')
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/khadas/krescue/master/tools/xze) "${{ matrix.model_name }}-archlinux-installer.img.xz" \
+             --meta \
+             label="Arch Linux Installer" \
+             builder="Arch Linux Installer" \
+             date="$(LANG=C TZ= date)" \
+             match=BOARD=Edge2 \
+             link=https://github.com/kwankiu/archlinux-installer-rock5/wiki \
+             duration=250 \
+             desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for ${{ matrix.model_name }}"
+        continue-on-error: true
+
       - name: Upload to GitHub Release
         uses: ncipollo/release-action@v1
         with:
