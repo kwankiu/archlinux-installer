@@ -74,6 +74,7 @@ jobs:
             echo "Building image for $model"
             case $model in
               asahi)
+                # Notes: this should be rootfs only & WIP
                 args="--kernel=linux-asahi"
                 ;;
               raspberrypi)
@@ -82,20 +83,20 @@ jobs:
                 ;;
               radxa-zero*)
                 model_name="${model#*-}"
-                args="--kernel=linux-rockchip-joshua-git --addpkg=linux-firmware-joshua-git --uboot=usr/lib/u-boot/${model_name}"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --uboot=usr/lib/u-boot/${model_name}"
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
                 ;;
               radxa-*)
                 model_name="${model#*-}"
-                args="--kernel=linux-rockchip-joshua-git --addpkg=linux-firmware-joshua-git --uboot=usr/lib/u-boot/${model_name}"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --uboot=usr/lib/u-boot/${model_name}"
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
                 ;;
               khadas-*)
-                args="--kernel=linux-rockchip-joshua-git --addpkg=linux-firmware-joshua-git --uboot=usr/lib/u-boot"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --uboot=usr/lib/u-boot"
                 uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.5-2017.09_arm64.deb"
                 ;;
               orangepi-*)
-                args="--kernel=linux-aarch64-orangepi5-git --addpkg=linux-firmware-orangepi-git --uboot=usr/lib/u-boot -b"
+                args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --uboot=usr/lib/u-boot -b"
                 uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20230704.git1f70ac3a-9_arm64.deb"
                 ;;
               *)
