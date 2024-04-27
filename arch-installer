@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24042201
+installerver=24042701
 
 # Required ACU version
 acuver=0.0.7-dev
@@ -826,12 +826,11 @@ install_part2() {
     sudo rm -rf /boot/initr*
     sudo rm -rf /boot/dtbs
     sudo rm -rf /usr/lib/modules/*
+    sudo rm -rf /usr/src/*
     sudo rm -rf /etc/mkinitcpio.d/*
 
     alert "Installing Linux kernel ..."
-    oldkrlrel=$(uname -r)
-    acu -y install $install_kernel $install_kernel-headers --device=$install_target
-    sudo rm -rf /boot/dtbs/$oldkrlrel /lib/modules/$oldkrlrel
+    acu -y install $install_kernel $install_kernel-headers
 
     ################################################################
     # Install Kernel Additional Packages
