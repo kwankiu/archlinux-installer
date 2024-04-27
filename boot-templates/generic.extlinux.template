@@ -1,8 +1,0 @@
-#timeout 10
-#menu title select kernel
-
-label Archlinux
-    kernel /vmlinuz-%PKGBASE%
-    initrd /initramfs-%PKGBASE%.img
-    devicetreedir /dtbs/%PKGBASE%
-    append   root=UUID=CHANGEME rw quiet splash

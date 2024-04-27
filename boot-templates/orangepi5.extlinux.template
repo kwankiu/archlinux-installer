@@ -1,9 +1,0 @@
-#timeout 10
-#menu title select kernel
-
-label Archlinux
-    kernel /vmlinuz-%PKGBASE%
-    initrd /initramfs-%PKGBASE%.img
-    fdt /dtbs/%PKGBASE%/rockchip/rk3588s-orangepi-5.dtb
-    fdtoverlays	%PKGBASE%
-    append   root=UUID=CHANGEME rw quiet splash
