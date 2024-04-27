@@ -825,8 +825,10 @@ if [ "$argbootpt" = 1 ]; then
 fi
 
 # Copy kernel files
-colorecho "$GREEN" "Copying Linux Kernel ..."
-sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
+if [ "$argkrl" != "linux" ]; then
+    colorecho "$GREEN" "Copying Linux Kernel ..."
+    sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
+fi
 
 title
 
