@@ -101,7 +101,7 @@ jobs:
                 ;;
               *)
                 # Generic
-                args="--kernel=linux-aarch64"
+                args="--kernel=linux"
                 ;;
             esac
           done
