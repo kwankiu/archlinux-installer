@@ -126,13 +126,12 @@ jobs:
           args: ${{ env.ARGS }}
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer.img -c $args
-          cp -r out/*-archlinux-*.img.xz *-archlinux-*.img.xz
+          cp -r out/*-archlinux-*.img.xz .
 
       - name: Upload to GitHub Release
         uses: ncipollo/release-action@v1
         with:
             artifacts: "*-archlinux-*.img.xz"
             makeLatest: false
-            prerelease: true
             allowUpdates: true
             omitBody: true
