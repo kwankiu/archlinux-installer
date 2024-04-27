@@ -486,7 +486,7 @@ for arg in "$@"; do
         echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
         echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
         echo "--model=<model> : Set a device model to generate boot config for."
-        echo "--uboot=<path> : Flash u-boot to the target disk or image. The specified path must contain idbloader.img and uboot.itb"
+        echo "--bootloader=<path> : Flash a bootloader to the target disk or image. The specified path must contain idbloader.img and uboot.itb"
         echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
         echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 32MiB for Config or 500MiB for Boot)."
         echo "--installer=<type> : Set which Installer to use (options: installer (default), legacy)."
@@ -539,9 +539,13 @@ for arg in "$@"; do
         adrepo_url="${arg#*=}"
         colorecho "$RED" "Using custom package repo at ${adrepo_url}"
         ;;
-    --uboot=*)
-        arguboot="${arg#*=}"
-        colorecho "$GREEN" "Build image with uboot from ${arguboot}"
+    --bootloader=*)
+        argbootloader="${arg#*=}"
+        colorecho "$GREEN" "Build image with bootloader from ${argbootloader}"
+        ;;
+    --grub)
+        argbootcfg="grub"
+        colorecho "$GREEN" "Build image with GRUB"
         ;;
     --bootpartstart=*)
         argbootptst="${arg#*=}"
@@ -752,19 +756,21 @@ if [ -z "$argmountimg" ]; then
         sudo parted $drive set 2 boot on
     fi
 
-    # Pack u-boot
-    if [ -n "$arguboot" ]; then
-        colorecho "$GREEN" "Flashing u-boot ..."
+    # Pack u-boot / edk2
+    if [ -n "$argbootloader" ]; then
+        colorecho "$GREEN" "Flashing bootloader ..."
 
-        if [ -f "$arguboot/idbloader.img" ] && [ -f "$arguboot/u-boot.itb" ]; then
-            sudo dd if="$arguboot/idbloader.img" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
-        elif [ -f "$arguboot/idblock.bin" ] && [ -f "$arguboot/uboot.img" ]; then
-            sudo dd if="$arguboot/idblock.bin" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$arguboot/uboot.img" of="$drive" seek=16384 conv=notrunc
-        elif [ -f "$arguboot/tpl-spl.img" ] && [ -f "$arguboot/u-boot.itb" ]; then
-            sudo dd if="$arguboot/tpl-spl.img" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$arguboot/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+        if [[ "$argbootloader" == *".img" ]]; then
+            sudo dd if="$argbootloader" of="$drive" bs=512 skip=64 seek=64 conv=notrunc
+        elif [ -f "$argbootloader/idbloader.img" ] && [ -f "$argbootloader/u-boot.itb" ]; then
+            sudo dd if="$argbootloader/idbloader.img" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootloader/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootloader/idblock.bin" ] && [ -f "$argbootloader/uboot.img" ]; then
+            sudo dd if="$argbootloader/idblock.bin" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootloader/uboot.img" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootloader/tpl-spl.img" ] && [ -f "$argbootloader/u-boot.itb" ]; then
+            sudo dd if="$argbootloader/tpl-spl.img" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootloader/u-boot.itb" of="$drive" seek=16384 conv=notrunc
         else
             colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
         fi
@@ -855,8 +861,8 @@ if [ "$config_boot" = 1 ]; then
     echo "Info : Root partition PARTUUID: $root_part_uuid"
 
     # Create extlinux.conf / grub.cfg
-    if [ "$argbootloader" = "UEFI" ]; then
-        colorecho "$GREEN" "UEFI + Grub ... Coming Soon"
+    if [ "$argbootcfg" = "grub" ]; then
+        colorecho "$GREEN" "Install Grub and generating grub.cfg ... Coming Soon"
     else
         colorecho "$GREEN" "Generating new extlinux.conf ..."
 
@@ -872,12 +878,18 @@ if [ "$config_boot" = 1 ]; then
         echo "    kernel /vmlinuz-%PKGBASE%" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
         echo "    initrd /initramfs-%PKGBASE%.img" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
 
-        echo "    devicetreedir $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
-        #echo "    ftd $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
-        echo "    fdtoverlays $bootdtboverlays" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+        if [ -n "$bootdtb" ] && [ "$bootdtb" != "null" ]; then
+            echo "    devicetreedir $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+        fi
+        if [ -n "$bootdtb" ] && [ "$bootdtb" != "null" ]; then
+            #echo "    ftd $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+        fi
+        if [ -n "$bootdtboverlays" ] && [ "$bootdtboverlays" != "null" ]; then
+            echo "    fdtoverlays $bootdtboverlays" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+        fi
         echo "    append   root=${root_uuid} $bootcmdline" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
     fi
-
+    
     # Update pkgbase for extlinux.conf
     sudo sed -i "s|%PKGBASE%|$argkrl|" $boot_mount_dir/extlinux/extlinux.conf
 
