@@ -553,7 +553,7 @@ for arg in "$@"; do
         argimg="aarch64-archlinux-installer.img"
         ;;
     -k | --kernel)
-        argkrl="rkbsp"
+        argkrl="linux-aarch64"
         ;;
     -b | --bootpart)
         argbootpt=1
@@ -686,15 +686,15 @@ fi
 if [ -z "$argkrl" ]; then
     title
     colorecho "$GREEN" "Select a kernel to install:"
-    options=("(Recommended) Radxa BSP Kernel (Linux 5.10)" "(WIP) Install other Kernel from repo")
+    options=("Linux Aarch64 Mainline Kernel" "(WIP) Install other Kernel from repo")
     select_option "${options[@]}"
     answer=$?
 else
     answer=99
 fi
 
-if [ "$answer" = 0 ] || [ "$argkrl" = "rkbsp" ]; then
-    install_kernel "linux-radxa-rkbsp5"
+if [ "$answer" = 0 ] || [ "$argkrl" = "linux-aarch64" ]; then
+    echo "Using mainline kernel"
 else
     if [ -z "$argkrl" ]; then
         read -p "Enter kernel package name:" answer
