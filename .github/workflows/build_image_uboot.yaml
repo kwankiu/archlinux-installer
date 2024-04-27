@@ -82,13 +82,16 @@ jobs:
                 args="--kernel=linux-rpi --addpkg=firmware-raspberrypi -b --bootpartstart=4MiB"
                 ;;
               radxa-zero*)
-                model_name="${model#*-}"
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootloader=usr/lib/u-boot/${model_name}"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootloader=usr/lib/u-boot/${model}"
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
                 ;;
-              radxa-*)
+              radxa-rock*)
                 model_name="${model#*-}"
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootloader=usr/lib/u-boot/${model_name}"
+                uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
+                ;;
+              radxa-*)
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootloader=usr/lib/u-boot/${model}"
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
                 ;;
               khadas-*)
@@ -97,7 +100,7 @@ jobs:
                 ;;
               orangepi-*)
                 args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootloader=usr/lib/u-boot -b"
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20230704.git1f70ac3a-9_arm64.deb"
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-2_arm64.deb"
                 ;;
               *)
                 # Generic
