@@ -875,7 +875,7 @@ if [ "$config_boot" = 1 ]; then
         echo "    devicetreedir $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
         #echo "    ftd $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
         echo "    fdtoverlays $bootdtboverlays" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
-        echo "    append   root=UUID=${root_uuid} $bootcmdline" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+        echo "    append   root=${root_uuid} $bootcmdline" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
     fi
 
     # Update pkgbase for extlinux.conf
