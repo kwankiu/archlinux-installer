@@ -815,17 +815,28 @@ curl -LJO $rootfs_url
 
 colorecho "$GREEN" "Copying Arch Linux rootfs ..."
 sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
-sudo rm -rf $root_mount_dir/boot/*
-
-if [ "$argbootpt" = 1 ]; then
-    # Copy contents to boot partition
-    colorecho "$GREEN" "Copying Boot Partition ..."
-    sudo cp -r "$boot_image"/* "$boot_mount_dir"
-    sudo rm -rf "$boot_image"/*
-fi
 
 # Copy kernel files
-if [ "$argkrl" != "linux" ]; then
+if [ "$argkrl" = "linux" ]; then
+
+    if [ "$argbootpt" = 1 ]; then
+        # Copy contents to boot partition
+        colorecho "$GREEN" "Copying Boot Partition ..."
+        sudo cp -r $root_mount_dir/boot/* "$boot_mount_dir"
+        sudo rm -rf $root_mount_dir/boot/*
+    fi 
+
+else
+
+    sudo rm -rf $root_mount_dir/boot/*
+
+    if [ "$argbootpt" = 1 ]; then
+        # Copy contents to boot partition
+        colorecho "$GREEN" "Copying Boot Partition ..."
+        sudo cp -r "$boot_image"/* "$boot_mount_dir"
+        sudo rm -rf "$boot_image"/*
+    fi
+
     colorecho "$GREEN" "Copying Linux Kernel ..."
     sudo cp -r $pkg_tar_dir/Kernel/linux/* "$root_mount_dir"
 fi
