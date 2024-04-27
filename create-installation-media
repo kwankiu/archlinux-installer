@@ -893,6 +893,9 @@ if [ "$config_boot" = 1 ]; then
     if [ -e "$boot_mount_dir/dtbs/$argkrl/rockchip/overlay" ]; then
         sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" $boot_mount_dir/extlinux/extlinux.conf
     fi
+
+    # Print extlinux.conf for debugging
+    cat $boot_mount_dir/extlinux/extlinux.conf
 fi
 
 title
