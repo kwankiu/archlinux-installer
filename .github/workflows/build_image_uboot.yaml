@@ -129,7 +129,7 @@ jobs:
         env:
           args: ${{ env.ARGS }}
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer.img -c $args
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer.img -c $args
           cp -r out/*-archlinux-*.img.xz .
 
       - name: Add meta data to Image (OOWOW)
@@ -141,7 +141,7 @@ jobs:
              builder="Arch Linux Installer" \
              date="$(LANG=C TZ= date)" \
              match=BOARD=$(echo "${{ matrix.model_name }}" | awk -F'-' '{print toupper(substr($2,1,1)) substr($2,2)}') \
-             link=https://github.com/kwankiu/archlinux-installer-rock5/wiki \
+             link=https://github.com/kwankiu/archlinux-installer/wiki \
              duration=250 \
              desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
         continue-on-error: true

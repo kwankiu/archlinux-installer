@@ -22,7 +22,7 @@
 branch=dev
 
 # URL for Kernel and Arch Linux Rootfs
-adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/kernel"
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/tags/kernel"
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 ################################################################
@@ -202,9 +202,9 @@ list_disks() {
             selected_disk="/dev/${disks[((choice - 1) * 3)]}"
         elif [[ $choice -eq $((i / 3 + 1)) ]]; then
             # Create Image
-            read -p "Image Name (default=archlinux-installer-rock5.img): " selected_disk
+            read -p "Image Name (default=archlinux-installer.img): " selected_disk
             if [ -z "$selected_disk" ]; then
-                selected_disk="archlinux-installer-rock5.img"
+                selected_disk="archlinux-installer.img"
             else
                 selected_disk="$selected_disk"
             fi
@@ -496,7 +496,7 @@ for arg in "$@"; do
         ;;
     -d | --dev)
         echo "Getting the latest installation script from dev ..."
-        bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/archlinux-installer) ${@:2}
+        bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/archlinux-installer) ${@:2}
         exit 1
         ;;
     --get-pkg)
@@ -845,7 +845,7 @@ fi
 title
 
 colorecho "$GREEN" "Loading boot config list ..."
-eval $(bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/0.0.7-dev/script/acu_parser.sh) https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/boot.yaml)
+eval $(bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/0.0.7-dev/script/acu_parser.sh) https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/boot.yaml)
 
 for ((i = 0; i < ${#boot_dtb[@]}; i++)); do
     # Add tags
@@ -937,20 +937,20 @@ colorecho "$GREEN" "Downloading Installer ..."
 if [ "$arginstaller" == "installer" ] || [ -z "$arginstaller" ]; then
     installer_name="arch-installer"
     compiled_pkg_dir="/usr/lib/installer/packages"
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/$installer_name
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/$installer_name
     # Download and Copy ACU
     curl -LJO https://raw.githubusercontent.com/kwankiu/acu/0.0.7-dev/acu
     sudo chmod +x acu
     sudo cp -r acu "$root_mount_dir/usr/bin/acu"
     sudo rm -rf acu
     # Download and Copy ACU Config for TUI Installer
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/config/acu_config.yaml
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/acu_config.yaml
     sudo mkdir -p "$root_mount_dir/usr/lib/installer/.acu/config"
     sudo cp -r acu_config.yaml "$root_mount_dir/usr/lib/installer/.acu/config/config.yaml"
 elif [ "$arginstaller" == "legacy" ]; then
     installer_name="arch-rock-installer"
     compiled_pkg_dir="/usr/lib/compiled-packages"
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/$installer_name
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/$installer_name
 fi
 
 # Copy Installer
@@ -1093,6 +1093,6 @@ else
     colorecho "$YELLOW" "Tips: Check if your disk is unmounted successfully before you unplug it."
     colorecho "$GREEN" "You may now boot into $drive for installation."
 fi
-echo "Please visit https://github.com/kwankiu/archlinux-installer-rock5/README.md for more information."
+echo "Please visit https://github.com/kwankiu/archlinux-installer/README.md for more information."
 
 ################################################################

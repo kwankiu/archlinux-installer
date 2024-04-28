@@ -66,7 +66,7 @@
         mkdir -p /etc/NetworkManager/conf.d
         echo -e "[device]\nwifi.backend=iwd" | tee /etc/NetworkManager/conf.d/wifi_backend.conf
         echo "Post Install: AP6275P Bluetooth"
-        curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+        curl -LJO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/brcm_patchram_plus
         chmod +x brcm_patchram_plus
         mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
         echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error: Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info: ${wifi_chip}"\n    echo "BT Status: ${bt_status}"\nfi' | tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
@@ -88,7 +88,7 @@
     echo "Replacing installer with a minimal first boot setup script ..."
     rm -rf /usr/lib/compiled-packages
     rm -rf /usr/bin/installer
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/dev/scripts/init-setup.sh
+    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/scripts/init-setup.sh
     chmod +x init-setup.sh
     cp -r init-setup.sh /usr/bin/installer
     rm -rf init-setup.sh
