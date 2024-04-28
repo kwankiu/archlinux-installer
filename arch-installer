@@ -19,10 +19,10 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24042701
+installerver=24042801
 
 # Required ACU version
-acuver=0.0.7-dev
+acuver=0.0.8-dev
 
 # Installer Branch / Tag
 branch=dev
@@ -804,13 +804,15 @@ install_part2() {
     ################################################################
     # Set Time Zone
     if [ -n "$install_time_zone" ]; then
+        alert "Syncing Time Zone ..."
         acu "time" set-time-zone $install_time_zone
     fi
 
     ################################################################
     # Set Language
     if [ -n "$install_language" ]; then
-        acu locale generate "$install_language" -y
+        alert "Generating locales ..."
+        acu locale generate "$install_language" -y >/dev/null
     fi
 
     ################################################################

@@ -845,7 +845,7 @@ fi
 title
 
 colorecho "$GREEN" "Loading boot config list ..."
-eval $(bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/0.0.7-dev/script/acu_parser.sh) https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/boot.yaml)
+eval $(bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/0.0.8-dev/scripts/acu_parser.sh) https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/boot.yaml)
 
 for ((i = 0; i < ${#boot_dtb[@]}; i++)); do
     # Add tags
@@ -939,7 +939,7 @@ if [ "$arginstaller" == "installer" ] || [ -z "$arginstaller" ]; then
     compiled_pkg_dir="/usr/lib/installer/packages"
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/$installer_name
     # Download and Copy ACU
-    curl -LJO https://raw.githubusercontent.com/kwankiu/acu/0.0.7-dev/acu
+    curl -LJO https://raw.githubusercontent.com/kwankiu/acu/0.0.8-dev/acu
     sudo chmod +x acu
     sudo cp -r acu "$root_mount_dir/usr/bin/acu"
     sudo rm -rf acu
