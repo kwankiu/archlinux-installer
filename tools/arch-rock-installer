@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403121
+installerver=2404271
 
 # Define main / dev branch
 branch=main
@@ -854,7 +854,7 @@ title "Installing Linux Kernel"
     elif [ "$install_target" != "rpi" ]; then
         # Kernel does not provide template, get sbc template
         colorecho "$YELLOW" "Downloading extlinux template for ${install_target} ..."
-        curl -LRO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/${install_target}.extlinux.template
+        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/boot-templates/${install_target}.extlinux.template
         sudo mv ${install_target}.extlinux.template /boot/extlinux/extlinux.conf
     fi        
         
