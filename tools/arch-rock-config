@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2402206
+utilver=2404271
 
 # Define main / dev branch
 branch=main
@@ -30,7 +30,7 @@ armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_l
 # URL of Arch Linux ARM Archive
 alaa_url="https://alaa.ad24.cz/"
 
-adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/kernel"
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/tags/kernel"
 
 # Directory for storing source files
 source_repo_dir="source-repo-dir"
@@ -125,7 +125,7 @@ title() {
 
 # Check updates
 check_util_updates() {
-    remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
+    remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
     if [ "$remote_utilver" -gt "$utilver" ]; then
         update_available=true
     fi
@@ -141,7 +141,7 @@ update_util() {
         fi
 
         sudo rm -rf /usr/bin/arch-rock-config
-        sudo wget -N -P /usr/bin/ https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        sudo wget -N -P /usr/bin/ https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-config
         sudo chmod +x /usr/bin/arch-rock-config
         if ! [ -x "$(command -v arcu)" ]; then
             add_alias "arcu"
@@ -473,16 +473,11 @@ install_completed_reboot() {
 # Utility Main Menu
 
 config_options() {
-    title "Arch Rock Configuration Utility"
-    options=("System Maintenance - Managing Updates, Bootloader, System, Linux Kernel, etc.")
-    options+=("Manage Packages - Install, Update or Downgrade Software Packages.")
-    options+=("Performance & Features - Tweak SoC Performance Settings, Enable PWM Fan, Overclocking, etc.")
-    options+=("User & Localization - Manage user accounts, Generating Locale, changing Timezone, etc.")
-
-    if [ "$update_available" = true ]; then 
-        options+=("Update Configuration Utility to latest version $GREEN(Updates available)$NC")
-    fi
-    
+    title "Arch Rock Configuration Utility is now deprecated !"
+    echo
+    colorecho "$NC" "Arch Rock Configuration Utility is now replaced by ACU (A Configuration Utility for Arch Linux ARM), would you like to replace arch-rock-config with ACU?"
+    echo
+    options=("Replace arch-rock-config with ACU (Recommended)" "Install the last release of arch-rock-config (There will not be any updates in the future)")
     options+=("Exit Configuration Utility")
     select_option "${options[@]}"
     choice=$?
@@ -490,22 +485,21 @@ config_options() {
     # Choice
     case $choice in
         0)
-            system_maintenance
+            colorecho "$GREEN" "Removing arch-rock-config ..."
+            sudo rm -rf /usr/bin/arch-rock-config /usr/bin/arcu
+            colorecho "$GREEN" "Installing ACU ..."
+            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/$branch/acu) -u
+            exit 0
             ;;
         1)
-            manage_packages
-            ;;
-        2)
-            performance_features
-            ;;
-        3)
-            user_localization
-            ;;
-        4)
-            update_util
+            colorecho "$GREEN" "Installing arch-rock-config ..."
+            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/9cd93887bc851a114f5d4ad07a4d0db14cfccc1d/tools/arch-rock-config)
+            colorecho "$GREEN" "Disable arch-rock-config updates ..."
+            sudo sed -i "s/utilver=2403122/utilver=9999999/g" /usr/bin/arch-rock-config
+            exit 0
             ;;
         *)
-            exit 1
+            exit 0
             ;;
     esac
 
@@ -1504,6 +1498,15 @@ user_localization() {
 # Function to manage user accounts
 manage_user() {
 
+    confirm_password() {
+        while [[ -z "$new_pw" || -z "$cfm_pw" || "$new_pw" != "$cfm_pw" ]]; do
+            read -s -p "Set a password for $new_user: " new_pw
+            echo
+            read -s -p "Confirm password for $new_user: " cfm_pw
+            echo
+        done
+    }
+
     if [ -z "$1" ]; then
     title "Arch Rock Configuration Utility - Manage User"
     
@@ -1537,8 +1540,11 @@ manage_user() {
                 title "Arch Rock Configuration Utility - Add New User"
                 read -p "Enter username for the new user: " new_user
             fi
+            if [ -z "$new_pw" ]; then
+                confirm_password
+            fi
             sudo useradd -m "$new_user"
-            sudo passwd "$new_user"
+            echo -e "$new_pw\n$cfm_pw" | sudo passwd "$new_user"
             sudo usermod -aG wheel "$new_user"
             sudo usermod -aG video "$new_user"
             sudo usermod -aG audio "$new_user"
@@ -1654,7 +1660,7 @@ locale() {
 
             if [ ! "$1" = "list-available" ]; then
 
-                if [ "$1" = "generate" ] && [ -z "$2" ]; then
+                if [ "$1" = "generate" ] && [ -z "$2" ] || [ "$1" = "locale" ] && [ -z "$2" ] || [ -z "$1" ]; then
                     colorecho "$GREEN" "Available Locales for generation:"
 
                     for ((i = 0; i < ${#langcode[@]}; i++)); do

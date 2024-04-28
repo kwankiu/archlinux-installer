@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2403092
+installerver=2404271
 
 # Define main / dev branch
 branch=main
@@ -307,7 +307,7 @@ network_option() {
 # Check Installer Updates
 check_installer_updates() {
     colorecho "$YELLOW" "Checking for installer updates..."
-    remote_installerver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
+    remote_installerver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-installer" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
     if [ "$remote_installerver" -gt "$installerver" ]; then
         colorecho "$GREEN" "A newer version ($remote_installerver) of this installer is available, do you want to update this installer?"
         options=("Update this Installer" "Do not update this installer")
@@ -316,7 +316,7 @@ check_installer_updates() {
         if [ "$answer" = 0 ]; then
             # Download Installer
             colorecho "$GREEN" "Downloading Installer ..."
-            curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer
+            curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-installer
 
             # Update arch-rock-installer
             colorecho "$GREEN" "Updating Installer ..."
@@ -446,7 +446,7 @@ init_setup() {
         colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
         sleep 3
         cd /usr/bin
-        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-config
         ((attempt++))
     done
     chmod +x arch-rock-config
@@ -655,8 +655,9 @@ fi
     elif [ "$choice" -ge "$sgdindx" ]; then
         echo "Skipping ..."
     else
-        echo "Set Language to ${options[$choice]}"
-        arch-rock-config locale generate "${options[$choice]}" -y
+        selected_lang=$(echo "${options[$choice]}" | tr '-' '_')
+        echo "Set Language to $selected_lang"
+        arch-rock-config locale generate "$selected_lang" -y
     fi
 
 ################################################################
@@ -737,8 +738,8 @@ kernel_menu() {
         elif [[ $compilepkggit = 1 ]]; then  
             read -p "Enter a kernel to install from adrepo (e.g. linux-radxa-rkbsp5-git): " kernelpkg
         elif [[ $compilepkggit = 2 ]]; then
-            read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
-            read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
+            read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-aarch64-rockchip-bsp5.10-joshua): " kernelurl
+            read -p "Enter the kernel PKGBASE name (e.g. linux-aarch64-rockchip-bsp5.10-joshua): " kernelpkg
         else
             #colorecho "$YELLOW" "Warning: No option is selected, kernel may not be installed."
             kernel_menu
@@ -847,13 +848,13 @@ title "Installing Linux Kernel"
     # Update extlinux.conf
     colorecho "$YELLOW" "Generating extlinux.conf ..."
 
-    if sudo test -e  "/boot/extlinux/extlinux.arch.template"; then 
-        colorecho "$YELLOW" "Using extlinux.arch.template ..."
-        sudo mv /boot/extlinux/extlinux.arch.template /boot/extlinux/extlinux.conf
-    else
+    if found_file=$(sudo ls -1 /boot/extlinux/extlinux.*.template 2>/dev/null); then
+        colorecho "$YELLOW" "Using package provided template: $found_file"
+        sudo mv "$found_file" /boot/extlinux/extlinux.conf
+    elif [ "$install_target" != "rpi" ]; then
         # Kernel does not provide template, get sbc template
         colorecho "$YELLOW" "Downloading extlinux template for ${install_target} ..."
-        curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/${install_target}.extlinux.template
+        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/boot-templates/${install_target}.extlinux.template
         sudo mv ${install_target}.extlinux.template /boot/extlinux/extlinux.conf
     fi        
         
@@ -971,7 +972,7 @@ fi
 if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
     # For testing, to enable AP6275P bluetooth
     colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
-    curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+    curl -LJO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/brcm_patchram_plus
     sudo chmod +x brcm_patchram_plus
     sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
     echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error: Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info: ${wifi_chip}"\n    echo "BT Status: ${bt_status}"\nfi' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
@@ -1009,7 +1010,7 @@ if [ "$de_options" = 0 ]; then
 elif [ "$de_options" = 1 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome (Minimal) ..."
-    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-user-dirs --noconfirm
+    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-desktop-portal xdg-desktop-portal-gnome xdg-user-dirs --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
@@ -1039,8 +1040,8 @@ elif [ "$de_options" = 5 ]; then
 elif [ "$de_options" = 6 ]; then
     # Install Cutefish
     colorecho "$GREEN" "Installing Cutefish ..."
-    sudo pacman -S cutefish --noconfirm
-    #sudo systemctl enable sddm
+    sudo pacman -S plasma-desktop cutefish sddm --noconfirm
+    sudo systemctl enable sddm
 elif [ "$de_options" = 7 ]; then
     # Install XFCE
     colorecho "$GREEN" "Installing XFCE ..."

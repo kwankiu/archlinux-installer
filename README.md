@@ -7,8 +7,8 @@ a community-built Arch Linux Installer for ARM (Aarch64) based devices.
 
 ### Supported devices:
 - Radxa Rock 5 series (Rock 5A and Rock 5B)
-- Orange Pi 5 series ([Needs Testing](https://github.com/kwankiu/archlinux-installer-rock5/discussions))
-- Khadas Edge 2 ([Known Issues](https://github.com/kwankiu/archlinux-installer-rock5/wiki/General#known-issues))
+- Orange Pi 5 series ([Needs Testing](https://github.com/kwankiu/archlinux-installer/discussions))
+- Khadas Edge 2 ([Known Issues](https://github.com/kwankiu/archlinux-installer/wiki/General#known-issues))
 
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
 
@@ -25,9 +25,9 @@ Images for Radxa Rock 5 series are available on the [RPI Imager repository](http
 Images for Khadas Edge 2 are available on [OOWOW](https://docs.khadas.com/software/oowow/getting-started) (coming soon).
 
 ### For all devices
-You may also download our [prebuilt image](https://github.com/kwankiu/archlinux-installer-rock5/releases/latest) and flash it (using [RPI Imager](https://www.raspberrypi.com/software/), [balenaEtcher](https://etcher.balena.io/), etc) to your storage device.
+You may also download our [prebuilt image](https://github.com/kwankiu/archlinux-installer/releases/latest) and flash it (using [RPI Imager](https://www.raspberrypi.com/software/), [balenaEtcher](https://etcher.balena.io/), etc) to your storage device.
 
-  More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer-rock5/wiki/Get-the-installer).
+  More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/Get-the-installer).
 
 ## Running the script (Advanced)
 
@@ -35,11 +35,11 @@ You can build your own image or flash our Installer to your disk directly by exe
 
 ```bash
 
-bash  <(curl  -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer)
+bash  <(curl  -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer)
 
 ```
 
-  More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer-rock5/wiki/Advanced).
+  More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/Advanced).
 
 # Installation
 
@@ -52,7 +52,7 @@ bash  <(curl  -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installe
 
 3. The installer will guide you through the installation of Arch Linux with your desired Settings, Kernel, Desktop Environment, and Software, Enjoy!
 
-More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer-rock5/wiki/Installation).
+More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/Installation).
 
 # Troubleshooting
 
@@ -64,7 +64,7 @@ More details can be found at our [wiki](https://github.com/kwankiu/archlinux-ins
 
 4. After the installation, you will need to connect to WiFi again.
 
-  More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer-rock5/wiki/General#troubleshooting).
+  More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/General#troubleshooting).
 
 # Arch Rock Configuration Utility (experimental)
 
@@ -82,4 +82,4 @@ Note: I am creating a new configuration utility called [acu](https://github.com/
 arch-rock-config
 ```
 
-More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer-rock5/wiki/General#troubleshooting).
+More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/General#troubleshooting).

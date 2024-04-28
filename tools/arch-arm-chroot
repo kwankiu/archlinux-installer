@@ -19,7 +19,7 @@ colorecho() {
 ################################################################
 
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
-rootfs_dir="out/arch-linux-aarch64"
+rootfs_dir="rootfs"
 
 # Check if qemu-aarch64-static is installed
     if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then

@@ -27,19 +27,19 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Extract U-Boot
         run: |
-          curl -L https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-10-52701b7_arm64.deb -o uboot.deb
+          curl -L https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb -o uboot.deb
           ar xv uboot.deb
           tar -xf data.tar.xz
           ls -l
 
       - name: Build Image for Rock 5A
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5a-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5a
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-rockchip-bsp5.10-joshua --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5a-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5a
           cp -r out/rock-5a-archlinux-installer.img.xz rock-5a-archlinux-installer.img.xz
 
       - name: Build Image for Rock 5B
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5b-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5b
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-rockchip-bsp5.10-joshua --sbc=rock5 --addpkg=linux-firmware-joshua-git -c --image=rock-5b-archlinux-installer.img --uboot=usr/lib/u-boot/rock-5b
           cp -r out/rock-5b-archlinux-installer.img.xz rock-5b-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1
