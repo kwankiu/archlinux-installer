@@ -12,7 +12,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-utilver=2403122
+utilver=2404271
 
 # Define main / dev branch
 branch=main
@@ -473,16 +473,11 @@ install_completed_reboot() {
 # Utility Main Menu
 
 config_options() {
-    title "Arch Rock Configuration Utility"
-    options=("System Maintenance - Managing Updates, Bootloader, System, Linux Kernel, etc.")
-    options+=("Manage Packages - Install, Update or Downgrade Software Packages.")
-    options+=("Performance & Features - Tweak SoC Performance Settings, Enable PWM Fan, Overclocking, etc.")
-    options+=("User & Localization - Manage user accounts, Generating Locale, changing Timezone, etc.")
-
-    if [ "$update_available" = true ]; then 
-        options+=("Update Configuration Utility to latest version $GREEN(Updates available)$NC")
-    fi
-    
+    title "Arch Rock Configuration Utility is now deprecated !"
+    echo
+    colorecho "$NC" "Arch Rock Configuration Utility is now replaced by ACU (A Configuration Utility for Arch Linux ARM), would you like to replace arch-rock-config with ACU?"
+    echo
+    options=("Replace arch-rock-config with ACU (Recommended)" "Install the last release of arch-rock-config (There will not be any updates in the future)")
     options+=("Exit Configuration Utility")
     select_option "${options[@]}"
     choice=$?
@@ -490,22 +485,21 @@ config_options() {
     # Choice
     case $choice in
         0)
-            system_maintenance
+            colorecho "$GREEN" "Removing arch-rock-config ..."
+            sudo rm -rf /usr/bin/arch-rock-config /usr/bin/arcu
+            colorecho "$GREEN" "Installing ACU ..."
+            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/acu/$branch/acu) -u
+            exit 0
             ;;
         1)
-            manage_packages
-            ;;
-        2)
-            performance_features
-            ;;
-        3)
-            user_localization
-            ;;
-        4)
-            update_util
+            colorecho "$GREEN" "Installing arch-rock-config ..."
+            bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/9cd93887bc851a114f5d4ad07a4d0db14cfccc1d/tools/arch-rock-config)
+            colorecho "$GREEN" "Disable arch-rock-config updates ..."
+            sudo sed -i "s/utilver=2403122/utilver=9999999/g" /usr/bin/arch-rock-config
+            exit 0
             ;;
         *)
-            exit 1
+            exit 0
             ;;
     esac
 
