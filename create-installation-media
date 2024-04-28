@@ -26,7 +26,8 @@ adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/ta
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 ################################################################
-# Tools for formatting / styling
+# Tools
+system_arch=$(uname -m)
 
 # Define terminal color codes
 RED='\033[0;31m'
@@ -660,6 +661,54 @@ if ! [ -x "$(command -v mkfs.vfat)" ]; then
     fi
 fi
 
+echo "System is $system_arch"
+# Check qemu-aarch64-static is installed if x86_64
+if [ "$system_arch" == "x86_64" ]; then
+    # Check if qemu-aarch64-static is installed
+    if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
+        # Check Linux distribution
+        colorecho "$YELLOW" "qemu-aarch64-static is not found, trying to install..."
+        if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+            # Debian/Ubuntu-based
+            sudo apt-get update
+            sudo apt-get install -y qemu-user-static
+        elif [ -f /etc/redhat-release ]; then
+            # Red Hat-based
+            sudo yum update
+            sudo yum install -y qemu-user-static
+        elif [ -f /etc/arch-release ]; then
+            # Arch Linux
+            sudo pacman -S qemu-user-static --noconfirm
+        elif [ -x "$(command -v apk)" ]; then
+            # Alphine-based
+            apk add qemu-user-static
+        else
+            colorecho "$RED" "Error : qemu-aarch64-static is not installed."
+        fi
+    fi
+
+    S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
+    S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:CF'
+    echo -n $S1$S2 | sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
+    echo
+    sudo systemctl restart systemd-binfmt.service
+fi
+
+# Check if arch-install-scripts is installed
+if [ -z "$(command -v arch-chroot)" ]; then
+    # Check Linux distribution
+    colorecho "$YELLOW" "arch-chroot is not found, trying to install arch-install-scripts ..."
+    if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+        # Debian/Ubuntu-based
+        sudo apt-get install -y arch-install-scripts
+    elif [ -f /etc/arch-release ]; then
+        # Arch Linux
+        sudo pacman -S arch-install-scripts --noconfirm
+    else
+        colorecho "$RED" "Error : arch-install-scripts is not installed."
+    fi
+fi
+
 ################################################################
 # Show interactive menu if no corresponding arguments were set
 
@@ -876,7 +925,20 @@ if [ "$config_boot" = 1 ]; then
 
     # Create extlinux.conf / grub.cfg
     if [ "$argbootld" = "grub" ]; then
-        colorecho "$GREEN" "Install Grub and generating grub.cfg ... Coming Soon"
+        colorecho "$GREEN" "Chroot into system ..."
+        if [ "$argbootpt" = 1 ]; then
+            colorecho "$GREEN" "Mounting /boot into chroot ..."
+            sudo mount --bind /boot $boot_mount_dir
+        fi
+        colorecho "$GREEN" "Installing Grub and Generating grub.cfg ..."
+        sudo arch-chroot $root_mount_dir /bin/bash <<END
+        pacman-key --init
+        pacman-key --populate archlinuxarm
+        pacman -Sy grub --noconfirm
+        grub-install --target=arm64-efi --efi-directory=/boot
+        grub-mkconfig -o /boot/grub/grub.cfg
+END
+
     elif [ -z "$argbootld" ] || [ "$argbootld" = "extlinux" ]; then
         colorecho "$GREEN" "Generating new extlinux.conf ..."
 
@@ -983,71 +1045,18 @@ ls "${root_mount_dir}${compiled_pkg_dir}" #DEBUG
 sudo rm -rf "$pkg_tar_dir"
 sudo rm -rf $installer_name
 
-system_arch=$(uname -m)
-echo "System is $system_arch"
-
-if [ "$system_arch" == "x86_64" ]; then
-    # Check if qemu-aarch64-static is installed
-    if ! [ -e "/usr/bin/qemu-aarch64-static" ]; then
-        # Check Linux distribution
-        colorecho "$YELLOW" "qemu-aarch64-static is not found, trying to install..."
-        if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
-            # Debian/Ubuntu-based
-            sudo apt-get update
-            sudo apt-get install -y qemu-user-static
-        elif [ -f /etc/redhat-release ]; then
-            # Red Hat-based
-            sudo yum update
-            sudo yum install -y qemu-user-static
-        elif [ -f /etc/arch-release ]; then
-            # Arch Linux
-            sudo pacman -S qemu-user-static --noconfirm
-        elif [ -x "$(command -v apk)" ]; then
-            # Alphine-based
-            apk add qemu-user-static
-        else
-            colorecho "$RED" "Error : qemu-aarch64-static is not installed."
-        fi
-    fi
-
-    S1=':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7'
-    S2=':\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:CF'
-    echo -n $S1$S2 | sudo tee /lib/binfmt.d/05-local-qemu-aarch64-static.conf
-    echo
-    sudo systemctl restart systemd-binfmt.service
-fi
-
-if [ "$system_arch" = "aarch64" ] || [ "$system_arch" = "arm64" ] || [ "$system_arch" = "armv8" ] || [ "$system_arch" == "x86_64" ]; then
-    # Check if arch-install-scripts is installed
-    if [ -z "$(command -v arch-chroot)" ]; then
-        # Check Linux distribution
-        colorecho "$YELLOW" "arch-chroot is not found, trying to install arch-install-scripts ..."
-        if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
-            # Debian/Ubuntu-based
-            sudo apt-get install -y arch-install-scripts
-        elif [ -f /etc/arch-release ]; then
-            # Arch Linux
-            sudo pacman -S arch-install-scripts --noconfirm
-        else
-            colorecho "$RED" "Error : arch-install-scripts is not installed."
-        fi
-    fi
-
-    if [ -n "$argscripts" ]; then
-        colorecho "$GREEN" "Chroot into system ..."
-        sudo arch-chroot $root_mount_dir /bin/bash <<END
+# Run installer as a system service at first boot
+if [ -n "$argscripts" ]; then
+    colorecho "$GREEN" "Chroot into system ..."
+    sudo arch-chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-installer-service
     /usr/bin/script.sh "$argmodel"
 END
-    else
-        colorecho "$GREEN" "Chroot into system ..."
-        sudo arch-chroot $root_mount_dir /bin/bash <<END
+else
+    colorecho "$GREEN" "Chroot into system ..."
+    sudo arch-chroot $root_mount_dir /bin/bash <<END
     /usr/bin/installer --create-installer-service
 END
-    fi
-
-else
-    colorecho "$YELLOW" "System Architecture not supported. Skipping Chroot..."
 fi
 
 # Unmount the boot and root partitions
