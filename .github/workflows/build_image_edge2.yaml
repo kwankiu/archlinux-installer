@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Image for Edge 2
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/main/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=edge2 --addpkg=linux-firmware-joshua-git -c -b --image=edge2-archlinux-installer.img --uboot=usr/lib/u-boot
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=edge2 --addpkg=linux-firmware-joshua-git -c -b --image=edge2-archlinux-installer.img --uboot=usr/lib/u-boot
           cp -r out/edge2-archlinux-installer.img.xz edge2-archlinux-installer.img.xz
 
       - name: Add meta data to Image for Edge 2
@@ -45,7 +45,7 @@ jobs:
              builder="Arch Linux Installer" \
              date="$(LANG=C TZ= date)" \
              match=BOARD=Edge2 \
-             link=https://github.com/kwankiu/archlinux-installer-rock5/wiki \
+             link=https://github.com/kwankiu/archlinux-installer/wiki \
              duration=250 \
              desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for Khadas Edge 2"
         continue-on-error: true

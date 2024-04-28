@@ -30,7 +30,7 @@ armbian_url="https://github.com/huazi-yg/rock5b/releases/download/rock5b/rkspi_l
 # URL of Arch Linux ARM Archive
 alaa_url="https://alaa.ad24.cz/"
 
-adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer-rock5/releases/tags/kernel"
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/tags/kernel"
 
 # Directory for storing source files
 source_repo_dir="source-repo-dir"
@@ -125,7 +125,7 @@ title() {
 
 # Check updates
 check_util_updates() {
-    remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
+    remote_utilver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-config" | grep -o 'utilver=[0-9]*' | cut -d= -f2)
     if [ "$remote_utilver" -gt "$utilver" ]; then
         update_available=true
     fi
@@ -141,7 +141,7 @@ update_util() {
         fi
 
         sudo rm -rf /usr/bin/arch-rock-config
-        sudo wget -N -P /usr/bin/ https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        sudo wget -N -P /usr/bin/ https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-config
         sudo chmod +x /usr/bin/arch-rock-config
         if ! [ -x "$(command -v arcu)" ]; then
             add_alias "arcu"

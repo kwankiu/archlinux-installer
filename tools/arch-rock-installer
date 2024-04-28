@@ -307,7 +307,7 @@ network_option() {
 # Check Installer Updates
 check_installer_updates() {
     colorecho "$YELLOW" "Checking for installer updates..."
-    remote_installerver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
+    remote_installerver=$(curl -s "https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-installer" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
     if [ "$remote_installerver" -gt "$installerver" ]; then
         colorecho "$GREEN" "A newer version ($remote_installerver) of this installer is available, do you want to update this installer?"
         options=("Update this Installer" "Do not update this installer")
@@ -316,7 +316,7 @@ check_installer_updates() {
         if [ "$answer" = 0 ]; then
             # Download Installer
             colorecho "$GREEN" "Downloading Installer ..."
-            curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-installer
+            curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-installer
 
             # Update arch-rock-installer
             colorecho "$GREEN" "Updating Installer ..."
@@ -446,7 +446,7 @@ init_setup() {
         colorecho "$GREEN" "Installing Configuration Utility (arch-rock-config) ..."
         sleep 3
         cd /usr/bin
-        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer-rock5/$branch/tools/arch-rock-config
+        curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/arch-rock-config
         ((attempt++))
     done
     chmod +x arch-rock-config
@@ -854,7 +854,7 @@ title "Installing Linux Kernel"
     elif [ "$install_target" != "rpi" ]; then
         # Kernel does not provide template, get sbc template
         colorecho "$YELLOW" "Downloading extlinux template for ${install_target} ..."
-        curl -LRO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/${install_target}.extlinux.template
+        curl -LRO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/${install_target}.extlinux.template
         sudo mv ${install_target}.extlinux.template /boot/extlinux/extlinux.conf
     fi        
         
@@ -972,7 +972,7 @@ fi
 if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
     # For testing, to enable AP6275P bluetooth
     colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
-    curl -LJO https://github.com/kwankiu/archlinux-installer-rock5/releases/download/kernel/brcm_patchram_plus
+    curl -LJO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/brcm_patchram_plus
     sudo chmod +x brcm_patchram_plus
     sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
     echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error: Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info: ${wifi_chip}"\n    echo "BT Status: ${bt_status}"\nfi' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
