@@ -928,16 +928,19 @@ if [ "$config_boot" = 1 ]; then
         colorecho "$GREEN" "Chroot into system ..."
         if [ "$argbootpt" = 1 ]; then
             colorecho "$GREEN" "Mounting /boot into chroot ..."
-            sudo mount --bind /boot $boot_mount_dir
+            sudo mount $boot_partition $root_mount_dir/boot
         fi
         colorecho "$GREEN" "Installing Grub and Generating grub.cfg ..."
         sudo arch-chroot $root_mount_dir /bin/bash <<END
         pacman-key --init
         pacman-key --populate archlinuxarm
-        pacman -Sy grub --noconfirm
+        pacman -Sy grub device-mapper efibootmgr --noconfirm
         grub-install --target=arm64-efi --efi-directory=/boot
         grub-mkconfig -o /boot/grub/grub.cfg
 END
+        if [ "$argbootpt" = 1 ]; then
+            sudo umount $root_mount_dir/boot
+        fi
 
     elif [ -z "$argbootld" ] || [ "$argbootld" = "extlinux" ]; then
         colorecho "$GREEN" "Generating new extlinux.conf ..."
