@@ -140,7 +140,7 @@ jobs:
              label="Arch Linux Installer" \
              builder="Arch Linux Installer" \
              date="$(LANG=C TZ= date)" \
-             match=BOARD=$(echo "${{ matrix.model_name#*- }}" | awk '{print toupper(substr($0,1,1)) substr($0,2)}') \
+             match=BOARD=$(echo "${{ matrix.model_name }}" | awk -F'-' '{print toupper(substr($2,1,1)) substr($2,2)}') \
              link=https://github.com/kwankiu/archlinux-installer-rock5/wiki \
              duration=250 \
              desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
