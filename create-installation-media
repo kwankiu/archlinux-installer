@@ -486,7 +486,8 @@ for arg in "$@"; do
         echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
         echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
         echo "--model=<model> : Set a device model to generate boot config for."
-        echo "--bootloader=<path> : Flash a bootloader to the target disk or image. The specified path must contain idbloader.img and uboot.itb"
+        echo "--bootfirmware=<path> : Flash a boot firmware to the target disk or image. The specified path must be .img file or a directory that contains idbloader.img and uboot.itb"
+        echo "--bootloader=<bootloader> : Set which bootloader to use for config, available options are extlinux and grub (default is extlinux)."
         echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
         echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 32MiB for Config or 500MiB for Boot)."
         echo "--installer=<type> : Set which Installer to use (options: installer (default), legacy)."
@@ -539,13 +540,13 @@ for arg in "$@"; do
         adrepo_url="${arg#*=}"
         colorecho "$RED" "Using custom package repo at ${adrepo_url}"
         ;;
-    --bootloader=*)
-        argbootloader="${arg#*=}"
-        colorecho "$GREEN" "Build image with bootloader from ${argbootloader}"
+    --bootfirmware=*)
+        argbootfw="${arg#*=}"
+        colorecho "$GREEN" "Build image with boot firmware from ${argbootfw}"
         ;;
-    --grub)
-        argbootcfg="grub"
-        colorecho "$GREEN" "Build image with GRUB"
+    --bootloader=*)
+        argbootld="${arg#*=}"
+        colorecho "$GREEN" "Build image with bootloader ${argbootld}"
         ;;
     --bootpartstart=*)
         argbootptst="${arg#*=}"
@@ -757,20 +758,20 @@ if [ -z "$argmountimg" ]; then
     fi
 
     # Pack u-boot / edk2
-    if [ -n "$argbootloader" ]; then
+    if [ -n "$argbootfw" ]; then
         colorecho "$GREEN" "Flashing bootloader ..."
 
-        if [[ "$argbootloader" == *".img" ]]; then
-            sudo dd if="$argbootloader" of="$drive" bs=512 skip=64 seek=64 conv=notrunc
-        elif [ -f "$argbootloader/idbloader.img" ] && [ -f "$argbootloader/u-boot.itb" ]; then
-            sudo dd if="$argbootloader/idbloader.img" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$argbootloader/u-boot.itb" of="$drive" seek=16384 conv=notrunc
-        elif [ -f "$argbootloader/idblock.bin" ] && [ -f "$argbootloader/uboot.img" ]; then
-            sudo dd if="$argbootloader/idblock.bin" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$argbootloader/uboot.img" of="$drive" seek=16384 conv=notrunc
-        elif [ -f "$argbootloader/tpl-spl.img" ] && [ -f "$argbootloader/u-boot.itb" ]; then
-            sudo dd if="$argbootloader/tpl-spl.img" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$argbootloader/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+        if [[ "$argbootfw" == *".img" ]]; then
+            sudo dd if="$argbootfw" of="$drive" bs=512 skip=64 seek=64 conv=notrunc
+        elif [ -f "$argbootfw/idbloader.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
+            sudo dd if="$argbootfw/idbloader.img" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootfw/idblock.bin" ] && [ -f "$argbootfw/uboot.img" ]; then
+            sudo dd if="$argbootfw/idblock.bin" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootfw/uboot.img" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootfw/tpl-spl.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
+            sudo dd if="$argbootfw/tpl-spl.img" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
         else
             colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
         fi
@@ -874,9 +875,9 @@ if [ "$config_boot" = 1 ]; then
     echo "Info : Root partition PARTUUID: $root_part_uuid"
 
     # Create extlinux.conf / grub.cfg
-    if [ "$argbootcfg" = "grub" ]; then
+    if [ "$argbootld" = "grub" ]; then
         colorecho "$GREEN" "Install Grub and generating grub.cfg ... Coming Soon"
-    else
+    elif [ -z "$argbootld" ] || [ "$argbootld" = "extlinux" ]; then
         colorecho "$GREEN" "Generating new extlinux.conf ..."
 
         # Check if the extlinux directory exists, create it if it doesn't
@@ -925,6 +926,8 @@ if [ "$config_boot" = 1 ]; then
 
     # Print extlinux.conf for debugging
     cat $boot_mount_dir/extlinux/extlinux.conf
+else
+    colorecho "$GREEN" "boot config skipped"
 fi
 
 title

@@ -82,24 +82,24 @@ jobs:
                 args="--kernel=linux-rpi --addpkg=firmware-raspberrypi -b --bootpartstart=4MiB"
                 ;;
               radxa-zero*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootloader=usr/lib/u-boot/${model}"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
                 ;;
               radxa-rock*)
                 model_name="${model#*-}"
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootloader=usr/lib/u-boot/${model_name}"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model_name}"
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
                 ;;
               radxa-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootloader=usr/lib/u-boot/${model}"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
                 ;;
               khadas-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootloader=usr/lib/u-boot"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
                 uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.5-2017.09_arm64.deb"
                 ;;
               orangepi-*)
-                args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootloader=usr/lib/u-boot -b"
+                args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=usr/lib/u-boot -b"
                 uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-2_arm64.deb"
                 ;;
               *)
@@ -143,7 +143,7 @@ jobs:
              match=BOARD=$(echo "${{ matrix.model_name#*- }}" | awk '{print toupper(substr($0,1,1)) substr($0,2)}') \
              link=https://github.com/kwankiu/archlinux-installer-rock5/wiki \
              duration=250 \
-             desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for ${{ matrix.model_name }}"
+             desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
         continue-on-error: true
 
       - name: Upload to GitHub Release
