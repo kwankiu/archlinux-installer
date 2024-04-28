@@ -800,6 +800,7 @@ if [ -z "$argmountimg" ]; then
         sudo parted $drive mkpart boot fat32 $argbootptst $argbootpted
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
         sudo parted $drive set 1 boot on
+        sudo parted $drive set 1 esp on
     else
         sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
@@ -824,7 +825,6 @@ if [ -z "$argmountimg" ]; then
         else
             colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
         fi
-
     fi
 
     # Find the partitions
@@ -925,6 +925,7 @@ if [ "$config_boot" = 1 ]; then
 
     # Create extlinux.conf / grub.cfg
     if [ "$argbootld" = "grub" ]; then
+    # GRUB
         colorecho "$GREEN" "Chroot into system ..."
         if [ "$argbootpt" = 1 ]; then
             colorecho "$GREEN" "Mounting /boot into chroot ..."
@@ -935,7 +936,7 @@ if [ "$config_boot" = 1 ]; then
         pacman-key --init
         pacman-key --populate archlinuxarm
         pacman -Sy grub device-mapper efibootmgr --noconfirm
-        grub-install --target=arm64-efi --efi-directory=/boot
+        grub-install --target=arm64-efi --efi-directory=/boot --removable
         grub-mkconfig -o /boot/grub/grub.cfg
 END
         if [ "$argbootpt" = 1 ]; then
@@ -943,6 +944,7 @@ END
         fi
 
     elif [ -z "$argbootld" ] || [ "$argbootld" = "extlinux" ]; then
+    # EXTLINUX
         colorecho "$GREEN" "Generating new extlinux.conf ..."
 
         # Check if the extlinux directory exists, create it if it doesn't
@@ -971,26 +973,28 @@ END
             echo "    fdtoverlays $bootdtboverlays" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
         fi
         echo "    append   root=${root_uuid} $bootcmdline" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
-    fi
-    
-    # Update pkgbase for extlinux.conf
-    sudo sed -i "s|%PKGBASE%|$argkrl|" $boot_mount_dir/extlinux/extlinux.conf
 
-    if [ ! "$argbootpt" = 1 ]; then
-        sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" $boot_mount_dir/extlinux/extlinux.conf
-        sudo sed -i "s| /initramfs| /boot/initramfs|" $boot_mount_dir/extlinux/extlinux.conf
-        sudo sed -i "s| /initrd| /boot/initrd|" $boot_mount_dir/extlinux/extlinux.conf
-        sudo sed -i "s| /dtbs| /boot/dtbs|" $boot_mount_dir/extlinux/extlinux.conf
-        sudo sed -i "s| /dtbo| /boot/dtbo|" $boot_mount_dir/extlinux/extlinux.conf
-    fi
+        # Update pkgbase for extlinux.conf
+        sudo sed -i "s|%PKGBASE%|$argkrl|" $boot_mount_dir/extlinux/extlinux.conf
 
-    # fix rockchip overlay directory name
-    if [ -e "$boot_mount_dir/dtbs/$argkrl/rockchip/overlay" ]; then
-        sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" $boot_mount_dir/extlinux/extlinux.conf
-    fi
+        if [ ! "$argbootpt" = 1 ]; then
+            sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" $boot_mount_dir/extlinux/extlinux.conf
+            sudo sed -i "s| /initramfs| /boot/initramfs|" $boot_mount_dir/extlinux/extlinux.conf
+            sudo sed -i "s| /initrd| /boot/initrd|" $boot_mount_dir/extlinux/extlinux.conf
+            sudo sed -i "s| /dtbs| /boot/dtbs|" $boot_mount_dir/extlinux/extlinux.conf
+            sudo sed -i "s| /dtbo| /boot/dtbo|" $boot_mount_dir/extlinux/extlinux.conf
+        fi
 
-    # Print extlinux.conf for debugging
-    cat $boot_mount_dir/extlinux/extlinux.conf
+        # fix rockchip overlay directory name
+        if [ -e "$boot_mount_dir/dtbs/$argkrl/rockchip/overlay" ]; then
+            sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" $boot_mount_dir/extlinux/extlinux.conf
+        fi
+
+        # Print extlinux.conf for debugging
+        cat $boot_mount_dir/extlinux/extlinux.conf
+    else
+        colorecho "$RED" "Invalid --bootloader argument"
+    fi
 else
     colorecho "$GREEN" "boot config skipped"
 fi
