@@ -79,7 +79,7 @@ jobs:
                 ;;
               raspberrypi)
                 # Notes: Raspberry Pi does not use extlinux and does not need to pack u-boot
-                args="--kernel=linux-rpi --addpkg=firmware-raspberrypi -b --bootpartstart=4MiB"
+                args="--kernel=linux-rpi --addpkg=firmware-raspberrypi -b --bootpartstart=4MiB --bootloader=skip"
                 ;;
               radxa-zero*)
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
