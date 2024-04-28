@@ -738,8 +738,8 @@ kernel_menu() {
         elif [[ $compilepkggit = 1 ]]; then  
             read -p "Enter a kernel to install from adrepo (e.g. linux-radxa-rkbsp5-git): " kernelpkg
         elif [[ $compilepkggit = 2 ]]; then
-            read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
-            read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
+            read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-aarch64-rockchip-bsp5.10-joshua): " kernelurl
+            read -p "Enter the kernel PKGBASE name (e.g. linux-aarch64-rockchip-bsp5.10-joshua): " kernelpkg
         else
             #colorecho "$YELLOW" "Warning: No option is selected, kernel may not be installed."
             kernel_menu

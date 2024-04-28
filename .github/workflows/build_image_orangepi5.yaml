@@ -53,17 +53,17 @@ jobs:
 
       - name: Build Image for Orange Pi 5
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-orangepi5-git --sbc=orangepi5 --addpkg=linux-firmware-orangepi-git -c -b --image=orangepi-5-archlinux-installer.img --uboot=usr/lib/u-boot/orangepi-5
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --sbc=orangepi5 --addpkg=linux-firmware-orangepi-git -c -b --image=orangepi-5-archlinux-installer.img --uboot=usr/lib/u-boot/orangepi-5
           cp -r out/orangepi-5-archlinux-installer.img.xz orangepi-5-archlinux-installer.img.xz
 
       - name: Build Image for Orange Pi 5B
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-orangepi5-git --sbc=orangepi5 --addpkg=linux-firmware-orangepi-git -c -b --image=orangepi-5b-archlinux-installer.img --uboot=usr/lib/u-boot/orangepi-5b
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --sbc=orangepi5 --addpkg=linux-firmware-orangepi-git -c -b --image=orangepi-5b-archlinux-installer.img --uboot=usr/lib/u-boot/orangepi-5b
           cp -r out/orangepi-5b-archlinux-installer.img.xz orangepi-5b-archlinux-installer.img.xz
 
       - name: Build Image for Orange Pi 5 Plus
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-orangepi5-git --sbc=orangepi5 --addpkg=linux-firmware-orangepi-git -c -b --image=orangepi-5-plus-archlinux-installer.img --uboot=usr/lib/u-boot/orangepi-5-plus
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --sbc=orangepi5 --addpkg=linux-firmware-orangepi-git -c -b --image=orangepi-5-plus-archlinux-installer.img --uboot=usr/lib/u-boot/orangepi-5-plus
           cp -r out/orangepi-5-plus-archlinux-installer.img.xz orangepi-5-plus-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1

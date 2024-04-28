@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Image for Zero 3
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-rockchip-joshua-git --sbc=zero3 --addpkg=linux-firmware-joshua-git -c --image=zero-3-archlinux-installer.img --uboot=usr/lib/u-boot/radxa-zero3
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer) --kernel=linux-aarch64-rockchip-bsp5.10-joshua --sbc=zero3 --addpkg=linux-firmware-joshua-git -c --image=zero-3-archlinux-installer.img --uboot=usr/lib/u-boot/radxa-zero3
           cp -r out/zero-3-archlinux-installer.img.xz zero-3-archlinux-installer.img.xz
 
       - uses: ncipollo/release-action@v1
