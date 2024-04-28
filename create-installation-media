@@ -490,7 +490,7 @@ for arg in "$@"; do
         echo "--bootloader=<bootloader> : Set which bootloader to use for config, available options are extlinux and grub (default is extlinux)."
         echo "--bootpartstart=<size> : Set Boot/Config Partition Start Sector (default is 16MiB)."
         echo "--bootpartend=<size> : Set Boot/Config Partition End Sector (default is 32MiB for Config or 500MiB for Boot)."
-        echo "--installer=<type> : Set which Installer to use (options: installer (default), legacy)."
+        echo "--installer=<type> : Set which Installer to use (options: installer (default))."
         echo "--script=<path> : Run an additional script in chroot."
         exit 1
         ;;
@@ -947,20 +947,15 @@ if [ "$arginstaller" == "installer" ] || [ -z "$arginstaller" ]; then
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/acu_config.yaml
     sudo mkdir -p "$root_mount_dir/usr/lib/installer/.acu/config"
     sudo cp -r acu_config.yaml "$root_mount_dir/usr/lib/installer/.acu/config/config.yaml"
-elif [ "$arginstaller" == "legacy" ]; then
-    installer_name="arch-rock-installer"
-    compiled_pkg_dir="/usr/lib/compiled-packages"
-    curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/tools/$installer_name
 fi
 
 # Copy Installer
 colorecho "$GREEN" "Copying Installer ..."
 sudo chmod +x $installer_name
 sudo cp -r "$installer_name" "$root_mount_dir/usr/bin/installer"
-if [ ! -z "$argmodel" ]; then
-    sudo sed -i "s/install_target=\"rock5\"/install_target=\"$argmodel\"/g" "$root_mount_dir/usr/bin/installer" # old installer
-    #sudo sed -i "s/^#install_target=\".*\"/install_target=\"$argmodel\"/g" "$root_mount_dir/usr/bin/installer" # new installer (optional)
-fi
+#if [ -n "$argmodel" ]; then
+    #sudo sed -i "s/^#install_target=\".*\"/install_target=\"$argmodel\"/g" "$root_mount_dir/usr/bin/installer" # (optional)
+#fi
 
 if [ ! -z "$is_img" ]; then
     colorecho "$GREEN" "Downloading growpart ..."
