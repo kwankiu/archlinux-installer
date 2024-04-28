@@ -1,0 +1,107 @@
+name: Build Arch Linux Installer (UEFI)
+
+# Controls when the workflow will run
+on:
+  push:
+    tags:
+      #- 'b*'
+      - 'b*-UEFI'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    name: Build Images
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        model_name:
+          # Generic
+          - generic
+          # Asahi (Apple Silicon)
+          - asahi
+          # Raspberry Pi
+          #- raspberrypi
+          # Radxa
+          - radxa-rock-5a
+          - radxa-rock-5b
+          # Khadas
+          - khadas-edge2
+          # Orange Pi
+          - orangepi-5 #rockchip-rk3588s-orangepi-5
+          - orangepi-5-plus
+          # Nano Pi
+          - friendlyelec-nanopc-t6
+          - friendlyelec-nanopi-r6c
+          - friendlyelec-nanopi-r6s
+          # Other Rockchip
+          - indiedroid-nova #9tripod-rk3588s
+          - mixtile-blade3 #rockchip-rk3588-blade3-v101-linux
+          # Add more models as needed
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Preparing
+        run: |
+          for model in ${{ matrix.model_name }}; do
+            echo "Building image for $model"
+            rk3588_edk2_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.9.1/${model#*-}_UEFI_Release_v0.9.1.img"
+            case $model in
+              asahi)
+                # Notes: this should be rootfs only & WIP
+                args="--kernel=linux-asahi -b"
+                ;;
+              radxa-*)
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=${rk3588_edk2_url}"
+                ;;
+              khadas-*)
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=${rk3588_edk2_url}"
+                ;;
+              orangepi-*)
+                args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=${rk3588_edk2_url} -b"
+                ;;
+              *)
+                # Generic
+                args="--kernel=linux -b"
+                ;;
+            esac
+          done
+          echo "ARGS=$args" >> $GITHUB_ENV
+
+      - name: Build Image
+        env:
+          args: ${{ env.ARGS }}
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer-uefi.img --bootloader=grub -c $args
+          cp -r out/*-archlinux-*.img.xz .
+
+      - name: Add meta data to Image (OOWOW)
+        if: startsWith(matrix.model_name, 'khadas')
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/khadas/krescue/master/tools/xze) "${{ matrix.model_name }}-archlinux-installer-uefi.img.xz" \
+             --meta \
+             label="Arch Linux Installer" \
+             builder="Arch Linux Installer" \
+             date="$(LANG=C TZ= date)" \
+             match=BOARD=$(echo "${{ matrix.model_name }}" | awk -F'-' '{print toupper(substr($2,1,1)) substr($2,2)}') \
+             link=https://github.com/kwankiu/archlinux-installer/wiki \
+             duration=250 \
+             desc="Community-built Arch Linux Installer for ARM (Aarch64), UEFI Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
+        continue-on-error: true
+
+      - name: Upload to GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+            artifacts: "*-archlinux-*.img.xz"
+            makeLatest: false
+            allowUpdates: true
+            omitBody: true
