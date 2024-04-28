@@ -27,7 +27,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Extract U-Boot
         run: |
-          curl -L https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-10-52701b7_arm64.deb -o uboot.deb
+          curl -L https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb -o uboot.deb
           ar xv uboot.deb
           tar -xf data.tar.xz
           ls -l
