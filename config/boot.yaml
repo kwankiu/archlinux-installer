@@ -20,6 +20,13 @@ boot:
   compatible:
     - generic
 
+# Asahi (Apple Silicon)
+- dtb: /usr/lib/asahi-boot/dtb
+  dtb_overlays: null
+  cmdline: rw quiet splash
+  compatible:
+    - apple*
+
 # Radxa RK3588
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays:
@@ -37,15 +44,6 @@ boot:
     - radxa-zero-3*
     - radxa-rock-2a
 
-# Orange Pi and other RK3588
-- dtb: /dtbs/%PKGBASE%
-  dtb_overlays: null
-  cmdline: rw quiet splash
-  compatible:
-    - xunlong-orangepi*
-    - orangepi*
-    - rockchip-rk3588*
-  
 # Khadas Edge 2
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
@@ -53,9 +51,19 @@ boot:
   compatible:
     - khadas-edge*
 
-# Asahi (Apple Silicon)
-- dtb: /usr/lib/asahi-boot/dtb
+# Orange Pi and other non-mainline models
+- dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
   cmdline: rw quiet splash
   compatible:
-    - apple*
+    - xunlong-orangepi*
+    - orangepi*
+    - rockchip-rk3588*
+    - friendlyelec*
+    - indiedroid*
+    - mixtile*
+    - embedfire*
+    - firefly*
+    - turing*
+    - armsom*
+
