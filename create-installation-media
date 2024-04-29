@@ -936,7 +936,7 @@ if [ "$config_boot" = 1 ]; then
         pacman-key --init
         pacman-key --populate archlinuxarm
         pacman -Sy grub device-mapper efibootmgr --noconfirm
-        grub-install --target=arm64-efi --efi-directory=/boot --removable
+        grub-install --target=arm64-efi --efi-directory=/boot/EFI --removable
         grub-mkconfig -o /boot/grub/grub.cfg
 END
         if [ "$argbootpt" = 1 ]; then
