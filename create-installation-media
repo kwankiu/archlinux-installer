@@ -781,7 +781,7 @@ if [ -z "$argmountimg" ]; then
     fi
 
     # Create GPT table and partitions
-    colorecho "$GREEN" "Formatting and partitioning disk ..."
+    colorecho "$GREEN" "Creating Partition Table ..."
     echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
 
     # Pack boot firmware
@@ -807,6 +807,7 @@ if [ -z "$argmountimg" ]; then
     fi
 
     # Create system partitions
+    colorecho "$GREEN" "Partitioning disk ..."
     if [ -z "$argbootptst" ]; then
         argbootptst="16MiB"
     fi
