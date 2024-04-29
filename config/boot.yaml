@@ -66,4 +66,7 @@ boot:
     - firefly*
     - turing*
     - armsom*
+    - hinlink*
+    - mekotronics*
+    - stationpc*
 

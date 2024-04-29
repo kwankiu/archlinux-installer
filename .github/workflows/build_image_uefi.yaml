@@ -26,23 +26,33 @@ jobs:
           - generic
           # Asahi (Apple Silicon)
           - asahi
-          # Raspberry Pi
+          ## Raspberry Pi UEFI ##
           #- raspberrypi
+          ## RK3588-EDK2 ##
           # Radxa
           - radxa-rock-5a
           - radxa-rock-5b
-          # Khadas
-          - khadas-edge2
+          #- radxa-rock-5-itx
           # Orange Pi
           - orangepi-5 #rockchip-rk3588s-orangepi-5
           - orangepi-5plus
+          # Khadas
+          - khadas-edge2
           # Nano Pi
           - friendlyelec-nanopc-t6
           - friendlyelec-nanopi-r6c
           - friendlyelec-nanopi-r6s
+          # Firefly
+          - firefly-roc-rk3588s-pc
+          #- firefly-itx-3588j
+          #- firefly-aio-3588q
           # Other Rockchip
           - indiedroid-nova #9tripod-rk3588s
           - mixtile-blade3 #rockchip-rk3588-blade3-v101-linux
+          - stationpc-station-m3
+          - mekotronics-r58x
+          - mekotronics-r58-mini
+          - hinlink-h88k
           # Add more models as needed
 
     steps:
