@@ -57,17 +57,17 @@ jobs:
             rk3588_edk2_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.9.1/${model#*-}_UEFI_Release_v0.9.1.img"
             case $model in
               asahi)
-                # Notes: this should be rootfs only & WIP
                 args="--kernel=linux-asahi -b"
                 ;;
-              radxa-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=${rk3588_edk2_url}"
-                ;;
-              khadas-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=${rk3588_edk2_url}"
+              radxa-* | khadas-*)
+                bootfw_url="${rk3588_edk2_url}"
+                bootfw="$(basename $bootfw_url)"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw}"
                 ;;
               orangepi-*)
-                args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=${rk3588_edk2_url} -b"
+                bootfw_url="${rk3588_edk2_url}"
+                bootfw="$(basename $bootfw_url)"
+                args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=${bootfw} -b"
                 ;;
               *)
                 # Generic
@@ -76,6 +76,15 @@ jobs:
             esac
           done
           echo "ARGS=$args" >> $GITHUB_ENV
+          echo "BOOTFW_URL=$bootfw_url" >> $GITHUB_ENV
+  
+      - name: Download Bootloader
+        if: ${{ env.BOOTFW_URL }}
+        env:
+          bootfw_url: ${{ env.BOOTFW_URL }}
+        run: |
+          curl -LJO ${bootfw_url}
+          ls -l
 
       - name: Build Image
         env:
