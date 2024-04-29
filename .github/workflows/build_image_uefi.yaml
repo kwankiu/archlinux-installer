@@ -35,7 +35,7 @@ jobs:
           - khadas-edge2
           # Orange Pi
           - orangepi-5 #rockchip-rk3588s-orangepi-5
-          - orangepi-5-plus
+          - orangepi-5plus
           # Nano Pi
           - friendlyelec-nanopc-t6
           - friendlyelec-nanopi-r6c
@@ -54,20 +54,19 @@ jobs:
         run: |
           for model in ${{ matrix.model_name }}; do
             echo "Building image for $model"
-            rk3588_edk2_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.9.1/${model#*-}_UEFI_Release_v0.9.1.img"
             case $model in
-              asahi)
-                args="--kernel=linux-asahi -b"
-                ;;
-              radxa-* | khadas-*)
-                bootfw_url="${rk3588_edk2_url}"
+              radxa-* | khadas-* | mixtile-*)
+                bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.9.1/${model#*-}_UEFI_Release_v0.9.1.img"
                 bootfw="$(basename $bootfw_url)"
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw}"
                 ;;
-              orangepi-*)
-                bootfw_url="${rk3588_edk2_url}"
+              orangepi-* | indiedroid-*)
+                bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.9.1/${model}_UEFI_Release_v0.9.1.img"
                 bootfw="$(basename $bootfw_url)"
                 args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=${bootfw} -b"
+                ;;
+              asahi)
+                args="--kernel=linux-asahi -b"
                 ;;
               *)
                 # Generic
