@@ -812,7 +812,7 @@ if [ -z "$argmountimg" ]; then
         colorecho "$GREEN" "Flashing bootloader ..."
 
         if [[ "$argbootfw" == *".img" ]]; then
-            sudo dd if="$argbootfw" of="$drive" bs=512 skip=64 seek=64 conv=notrunc
+            sudo dd if="$argbootfw" of="$drive" conv=notrunc
         elif [ -f "$argbootfw/idbloader.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
             sudo dd if="$argbootfw/idbloader.img" of="$drive" seek=64 conv=notrunc
             sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
