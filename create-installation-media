@@ -790,6 +790,7 @@ if [ -z "$argmountimg" ]; then
 
         if [[ "$argbootfw" == *".img" ]]; then
             sudo dd if="$argbootfw" of="$drive" conv=notrunc
+            echo -e "OK\nFix" | sudo parted $drive print ---pretend-input-tty
         elif [ -f "$argbootfw/idbloader.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
             sudo dd if="$argbootfw/idbloader.img" of="$drive" seek=64 conv=notrunc
             sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
@@ -820,25 +821,36 @@ if [ -z "$argmountimg" ]; then
         fi
     fi
 
+    # Find the first partition number after boot firmware
+    num_of_part="$(sudo partx -g $drive | wc -l)"
+    if [ -n "$num_of_part" ] && [ "$num_of_part" -gt 0 ]; then
+        first_part=$((num_of_part + 1))
+    else
+        first_part=1
+    fi
+    echo "Index of first partition after boot firmware (if exist) is $first_part"
+
     if [ "$argbootpt" = 1 ]; then
         sudo parted $drive mkpart boot fat32 $argbootptst $argbootpted
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
-        sudo parted $drive set 1 boot on
-        sudo parted $drive set 1 esp on
+        sudo parted $drive set $first_part boot on
+        sudo parted $drive set $first_part esp on
     else
         sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
-        sudo parted $drive set 2 boot on
+        sudo parted $drive set $((first_part + 1)) boot on
     fi
 
     # Find the partitions
     if [ -e $drive"1" ]; then
-        root_partition=$drive"2"
-        boot_partition=$drive"1"
+        root_partition=$drive"$((first_part + 1))"
+        boot_partition=$drive"$first_part"
     else
-        root_partition=$drive"p2"
-        boot_partition=$drive"p1"
+        root_partition=$drive"p$((first_part + 1))"
+        boot_partition=$drive"p$first_part"
     fi
+    echo "Boot / Config Part: $boot_partition"
+    echo "Rootfs Part: $root_partition"
 
     # Format the partitions
     echo -e 'y' | sudo mkfs.ext4 $root_partition
