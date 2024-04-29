@@ -825,6 +825,8 @@ if [ -z "$argmountimg" ]; then
         else
             colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
         fi
+
+        sync
     fi
 
     # Find the partitions
