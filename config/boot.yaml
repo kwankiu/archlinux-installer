@@ -25,6 +25,7 @@ boot:
   dtb_overlays: null
   cmdline: rw quiet splash
   compatible:
+    - asahi
     - apple*
 
 # Radxa RK3588
