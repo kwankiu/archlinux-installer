@@ -784,6 +784,29 @@ if [ -z "$argmountimg" ]; then
     colorecho "$GREEN" "Formatting and partitioning disk ..."
     echo -e "Yes" | sudo parted $drive mklabel gpt ---pretend-input-tty
 
+    # Pack boot firmware
+    if [ -n "$argbootfw" ]; then
+        colorecho "$GREEN" "Flashing boot firmware ..."
+
+        if [[ "$argbootfw" == *".img" ]]; then
+            sudo dd if="$argbootfw" of="$drive" conv=notrunc
+        elif [ -f "$argbootfw/idbloader.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
+            sudo dd if="$argbootfw/idbloader.img" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootfw/idblock.bin" ] && [ -f "$argbootfw/uboot.img" ]; then
+            sudo dd if="$argbootfw/idblock.bin" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootfw/uboot.img" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootfw/tpl-spl.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
+            sudo dd if="$argbootfw/tpl-spl.img" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+        else
+            colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
+        fi
+
+        sync
+    fi
+
+    # Create system partitions
     if [ -z "$argbootptst" ]; then
         argbootptst="16MiB"
     fi
@@ -805,28 +828,6 @@ if [ -z "$argmountimg" ]; then
         sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
         sudo parted $drive set 2 boot on
-    fi
-
-    # Pack u-boot / edk2
-    if [ -n "$argbootfw" ]; then
-        colorecho "$GREEN" "Flashing bootloader ..."
-
-        if [[ "$argbootfw" == *".img" ]]; then
-            sudo dd if="$argbootfw" of="$drive" skip=64 seek=64 conv=notrunc
-        elif [ -f "$argbootfw/idbloader.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
-            sudo dd if="$argbootfw/idbloader.img" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
-        elif [ -f "$argbootfw/idblock.bin" ] && [ -f "$argbootfw/uboot.img" ]; then
-            sudo dd if="$argbootfw/idblock.bin" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$argbootfw/uboot.img" of="$drive" seek=16384 conv=notrunc
-        elif [ -f "$argbootfw/tpl-spl.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
-            sudo dd if="$argbootfw/tpl-spl.img" of="$drive" seek=64 conv=notrunc
-            sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
-        else
-            colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
-        fi
-
-        sync
     fi
 
     # Find the partitions
