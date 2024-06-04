@@ -100,7 +100,7 @@ jobs:
                 ;;
               orangepi-*)
                 args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=usr/lib/u-boot -b"
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-2_arm64.deb"
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-5_arm64.deb"
                 ;;
               *)
                 # Generic
