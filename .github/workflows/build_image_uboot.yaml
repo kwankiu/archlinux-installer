@@ -36,7 +36,8 @@ jobs:
           - radxa-rock-5-itx
           - radxa-rock-2a
           - radxa-zero-3
-          - radxa-cm5
+          - radxa-cm5-io
+          - radxa-cm5-rpi-cm4-io
           - radxa-nx5
           # Khadas
           - khadas-edge2
