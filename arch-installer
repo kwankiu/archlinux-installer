@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24042801
+installerver=24060401
 
 # Required ACU version
 acuver=0.0.8-dev
@@ -871,7 +871,8 @@ install_part2() {
     # Install desktop environment
     alert "Installing Desktop environment"
     if [ -n "$install_desktop_environment" ]; then
-        acu -y install $install_desktop_environment
+        #acu -y install $install_desktop_environment
+        acu install $install_desktop_environment --noconfirm
     fi
 
     ################################################################
