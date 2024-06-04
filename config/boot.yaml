@@ -36,6 +36,7 @@ boot:
   compatible:
     - radxa-rock-5*
     - radxa-cm5*
+    - radxa-nx5*
 
 # Radxa Zero 3 and Rock 2A
 - dtb: /dtbs/%PKGBASE%

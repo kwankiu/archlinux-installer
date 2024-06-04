@@ -38,6 +38,7 @@ postinstall:
         compatible:
           - radxa-rock-5*
           - radxa-cm5*
+          - radxa-nx5*
         commands: |
           #1 Disable Sleep
           echo "Disable suspend ..."
