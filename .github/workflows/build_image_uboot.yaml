@@ -145,6 +145,7 @@ jobs:
              link=https://github.com/kwankiu/archlinux-installer/wiki \
              duration=250 \
              desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
+          mv ${{ matrix.model_name }}-archlinux-installer.img.xz $(echo "${{ matrix.model_name }}" | awk -F'-' '{print substr($2,1)}')-khadas-archlinux-installer.img.xz
         continue-on-error: true
 
       - name: Upload to GitHub Release
