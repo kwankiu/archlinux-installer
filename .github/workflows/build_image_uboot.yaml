@@ -92,7 +92,7 @@ jobs:
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
                 ;;
               radxa-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
                 ;;
               khadas-*)
