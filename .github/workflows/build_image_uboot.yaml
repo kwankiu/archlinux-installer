@@ -38,6 +38,7 @@ jobs:
           - radxa-zero-3
           - radxa-cm5-io
           - radxa-cm5-rpi-cm4-io
+          - radxa-cm5-opi5
           - radxa-nx5-io
           # Khadas
           - khadas-edge2
@@ -81,6 +82,10 @@ jobs:
               raspberrypi)
                 # Notes: Raspberry Pi does not use extlinux and does not need to pack u-boot
                 args="--kernel=linux-rpi --addpkg=firmware-raspberrypi -b --bootpartstart=4MiB --bootloader=skip"
+                ;;
+              radxa-cm5-opi5)
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5_2017.09+20240401.git7f7ff61a-5_arm64.deb"
                 ;;
               radxa-zero*)
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
