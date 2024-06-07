@@ -28,22 +28,30 @@ jobs:
           # Raspberry Pi
           - raspberrypi
           # Radxa
+          - radxa-rock-2a
+          #- radxa-rock-3a
+          #- radxa-rock-3b
+          #- radxa-rock-3c
           - radxa-rock-5a
           - radxa-rock-5b
-          #- radxa-rock-5b-plus
-          #- radxa-rock-5c
-          #- radxa-rock-5d
+          - radxa-rock-5b-plus
+          - radxa-rock-5c
+          - radxa-rock-5d
           - radxa-rock-5-itx
-          - radxa-rock-2a
-          - radxa-zero-3
+          #- radxa-cm3-io
+          #- radxa-cm3-rpi-cm4-io
+          #- radxa-cm3-sodimm-io
+          #- radxa-cm3i-io
+          #- radxa-e23
+          #- radxa-e25
           - radxa-cm5-io
           - radxa-cm5-rpi-cm4-io
           - radxa-cm5-opi5
           - radxa-nx5-io
+          - radxa-zero-3
           # Khadas
+          - khadas-edge
           - khadas-edge2
-          #- khadas-edgev
-          #- khadas-edge
           # Orange Pi
           - orangepi-5 #rockchip-rk3588s-orangepi-5
           - orangepi-5b
@@ -83,29 +91,36 @@ jobs:
                 # Notes: Raspberry Pi does not use extlinux and does not need to pack u-boot
                 args="--kernel=linux-rpi --addpkg=firmware-raspberrypi -b --bootpartstart=4MiB --bootloader=skip"
                 ;;
-              radxa-cm5-opi5)
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5_2017.09+20240401.git7f7ff61a-5_arm64.deb"
-                ;;
-              radxa-zero*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
-                uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
-                ;;
-              radxa-rock*)
-                model_name="${model#*-}"
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model_name}"
-                uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
-                ;;
               radxa-*)
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
-                uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
+                # Use different kernel and u-boot path for different boards
+                if [ "$model" == "radxa-rock"* ]; then
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
+                elif [ "$model" == "radxa-cm5-opi5" ]; then
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                else
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
+                fi
+                # URL to download u-boot for the board
+                if [ "$model" == "radxa-zero"* ]; then
+                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
+                elif [ "$model" == "radxa-cm5-opi5" ]; then
+                  uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5_2017.09+20240401.git7f7ff61a-5_arm64.deb"
+                else
+                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
+                fi
                 ;;
               khadas-*)
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
-                uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.5-2017.09_arm64.deb"
+                # URL to download u-boot for the board
+                if [ "$model" == "khadas-edge2" ]; then
+                    uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.8-2017.09_arm64.deb"
+                elif [ "$model" == "khadas-edge" ]; then
+                    uboot_url="https://dl.khadas.com/repos/edge/pool/main/l/linux-u-boot-edge-vendor/linux-u-boot-edge-vendor_0.8.3-2017.09_arm64.deb"
+                fi
                 ;;
               orangepi-*)
                 args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=usr/lib/u-boot -b"
+                # URL to download u-boot for the board
                 uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-5_arm64.deb"
                 ;;
               *)
@@ -150,6 +165,7 @@ jobs:
              link=https://github.com/kwankiu/archlinux-installer/wiki \
              duration=250 \
              desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
+          # Rename image name to begin with the board model (required to prevent OOWOW hiding the image)
           mv ${{ matrix.model_name }}-archlinux-installer.img.xz $(echo "${{ matrix.model_name }}" | awk -F'-' '{print substr($2,1)}')-khadas-archlinux-installer.img.xz
         continue-on-error: true
 
