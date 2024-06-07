@@ -28,7 +28,8 @@ jobs:
           # Raspberry Pi
           - raspberrypi
           # Radxa
-          - radxa-rock-2a
+          #- radxa-rock-2a
+          #- radxa-rock-2f
           #- radxa-rock-3a
           #- radxa-rock-3b
           #- radxa-rock-3c
