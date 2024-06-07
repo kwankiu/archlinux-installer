@@ -800,6 +800,9 @@ if [ -z "$argmountimg" ]; then
         elif [ -f "$argbootfw/idblock.bin" ] && [ -f "$argbootfw/uboot.img" ]; then
             sudo dd if="$argbootfw/idblock.bin" of="$drive" seek=64 conv=notrunc
             sudo dd if="$argbootfw/uboot.img" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootfw/idbloader.img" ] && [ -f "$argbootfw/uboot.img" ]; then
+            sudo dd if="$argbootfw/idbloader.img" of="$drive" seek=64 conv=notrunc
+            sudo dd if="$argbootfw/uboot.img" of="$drive" seek=16384 conv=notrunc
         elif [ -f "$argbootfw/tpl-spl.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
             sudo dd if="$argbootfw/tpl-spl.img" of="$drive" seek=64 conv=notrunc
             sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
