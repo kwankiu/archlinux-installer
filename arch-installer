@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24060401
+installerver=24060801
 
 # Required ACU version
 acuver=0.0.9-dev
@@ -67,6 +67,16 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 # (Optional) Target Device for Installation (comment this to auto detect from devicetree)
 #install_target="radxa-rock-5b"
 
+################################################################
+    # Auto detect install target from devicetree
+    if [ -z "$install_target" ]; then
+        if [ -f "/proc/device-tree/compatible" ]; then
+            install_target="$(sed 's/\x00/ /g; s/,/ /g' /proc/device-tree/compatible | awk '{print $1, $2}' | tr ' ' '-')"
+        fi
+        if [ -z "$install_target" ]; then
+            install_target="generic"
+        fi
+    fi
 ################################################################
 ## Debug variable overrides ##
 # (FOR DEVELOPMENT USE ONLY, MAKE SURE ALL OVERRIDES ARE COMMENTED FOR PRODUCTION USE)
@@ -948,17 +958,6 @@ start_installation() {
 installer_menu() {
 
     ################################################################
-    # Auto detect install target from devicetree
-    if [ -z "$install_target" ]; then
-        if [ -f "/proc/device-tree/compatible" ]; then
-            install_target="$(sed 's/\x00/ /g; s/,/ /g' /proc/device-tree/compatible | awk '{print $1, $2}' | tr ' ' '-')"
-        fi
-        if [ -z "$install_target" ]; then
-            install_target="generic"
-        fi
-    fi
-
-    ################################################################
     # Choose Language
 
     # Full Language Choice Menu
@@ -1398,6 +1397,13 @@ if [ -d "$compiled_pkg_folder" ] && [ -z "$skip_install_pkg" ]; then
             # Ensure SSL (Sync Clock)
             alert "Enabling Time Sync ..."
             systemctl enable systemd-timesyncd
+
+            # USB Fix for OPI5
+            if [[ "$install_target" == "rockchip-rk3588"* ]]; then
+                alert "Running USB2 Fix"
+                echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n[Service]\nExecStart=/usr/bin/sh -c \"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\"\nType=oneshot\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
+                sudo systemctl enable enable-usb2
+            fi
 
             alert "System will reboot now."
             if ! reboot --force; then

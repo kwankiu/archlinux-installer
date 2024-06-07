@@ -93,7 +93,7 @@ jobs:
                 ;;
               radxa-*)
                 # Use different kernel and u-boot path for different boards
-                if [ "$model" == "radxa-rock"* ]; then
+                if [[ "$model" == "radxa-rock"* ]]; then
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
                 elif [ "$model" == "radxa-cm5-opi5" ]; then
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
@@ -101,7 +101,7 @@ jobs:
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
                 # URL to download u-boot for the board
-                if [ "$model" == "radxa-zero"* ]; then
+                if [[ "$model" == "radxa-zero"* ]]; then
                   uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
                 elif [ "$model" == "radxa-cm5-opi5" ]; then
                   uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-orangepi-5_2017.09+20240401.git7f7ff61a-5_arm64.deb"
