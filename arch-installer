@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24060801
+installerver=24060802
 
 # Required ACU version
 acuver=0.0.9-dev
@@ -916,7 +916,8 @@ install_part2() {
     # Reset bashrc and disable autologin and enable sudo password
     cp -r /etc/skel/.bashrc /home/$(whoami)
     sudo rm -rf /etc/systemd/system/getty@tty1.service.d/autologin.conf
-    acu user manage $(whoami) sudopw
+    # Re-enable sudo password when installation is complete
+    sudo sed -i "s/^\($(whoami).*\)NOPASSWD: ALL/\1ALL/" /etc/sudoers
 
     ################################################################
     # Installation Finished
