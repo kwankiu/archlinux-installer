@@ -99,7 +99,7 @@ jobs:
                 elif [ "$model" == "radxa-cm5-opi5" ]; then
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
                 elif [ "$model" == "radxa-cm5-rpi-cm4-io" ]; then
-                  args="--kernel=linux-aarch64-rockchip-bsp6.1-radxa --bootfirmware=usr/lib/u-boot/${model}"
+                  args="--kernel=linux-aarch64-rockchip-bsp5.10-radxa --bootfirmware=usr/lib/u-boot/${model}"
                 else
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
