@@ -68,7 +68,7 @@ jobs:
               radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-*)
                 bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.9.1/${model#*-}_UEFI_Release_v0.9.1.img"
                 bootfw="$(basename $bootfw_url)"
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               orangepi-* | indiedroid-*)
                 bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.9.1/${model}_UEFI_Release_v0.9.1.img"

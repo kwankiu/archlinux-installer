@@ -109,7 +109,7 @@ kernel:
         additional: null
 
       # Joshua's Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-bsp5.10-joshua
+      - base: linux-aarch64-rockchip-bsp5.10-joshua-git
         description: Joshua Linux Rockchip BSP Kernel
         version: 5.10.160
         repo:

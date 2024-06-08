@@ -95,13 +95,11 @@ jobs:
               radxa-*)
                 # Use different kernel and u-boot path for different boards
                 if [[ "$model" == "radxa-rock"* ]]; then
-                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
+                  args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
                 elif [ "$model" == "radxa-cm5-opi5" ]; then
-                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
-                elif [ "$model" == "radxa-cm5-rpi-cm4-io" ]; then
-                  args="--kernel=linux-aarch64-rockchip-bsp5.10-radxa --bootfirmware=usr/lib/u-boot/${model}"
+                  args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
                 else
-                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
+                  args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
                 # URL to download u-boot for the board
                 if [[ "$model" == "radxa-zero"* ]]; then
@@ -113,7 +111,7 @@ jobs:
                 fi
                 ;;
               khadas-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
                 # URL to download u-boot for the board
                 if [ "$model" == "khadas-edge2" ]; then
                     uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.8-2017.09_arm64.deb"
