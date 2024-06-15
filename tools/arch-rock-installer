@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2404271
+installerver=2406161
 
 # Define main / dev branch
 branch=main
@@ -263,25 +263,9 @@ network_option() {
                 sudo wifi-menu $iwdev
             else
                 wifi-menu $iwdev
+                colorecho "$GREEN" "Enabling netctl Auto Connect ..."
+                systemctl enable netctl-auto@$iwdev.service
             fi               
-             # NTP Sync for WiFi
-                if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
-                    colorecho "$GREEN" "Updating NTP Time Sync ..."
-                    if [ -x "$(command -v sudo)" ]; then
-                        sudo rm -rf /etc/systemd/network/*
-                        sudo systemctl restart systemd-networkd
-                        sleep 1
-                        sudo timedatectl set-ntp false
-                        sudo timedatectl set-ntp true
-                    else
-                        rm -rf /etc/systemd/network/*
-                        systemctl restart systemd-networkd
-                        sleep 1
-                        timedatectl set-ntp false
-                        timedatectl set-ntp true
-                    fi
-                fi
-            
             ;;
         [pP])
             if [ -x "$(command -v sudo)" ]; then
@@ -302,6 +286,24 @@ network_option() {
             fi
             ;;
     esac
+
+    # NTP Sync for WiFi
+    if ip link show | grep "state UP" | grep -q "wl" >/dev/null 2>&1; then
+        colorecho "$GREEN" "Updating NTP Time Sync ..."
+        if [ -x "$(command -v sudo)" ]; then
+            sudo rm -rf /etc/systemd/network/*
+            sudo systemctl restart systemd-networkd
+            sleep 1
+            sudo timedatectl set-ntp false
+            sudo timedatectl set-ntp true
+        else
+            rm -rf /etc/systemd/network/*
+            systemctl restart systemd-networkd
+            sleep 1
+            timedatectl set-ntp false
+            timedatectl set-ntp true
+        fi
+    fi
 }
 
 # Check Installer Updates
@@ -514,8 +516,8 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "-h / --help : Usage and Infomation of this installer"
     echo "--skip-init-setup : Skip init setup (use only if the corresponding setup has been done)"
     exit 1
-elif [ "$1" = "--create-init-setup-service" ]; then
-    echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\nBefore=sshd.service systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
+elif [ "$1" = "--create-init-setup-service" ] || [ "$1" = "--create-installer-service" ]; then
+    echo -e "[Unit]\nDescription=Initial System Setup\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/init-setup.service && systemctl enable init-setup.service
     exit 1
 fi
 
@@ -528,7 +530,7 @@ title
 if [ -e $compiled_pkg_folder ]; then 
     if [ ! "$1" = "--skip-install-pkg" ]; then
         colorecho "$GREEN" "Installing Required Packages ..."
-        if yes y | pacman -U $compiled_pkg_folder/*.pkg.tar.* --needed; then
+        if pacman -U --overwrite \* $compiled_pkg_folder/*.pkg.tar.* --needed --noconfirm; then
 
             echo "Removing packages archives ..."
             rm -rf $compiled_pkg_folder
@@ -685,36 +687,35 @@ title "Time Zone"
 kernel_menu() {
     title "Linux Kernel"
     colorecho "$GREEN" "Select a linux kernel to install :"
-    colorecho "$GREEN" "  Linux Kernel \t\t Repo \t\t Description \t\t\t Kernel Version"
+    colorecho "$GREEN" "  Linux Kernel \t\t (Repo) \t\t\t\t Description \t\t\t Kernel Version"
     options=()
 
     # Kernel options for each install target
     # format: kernelpkg (repo) - Description (linux_kernel_version)
     # notes: put the recommended option at first line and mark (Recommended) in Description
 
-    if [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-        options+=("linux-aarch64-rockchip-bsp5.10-joshua (7Ji) - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+    # options to show in all images
+    if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+        options+=("linux-aarch64-rockchip-bsp5.10-joshua-git (7Ji)                     - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)                  - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+    elif [ "$install_target" = "rpi" ]; then
+        options+=("linux-rpi (alarm)                                               - Install Linux Raspberry Pi BSP Kernel (Linux 6.6)")
+        options+=("linux-rpi-16k (alarm)                                           - Install Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY (Linux 6.6)")
+        options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
+    elif [ "$install_target" = "asahi" ]; then
+        options+=("linux-asahi (Experimental)                                      - Install Linux Asahi Kernel (Linux 6.6)")
+        options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
     else
-        options+=("linux-aarch64 (alarm) - Install Linux Mainline Kernel (Linux 6.x)")
+        options+=("linux-aarch64 (alarm)                                           - Install Linux Mainline Kernel (Linux mainline latest)")
     fi 
  
-    if [ "$install_target" = "rock5" ]; then 
-        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji) - Install Linux Radxa BSP Kernel (Linux 5.10.108)")
+    if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
+        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)                  - (MAY BE UNAVAILABLE) Install Linux Radxa Rockchip BSP 5.10 Kernel (Linux 5.10-rkr4.1)")
     fi 
  
     if [ "$install_target" = "orangepi5" ]; then
-        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji) - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
-        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji) - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
-    fi 
-
-    if [ "$branch" = "dev" ]; then 
-        #options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji) - (Experimental) Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
-        #options+=("linux-rockchip-6-joshua-bin (acu) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
-        #options+=("linux-rockchip-joshua-bin (7Ji-PKGBUILDs) - (Experimental) Install Joshua Linux Rockchip Kernel (Linux 6.1.43)") 
-        options+=("linux-joshua-git (7Ji) - Install Linux Mainline Kernel with patches for rk3588 devices with linux-git trunk of Joshua (Linux 6.7.0)")
-        options+=("linux-aarch64-7ji (7Ji) - Install Linux Mainline Kernel with patches for Amlogic devices and RK3588 (Linux 6.x latest)")
-        options+=("linux-aarch64 (7Ji) - Install Linux Mainline Kernel (This is actually from alarm repo) (Linux 6.x latest)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji)            - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)        - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
     fi 
 
     options+=("(Others) Enter custom kernel options (Experimental)")
@@ -738,8 +739,8 @@ kernel_menu() {
         elif [[ $compilepkggit = 1 ]]; then  
             read -p "Enter a kernel to install from adrepo (e.g. linux-radxa-rkbsp5-git): " kernelpkg
         elif [[ $compilepkggit = 2 ]]; then
-            read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-aarch64-rockchip-bsp5.10-joshua): " kernelurl
-            read -p "Enter the kernel PKGBASE name (e.g. linux-aarch64-rockchip-bsp5.10-joshua): " kernelpkg
+            read -p "Enter the github repo for your PKGBUILD (e.g. 7Ji-PKGBUILDs/linux-rockchip-joshua-git): " kernelurl
+            read -p "Enter the kernel PKGBASE name (e.g. linux-rockchip-joshua-git): " kernelpkg
         else
             #colorecho "$YELLOW" "Warning: No option is selected, kernel may not be installed."
             kernel_menu
@@ -761,7 +762,7 @@ kernel_menu
 title "Desktop Environment"
 colorecho "$GREEN" "Select a desktop environment to install :"
 echo
-options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish (Experimental)" "XFCE (Experimental)" "LXQt" "LXDE" "MATE" "Cinnamon")
+options=("Gnome (Full)" "Gnome (Minimal)" "KDE Plasma (Full)" "KDE Plasma (No KDE Apps)" "Budgie Desktop" "Sway" "Cutefish (Experimental)" "XFCE (Experimental)" "LXQt" "LXDE" "MATE" "Cinnamon" "Hyprland")
 options+=("Do not install a Desktop Environment")
 
 select_option "${options[@]}"
@@ -831,16 +832,16 @@ title "Installing Linux Kernel"
 
     colorecho "$GREEN" "Installing Linux Firmware ..." 
     if [[ "$kernelpkg" == *"-orangepi"* ]]; then
-        yes y|sudo pacman -S linux-firmware-orangepi-git mali-valhall-g610-firmware
-    elif [[ "$kernelpkg" == *"-radxa"* ]]; then
+        yes y|sudo pacman -S linux-firmware-orangepi-git
+    elif [[ "$kernelpkg" == *"-radxa"* ]] && [ "$install_target" = "rock5" ]; then
         colorecho "$GREEN" "Removing linux-firmware-joshua-git ..."
         yes y|sudo pacman -R linux-firmware-joshua-git
         colorecho "$GREEN" "Installing DKMS Packages ..."
         arch-rock-config install "8852bu-dkms-git" "8852be-dkms-git"
     elif [[ "$kernelpkg" == *"-joshua"* ]]; then
-        yes y|sudo pacman -S linux-firmware-joshua-git mali-valhall-g610-firmware
-    elif [ "$install_target" = "rock5" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-        yes y|sudo pacman -S linux-firmware-joshua-git mali-valhall-g610-firmware
+        yes y|sudo pacman -S linux-firmware-joshua-git
+    elif [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
+        yes y|sudo pacman -S linux-firmware-joshua-git
     else
         yes y|sudo pacman -S $firmwarepkg
     fi
@@ -857,45 +858,47 @@ title "Installing Linux Kernel"
         curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/boot-templates/${install_target}.extlinux.template
         sudo mv ${install_target}.extlinux.template /boot/extlinux/extlinux.conf
     fi        
-        
-    colorecho "$YELLOW" "Generating extlinux.conf from template ..."
-    # Get rootfs partition from the current mount point "/"
-    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
-    # Find the UUIDs of the root partition
-    root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
-    echo "Root partition UUID: $root_uuid"
+    if [ "$install_target" != "rpi" ]; then    
+        colorecho "$YELLOW" "Generating extlinux.conf from template ..."
+        # Get rootfs partition from the current mount point "/"
+        rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
-    colorecho "$GREEN" "Updating extlinux.conf ..."
+        # Find the UUIDs of the root partition
+        root_uuid=$(sudo blkid $rootfs_partition | awk '{print $2}' | tr -d '"')
+        echo "Root partition UUID: $root_uuid"
 
-    # Change pkgbase for extlinux.conf
-    if sudo test ! -e "/boot/dtbs/$kernelpkg"; then 
-        sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
-    fi
+        colorecho "$GREEN" "Updating extlinux.conf ..."
 
-    # fix rockchip overlay directory name
-    if sudo test -e "/boot/dtbs/$kernelpkg/rockchip/overlay"; then
-        sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
-    fi
+        # Change pkgbase for extlinux.conf
+        if sudo test ! -e "/boot/dtbs/$kernelpkg"; then 
+            sudo sed -i "s|/dtbs/%PKGBASE%|/dtbs|" /boot/extlinux/extlinux.conf
+        fi
 
-    sudo sed -i "s|%PKGBASE%|$kernelpkg|" /boot/extlinux/extlinux.conf
+        # fix rockchip overlay directory name
+        if sudo test -e "/boot/dtbs/$kernelpkg/rockchip/overlay"; then
+            sudo sed -i "s|/rockchip/overlays|/rockchip/overlay|" /boot/extlinux/extlinux.conf
+        fi
 
-    # Change UUID for extlinux.conf   
-    sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
-    sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s|%PKGBASE%|$kernelpkg|" /boot/extlinux/extlinux.conf
 
-    # Check if /boot is mounted as a partition or directory
-    if mountpoint -q /boot; then
-        colorecho "$GREEN" "/boot is mounted as a partition"
-        colorecho "$GREEN" "Done"
-    else
-        colorecho "$GREEN" "/boot is mounted as a directory"
-        colorecho "$GREEN" "Updating paths for extlinux.conf ..."
-        sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
-        sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+        # Change UUID for extlinux.conf   
+        sudo sed -i "s|UUID=\\*\\*CHANGEME\\*\\*|$root_uuid|" /boot/extlinux/extlinux.conf
+        sudo sed -i "s|UUID=CHANGEME|$root_uuid|" /boot/extlinux/extlinux.conf
+
+        # Check if /boot is mounted as a partition or directory
+        if mountpoint -q /boot; then
+            colorecho "$GREEN" "/boot is mounted as a partition"
+            colorecho "$GREEN" "Done"
+        else
+            colorecho "$GREEN" "/boot is mounted as a directory"
+            colorecho "$GREEN" "Updating paths for extlinux.conf ..."
+            sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /initramfs| /boot/initramfs|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /initrd| /boot/initrd|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /dtbs| /boot/dtbs|" /boot/extlinux/extlinux.conf
+            sudo sed -i "s| /dtbo| /boot/dtbo|" /boot/extlinux/extlinux.conf
+        fi
     fi
 
 ################################################################
@@ -928,6 +931,8 @@ title "Installing Video Acceleration"
         sudo pacman -S ffmpeg-rockchip-git --noconfirm
     elif sudo pacman -Ssy "ffmpeg-mpp-git" &> /dev/null; then
         sudo pacman -S ffmpeg-mpp-git --noconfirm
+    elif [ "$install_target" = "rpi" ]; then
+        sudo pacman -S ffmpeg-rpi --noconfirm
     else
         sudo pacman -S ffmpeg--noconfirm
     fi
@@ -965,12 +970,19 @@ if [ "$install_target" = "edge2" ]; then
     sudo chmod +x fan.sh
     sudo mv fan.sh /usr/local/bin/fan.sh
     colorecho "$GREEN" "Creating FAN control service ..."
-    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee -a /usr/lib/systemd/system/fan.service
+    echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee /usr/lib/systemd/system/fan.service
     sudo systemctl enable fan.service
 fi
 
+if [ "$install_target" = "orangepi5" ]; then
+    # Enable the USB 2.0 port
+    colorecho "$GREEN" "Fix: Enable the USB 2.0 port ..."
+    echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n\n[Service]\nExecStart=/usr/bin/sh -c \"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\"\nType=oneshot\n\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
+    sudo systemctl enable enable-usb2
+fi
+
 if [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ]; then
-    # For testing, to enable AP6275P bluetooth
+    # Enable AP6275P bluetooth
     colorecho "$GREEN" "Fix : AP6275P Bluetooth ..."
     curl -LJO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/brcm_patchram_plus
     sudo chmod +x brcm_patchram_plus
@@ -1010,7 +1022,7 @@ if [ "$de_options" = 0 ]; then
 elif [ "$de_options" = 1 ]; then
     # Install Gnome
     colorecho "$GREEN" "Installing Gnome (Minimal) ..."
-    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-desktop-portal xdg-desktop-portal-gnome xdg-user-dirs --noconfirm
+    sudo pacman -S gnome-shell gdm gnome-keyring gnome-control-center gnome-console gnome-disk-utility gnome-tweaks gnome-backgrounds nautilus xdg-desktop-portal xdg-desktop-portal-gnome xdg-user-dirs librsvg --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 2 ]; then
     # Install KDE Plasma
@@ -1025,12 +1037,12 @@ elif [ "$de_options" = 3 ]; then
 elif [ "$de_options" = 4 ]; then
     # Install Budgie
     colorecho "$GREEN" "Installing Budgie Desktop ..."
-    sudo pacman -S budgie gdm arc-gtk-theme papirus-icon-theme gnome-console gnome-disk-utility nautilus --noconfirm
+    sudo pacman -S budgie gdm arc-gtk-theme papirus-icon-theme gnome-console gnome-disk-utility nautilus librsvg --noconfirm
     sudo systemctl enable gdm
 elif [ "$de_options" = 5 ]; then
     # Install Sway
     colorecho "$GREEN" "Installing Sway ..."
-    sudo pacman -S sway wmenu i3status mako waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst mako thunar --noconfirm
+    sudo pacman -S sway wmenu i3status waybar swayidle swaylock swaybg sddm foot xorg-xwayland qt5-wayland qt6-wayland wofi lxappearance qt5ct python-pywal pcmanfm-qt pass dunst thunar --noconfirm
     sudo systemctl enable sddm
     sudo mkdir -p .config/{sway,dunst,waybar,wofi}
     sudo install -Dm755 /etc/sway/config ~/.config/sway/config
@@ -1067,6 +1079,12 @@ elif [ "$de_options" = 11 ]; then
     colorecho "$GREEN" "Installing Cinnamon ..."
     sudo pacman -S cinnamon cinnamon-translations nemo-fileroller nemo-image-converter nemo-preview xed xreader gnome-console gdm --noconfirm
     sudo systemctl enable gdm
+elif [ "$de_options" = 12 ]; then
+    # Install Sway
+    colorecho "$GREEN" "Installing Hyprland ..."
+    sudo pacman -S hyprland qt5-wayland xdg-desktop-portal-hyprland wofi pass dunst alacritty thunar sddm --noconfirm
+    sudo systemctl enable sddm
+    sed -i 's/kitty/alacritty/g' $HOME/.config/hypr/hyprland.conf
 else
     colorecho "$YELLOW" "Skipping install desktop environment ..."
 fi
