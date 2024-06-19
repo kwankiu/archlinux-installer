@@ -47,7 +47,6 @@ jobs:
           #- radxa-e25
           - radxa-cm5-io
           - radxa-cm5-rpi-cm4-io
-          - radxa-cm5-opi5
           - radxa-nx5-io
           - radxa-zero3
           # Khadas
