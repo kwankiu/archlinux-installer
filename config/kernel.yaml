@@ -93,9 +93,9 @@ kernel:
       # Linux Asahi Kernel
       - base: linux-asahi
         description: Linux Asahi Kernel
-        version: 6.6
+        version: 6.8
         repo:
-          - Experimental
+          - asahi
         compatible:
           - apple*
         recommended:
@@ -169,55 +169,25 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
-      # Joshua's Rockchip 6.1 BIN Kernel
-      - base: linux-aarch64-rockchip-bsp6.1-joshua-bin
-        description: Joshua Linux Rockchip BSP Kernel
-        version: 6.1.43
-        repo:
-          - Experimental
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero-3*
-          - khadas-edge*
-          - xunlong-orangepi-5*
-          - rockchip-rk3588*
-        firmware:
-          - linux-firmware-joshua-git
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
       # Joshua's Rockchip 6.1 Panthor Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-panthor-git
         description: Boogie's Joshua Linux Rockchip BSP Kernel with Panthor support
         version: 6.1.43
         repo:
-          - Experimental
+          - rockchip
           - 7Ji
         compatible: null
         recommended: null
         experimental:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero-3*
-          - khadas-edge*
+          - radxa-rock-5a
+          - radxa-rock-5b
+          - khadas-edge2
           - xunlong-orangepi-5*
           - rockchip-rk3588*
         firmware:
           - linux-firmware-joshua-git
         graphics:
-          - mesa-panfrost-git
+          - mesa
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
@@ -225,7 +195,7 @@ kernel:
 
       # Radxa Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-radxa-git
-        description: Radxa Linux Rockchip BSP Kernel
+        description: (Unavailable) Radxa Linux Rockchip BSP Kernel
         version: 5.10-rkr4.1
         repo:
           - 7Ji
@@ -250,11 +220,11 @@ kernel:
         additional: null
 
       # Radxa Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-bsp5.10-radxa-bin
+      - base: linux-aarch64-rockchip-bsp5.10-radxa
         description: Radxa Linux Rockchip BSP Kernel
         version: 5.10.110
         repo:
-          - Experimental
+          - rockchip
           - 7Ji
         compatible: null
         recommended: null
@@ -277,11 +247,11 @@ kernel:
         additional: null
 
       # Radxa Rockchip 6.1 Kernel
-      - base: linux-aarch64-rockchip-bsp6.1-radxa-bin
+      - base: linux-aarch64-rockchip-bsp6.1-radxa
         description: Radxa Linux Rockchip BSP Kernel
         version: 6.1.43
         repo:
-          - Experimental
+          - rockchip
           - 7Ji
         compatible: null
         recommended: null
@@ -352,38 +322,12 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
-      # wyf9661's Rockchip 6.1 Kernel
-      - base: linux-aarch64-rockchip-bsp
-        description: wyf9661's Linux Rockchip BSP Kernel
-        version: 6.1.57
-        repo:
-          - Experimental
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero-3*
-          - khadas-edge*
-          - xunlong-orangepi-5*
-          - rockchip-rk3588*
-        firmware:
-          - linux-firmware-joshua-git
-        graphics:
-          - mesa-panfork-git
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
       # Collabora RK3588 Hardware Enablement Kernel
       - base: linux-aarch64-rk3588-collabora-git
         description: Collabora RK3588 Hardware Enablement Linux Kernel
         version: 6.9
         repo:
-          - Experimental
+          - rockchip
           - 7Ji
         compatible: null
         recommended: null
@@ -392,9 +336,9 @@ kernel:
           - radxa-rock-5b
           - khadas-edge2
         firmware:
-          - linux-firmware-joshua-git
+          - linux-firmware-armbian-git
         graphics:
-          - mesa-panfrost-git
+          - mesa
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
@@ -426,9 +370,10 @@ kernel:
 
       # Armbian's Edge Mainline Kernel
       - base: linux-aarch64-rockchip-armbian-git
-        description: Armbian Linux Mainline kernel with patches for rk3588
+        description: (Unavailable) Armbian Linux Mainline kernel with patches for rk3588
         version: lastest stable
         repo:
+          - rockchip
           - 7Ji
         compatible: null
         recommended: null
@@ -439,7 +384,33 @@ kernel:
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588*
-        firmware: null
+        firmware:
+          - linux-firmware-armbian-git
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg-mpp-git
+        additional: null
+
+      # Armbian's Rockchip BSP6.1 Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-armbian-git
+        description: Armbian Linux Rockchip BSP6.1 Kernel
+        version: 6.1.43
+        repo:
+          - rockchip
+          - 7Ji
+        compatible: null
+        recommended: null
+        experimental:
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-nx5*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
+        firmware:
+          - linux-firmware-armbian-git
         graphics:
           - mesa-panfork-git
         video:
