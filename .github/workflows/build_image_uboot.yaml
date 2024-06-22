@@ -24,7 +24,7 @@ jobs:
           # Generic
           - generic
           # Asahi (Apple Silicon)
-          - asahi
+          #- asahi
           # Raspberry Pi
           - raspberrypi
           # Radxa
