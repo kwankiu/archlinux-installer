@@ -84,9 +84,10 @@ desktop:
         description: A Desktop Environment
         compatible: null
         packages:
-          - plasma-desktop
+          - plasma-meta
           - sddm
           - konsole
+          - dolphin
         commands: |
           sudo systemctl enable sddm
 
