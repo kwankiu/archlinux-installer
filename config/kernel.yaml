@@ -14,8 +14,8 @@ kernel:
 #        repo:
 #          - Repositories to be added to pacman, supported formats are
 #          - REPO_NAME
-#          - REPO_NAME,REPO_URL
-#          - REPO_NAME,REPO_URL,GPG_KEY
+#          - REPO_NAME,REPO_URL (Coming Soon)
+#          - REPO_NAME,REPO_URL,GPG_KEY (Coming Soon)
 #        compatible:
 #          - Device tags that this package is compatible with (or set to null if none)
 #        recommended:
