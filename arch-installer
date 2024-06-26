@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24062702
+installerver=24062703
 
 # Required ACU version
 acuver=0.0.9-dev
@@ -1112,7 +1112,7 @@ installer_menu() {
     # Select linux kernel
     kernel_menu() {
         menu_header="Linux Kernel"
-        menu_option_title="Select a linux kernel to install :\n\n\Zb\Z2           Linux Kernel           (Repo)                                     Description                (Kernel Version)"
+        menu_option_title="Target Device:\Z2 $install_target \Z4\n\n Select a linux kernel to install :\n\n\Zb\Z2           Linux Kernel           (Repo)                                     Description                (Kernel Version)"
         # Process Kernel List
         eval $(acu parse $kernel_list)
         options=()
