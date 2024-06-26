@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24062001
+installerver=24062702
 
 # Required ACU version
 acuver=0.0.9-dev
@@ -68,7 +68,7 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 #install_target="radxa-rock-5b"
 
 ################################################################
-    # Auto detect install target from devicetree
+# Auto detect install target from devicetree
     if [ -z "$install_target" ]; then
         if [ -f "/proc/device-tree/compatible" ]; then
             install_target="$(sed 's/\x00/ /g; s/,/ /g' /proc/device-tree/compatible | awk '{print $1, $2}' | tr ' ' '-')"
@@ -1141,7 +1141,7 @@ installer_menu() {
             done
         done
         # Append Experimental Kernel List
-        if [ "$branch" = "dev" ]; then
+        if [ "$showexperimental" = 1 ]; then
             for ((i = 0; i < ${#kernel_base[@]}; i++)); do
                 # Add Kernel tags
                 kernel_tags=(${kernel_experimental[i]})
@@ -1153,21 +1153,33 @@ installer_menu() {
                     fi
                 done
             done
+            options+=("Hide Experimental Kernel Options")
+        else
+            options+=("Show Experimental Kernel Options")
         fi
         select_option "${options[@]}"
         selected=$? # get selected index
-        kernelpkg=$(echo "${options[selected]}" | awk '{print $1}') # get selected kernel package
-        # Find the base package in kernel list
-        for ((i = 0; i < ${#kernel_base[@]}; i++)); do
-            if [ "${kernel_base[i]}" = "$kernelpkg" ]; then
-                pacmanrepo=${kernel_repo[i]}
-                firmwarepkg=${kernel_firmware[i]}
-                graphicspkg=${kernel_graphics[i]}
-                videopkg=${kernel_video[i]}
-                kerneladditionalpkg=${kernel_additional[i]}
-                break
+        if [ "$selected" -lt "$((${#options[@]}-1))" ]; then
+            kernelpkg=$(echo "${options[selected]}" | awk '{print $1}') # get selected kernel package
+            # Find the base package in kernel list
+            for ((i = 0; i < ${#kernel_base[@]}; i++)); do
+                if [ "${kernel_base[i]}" = "$kernelpkg" ]; then
+                    pacmanrepo=${kernel_repo[i]}
+                    firmwarepkg=${kernel_firmware[i]}
+                    graphicspkg=${kernel_graphics[i]}
+                    videopkg=${kernel_video[i]}
+                    kerneladditionalpkg=${kernel_additional[i]}
+                    break
+                fi
+            done
+        else
+            if [ "$showexperimental" = 1 ]; then
+                showexperimental=0
+            else
+                showexperimental=1
             fi
-        done
+            kernel_menu
+        fi
     }
     kernel_menu
 
