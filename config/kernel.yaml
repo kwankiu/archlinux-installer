@@ -33,7 +33,7 @@ kernel:
 
       # Linux Mainline Kernel
       - base: linux-aarch64
-        description: Linux Mainline Kernel
+        description: Linux Mainstream Stable Kernel
         version: latest stable
         repo: null
         compatible:
