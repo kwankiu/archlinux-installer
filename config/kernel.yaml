@@ -171,7 +171,7 @@ kernel:
 
       # Joshua's Rockchip 6.1 Panthor Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-panthor-git
-        description: Boogie's Joshua Linux Rockchip BSP Kernel with Panthor support
+        description: (Panthor) Boogie's Joshua Linux Rockchip BSP Kernel
         version: 6.1.43
         repo:
           - rockchip
@@ -226,14 +226,14 @@ kernel:
         repo:
           - rockchip
           - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
+        compatible:
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-nx5*
           - radxa-zero-3*
           - radxa-rock-2a
+        recommended: null
+        experimental: null
         firmware:
           - 8852bu-dkms-git
           - 8852be-dkms-git
@@ -265,9 +265,7 @@ kernel:
           - 8852bu-dkms-git
           - 8852be-dkms-git
         graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
+          - mesa
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
@@ -354,15 +352,13 @@ kernel:
         recommended: null
         experimental:
           - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
           - radxa-zero-3*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588*
         firmware: null
         graphics:
-          - mesa-panfork-git
+          - mesa
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
@@ -379,8 +375,7 @@ kernel:
         recommended: null
         experimental:
           - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
+          - radxa-zero-3*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588*
