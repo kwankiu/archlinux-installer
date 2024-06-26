@@ -42,10 +42,8 @@ kernel:
           - raspberrypi*
         recommended: null
         experimental:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero-3*
+          - radxa-rock-5a
+          - radxa-rock-5b
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588*
