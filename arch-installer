@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24062703
+installerver=24062901
 
 # Required ACU version
 acuver=0.0.9-dev
@@ -664,7 +664,7 @@ network_menu()
 check_installer_updates() {
     alert "Checking for installer updates..."
     remote_installerver=$(curl -s "$remote_installer_url" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
-    remote_acuver=$(curl -s "$remote_installer_url" | grep -o 'acuver=[0-9]*' | cut -d= -f2)
+    remote_acuver=$(curl -s "$remote_installer_url" | grep -m1 'acuver=[0-9]*' | cut -d= -f2)
     if [ "$remote_installerver" -gt "$installerver" ]; then
         menu_header="Installer Updates Available"
         menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available. \n\Zn Do you want to update this installer?"
