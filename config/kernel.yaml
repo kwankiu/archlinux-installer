@@ -318,9 +318,60 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
+      # Armbian's Rockchip BSP6.1 Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-armbian-git
+        description: Armbian Linux Rockchip BSP6.1 Kernel
+        version: 6.1.43
+        repo:
+          - rockchip
+          - 7Ji
+        compatible: null
+        recommended: null
+        experimental:
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-nx5*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
+        firmware:
+          - linux-firmware-armbian-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - pipewire-jack
+          - ffmpeg-mpp-git
+        additional: null
+
+      # Armbian's Edge Mainline Kernel
+      - base: linux-aarch64-rockchip-armbian-git
+        description: (Unavailable) Armbian Linux Mainline kernel with patches for rk3588
+        version: lastest stable
+        repo:
+          - rockchip
+          - 7Ji
+        compatible: null
+        recommended: null
+        experimental:
+          - radxa-rock-5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588*
+        firmware:
+          - linux-firmware-armbian-git
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg-mpp-git
+        additional: null
+
       # Collabora RK3588 Hardware Enablement Kernel
       - base: linux-aarch64-rk3588-collabora-git
-        description: Collabora RK3588 Hardware Enablement Linux Kernel
+        description: (Deprecated) Collabora RK3588 Hardware Enablement Linux Kernel
         version: 6.9
         repo:
           - rockchip
@@ -357,57 +408,6 @@ kernel:
         firmware: null
         graphics:
           - mesa
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
-      # Armbian's Edge Mainline Kernel
-      - base: linux-aarch64-rockchip-armbian-git
-        description: (Unavailable) Armbian Linux Mainline kernel with patches for rk3588
-        version: lastest stable
-        repo:
-          - rockchip
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5*
-          - radxa-zero-3*
-          - khadas-edge*
-          - xunlong-orangepi-5*
-          - rockchip-rk3588*
-        firmware:
-          - linux-firmware-armbian-git
-        graphics:
-          - mesa
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
-      # Armbian's Rockchip BSP6.1 Kernel
-      - base: linux-aarch64-rockchip-bsp6.1-armbian-git
-        description: Armbian Linux Rockchip BSP6.1 Kernel
-        version: 6.1.43
-        repo:
-          - rockchip
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - khadas-edge*
-          - xunlong-orangepi-5*
-          - rockchip-rk3588*
-        firmware:
-          - linux-firmware-armbian-git
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
