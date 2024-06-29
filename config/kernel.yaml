@@ -347,8 +347,8 @@ kernel:
 
       # Armbian's Edge Mainline Kernel
       - base: linux-aarch64-rockchip-armbian-git
-        description: (Unavailable) Armbian Linux Mainline kernel with patches for rk3588
-        version: lastest stable
+        description: Linux Mainline kernel with armbian's patches for rk3588
+        version: 6.10.rc5
         repo:
           - rockchip
           - 7Ji
@@ -372,7 +372,7 @@ kernel:
       # Collabora RK3588 Hardware Enablement Kernel
       - base: linux-aarch64-rk3588-collabora-git
         description: (Deprecated) Collabora RK3588 Hardware Enablement Linux Kernel
-        version: 6.9
+        version: 6.9.rc1
         repo:
           - rockchip
           - 7Ji
