@@ -47,7 +47,7 @@ jobs:
           #- radxa-e25
           - radxa-cm5-io
           - radxa-cm5-rpi-cm4-io
-          - radxa-cm5-rpi-cm4-io-rk3582-unlock
+          - radxa-cm5-lite-rpi-cm4-io-unlocked
           - radxa-nx5-io
           - radxa-zero3
           # Khadas
@@ -96,7 +96,7 @@ jobs:
                 # Use different kernel and u-boot path for different boards
                 if [[ "$model" == "radxa-rock"* ]]; then
                   args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
-                elif [[ "$model" == "radxa-cm5-rpi-cm4-io-rk3582-unlock" ]]; then
+                elif [[ "$model" == "radxa-cm5-lite-rpi-cm4-io-unlocked" ]]; then
                   args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/radxa-cm5-rpi-cm4-io"
                 else
                   args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
@@ -104,7 +104,7 @@ jobs:
                 # URL to download u-boot for the board
                 if [[ "$model" == "radxa-zero"* ]]; then
                   uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
-                elif [[ "$model" == "radxa-cm5-rpi-cm4-io-rk3582-unlock" ]]; then
+                elif [[ "$model" == "radxa-cm5-lite-rpi-cm4-io-unlocked" ]]; then
                   uboot_url="https://github.com/kwankiu/archlinux-installer/releases/download/kernel/uboot-radxa-cm5-lite-rk3582-unlock_2017.09-1_arm64.deb"
                 else
                   uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
