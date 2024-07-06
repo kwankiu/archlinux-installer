@@ -143,7 +143,7 @@ kernel:
       # Joshua's Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-git
         description: Joshua Linux Rockchip BSP Kernel
-        version: 6.1.43
+        version: 6.1.75
         repo:
           - 7Ji
         compatible:
@@ -156,32 +156,6 @@ kernel:
           - rockchip-rk3588*
         recommended: null
         experimental: null
-        firmware:
-          - linux-firmware-joshua-git
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
-      # Joshua's Rockchip 6.1 Panthor Kernel
-      - base: linux-aarch64-rockchip-bsp6.1-joshua-panthor-git
-        description: (Panthor) Boogie's Joshua Linux Rockchip BSP Kernel
-        version: 6.1.43
-        repo:
-          - rockchip
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5a
-          - radxa-rock-5b
-          - khadas-edge2
-          - xunlong-orangepi-5*
-          - rockchip-rk3588*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -360,28 +334,6 @@ kernel:
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588*
-        firmware:
-          - linux-firmware-armbian-git
-        graphics:
-          - mesa
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
-      # Collabora RK3588 Hardware Enablement Kernel
-      - base: linux-aarch64-rk3588-collabora-git
-        description: (Deprecated) Collabora RK3588 Hardware Enablement Linux Kernel
-        version: 6.9.rc1
-        repo:
-          - rockchip
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5a
-          - radxa-rock-5b
-          - khadas-edge2
         firmware:
           - linux-firmware-armbian-git
         graphics:
