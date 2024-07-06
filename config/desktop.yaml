@@ -34,7 +34,7 @@ desktop:
       - package_name: gnome-full
         pretty_name: Gnome (Full)
         category: Desktop
-        description: A Desktop Environment
+        description: Comprehensive Gnome desktop with full suite
         compatible: null
         packages:
           - gnome
@@ -45,7 +45,7 @@ desktop:
       - package_name: gnome-minimal
         pretty_name: Gnome (Minimal)
         category: Desktop
-        description: A Desktop Environment
+        description: Comprehensive Gnome desktop with essentials only
         compatible: null
         packages:
           - gdm
@@ -68,7 +68,7 @@ desktop:
       - package_name: plasma-full
         pretty_name: KDE Plasma (Full)
         category: Desktop
-        description: A Desktop Environment
+        description: KDE's comprehensive desktop with full suite
         compatible: null
         packages:
           - plasma-meta
@@ -81,7 +81,7 @@ desktop:
       - package_name: plasma-minimal
         pretty_name: KDE Plasma (Minimal)
         category: Desktop
-        description: A Desktop Environment
+        description: KDE's comprehensive desktop with essentials only
         compatible: null
         packages:
           - plasma-meta
@@ -95,7 +95,7 @@ desktop:
       - package_name: budgie
         pretty_name: Budgie Desktop
         category: Desktop
-        description: A Desktop Environment
+        description: A lightweight Gnome-based desktop
         compatible: null
         packages:
           - budgie
@@ -113,7 +113,7 @@ desktop:
       - package_name: cutefish
         pretty_name: Cutefish Desktop
         category: Desktop
-        description: A Desktop Environment
+        description: Elegant and uncluttered KDE-based desktop
         compatible: null
         packages:
           - plasma-desktop
@@ -126,7 +126,7 @@ desktop:
       - package_name: xfce
         pretty_name: XFCE
         category: Desktop
-        description: A Desktop Environment
+        description: Lightweight GTK-based desktop
         compatible: null
         packages:
           - xfce4
@@ -144,7 +144,7 @@ desktop:
       - package_name: lxqt
         pretty_name: LXQT
         category: Desktop
-        description: A Desktop Environment
+        description: Lightweight Qt-based desktop
         compatible: null
         packages:
           - lxqt
@@ -157,7 +157,7 @@ desktop:
       - package_name: lxde
         pretty_name: LXDE
         category: Desktop
-        description: A Desktop Environment
+        description: Lightweight X11 desktop
         compatible: null
         packages:
           - lxde
@@ -169,7 +169,7 @@ desktop:
       - package_name: mate
         pretty_name: MATE
         category: Desktop
-        description: A Desktop Environment
+        description: Traditional Gnome 2-based desktop
         compatible: null
         packages:
           - mate
@@ -182,7 +182,7 @@ desktop:
       - package_name: cinnamon
         pretty_name: Cinnamon
         category: Desktop
-        description: A Desktop Environment
+        description: Cinnamon Gnome-based desktop
         compatible: null
         packages:
           - cinnamon
@@ -201,7 +201,7 @@ desktop:
       - package_name: sway
         pretty_name: Sway
         category: Desktop
-        description: A Desktop Environment
+        description: Tiling Wayland window manager
         compatible: null
         packages:
           - sway
@@ -236,7 +236,7 @@ desktop:
       - package_name: hyprland
         pretty_name: Hyprland
         category: Desktop
-        description: A Desktop Environment
+        description: Dynamic tiling Wayland window manager
         compatible: null
         packages:
           - sddm
