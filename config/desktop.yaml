@@ -239,15 +239,18 @@ desktop:
         description: A Desktop Environment
         compatible: null
         packages:
+          - sddm
           - hyprland
           - qt5-wayland
           - xdg-desktop-portal-hyprland
-          - wofi
-          - pass
-          - dunst
+          - waybar
+          - polkit-gnome
+          - swaync
+          - swaybg
+          - swaylock
           - alacritty
           - thunar
-          - sddm
+          - rofi
         commands: |
           sudo systemctl enable sddm
           sed -i 's/kitty/alacritty/g' ~/.config/hypr/hyprland.conf
