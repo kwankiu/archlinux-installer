@@ -64,6 +64,7 @@ jobs:
           - friendlyelec-nanopi-r6c
           - friendlyelec-nanopi-r6s
           #- friendlyelec-cm3588
+          # Other Rockchip RK35XX
           #- indiedroid-nova #9tripod-rk3588s
           #- mixtile-blade3 #rockchip-rk3588-blade3-v101-linux
           #- mixtile-core3588e
@@ -71,6 +72,7 @@ jobs:
           #- turing-rk1
           #- armsom-sige7 #rockchip-rk3588-armsom-sige7
           #- armsom-w3 #rockchip-rk3588-armsom-w3
+          #- fydetab-duo #rockchip-rk3588s-tablet-12c-linux
           # Others
           # Add more models as needed
 
@@ -125,6 +127,15 @@ jobs:
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
                 uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model#*-}_2017.09+20240626.git5202c429-1_arm64.deb"
+                ;;
+              fydetab-*)
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=usr/lib/u-boot -b"
+                # Create path
+                mkdir -p usr/lib/u-boot
+                # Download idblock.bin
+                curl -L https://github.com/openFyde/foundation-rk3588/raw/main/rk3588-image-maker/rk3588-uboot-bin/rk3588_spl_loader_v1.07.111.bin -o usr/lib/u-boot/idblock.bin
+                # Download uboot.img
+                curl -L https://github.com/openFyde/foundation-rk3588/raw/main/rk3588-image-maker/rk3588-uboot-bin/uboot.img -o usr/lib/u-boot/uboot.img
                 ;;
               *)
                 # Generic
