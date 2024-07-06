@@ -46,7 +46,8 @@ kernel:
           - radxa-rock-5b
           - khadas-edge*
           - xunlong-orangepi-5*
-          - rockchip-rk3588*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
         firmware: null
         graphics:
           - mesa
@@ -119,7 +120,8 @@ kernel:
           - radxa-zero-3*
           - khadas-edge*
           - xunlong-orangepi-5*
-          - rockchip-rk3588*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
         recommended:
           - radxa-rock-5*
           - radxa-cm5*
@@ -127,7 +129,8 @@ kernel:
           - radxa-zero-3*
           - khadas-edge*
           - xunlong-orangepi-5*
-          - rockchip-rk3588*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
         experimental: null
         firmware:
           - linux-firmware-joshua-git
@@ -153,7 +156,8 @@ kernel:
           - radxa-zero-3*
           - khadas-edge*
           - xunlong-orangepi-5*
-          - rockchip-rk3588*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
         recommended: null
         experimental: null
         firmware:
@@ -307,7 +311,8 @@ kernel:
           - radxa-nx5*
           - khadas-edge*
           - xunlong-orangepi-5*
-          - rockchip-rk3588*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
         firmware:
           - linux-firmware-armbian-git
         graphics:
@@ -333,7 +338,8 @@ kernel:
           - radxa-zero-3*
           - khadas-edge*
           - xunlong-orangepi-5*
-          - rockchip-rk3588*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
         firmware:
           - linux-firmware-armbian-git
         graphics:
@@ -356,7 +362,8 @@ kernel:
           - radxa-zero-3*
           - khadas-edge*
           - xunlong-orangepi-5*
-          - rockchip-rk3588*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
         firmware: null
         graphics:
           - mesa

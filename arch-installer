@@ -1416,7 +1416,7 @@ if [ -d "$compiled_pkg_folder" ] && [ -z "$skip_install_pkg" ]; then
             systemctl enable systemd-timesyncd
 
             # USB Fix for OPI5
-            if [[ "$install_target" == "rockchip-rk3588"* ]]; then
+            if [[ "$install_target" == *"-orangepi-"* ]]; then
                 alert "Running USB2 Fix"
                 echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n[Service]\nExecStart=/usr/bin/sh -c \"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\"\nType=oneshot\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
                 sudo systemctl enable enable-usb2
