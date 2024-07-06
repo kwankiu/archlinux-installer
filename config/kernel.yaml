@@ -122,6 +122,9 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - friendlyelec-nanopi-r6*
+          - friendlyelec-nanopc-*
+          - friendlyelec-cm*
         recommended:
           - radxa-rock-5*
           - radxa-cm5*
@@ -131,6 +134,9 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - friendlyelec-nanopi-r6*
+          - friendlyelec-nanopc-*
+          - friendlyelec-cm*
         experimental: null
         firmware:
           - linux-firmware-joshua-git
@@ -158,6 +164,9 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - friendlyelec-nanopi-r6*
+          - friendlyelec-nanopc-*
+          - friendlyelec-cm*
         recommended: null
         experimental: null
         firmware:
