@@ -18,7 +18,7 @@
 # Version of this script 
 # (For developer : Update whenever there is a change in this file or its related files)
 # format of Version Number is YYMMDDN which N is 1-9 count on updates commited on the same day)
-installerver=2406161
+installerver=2407071
 
 # Define main / dev branch
 branch=main
@@ -696,8 +696,8 @@ kernel_menu() {
 
     # options to show in all images
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ] || [ "$install_target" = "edge2" ] || [ "$install_target" = "orangepi5" ] || [ "$install_target" = "zero3" ] || [ "$install_target" = "rockchip" ]; then
-        options+=("linux-aarch64-rockchip-bsp5.10-joshua-git (7Ji)                     - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10.160)")
-        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)                  - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1.43)")
+        options+=("linux-aarch64-rockchip-bsp5.10-joshua-git (7Ji)                 - (Recommended) Install Joshua Linux Rockchip Kernel (Linux 5.10)")
+        options+=("linux-aarch64-rockchip-bsp6.1-joshua-git (7Ji)                  - Install Joshua Linux Rockchip 6.1 Kernel (Linux 6.1)")
     elif [ "$install_target" = "rpi" ]; then
         options+=("linux-rpi (alarm)                                               - Install Linux Raspberry Pi BSP Kernel (Linux 6.6)")
         options+=("linux-rpi-16k (alarm)                                           - Install Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY (Linux 6.6)")
@@ -710,12 +710,12 @@ kernel_menu() {
     fi 
  
     if [ "$install_target" = "rock5" ] || [ "$install_target" = "rock2" ]; then 
-        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)                  - (MAY BE UNAVAILABLE) Install Linux Radxa Rockchip BSP 5.10 Kernel (Linux 5.10-rkr4.1)")
+        options+=("linux-aarch64-rockchip-bsp5.10-radxa-git (7Ji)                  - Install Radxa Linux Rockchip Kernel (Linux 5.10)")
     fi 
  
     if [ "$install_target" = "orangepi5" ]; then
-        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji)            - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.110)")
-        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)        - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10.160)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi (7Ji)            - (Recommended) Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10)")
+        options+=("linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git (7Ji)        - Install AArch64 Rockchip vendor kernel (BSP5.10 for RK3588, OrangePi fork) (Linux 5.10)")
     fi 
 
     options+=("(Others) Enter custom kernel options (Experimental)")
@@ -906,7 +906,9 @@ title "Installing Linux Kernel"
 
 title "Installing Graphics Acceleration"
 
-    if sudo pacman -Ssy "mesa-panfork-git" &> /dev/null; then
+    if [[ "$kernelpkg" == "linux-aarch64-rockchip-bsp6.1-joshua-git" ]]; then
+        sudo pacman -S mesa --noconfirm
+    elif sudo pacman -Ssy "mesa-panfork-git" &> /dev/null; then
         sudo pacman -S mesa-panfork-git libmali-valhall-g610-x11-wayland-gbm --noconfirm
     else
         sudo pacman -S mesa --noconfirm
