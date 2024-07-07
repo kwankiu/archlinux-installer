@@ -307,7 +307,7 @@ kernel:
 
       # FydeTab Duo Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-fydetab
-        description: (Unavailable) FydeTab Duo Rockchip 5.10 Kernel
+        description: FydeTab Duo Rockchip 5.10 Kernel
         version: 5.10.160
         repo:
           - rockchip
@@ -317,8 +317,7 @@ kernel:
         recommended:
           - rockchip-rk3588s-tablet-12c-linux
         experimental: null
-        firmware:
-          - linux-firmware-joshua-git
+        firmware: null
         graphics:
           - mesa-panfork-git
           - mali-valhall-g610-firmware
