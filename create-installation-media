@@ -986,11 +986,12 @@ END
         echo "    initrd /initramfs-%PKGBASE%.img" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
 
         if [ -n "$bootdtb" ] && [ "$bootdtb" != "null" ]; then
-            echo "    devicetreedir $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+            if [[ "$bootdtb" == *".dtb" ]]; then
+                echo "    ftd $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+            else
+                echo "    devicetreedir $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+            fi
         fi
-        #if [ -n "$bootdtb" ] && [ "$bootdtb" != "null" ]; then
-            #echo "    ftd $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
-        #fi
         if [ -n "$bootdtboverlays" ] && [ "$bootdtboverlays" != "null" ]; then
             echo "    fdtoverlays $bootdtboverlays" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
         fi

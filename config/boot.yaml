@@ -72,7 +72,7 @@ boot:
     - stationpc*
 
 # Fydetab Duo
-- dtb: /dtbs/rk3588s-tablet-12c-linux.dtb
+- dtb: /dtbs/%PKGBASE%/rockchip/rk3588s-tablet-12c-linux.dtb
   dtb_overlays: null
   cmdline: rw quiet splash
   compatible:
