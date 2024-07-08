@@ -140,6 +140,7 @@ desktop:
           - xdg-user-dirs
           - libmd
           - libbsd
+          - librsvg
         commands: |
           sudo systemctl enable lightdm
           sudo systemctl enable accounts-daemon
