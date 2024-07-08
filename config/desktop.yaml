@@ -129,16 +129,17 @@ desktop:
         description: Lightweight GTK-based desktop
         compatible: null
         packages:
+          - lightdm
+          - lightdm-gtk-greeter
+          - lightdm-gtk-greeter-settings
+          - xorg
           - xfce4
           - xfce4-goodies
-          - capitaine-cursors
-          - arc-gtk-theme
           - leafpad
           - galculator
-          - xdg-user-dirs-gtk
-          - sddm
+          - xdg-user-dirs
         commands: |
-          sudo systemctl enable sddm
+          sudo systemctl enable lightdm
 
       # LXQT
       - package_name: lxqt
