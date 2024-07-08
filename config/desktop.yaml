@@ -129,17 +129,17 @@ desktop:
         description: Lightweight GTK-based desktop
         compatible: null
         packages:
-          - lightdm
-          - lightdm-gtk-greeter
-          - lightdm-gtk-greeter-settings
-          - xorg
+          - gdm
           - xfce4
           - xfce4-goodies
           - leafpad
           - galculator
           - xdg-user-dirs
+          - libmd
+          - libbsd
+          - librsvg
         commands: |
-          sudo systemctl enable lightdm
+          sudo systemctl enable gdm
 
       # LXQT
       - package_name: lxqt
@@ -176,6 +176,7 @@ desktop:
           - mate
           - mate-extra
           - gdm
+          - librsvg
         commands: |
           sudo systemctl enable gdm
 
@@ -195,6 +196,7 @@ desktop:
           - xreader
           - gnome-console
           - gdm
+          - librsvg
         commands: |
           sudo systemctl enable gdm
 
