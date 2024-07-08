@@ -130,6 +130,7 @@ desktop:
         compatible: null
         packages:
           - gdm
+          - xorg-server
           - xfce4
           - xfce4-goodies
           - leafpad
