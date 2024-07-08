@@ -129,18 +129,20 @@ desktop:
         description: Lightweight GTK-based desktop
         compatible: null
         packages:
-          - gdm
+          - lightdm
+          - lightdm-gtk-greeter
+          - lightdm-gtk-greeter-settings
           - xorg-server
           - xfce4
           - xfce4-goodies
-          - leafpad
-          - galculator
+          - network-manager-applet
+          - blueman
           - xdg-user-dirs
           - libmd
           - libbsd
-          - librsvg
         commands: |
-          sudo systemctl enable gdm
+          sudo systemctl enable lightdm
+          sudo systemctl enable accounts-daemon
 
       # LXQT
       - package_name: lxqt
