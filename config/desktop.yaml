@@ -262,6 +262,10 @@ desktop:
           sudo mkdir -p /etc/sddm.conf.d
           sudo mkdir -p /usr/share/wayland-sessions
           echo -e '[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling Wayland compositor\nExec=Hyprland\nType=Application' | sudo tee /usr/share/wayland-sessions/hyprland.desktop
-          sudo sed -i 's/kitty/alacritty/g' ~/.config/hypr/hyprland.conf
+          #Hyprland Config
+          sudo sed -i 's/kitty/alacritty/g' /usr/share/hyprland/hyprland.conf
+          sudo sed -i 's/dolphin/thunar/g' /usr/share/hyprland/hyprland.conf
+          sudo sed -i 's/wofi --show/rofi -show/g' /usr/share/hyprland/hyprland.conf
+          sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar/g' /usr/share/hyprland/hyprland.conf
 
 ########################################################################
