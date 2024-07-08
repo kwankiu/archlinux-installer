@@ -250,8 +250,7 @@ desktop:
           - xdg-user-dirs
           - waybar
           - polkit-gnome
-          - swaync
-          - swaybg
+          - hyprpaper
           - hypridle
           - hyprlock
           - alacritty
@@ -266,6 +265,6 @@ desktop:
           sudo sed -i 's/kitty/alacritty/g' /usr/share/hyprland/hyprland.conf
           sudo sed -i 's/dolphin/thunar/g' /usr/share/hyprland/hyprland.conf
           sudo sed -i 's/wofi --show/rofi -show/g' /usr/share/hyprland/hyprland.conf
-          sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar/g' /usr/share/hyprland/hyprland.conf
+          sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar & hyprpaper & hypridle/g' /usr/share/hyprland/hyprland.conf
 
 ########################################################################
