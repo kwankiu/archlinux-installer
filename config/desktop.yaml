@@ -239,20 +239,29 @@ desktop:
         description: Dynamic tiling Wayland window manager
         compatible: null
         packages:
+          - qt6-5compat
+          - qt6-declarative
+          - qt6-svg
           - sddm
           - hyprland
-          - qt5-wayland
+          - hyprcursor
           - xdg-desktop-portal-hyprland
+          - xdg-desktop-portal-gtk
+          - xdg-user-dirs
           - waybar
           - polkit-gnome
           - swaync
           - swaybg
-          - swaylock
+          - hypridle
+          - hyprlock
           - alacritty
           - thunar
           - rofi
         commands: |
           sudo systemctl enable sddm
-          sed -i 's/kitty/alacritty/g' ~/.config/hypr/hyprland.conf
+          sudo mkdir -p /etc/sddm.conf.d
+          sudo mkdir -p /usr/share/wayland-sessions
+          echo -e '[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling Wayland compositor\nExec=Hyprland\nType=Application' | sudo tee /usr/share/wayland-sessions/hyprland.desktop
+          sudo sed -i 's/kitty/alacritty/g' ~/.config/hypr/hyprland.conf
 
 ########################################################################
