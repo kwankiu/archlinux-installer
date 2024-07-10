@@ -211,33 +211,33 @@ desktop:
         description: Tiling Wayland window manager
         compatible: null
         packages:
+          - qt6-5compat
+          - qt6-svg
+          - sddm
           - sway
-          - wmenu
-          - i3status
-          - waybar
           - swayidle
           - swaylock
           - swaybg
-          - sddm
+          - swaync
+          - waybar
+          - rofi
+          - xdg-desktop-portal-wlr
+          - xdg-desktop-portal-gtk
+          - xdg-user-dirs
+          - polkit-gnome
           - foot
-          - xorg-xwayland
-          - qt5-wayland
-          - qt6-wayland
-          - wofi
-          - lxappearance
-          - qt5ct
-          - python-pywal
-          - pcmanfm-qt
-          - pass
-          - dunst
           - thunar
+          - pass
         commands: |
           sudo systemctl enable sddm
-          sudo mkdir -p .config/{sway,dunst,waybar,wofi}
-          sudo install -Dm755 /etc/sway/config ~/.config/sway/config
-          sudo install -Dm755 /etc/dunst/dunstrc ~/.config/dunst/dunstrc
-          sudo touch ~/.config/waybar/config
-          sudo touch ~/.config/wofi/config
+          sudo mkdir -p /etc/sddm.conf.d
+          sudo mkdir -p /usr/share/wayland-sessions
+          #Sway Config
+          sudo sed -i 's/set $menu /set $menu rofi -show drun #/g' /etc/sway/config
+          sudo sed -i 's/bar {/exec waybar #/g' /etc/sway/config
+          sudo sed -i 's/position top/#position top/g' /etc/sway/config
+          mkdir -p /home/$(whoami)/.config/sway
+          cp -r /etc/sway/config /home/$(whoami)/.config/sway/config
 
       # Hyprland
       - package_name: hyprland
@@ -247,22 +247,23 @@ desktop:
         compatible: null
         packages:
           - qt6-5compat
-          - qt6-declarative
           - qt6-svg
           - sddm
           - hyprland
           - hyprcursor
-          - xdg-desktop-portal-hyprland
-          - xdg-desktop-portal-gtk
-          - xdg-user-dirs
-          - waybar
-          - polkit-gnome
           - hyprpaper
           - hypridle
           - hyprlock
+          - swaync
+          - waybar
+          - rofi
+          - xdg-desktop-portal-hyprland
+          - xdg-desktop-portal-gtk
+          - xdg-user-dirs
+          - polkit-gnome
           - alacritty
           - thunar
-          - rofi
+          - pass
         commands: |
           sudo systemctl enable sddm
           sudo mkdir -p /etc/sddm.conf.d
