@@ -290,6 +290,6 @@ desktop:
           cd archcraft-arm
           sudo curl -LO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/0001-Config-for-installing-Archcraft-DE.patch
           sudo git apply 0001-Config-for-installing-Archcraft-DE.patch
-          ./install.sh
+          sudo ./install.sh
 
 ########################################################################
