@@ -274,4 +274,22 @@ desktop:
           sudo sed -i 's/wofi --show/rofi -show/g' /usr/share/hyprland/hyprland.conf
           sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar & hyprpaper & hypridle/g' /usr/share/hyprland/hyprland.conf
 
+      # Archcraft
+      - package_name: archcraft
+        pretty_name: Archcraft
+        category: Desktop
+        description: Archcraft DE with Openbox, Bspwm & i3wm
+        compatible: null
+        packages:
+          - xorg
+          - git
+        commands: |
+          echo "Installing Archcraft ARM ..."
+          cd ~/.acu/cache
+          sudo git clone --depth 1 https://github.com/archcraft-os/archcraft-arm
+          cd archcraft-arm
+          sudo curl -LO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/0001-Config-for-installing-Archcraft-DE.patch
+          sudo git apply 0001-Config-for-installing-Archcraft-DE.patch
+          ./install.sh
+
 ########################################################################
