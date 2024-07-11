@@ -26,7 +26,7 @@ adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/ta
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 # Required ACU version
-acuver=0.1.0-dev
+acuver=0.1.1-dev
 
 ################################################################
 # Tools

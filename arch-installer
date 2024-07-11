@@ -19,10 +19,10 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24071101
+installerver=24071201
 
 # Required ACU version
-acuver=0.1.0-dev
+acuver=0.1.1-dev
 
 # Installer Branch / Tag
 branch=dev
