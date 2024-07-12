@@ -282,7 +282,7 @@ desktop:
         description: Archcraft DE with Openbox, Bspwm & i3wm
         compatible: null
         packages:
-          - xorg
+          - xorg-server
           - git
         commands: |
           echo "Installing Archcraft ARM ..."
