@@ -358,7 +358,7 @@ kernel:
       # Armbian's Edge Mainline Kernel
       - base: linux-aarch64-rockchip-armbian-git
         description: Linux Mainline kernel with armbian's patches for rk3588
-        version: 6.10.rc5
+        version: 6.10.rc6
         repo:
           - rockchip
           - 7Ji
