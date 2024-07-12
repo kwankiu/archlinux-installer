@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24071201
+installerver=24071202
 
 # Required ACU version
 acuver=0.1.1-dev
@@ -827,6 +827,8 @@ install_part2() {
     if [ -n "$install_language" ]; then
         alert "Generating locales ..."
         acu locale generate "$install_language" -y >/dev/null
+        alert "Setting system locale ..."
+        acu locale set-lang "$install_language"
     fi
 
     ################################################################
