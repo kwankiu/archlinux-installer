@@ -274,6 +274,8 @@ desktop:
           sudo sed -i 's/dolphin/thunar/g' /usr/share/hyprland/hyprland.conf
           sudo sed -i 's/wofi --show/rofi -show/g' /usr/share/hyprland/hyprland.conf
           sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar & hyprpaper & hypridle/g' /usr/share/hyprland/hyprland.conf
+          mkdir -p /home/$(whoami)/.config/hypr
+          cp -r /usr/share/hyprland/hyprland.conf /home/$(whoami)/.config/hypr/hyprland.conf
 
       # Archcraft
       - package_name: archcraft
