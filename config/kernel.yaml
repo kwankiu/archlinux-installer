@@ -110,7 +110,7 @@ kernel:
       # Joshua's Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-joshua-git
         description: Joshua Linux Rockchip BSP Kernel
-        version: 5.10.160
+        version: 5.10.209
         repo:
           - 7Ji
         compatible:
@@ -180,36 +180,9 @@ kernel:
 
       # Radxa Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-radxa-git
-        description: (Unavailable) Radxa Linux Rockchip BSP Kernel
+        description: Radxa Linux Rockchip BSP Kernel
         version: 5.10-rkr4.1
         repo:
-          - 7Ji
-        compatible:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero-3*
-          - radxa-rock-2a
-        recommended: null
-        experimental: null
-        firmware:
-          - 8852bu-dkms-git
-          - 8852be-dkms-git
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
-      # Radxa Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-bsp5.10-radxa
-        description: Radxa Linux Rockchip BSP Kernel
-        version: 5.10.110
-        repo:
-          - rockchip
           - 7Ji
         compatible:
           - radxa-rock-5*
@@ -358,9 +331,8 @@ kernel:
       # Armbian's Edge Mainline Kernel
       - base: linux-aarch64-rockchip-armbian-git
         description: Linux Mainline kernel with armbian's patches for rk3588
-        version: 6.10.rc6
+        version: 6.10.rc7
         repo:
-          - rockchip
           - 7Ji
         compatible: null
         recommended: null
@@ -372,7 +344,7 @@ kernel:
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
         firmware:
-          - linux-firmware-armbian-git
+          - linux-firmware-joshua-git
         graphics:
           - mesa
         video:
