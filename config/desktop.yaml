@@ -295,5 +295,7 @@ desktop:
           sudo git apply 0001-Config-for-installing-Archcraft-DE.patch
           cd profile
           sudo ./install.sh
+          # Fix permission issue
+          sudo chown -R $(whoami) /home/$(whoami)
 
 ########################################################################
