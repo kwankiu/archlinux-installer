@@ -22,7 +22,7 @@ jobs:
       matrix:
         model_name:
           # Generic
-          - generic
+          #- generic
           # Asahi (Apple Silicon)
           #- asahi
           # Raspberry Pi
@@ -72,7 +72,7 @@ jobs:
           #- turing-rk1
           #- armsom-sige7 #rockchip-rk3588-armsom-sige7
           #- armsom-w3 #rockchip-rk3588-armsom-w3
-          - fydetab-duo #rockchip-rk3588s-tablet-12c-linux
+          #- fydetab-duo #rockchip-rk3588s-tablet-12c-linux
           # Others
           # Add more models as needed
 
