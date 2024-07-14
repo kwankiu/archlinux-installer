@@ -15,11 +15,11 @@ repositories:
  
 - repo_name: desktop
   repo_type: acu
-  repo_url: https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/config/desktop.yaml
+  repo_url: https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/config/desktop.yaml
 
 - repo_name: postinstall
   repo_type: acu
-  repo_url: https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/config/postinstall.yaml
+  repo_url: https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/config/postinstall.yaml
 
 - repo_name: AUR
   repo_type: git

@@ -25,7 +25,7 @@ installerver=24071401
 acuver=0.1.2
 
 # Installer Branch / Tag
-branch=dev
+branch=main
 
 ################################################################
 ## Installer variables ##

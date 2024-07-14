@@ -62,5 +62,5 @@ configurations:
   # repositories_list - file (or url) to load repositories list
   # repositories_list_update - Sync local file from url when fetching updates (optional)
   repositories_list: .acu/config/repo.yaml
-  repositories_list_update: https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/config/repo.yaml
+  repositories_list_update: https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/config/repo.yaml
 
