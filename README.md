@@ -1,16 +1,27 @@
 # Arch Linux Installer for ARM (Aarch64)
-### With main focus on the Radxa Rock 5 and RK3588
 
 ![alt archlinux-arm logo](https://archlinuxarm.org/public/images/alarm.png)
 
 a community-built Arch Linux Installer for ARM (Aarch64) based devices.
 
-### Supported devices:
-- Radxa Rock 5 series (Rock 5A and Rock 5B)
-- Orange Pi 5 series ([Needs Testing](https://github.com/kwankiu/archlinux-installer/discussions))
-- Khadas Edge 2 ([Known Issues](https://github.com/kwankiu/archlinux-installer/wiki/General#known-issues))
+[![Total Github Downloads](https://img.shields.io/github/downloads/kwankiu/archlinux-installer/total.svg?&color=E95420&label=Total%20Downloads)](https://github.com/kwankiu/archlinux-installer/releases)
 
 ![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
+
+## Supported devices:
+### Rockchip
+- Radxa Rock 5 series (Rock 5A/5B/5B Plus/5C/5D/ITX/CM5/NX5)
+- Radxa Zero 3 Series (Zero 3W/3E)
+![Testers Needed](https://img.shields.io/badge/Testers%20Needed-F44336)
+
+- Orange Pi 5 series (Orange Pi 5, 5 Plus and 5B)
+- Khadas Edge Series (Edge 1/2)
+### Raspberry Pi (boardcom)
+- Raspberry Pi (4B/5B/Zero 2W & other aarch64 model)
+![Testers Needed](https://img.shields.io/badge/Testers%20Needed-F44336)
+### Asahi (apple silicon)
+- Asahi (Apple Silicon Macs)
+![Coming Soon](https://img.shields.io/badge/Coming%20Soon-4CAF50)
 
 # Get the installer
 
@@ -22,20 +33,30 @@ Images for Radxa Rock 5 series are available on the [RPI Imager repository](http
 
 ### Khadas Edge 2
 
-Images for Khadas Edge 2 are available on [OOWOW](https://docs.khadas.com/software/oowow/getting-started) (coming soon).
+~~Images for Khadas Edge 2 are available on [OOWOW](https://docs.khadas.com/software/oowow/getting-started).~~
 
-### For all devices
-You may also download our [prebuilt image](https://github.com/kwankiu/archlinux-installer/releases/latest) and flash it (using [RPI Imager](https://www.raspberrypi.com/software/), [balenaEtcher](https://etcher.balena.io/), etc) to your storage device.
+![Coming Soon](https://img.shields.io/badge/Coming%20Soon-4CAF50)
+
+### Asahi (apple silicon)
+
+There are no images available for Asahi.
+
+~~However, you can install Arch Linux ARM using the dev version of Asahi Installer. After that, you can download and run this installer.~~
+
+![Coming Soon](https://img.shields.io/badge/Coming%20Soon-4CAF50)
+
+### For other devices
+Our [prebuilt image](https://github.com/kwankiu/archlinux-installer/releases/latest) are available for downloads, you can flash it (using [RPI Imager](https://www.raspberrypi.com/software/), [balenaEtcher](https://etcher.balena.io/), etc) to your storage device.
 
   More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/Get-the-installer).
 
-## Running the script (Advanced)
+## The `create-installation-media` tool (Advanced)
 
-You can build your own image or flash our Installer to your disk directly by executing the following command:
+You can build your own image or flash the Installer to your disk directly by executing the following command:
 
 ```bash
 
-bash  <(curl  -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/archlinux-installer)
+bash  <(curl  -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/create-installation-media)
 
 ```
 
@@ -43,43 +64,51 @@ bash  <(curl  -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installe
 
 # Installation
 
-1. Power ON your Device with the **Storage Device** and **Ethernet Cable (or WiFi Adapter)** plugged in .  
-- If your first boot shows a user login screen instead, login to root/root and run `installer`.
+1. Power ON your Device with the **Storage Device** and **Ethernet Cable (or WiFi Adapter)** plugged in.
 
-2. The installer will run some setups and you should be prompted to create a user account. Follow the instructions and it should automatically reboot and login to the newly created user account.
-- If it does not log in automatically, log in to your newly created user account. 
-- If the installer does not start automatically, run `installer` to start it.
+2. The installer may install some required packages and perform some inital setup at its first boot, then it will reboot.
 
-3. The installer will guide you through the installation of Arch Linux with your desired Settings, Kernel, Desktop Environment, and Software, Enjoy!
+3. Network setup will be shown, if you have a wired connection, kindy wait for 5-15 seconds, and it should get connected. If you want to use wireless connection, press 'w' key to setup a WiFi.
+
+4. Now, choose 'Install Arch Linux (CLI/TUI)' to launch the installer.
+
+5. The installer will guide you through the installation of Arch Linux with your desired Settings, Kernel, Desktop Environment, and Software, Enjoy!
 
 More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/Installation).
 
 # Troubleshooting
 
-1. If you get stuck while rebooting, unplug the power and power it on manually.
+1. If your first boot shows a user login screen instead, login to root/root and run `installer`.
 
-2. WiFi support is experimental. This is only tested on RTL8852BE, other WiFi adapter may not work properly, refer to armbian firmware for supported WiFi adapter.
+2. If you get stuck while rebooting, unplug the power and power it on manually.
 
-3. After the inital setup, the device will reboot, and you will need to connect to WiFi again after a reboot.
+3. For WiFi support, please refer to [linux-firmware](https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/), [USB WiFi Support](https://github.com/morrownr/USB-WiFi/blob/main/home/USB_WiFi_Adapters_that_are_supported_with_Linux_in-kernel_drivers.md) & [Joshua's firmware](https://github.com/Joshua-Riek/firmware) (for rockchip SBCs) for supported WiFi adapter.
 
-4. After the installation, you will need to connect to WiFi again.
+4. During the installation, your system may reboot serveral times.
 
-  More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/General#troubleshooting).
+5. Sometimes you may need to connect to WiFi again after a reboot.
 
-# Arch Rock Configuration Utility (experimental)
-
-We have created a configuration utility `arch-rock-config` just like [armbian-config](https://github.com/armbian/config), [rsetup](https://docs.radxa.com/en/radxa-os/rsetup/rsetup-tool), or [raspi-config](https://www.raspberrypi.com/documentation/computers/configuration.html) but for Arch Linux running on Rock 5 / RK3588.
-
-Note: I am creating a new configuration utility called [acu](https://github.com/kwankiu/acu) which is based on this utility. This utility will be replaced by [acu](https://github.com/kwankiu/acu) once it is ready for use.
-
-![alt Arch Rock Configuration Utility](https://i.imgur.com/bccc10d.png)
-
-### Note that this configuration utility is work-in-progress.
-
-  To launch the configuration utility:
-
-```
-arch-rock-config
-```
+6. After the installation finishes, you will need to connect to WiFi again.
 
 More details can be found at our [wiki](https://github.com/kwankiu/archlinux-installer/wiki/General#troubleshooting).
+
+# ACU - A Configuration Utility for Arch Linux ARM
+### Warning: ACU is still experimental.
+
+ACU is a community-built tool designed for managing configurations and packages on Arch Linux ARM (Aarch64).
+
+We have created this configuration utility just like [armbian-config](https://github.com/armbian/config), [rsetup](https://docs.radxa.com/en/radxa-os/rsetup/rsetup-tool), or [raspi-config](https://www.raspberrypi.com/documentation/computers/configuration.html) but for Arch Linux ARM.
+
+![alt ACU Screenshot](https://i.imgur.com/DyaNIfv.png)
+
+This utility is included with our archlinux-installer.
+
+  To launch this configuration utility:
+
+```
+acu
+```
+
+Note that if you do not want this utility, it can be  uninstalled by simply running `acu remove acu`.
+
+More details can be found at [ACU](https://github.com/kwankiu/acu).

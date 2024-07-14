@@ -1,0 +1,1459 @@
+#!/bin/bash
+
+#################################################################
+#                    _     _      _                             #
+#     /\            | |   | |    (_)                            #
+#    /  \   _ __ ___| |__ | |     _ _ __  _   ___  __           #
+#   / /\ \ | '__/ __| '_ \| |    | | '_ \| | | \ \/ /           #
+#  / ____ \| | | (__| | | | |____| | | | | |_| |>  <            #
+# /_/    \_\_|  \___|_| |_|______|_|_| |_|\__,_/_/\_\ __        #
+#  _____           _        _ _           (  __)/  \(  _ \      #
+# |_   _|         | |      | | |           ) _)(  O ))   /      #
+#   | |  _ __  ___| |_ __ _| | | ___ _ __ (__)  \__/(__\_)      #
+#   | | | '_ \/ __| __/ _` | | |/ _ \ '__|    /__\ (  _ \( \/ ) #
+#  _| |_| | | \__ \ || (_| | | |  __/ |      /    \ )   // \/ \ #
+# |_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/ #
+#                                                               #
+#################################################################
+## Version Control ##
+
+# Installer Version
+# format : YYMMDDNN which NN is 01-99 of commits on the same day
+installerver=24071401
+
+# Required ACU version
+acuver=0.1.2
+
+# Installer Branch / Tag
+branch=main
+
+################################################################
+## Installer variables ##
+
+# Installer name string
+title_string="Arch Linux Installer for ARM"
+
+# Temporary home directory for installer
+installer_home="/usr/lib/installer"
+
+# Compiled Packages folder path
+compiled_pkg_folder="$installer_home/packages"
+
+# Dialog Theme config file path
+dialog_theme_config="$installer_home/dialog.conf"
+
+# Install using the generated configurations
+install_config="$installer_home/install.yaml"
+
+# Remote Installer URL
+remote_installer_url="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/arch-installer"
+
+# Full Language list
+lang_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/language.yaml"
+
+# Full Kernel list
+kernel_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/kernel.yaml"
+
+# Full Desktop Environment list
+de_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/desktop.yaml"
+
+# Full Post Install list
+postinstall_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/postinstall.yaml"
+
+# Ping server list for internet check
+# ping Google, Cloudflare and China Mobile DNS (for China users)
+ping_servers=("google.com" "1.1.1.1" "114.114.114.114") 
+
+# (Optional) Target Device for Installation (comment this to auto detect from devicetree)
+#install_target="radxa-rock-5b"
+
+################################################################
+# Auto detect install target from devicetree
+    if [ -z "$install_target" ]; then
+        if [ -f "/proc/device-tree/compatible" ]; then
+            install_target="$(sed 's/\x00/ /g; s/,/ /g' /proc/device-tree/compatible | awk '{print $1, $2}' | tr ' ' '-')"
+        fi
+        if [ -z "$install_target" ]; then
+            install_target="generic"
+        fi
+    fi
+################################################################
+## Debug variable overrides ##
+# (FOR DEVELOPMENT USE ONLY, MAKE SURE ALL OVERRIDES ARE COMMENTED FOR PRODUCTION USE)
+
+# Remote Installer URL
+#remote_installer_url="https://invalid.example" # use an invalid remote installer url to prevent accidental updates
+
+# Use out folder of current directory as temporary home directory for installer
+#installer_home="$(pwd)/out"
+
+# Compiled Packages folder path
+#compiled_pkg_folder="$installer_home/packages"
+
+# Dialog Theme config file path
+#dialog_theme_config="$installer_home/dialog.conf"
+
+# Install using the generated configurations
+#install_config="$installer_home/install.yaml"
+
+# Dialog override for debugging CLI Fallback
+#dialog () { return 1; }
+
+# Ping server list for internet check
+#ping_servers=("invalid.example") # debug test case: simulate no internet 
+#ping_servers=("0.0.0.0") # debug test case: bypass internet
+
+################################################################
+# Tools for formatting / styling
+
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Echo with colors
+colorecho() {
+    color="$1"
+    text="$2"
+    echo -e "${color}${text}${NC}"
+}
+
+# Sudo override
+sudo () {
+    local command=$@
+    if [ "$(id -u)" -eq 0 ]; then
+        #echo "Running in root."
+        command "$@"
+    else
+        #echo "Running with sudo."
+        command sudo "$@"
+    fi
+}
+
+# Generate Title Logo
+titlelogo_string() {
+    # Check if the argument count is provided
+    if [ -z "$1" ]; then
+        local count=8
+    else
+        local count=$1
+    fi
+    
+    # Generate the linespacing string with the specified count of spaces
+    local linespacing=$(printf "%${count}s")
+    local logostring="$linespacing                   _     _      _                  \n$linespacing    /\            | |   | |    (_)                 \n$linespacing   /  \   _ __ ___| |__ | |     _ _ __  _   ___  __\n$linespacing  / /\ \ | '__/ __| '_ \| |    | | '_ \| | | \ \/ /\n$linespacing / ____ \| | | (__| | | | |____| | | | | |_| |>  < \n$linespacing/_/    \_\_|  \___|_| |_|______|_|_| |_|\__,_/_/\_\ __\n$linespacing _____           _        _ _           (  __)/  \(  _ \  \n$linespacing|_   _|         | |      | | |           ) _)(  O ))   /  \n$linespacing  | |  _ __  ___| |_ __ _| | | ___ _ __ (__)  \__/(__\_)\n$linespacing  | | | '_ \/ __| __/ _\` | | |/ _ \ '__|    /__\ (  _ \( \/ )\n$linespacing _| |_| | | \__ \ || (_| | | |  __/ |      /    \ )   // \/ \ \n$linespacing|_____|_| |_|___/\__\__,_|_|_|\___|_|      \_/\_/(__\_)\_)(_/\n$linespacing"
+    # Echo the logo string
+    echo "$logostring"
+}
+
+# Generates Dash Lines
+dash_string() {
+    # Check if the argument count is provided
+    if [ -z "$1" ]; then
+        local count=80
+    else
+        local count=$1
+    fi
+
+    for ((i = 0; i < count; i++)); do
+        echo -n "-"
+    done
+}
+
+# Generate Status Bar
+status_bar() {
+    # Get the terminal width
+    terminal_width=$(tput cols)
+
+    # Calculate the width of each item
+    item_left=$(( (terminal_width - 4) / 3 ))  # Subtracting 4 for the brackets and spaces
+    item_center=$(( ((terminal_width - 4) / 6) + 3 ))  # Subtracting 4 for the brackets and spaces
+    item_right=$(( ((terminal_width - 4) / 2) - 3 ))  # Subtracting 4 for the brackets and spaces
+
+    # Define the strings for left, center, and right items
+    left_item="[$title_string$menu_header]"
+    center_item="$(date +"%b %e %H:%M")"
+    if [ "$internet_available" = 1 ]; then
+        right_item="[Internet Connected]"
+    elif [ "$internet_available" = 2 ]; then
+        right_item="[No Internet]"
+    else
+        right_item="[Waiting for Network]"
+    fi
+    # Print the items with alignment
+    printf "%-${item_left}s%${item_center}s%${item_right}s\n" "$left_item" "$center_item" "$right_item"
+}
+
+# Print Title Logo
+title() {
+  clear
+  text="$1"
+  colorecho "$BLUE" "$(status_bar)"
+  echo "$(dash_string)"
+  colorecho "$BLUE" "$(titlelogo_string)"
+  echo "$(dash_string)"
+  if [ "$branch" = "dev" ]; then
+    colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
+  fi
+}
+
+################################################################
+# CLI and TUI Menus and Functions
+
+# TUI Theme (dialog)
+create_dialog_theme() {
+    colorecho "$GREEN" "Generating Installer Theme ..."
+    sudo mkdir -p $(dirname $dialog_theme_config)
+    sudo tee "$dialog_theme_config" <<EOF
+# Arch Linux Installer for ARM
+# Run-time configuration theme for dialog
+#
+# Types of values:
+#
+# Number     -  <number>
+# String     -  "string"
+# Boolean    -  <ON|OFF>
+# Attribute  -  (foreground,background,highlight?,underline?,reverse?)
+
+# Screen color
+screen_color = (WHITE,WHITE,ON)
+# Shadow color
+shadow_color = (BLUE,BLUE,OFF)
+# Dialog box color
+dialog_color = (BLACK,WHITE,ON)
+# Dialog box border color
+border_color = (BLUE,WHITE,OFF)
+# Menu box border color
+menubox_border_color = border_color
+# Inactive button label color
+button_label_inactive_color = (BLUE,WHITE,ON)
+# Dialog box border2 color
+border2_color = (BLUE,WHITE,ON)
+EOF
+    sudo chmod +x $dialog_theme_config
+}
+
+# CLI Select Menu
+function select_option_cli {
+
+    # Little helpers for terminal print control and key input
+    ESC=$( printf "\033")
+    cursor_blink_on()  { printf "$ESC[?25h"; }
+    cursor_blink_off() { printf "$ESC[?25l"; }
+    cursor_to()        { printf "$ESC[$1;${2:-1}H"; }
+    print_option()     { printf "   $1 "; }
+    print_selected()   { printf "  $ESC[7m $1 $ESC[27m"; }
+    get_cursor_row()   { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
+    key_input()        { read -s -n3 key 2>/dev/null >&2
+                         if [[ $key = $ESC[A ]]; then echo up;    fi
+                         if [[ $key = $ESC[B ]]; then echo down;  fi
+                         if [[ $key = ""     ]]; then echo enter; fi; }
+
+    # Initially print empty new lines (scroll down if at bottom of screen)
+    for opt; do printf "\n"; done
+
+    # Determine current screen position for overwriting the options
+    local lastrow=`get_cursor_row`
+    local startrow=$(($lastrow - $#))
+
+    # Ensure cursor and input echoing back on upon a ctrl+c during read -s
+    trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
+    cursor_blink_off
+
+    local selected=0
+    while true; do
+        # Print options by overwriting the last lines
+        local idx=0
+        local max_width=$(tput cols)
+        for opt; do
+            cursor_to $(($startrow + $idx))
+            local formatted_opt="$((idx + 1)) \t $opt"
+            local formatted_opt=$(echo "$formatted_opt" | cut -c1-$((max_width - 3)))
+            if [ $idx -eq $selected ]; then
+                print_selected "$formatted_opt"
+            else
+                print_option "$formatted_opt"
+            fi
+            ((idx++))
+        done
+
+        # User key control
+        case `key_input` in
+            enter) break;;
+            up)    ((selected--));
+                   if [ $selected -lt 0 ]; then selected=$(($# - 1)); fi;;
+            down)  ((selected++));
+                   if [ $selected -ge $# ]; then selected=0; fi;;
+        esac
+    done
+
+    # Cursor position back to normal
+    cursor_to $lastrow
+    printf "\n"
+    cursor_blink_on
+
+    return $selected
+}
+
+# TUI Select Menu
+select_option() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+    print_option()     { echo "$1"; }
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        dialog_title="$menu_header"
+        menu_header=" - $menu_header"
+    else
+        dialog_title="Welcome to Arch Linux !"
+    fi
+
+    # menu option title
+    if [ -z "$menu_option_title" ]; then
+        menu_option_title="Select an option:"
+    fi
+
+    # Create options string for dialog
+    declare -a options_string=()
+    for opt; do
+        options_string+=("$((i + 1))" "$(print_option "$opt")")
+        ((i++))
+    done
+
+    # launch TUI using dialog
+    choice=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+        --title " $dialog_title " --ok-label "Next" --nocancel \
+        --menu "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \Zn" 0 0 0 "${options_string[@]}" \
+    3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
+    )
+
+    case $? in
+    0)
+        choice=$((choice - 1))
+        return $choice
+        ;;
+    *)
+        # CLI Fallback
+        title
+        colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/}"
+        echo "$(dash_string)"
+        colorecho "$GREEN" "${menu_option_title//\\Z[0-7bun]/}"
+        echo
+        select_option_cli "$@"
+        ;;
+    esac
+}
+
+# TUI Info Box
+alert() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        if [[ "$menu_header" != *" - "* ]]; then 
+            dialog_title="$menu_header"
+            menu_header=" - $menu_header"
+        fi
+    else
+        dialog_title="Info"
+    fi
+
+    for opt; do
+        ((i++))
+    done
+
+        # launch TUI using dialog
+    if ! dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+            --title " $dialog_title " \
+            --infobox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
+        # CLI Fallback
+        title
+        colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${opt//\\Z[0-7bun]/}"
+    fi
+        
+}
+
+# TUI Confirm Box
+confirm() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+    local cfm
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        if [[ "$menu_header" != *" - "* ]]; then 
+            dialog_title="$menu_header"
+            menu_header=" - $menu_header"
+        fi
+    else
+        dialog_title="Confirm"
+    fi
+
+    for opt; do
+        ((i++))
+    done
+
+    # launch TUI using dialog
+    if dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+        --title " $dialog_title " --yes-label "${menu_confirm_label[0]:-"Yes"}" --no-label "${menu_confirm_label[1]:-"No"}" \
+        --yesno "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
+        return 0
+    elif [ ! -x "$(command -v dialog)" ]; then
+        # CLI Fallback
+        title
+        local p="$(colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${opt//\\Z[0-7bun]/}") [Y/n]: "
+        read -p "$p" cfm
+        if [[ "$cfm" == [Yy] ]]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+    
+}
+
+# TUI Input Box
+input() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        if [[ "$menu_header" != *" - "* ]]; then 
+            dialog_title="$menu_header"
+            menu_header=" - $menu_header"
+        fi
+    else
+        dialog_title="Enter an input"
+    fi
+
+    for opt; do
+        ((i++))
+    done
+
+    # launch TUI using dialog
+    local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+        --title " $dialog_title " --nocancel \
+        --inputbox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0 \
+    3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
+    )
+
+    if [ -z "$value" ]; then
+        # CLI Fallback
+        local value
+        title  > /dev/tty
+        local p="$(colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${opt//\\Z[0-7bun]/}"): "
+        read -p "$p" value
+    fi
+
+    echo $value
+}
+
+# TUI Form Input Menu
+form() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+    print_option()     { echo "$1"; }
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        dialog_title="$menu_header"
+        menu_header=" - $menu_header"
+    else
+        dialog_title="Welcome to Arch Linux !"
+    fi
+
+    # menu option title
+    if [ -z "$menu_option_title" ]; then
+        menu_option_title="Select an option:"
+    fi
+
+    # Create options string for dialog
+    declare -a options_string=()
+    for opt; do
+        if [ -n "${menu_form_type[i]}" ]; then
+            options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "0" "${menu_form_type[i]}")
+        else
+            options_string+=("$(print_option "$opt")" "$((i + 1))" "5" "${menu_form_value[i]}" "$((i + 1))" "40" "25" "0" "0")
+        fi
+        ((i++))
+    done
+    # Reset form type list
+    menu_form_type=()
+
+    # launch TUI using dialog
+    local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+        --title " $dialog_title " --ok-label "Next" --nocancel --insecure \
+        --mixedform "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \n\Zn (Use arrow key to switch column, press enter to confirm)" 0 0 0 \
+        "${options_string[@]}" \
+    3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
+    )
+
+    if [ -z "$value" ]; then
+        ## CLI Fallback
+        local value
+        title > /dev/tty
+        for ((i = 0; i < ${#options_string[@]}; i+=9)); do
+            local p="$(colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${options_string[i]}")"
+            if [ -n "${options_string[i+3]}" ]; then
+                local dvalp="(${options_string[i+3]})"
+            else
+                local dvalp=""
+            fi
+            if [ "${options_string[i+8]}" = "0" ]; then
+                # Normal input
+                read -p "${p}: " input_value
+            elif [ "${options_string[i+8]}" = "1" ]; then
+                # Password input
+                read -s -p "${p}: " input_value
+                echo > /dev/tty
+            elif [ "${options_string[i+8]}" = "2" ]; then
+                # Readonly
+                echo -e "${p}: $dvalp" > /dev/tty
+            fi
+            if [ -z "$value" ]; then
+                value="$input_value"
+            else
+                value+=" $input_value"
+            fi
+        done
+    fi
+
+    echo $value
+}
+
+################################################################
+# Internet Connection & Updates Check
+internet_available=0
+check_internet() {
+        for server in "${ping_servers[@]}"; do
+            if ping -q -c 1 "$server" >/dev/null 2>&1; then
+                internet_found_at="$server"
+                internet_available=1 # internet connected
+                ckin='s'
+                echo $ckin
+                return
+            elif ip link show | grep "state UP"; then
+                internet_available=2 # network connected but no internet access
+            fi
+        done
+}
+
+network_menu()
+{
+    menu_header="Network Setup"
+
+    # Check if there is a Wireless Interface and get the first one
+    for dev in /sys/class/net/*; do
+        if [ -e "$dev"/wireless ]; then
+            iwdev=${dev##*/};
+            break;
+        fi
+    done
+
+    local last_check=$(( $(date +%s) - 2 ))
+    local last_internet
+
+    while [[ "$ckin" != [wWsS] ]]; do
+        read -t 0.1 -n 1 tmp && ckin=$tmp
+        # Perform internet check every 2 seconds
+        current_time=$(date +%s)
+        if [ $((current_time - last_check)) -ge 2 ]; then
+            # Check internet connectivity in the background
+            check_internet
+            last_check=$current_time
+        fi
+        # Keep tracking for wireless adapter if not found
+        if [ -z "$iwdev" ]; then
+            for dev in /sys/class/net/*; do
+                if [ -e "$dev"/wireless ]; then
+                    iwdev=${dev##*/};
+                    break;
+                fi
+            done
+            wl_adapter="No adapter found"
+        else
+            wl_adapter=$iwdev
+        fi
+        # Network Status
+        if [ "$internet_available" = 1 ]; then
+            network_status="             Internet is available via $internet_found_at"
+        elif [ "$internet_available" = 2 ]; then
+            network_status="            Network Connected. Waiting for Internet ..."
+        else
+            network_status="                    Waiting for Network ..."
+        fi
+        menu_option_title="\n\Z2$network_status\n\n\ZnEnter a key:\n\n"
+        if [ $((current_time - last_check)) -ge 4 ] || [ "$last_internet" != "$internet_available" ]; then
+            alert "$menu_option_title w) Connect to a WiFi network ($wl_adapter) \n s) Skip Internet Check (Installation may fail)"
+            last_internet=$internet_available
+        fi
+    done
+    # Restore terminal settings
+    clear
+
+    case $ckin in
+        [wW])
+            alert "Connecting to a WiFi network..."
+            if [ -z "$iwdev" ]; then
+                read -p "Please specify the network device (e.g. wlan0): " iwdev
+            fi
+            if [ -x "$(command -v sudo)" ]; then
+                sudo wifi-menu $iwdev
+            else
+                wifi-menu $iwdev
+                alert "Enabling netctl Auto Connect ..."
+                systemctl enable netctl-auto@$iwdev.service
+            fi
+            check_internet             
+            ;;
+    esac
+
+    # Loop until curl is successful or max attempts reached
+    attempt=0
+    until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 15 ]; do
+        alert "Establishing SSL internet connection ..."
+        # NTP Sync
+        if [ "$attempt" -eq 1 ]; then
+            alert "Updating NTP Time Sync ..."
+            if [ -x "$(command -v sudo)" ]; then
+                sudo rm -rf /etc/systemd/network/*
+                sudo systemctl restart systemd-networkd
+                sleep 1
+                sudo timedatectl set-ntp false
+                sudo timedatectl set-ntp true
+            else
+                rm -rf /etc/systemd/network/*
+                systemctl restart systemd-networkd
+                sleep 1
+                timedatectl set-ntp false
+                timedatectl set-ntp true
+            fi
+        fi
+        sleep 2
+        ((attempt++))
+    done
+
+    if [ "$attempt" -ge 5 ]; then
+        systemctl status systemd-timesyncd # for debugging
+        alert "Failed to establish SSL internet connection after $attempt attempts. \n\n Restart your device and try again or press Ctrl+C to exit this installer for manual operation."
+        options=("Continue Anyway (may break)" "Restart Now")
+        select_option "${options[@]}"
+        answer=$?
+        if [ "$answer" = 1 ]; then
+            alert "System will reboot now."
+            if ! reboot --force; then
+                alert "Unable to reboot automatically, please reboot your device manually."
+            fi
+        fi
+    fi
+}
+
+# Check Installer Updates
+check_installer_updates() {
+    alert "Checking for installer updates..."
+    remote_installerver=$(curl -s "$remote_installer_url" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
+    remote_acuver=$(curl -s "$remote_installer_url" | grep -m1 'acuver=[0-9]*' | cut -d= -f2)
+    if [ "$remote_installerver" -gt "$installerver" ]; then
+        menu_header="Installer Updates Available"
+        menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available. \n\Zn Do you want to update this installer?"
+        options=("Update this Installer" "Do not update this installer")
+        select_option "${options[@]}"
+        answer=$?
+        if [ "$answer" = 0 ]; then
+            # Updating Installer
+            alert "Downloading Installer ..."
+            local response_code=$(sudo curl --write-out '%{response_code}' -LJO "$remote_installer_url")
+            if [ "$response_code" = 200 ]; then
+                alert "Updating Installer ..."
+                # If install_target is set
+                if [ -n "$install_target" ]; then
+                    sudo sed -i "s/^#install_target=\".*\"/install_target=\"$install_target\"/g" arch-installer
+                fi
+                sudo chmod +x arch-installer
+                sudo cp -r arch-installer /usr/bin/installer
+                sudo rm -rf arch-installer
+                # Update ACU
+                echo "Updating ACU (Configuration Utility) ..."
+                sudo curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
+                sudo chmod +x /usr/bin/acu
+                # Reboot
+                alert "Installer updated. System will reboot now."
+                if ! sudo reboot --force; then
+                    alert "Unable to reboot automatically, please reboot your device manually."
+                fi
+            else
+                alert "An Error is occurred. Installer is not updated."
+                sleep 3
+            fi
+        fi
+    fi
+}
+
+################################################################
+# Installation - Part 1 (in root)
+add_boot_part_fstab() {
+    alert "Updating fstab ..."
+    boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
+
+    # Check if the boot_partition is not empty
+    if [ -z "$boot_partition" ]; then
+        echo "Unable to determine boot partition on $rootfs_disk"
+        exit 1
+    fi
+
+    # Add the line to /etc/fstab
+    new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
+
+    # Check if the line already exists in /etc/fstab
+    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+        echo "boot partition seems already configured in /etc/fstab to manage by system."
+    else
+        # Add the line to /etc/fstab
+        echo "$new_line" >> /etc/fstab
+        # Check if the addition was successful
+        if [ $? -eq 0 ]; then
+            cat /etc/fstab
+            echo "Line added to /etc/fstab successfully"
+        else
+            echo "Error adding line to /etc/fstab"
+        fi
+    fi
+}
+
+install_part1() {
+    local installation_file=$1
+    menu_header="Installation (Part 1)"
+
+    # Set Hostname
+    alert "Setting hostname ..."
+    hostnamectl set-hostname $install_hostname
+
+    # Get rootfs partition from the current mount point "/"
+    rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+
+    # Get disk path using rootfs partition path
+    rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
+    rootfs_disk="${rootfs_disk%p*}"
+
+    if [ ! -e "/boot/extlinux/extlinux.conf" ]; then
+        add_boot_part_fstab
+    fi
+
+    alert "Resizing File System ..."
+    growpart $rootfs_disk 2
+    resize2fs $rootfs_partition
+
+    # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
+    alert "Configuring pacman (populate alarm keys) ..."
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+
+    alert "Configuring pacman (adding repositories) ..."
+    local install_repo_list=($install_repo)
+    for ((i = 0; i < ${#install_repo_list[@]}; i++)); do
+        if [ "${install_repo_list[i]}" = "7Ji" ]; then
+            acu rem set 7Ji https://github.com/7Ji/archrepo/releases/download/\$arch pacman
+        elif [ "${install_repo_list[i]}" = "rockchip" ]; then
+            acu rem set rockchip https://github.com/kwankiu/PKGBUILDs/releases/download/\$arch pacman
+        elif [ "${install_repo_list[i]}" = "asahi" ]; then
+            acu rem set asahi https://github.com/kwankiu/PKGBUILDs/releases/download/\$arch pacman
+        #elif [ "${install_repo_list[i]}" = "Experimental" ]; then
+        #    acu rem set Experimental https://github.com/kwankiu/PKGBUILDs/releases/download/experimental pacman
+        fi
+    done
+
+    if [ -n "$install_parallel_downloads" ]; then 
+        alert "Configuring pacman (enabling ParallelDownloads)..."
+        sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $install_parallel_downloads/" /etc/pacman.conf
+    fi
+
+    alert "Installing sudo ..."
+    pacman -Sy sudo --noconfirm
+
+    alert "Removing default account ..."
+    acu user remove alarm
+
+    alert "Setting up new user account ..."
+    acu user add "$install_username" "$install_password"
+    acu user manage "$install_username" sudopw
+    acu user manage "$install_username" rebootpw
+
+    if [ "$install_disable_root_account" = 1 ]; then
+        passwd -l root
+    fi
+
+    if [ -e "/etc/systemd/system/installer.service" ]; then 
+        systemctl disable installer.service
+        rm -rf /etc/systemd/system/installer.service
+    fi
+
+    mkdir -p /etc/systemd/system/getty@tty1.service.d
+    echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $install_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    echo "installer $installation_file --part2" | tee -a /home/$install_username/.bashrc
+
+    alert "System will reboot now."
+    if ! reboot --force; then
+        alert "Unable to reboot automatically, please reboot your device manually."
+    fi
+}
+
+################################################################
+# Installation - Part 2 (in user)
+install_part2() {
+    local installation_file=$1
+    menu_header="Installation (Part 2)"
+
+    ################################################################
+    # Set Time Zone
+    if [ -n "$install_time_zone" ]; then
+        alert "Syncing Time Zone ..."
+        acu "time" set-time-zone $install_time_zone
+    fi
+
+    ################################################################
+    # Set Language
+    if [ -n "$install_language" ]; then
+        alert "Generating locales ..."
+        acu locale generate "$install_language" -y >/dev/null
+        alert "Setting system locale ..."
+        acu locale set-lang "$install_language"
+    fi
+
+    ################################################################
+    # Sync Repository Database
+    alert "Syncing Repository Database ..."
+    acu update
+
+    ################################################################
+    # Install Kernel
+    alert "Removing existing kernels ..."
+    yes y|sudo pacman -R linux-aarch64
+    sudo rm -rf /boot/vmlinu* 
+    sudo rm -rf /boot/initr*
+    sudo rm -rf /boot/dtbs
+    sudo rm -rf /usr/lib/modules/*
+    sudo rm -rf /usr/src/*
+    sudo rm -rf /etc/mkinitcpio.d/*
+
+    alert "Installing Linux kernel ..."
+    acu -y install $install_kernel $install_kernel-headers
+
+    ################################################################
+    # Install Kernel Additional Packages
+    alert "Installing Kernel Additional Packages ..."
+    if [ -n "$install_kernel_additional" ]; then
+        acu -y install $install_kernel_additional
+    fi
+
+    ################################################################
+    # Install Linux Firmware
+    alert "Installing Linux Firmware ..."
+    if [ -n "$install_firmware" ]; then
+        acu -y install $install_firmware
+    fi
+
+    ################################################################
+    # Install Graphics Acceleration
+    alert "Installing Graphics Acceleration"
+    if [ -n "$install_graphics" ]; then
+        acu -y install $install_graphics
+    fi
+
+    ################################################################
+    # Install Video Acceleration
+    alert "Installing Video Acceleration"
+    if [ -n "$install_video" ]; then
+        acu -y install $install_video
+    fi
+
+    ################################################################
+    # Full System Upgrade
+    alert "Performing Full System Upgrade ..."
+    sudo pacman -Syyu --noconfirm
+
+    ################################################################
+    # Install desktop environment
+    alert "Installing Desktop environment"
+    if [ -n "$install_desktop_environment" ]; then
+        #acu -y install $install_desktop_environment
+        acu install $install_desktop_environment --noconfirm
+    fi
+
+    ################################################################
+    # Install Additional Packages
+    alert "Installing Additional Packages"
+    if [ -n "$install_additional_packages" ]; then
+        acu -y install $install_additional_packages
+    fi
+
+    ################################################################
+    # System Services
+    alert "Enabling system services ..."
+    install_enable_services=($install_enable_services)
+    for ((i = 0; i < ${#install_enable_services[@]}; i++)); do
+        sudo systemctl enable ${install_enable_services[i]}
+    done
+
+    alert "Starting system services ..."
+    install_start_services=($install_start_services)
+    for ((i = 0; i < ${#install_start_services[@]}; i++)); do
+        sudo systemctl start ${install_start_services[i]}
+    done
+
+    ################################################################
+    # Clean Up
+    alert "Cleaning up system ..."
+    # Remove installer used directories
+    sudo rm -rf $installation_file
+    sudo rm -rf /usr/bin/installer
+    sudo rm -rf /usr/lib/installer
+    # Reset bashrc and disable autologin and enable sudo password
+    cp -r /etc/skel/.bashrc /home/$(whoami)
+    sudo rm -rf /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    # Re-enable sudo password when installation is complete
+    sudo sed -i "s/^\($(whoami).*\)NOPASSWD: ALL/\1ALL/" /etc/sudoers
+
+    ################################################################
+    # Installation Finished
+    alert "Installation Finished. We will reboot your system in 3 seconds. \n (Press Ctrl+C to cancel automatic reboot.)"
+    sleep 3
+    alert "Rebooting system ..."
+    if ! sudo systemctl reboot; then
+        if ! sudo reboot; then
+            alert "Unable to reboot automatically, please reboot your device manually."
+        fi
+    fi
+}
+
+# Start Installation
+start_installation() {
+    # Load Installation File
+    local installation_file=$1
+    if [ -f "$installation_file" ]; then
+        eval $(acu parse $installation_file)
+    else
+        alert "Error: The installation file is invalid / does not exist."
+        sleep 1
+        return 1
+    fi
+    # Confirm begin installation
+    menu_header="Installation Summary"
+    menu_confirm_label=("Install" "Cancel")
+    if [ "$install_run_part2" = 1 ] && [ ! "$(id -u)" -eq 0 ]; then
+        install_part2 "$installation_file"
+    elif [ "$install_confirm" = 1 ] || confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Config\Zn \n Target: $install_target \n \Zb\Z4Localization\Zn \n Language: ${install_language:-"(skipped)"} \n Time Zone: ${install_time_zone:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: $install_username \n Password: *** \n Disable Root Account: $install_disable_root_account \n \Zb\Z4System / Packages\Zn \n Hostname: $install_hostname \n Repositories: ${install_repo:-"(default)"} \n Linux Kernel: $install_kernel \n Firmware: ${install_firmware:-"(none)"} \n Graphics Acceleration: ${install_graphics:-"(none)"} \n Video Acceleration: ${install_video:-"(none)"} \n Kernel Additional: ${install_kernel_additional:-"(none)"} \n Desktop Environment: ${install_desktop_environment:-"(skipped)"} \n Additional Packages: ${install_additional_packages:-"(none)"} \n"; then 
+        install_part1 "$installation_file"
+    else
+        return 1
+    fi
+}
+
+################################################################
+# Installer Menu
+installer_menu() {
+
+    ################################################################
+    # Choose Language
+
+    # Full Language Choice Menu
+    langchoicemenu() {
+        menu_header="Language (More Options)"
+        menu_option_title="Choose a language category:"
+        eval $(acu parse $lang_list " ")
+        select_option "${langopt[@]}" "Skip setting Language"
+        choice=$?
+        if [ "$choice" = 0 ]; then
+            langchoice=("${langchi[@]}") # Chinese
+        elif [ "$choice" = 1 ]; then
+            langchoice=("${langeng[@]}") # English
+        elif [ "$choice" = 2 ]; then
+            langchoice=("${langspa[@]}") # Spanish
+        elif [ "$choice" = 3 ]; then
+            langchoice=("${langfre[@]}") # French
+        elif [ "$choice" = 4 ]; then
+            langchoice=("${langger[@]}") # German
+        elif [ "$choice" = 5 ]; then
+            langchoice=("${langara[@]}") # Arabic
+        elif [ "$choice" = 6 ]; then
+            title "Language (Others - sort by continents)"
+            select_option "${langcon[@]}"
+            choice=$?
+            if [ "$choice" = 0 ]; then
+                langchoice=("${langconas[@]}") # Asia
+            elif [ "$choice" = 1 ]; then
+                langchoice=("${langconeu[@]}") # Europe
+            elif [ "$choice" = 2 ]; then
+                langchoice=("${langconam[@]}") # Americas
+            elif [ "$choice" = 3 ]; then
+                langchoice=("${langconaf[@]}") # Africa
+            elif [ "$choice" = 4 ]; then
+                langchoice=("${langconother[@]}") # Others
+            fi
+        else
+            return
+        fi
+        menu_header="Language (More Options)"
+        menu_option_title="Choose a language:"
+        select_option "${langchoice[@]}"
+        choice=$?
+        menu_header="Language Setup"
+        selected_lang="${langchoice[$choice]%% (*}"
+        if ! confirm "                 Confirm setting language to $selected_lang ?"; then
+            selected_lang="" # To handle case that user chosen skip afterwards
+            langchoicemenu
+            return
+        fi
+    }
+
+    lclist=$(acu locale list-available)
+
+    lapicount=0
+    while [ $lapicount -lt 10 ]; do
+        netlang=$(curl -s https://ipapi.co/languages)
+        if echo "$netlang" | grep -q "RateLimited"; then
+            echo "Error"
+            sleep 2
+            lapicount=$((lapicount + 1))
+        else
+            break  # Exit the loop if there's no error
+        fi
+    done
+    network_lang=()
+    IFS=',' read -ra network_lang <<< "$netlang"
+
+    options=()
+    for ((i = 0; i < ${#network_lang[@]}-1; i++)); do
+        options+=("${network_lang[i]}")
+    done
+    sgdindx=$i
+    options+=("More Languages" "Skip setting Language")
+
+    menu_header="Language"
+    menu_option_title="\Zb          Let's begin with setting up your language, is that right?\Zn\n\nSuggested Languages:"
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = "$sgdindx" ]; then
+        langchoicemenu
+    elif [ "$choice" -ge "$sgdindx" ]; then
+        echo "Skipping ..."
+    else
+        selected_lang=$(echo "${options[$choice]}" | tr '-' '_')
+    fi
+
+    ################################################################
+    # Time Zone
+
+    menu_header="Time Zone"
+    ntz="$(acu time network-time-zone)"
+    menu_option_title="\Zb          Your time zone is: $ntz, is that right?\Zn\n"
+    options=("Yes, this is correct" "No, let me correct my Time Zone" "Skip setting Time Zone")
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = 0 ]; then
+        acu "time" set-time-zone sync
+        stz=$ntz
+    elif [ "$choice" = 1 ]; then
+        stz=$(input "Enter new time zone (e.g., Asia/Tokyo)")
+        acu "time" set-time-zone $stz
+    else
+        echo "Skipping ..."
+    fi
+
+    ################################################################
+    # Hostname
+    menu_header="Hostname"
+    menu_option_title="Set a hostname: \n (Can not contain space)"
+    menu_form_value=("alarm")
+    sethostname="$(form "Hostname")"
+
+    ################################################################
+    # Setup User Account
+    user_setup() {
+        menu_header="User Account"
+        menu_option_title="Create a new user account:"
+        menu_form_value=("user" "" "" "y")
+        menu_form_type=("" "1" "1")
+        local result=($(form "Username" "Password" "Confirm Password" "Disable Root Login? [Y/n]"))
+        if [ "${#result[@]}" -gt 4 ]; then
+            alert "Username / Password can not contain space."
+            sleep 1
+            user_setup
+        elif [ "${result[1]}" != "${result[2]}" ]; then
+            alert "Confirm password does not match."
+            sleep 1
+            user_setup
+        elif [ "${#result[@]}" -lt 4 ]; then
+            alert "Fields can not be empty."
+            sleep 1
+            user_setup
+        elif [[ "${result[3]}" != [YyNn] ]]; then
+            alert "Please answer y or n to [Y/n] questions."
+            sleep 1
+            user_setup
+        else
+            user_acc=(${result[@]})
+        fi
+    }
+    user_setup
+
+    ################################################################
+    # Select linux kernel
+    kernel_menu() {
+        menu_header="Linux Kernel"
+        menu_option_title="Target Device:\Z2 $install_target \Z4\n\n Select a linux kernel to install :\n\n\Zb\Z2           Linux Kernel           (Repo)                                     Description                (Kernel Version)"
+        # Process Kernel List
+        eval $(acu parse $kernel_list)
+        options=()
+        local i
+        local j
+        local k
+        # Append Kernel List
+        for ((i = 0; i < ${#kernel_base[@]}; i++)); do
+            # Add Kernel tags
+            kernel_tags=(${kernel_compatible[i]})
+            for ((j = 0; j < ${#kernel_tags[@]}; j++)); do
+                if [ "${kernel_tags[j]}" == "$install_target" ] || ([[ "${kernel_tags[j]}" == *"*" ]] && [[ "$install_target" = "${kernel_tags[j]%?}"* ]]); then
+                    is_rmd_kernel=(${kernel_recommended[i]})
+                    for ((k = 0; k < ${#is_rmd_kernel[@]}; k++)); do
+                        if [ "${is_rmd_kernel[k]}" == "$install_target" ]; then
+                            is_rmd_kernel="(Recommended) "
+                            break
+                        else
+                            is_rmd_kernel=""
+                        fi
+                    done
+                    kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "core" || echo "${kernel_repo[i]}" | awk '{print $1;}'))"
+                    kernel_string=$(printf "%-64s" "$kernel_string")
+                    options+=("$kernel_string - ${is_rmd_kernel}Install ${kernel_description[i]} (Linux ${kernel_version[i]})")
+                fi
+            done
+        done
+        # Append Experimental Kernel List
+        if [ "$showexperimental" = 1 ]; then
+            for ((i = 0; i < ${#kernel_base[@]}; i++)); do
+                # Add Kernel tags
+                kernel_tags=(${kernel_experimental[i]})
+                for ((j = 0; j < ${#kernel_tags[@]}; j++)); do
+                    if [ "${kernel_tags[j]}" == "$install_target" ] || ([[ "${kernel_tags[j]}" == *"*" ]] && [[ "$install_target" = "${kernel_tags[j]%?}"* ]]); then
+                        kernel_string="${kernel_base[i]} ($([[ "${kernel_repo[i]}" == "null" ]] && echo "core" || echo "${kernel_repo[i]}" | awk '{print $1;}'))"
+                        kernel_string=$(printf "%-64s" "$kernel_string")
+                        options+=("$kernel_string - (Experimental) Install ${kernel_description[i]} (Linux ${kernel_version[i]})")
+                    fi
+                done
+            done
+            options+=("Hide Experimental Kernel Options")
+        else
+            options+=("Show Experimental Kernel Options")
+        fi
+        select_option "${options[@]}"
+        selected=$? # get selected index
+        if [ "$selected" -lt "$((${#options[@]}-1))" ]; then
+            kernelpkg=$(echo "${options[selected]}" | awk '{print $1}') # get selected kernel package
+            # Find the base package in kernel list
+            for ((i = 0; i < ${#kernel_base[@]}; i++)); do
+                if [ "${kernel_base[i]}" = "$kernelpkg" ]; then
+                    pacmanrepo=${kernel_repo[i]}
+                    firmwarepkg=${kernel_firmware[i]}
+                    graphicspkg=${kernel_graphics[i]}
+                    videopkg=${kernel_video[i]}
+                    kerneladditionalpkg=${kernel_additional[i]}
+                    break
+                fi
+            done
+        else
+            if [ "$showexperimental" = 1 ]; then
+                showexperimental=0
+            else
+                showexperimental=1
+            fi
+            kernel_menu
+        fi
+    }
+    kernel_menu
+
+    ################################################################
+    # Select desktop environment
+
+    menu_header="Desktop Environment"
+    menu_option_title="Select a desktop environment to install :\n\n\Zb\Z2          Desktop Environment           Description"
+    # Process Desktop Environment List
+    eval $(acu parse $de_list)
+    options=()
+    for ((i = 0; i < ${#desktop_package_name[@]}; i++)); do
+        padded_name=$(printf "%-24s" "${desktop_pretty_name[i]}")
+        options+=("$padded_name - ${desktop_description[i]}")
+    done
+    select_option "${options[@]}" "Do not install a Desktop Environment"
+    de_options=$?
+    selected_de=${desktop_package_name[de_options]}
+
+    ################################################################
+    # Select additional packages #TODO
+    #menu_header="Additional Packages"
+    #menu_option_title="Select additional packages to install :"
+    #options=()
+    #select_option "${options[@]}"
+    #apps_options=$?
+
+    ################################################################
+    # Add the post install package
+    eval $(acu parse $postinstall_list)
+    local i
+    local j
+    for ((i = 0; i < ${#postinstall_package_name[@]}; i++)); do
+        # Add tags
+        local tags=(${postinstall_compatible[i]})
+        for ((j = 0; j < ${#tags[@]}; j++)); do
+            if [ "${tags[j]}" == "$install_target" ] || ([[ "${tags[j]}" == *"*" ]] && [[ "$install_target" = "${tags[j]%?}"* ]]); then
+                additionalpkg="${postinstall_package_name[i]} "
+                break
+            fi
+        done
+    done
+
+    # Default Additional Packages and System Services
+    additionalpkg+="networkmanager iw iwd bluez noto-fonts noto-fonts-cjk noto-fonts-emoji"
+    enableservices="NetworkManager.service bluetooth.service"
+    startservices="NetworkManager.service bluetooth.service"
+    # Pacman ParallelDownloads
+    prldownloads=50
+
+    ################################################################
+    # Generate Installation File
+    alert "Generating Installation File ..."
+
+    ## Installation File Header ##
+    echo -e "#$(titlelogo_string | sed 's/\\n/\\n#/g')" | tee "$install_config" >/dev/null
+    echo "# Installation File - Arch Linux Installer for ARM" | tee -a "$install_config" >/dev/null
+    echo "install:" | tee -a "$install_config" >/dev/null
+    echo " " | tee -a "$install_config" >/dev/null
+
+    ## Config ##
+    echo "# Config" | tee -a "$install_config" >/dev/null
+    # Install Target
+    echo "  target: $install_target" | tee -a "$install_config" >/dev/null
+    ## Localization ##
+    echo "# Localization" | tee -a "$install_config" >/dev/null
+    # Language
+    if [ -n "$selected_lang" ]; then
+        echo "  language: $selected_lang" | tee -a "$install_config" >/dev/null
+    fi
+    # Time Zone
+    if [ -n "$stz" ]; then
+        echo "  time_zone: $stz" | tee -a "$install_config" >/dev/null
+    fi
+
+    ## User Account ##
+    echo "# User Account" | tee -a "$install_config" >/dev/null
+    # Username
+    echo "  username: ${user_acc[0]}" | tee -a "$install_config" >/dev/null
+    # Password
+    echo "  password: ${user_acc[1]}" | tee -a "$install_config" >/dev/null
+    # Disable Root Account
+    if [[ "${user_acc[3]}" = [Yy] ]]; then
+        echo "  disable_root_account: 1" | tee -a "$install_config" >/dev/null
+    fi
+
+    ## System / Packages ##
+    echo "# System / Packages" | tee -a "$install_config" >/dev/null
+    # Hostname
+    echo "  hostname: $sethostname" | tee -a "$install_config" >/dev/null
+    # Pacman Repositories
+    if [ -n "$pacmanrepo" ] && [ "$pacmanrepo" != "null" ]; then
+        echo "  repo: $pacmanrepo" | tee -a "$install_config" >/dev/null
+    fi
+    # Pacman ParallelDownloads
+    if [ -n "$prldownloads" ]; then
+        echo "  parallel_downloads: $prldownloads" | tee -a "$install_config" >/dev/null
+    fi
+    # Kernel Package
+    echo "  kernel: $kernelpkg" | tee -a "$install_config" >/dev/null
+    # Firmware Package
+    if [ -n "$firmwarepkg" ] && [ "$firmwarepkg" != "null" ]; then
+        echo "  firmware: $firmwarepkg" | tee -a "$install_config" >/dev/null
+    fi
+    # Graphics Package
+    if [ -n "$graphicspkg" ] && [ "$graphicspkg" != "null" ]; then
+        echo "  graphics: $graphicspkg" | tee -a "$install_config" >/dev/null
+    fi
+    # Video Package
+    if [ -n "$videopkg" ] && [ "$videopkg" != "null" ]; then
+        echo "  video: $videopkg" | tee -a "$install_config" >/dev/null
+    fi
+    # Kernel Additional Package
+    if [ -n "$kerneladditionalpkg" ] && [ "$kerneladditionalpkg" != "null" ]; then
+        echo "  kernel_additional: $kerneladditionalpkg" | tee -a "$install_config" >/dev/null
+    fi
+    # Desktop Environment
+    if [ -n "$selected_de" ]; then
+        echo "  desktop_environment: $selected_de" | tee -a "$install_config" >/dev/null
+    fi
+    # Additional Packages
+    if [ -n "$additionalpkg" ]; then
+        echo "  additional_packages: $additionalpkg" | tee -a "$install_config" >/dev/null
+    fi
+    # Systemd Services
+    if [ -n "$enableservices" ]; then
+        echo "  enable_services: $enableservices" | tee -a "$install_config" >/dev/null
+    fi
+    if [ -n "$startservices" ]; then
+        echo "  start_services: $startservices" | tee -a "$install_config" >/dev/null
+    fi
+
+    ## Line ending ##
+    echo " " | tee -a "$install_config" >/dev/null
+    ################################################################
+    # Start Installation
+    if ! start_installation $install_config; then
+        sudo rm -rf $install_config
+        main_menu # Back to main menu if installation cancelled
+    fi
+}
+################################################################
+# Main Menu
+main_menu() {
+
+    # Welcome Menu
+    menu_header=""
+    menu_option_title=""
+    options=("Install Arch Linux (TUI/CLI)" "About this Installer" "Exit Installer") #TODO: Try / Install Arch Linux (GUI)
+    select_option "${options[@]}"
+    selected=$?
+
+    case $selected in
+    0)
+        installer_menu
+        ;;
+    #1) #TODO
+    #    if confirm "   This will download a 1GB image. Are you sure to continue (Coming Soon)?"; then
+    #        alert "Coming Soon"
+    #        sleep 3
+    #        main_menu
+    #    else
+    #        main_menu
+    #    fi
+    #    exit 0
+    #    ;;
+    1)
+        alert "\n Installer Version: $installerver \n ACU Version: $acuver"
+        sleep 3
+        main_menu
+        exit 0
+        ;;
+    *)
+        if confirm "   Are you sure to exit the installer? The system will shutdown."; then
+            sudo shutdown -h now
+        else
+            main_menu
+        fi
+        exit 0
+        ;;
+    esac
+}
+
+################################################################
+# Handle Installer agruments
+for arg in "$@"; do
+    case "$arg" in
+        -h | --help)
+            colorecho "$BLUE" "Arch Linux Installer for ARM (Aarch64)"
+            colorecho "$GREEN" "Installer Version: $installerver"
+            colorecho "$GREEN" "Required ACU Version: $acuver ($(acu -v --nocolorecho | grep -o '[0-9].[0-9].[0-9].*') Installed)"
+            echo
+            echo "Usage: $0 <installation_file(optional)> <arguments(optional)>"
+            echo
+            colorecho "$GREEN" "Options"
+            echo "-h / --help : Usage and Infomation of this installer"
+            echo "--skip-install-pkg : Skip installing required packages on first boot"
+            echo "--create-installer-service : Create a service to auto start this installer on first boot"
+            echo "--confirm : Skip the confirm prompt and proceed to installation"
+            echo "--part2 : Run installation part2 (use this only if you have already done part1 installation)"
+            exit 0
+            ;;
+        --create-installer-service)
+            echo -e "[Unit]\nDescription=Arch Linux Installer for ARM\nAfter=network.target\nBefore=systemd-logind.service getty@tty1.service\n\n[Service]\nType=oneshot\nTTYPath=/dev/tty13\nExecStartPre=/usr/bin/chvt 13\nExecStart=/usr/bin/installer\nExecStartPost=/usr/bin/chvt 1\nTimeoutStartSec=0\nStandardInput=tty\nTTYVHangup=yes\nTTYVTDisallocate=yes\n\n[Install]\nWantedBy=default.target\nRequiredBy=sshd.service systemd-logind.service getty@tty1.service" | tee /etc/systemd/system/installer.service && systemctl enable installer.service
+            exit 0
+            ;;
+        --skip-install-pkg)
+            skip_install_pkg=1
+            ;;
+        --confirm)
+            install_confirm=1
+            ;;
+        --part2)
+            install_run_part2=1
+            ;;
+        -*)
+            colorecho "$RED" "Invalid command or argument."
+            exit 1
+            ;;
+    esac
+done
+################################################################
+# Main Code
+alert "$title_string"
+# First Boot : Install Required Packages
+if [ -d "$compiled_pkg_folder" ] && [ -z "$skip_install_pkg" ]; then
+        alert "Installing Required Packages ..."
+        if pacman -U --overwrite \* $compiled_pkg_folder/*.pkg.tar.* --needed --noconfirm; then
+            echo "Removing packages archives ..."
+            rm -rf $compiled_pkg_folder
+
+            # Ensure SSL (Sync Clock)
+            alert "Enabling Time Sync ..."
+            systemctl enable systemd-timesyncd
+
+            # USB Fix for OPI5
+            if [[ "$install_target" == *"-orangepi-"* ]]; then
+                alert "Running USB2 Fix"
+                echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n[Service]\nExecStart=/usr/bin/sh -c \"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\"\nType=oneshot\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
+                sudo systemctl enable enable-usb2
+            fi
+
+            alert "System will reboot now."
+            if ! reboot --force; then
+                alert "Unable to reboot automatically, please reboot your device manually."
+            fi 
+        else
+            alert "Failed to install Required Packages. The image may be broken, try flashing the image again."
+            sleep 5
+            exit 1
+        fi
+fi
+
+# Create TUI Theme
+if [ ! -f "$dialog_theme_config" ]; then
+    create_dialog_theme
+fi
+
+# Network option menu
+network_menu
+
+# Check Updates
+check_installer_updates
+
+# Start Installation / Main Menu
+if [ -f "$1" ]; then
+    sudo chown -R $(whoami) $installer_home 
+    export HOME=$installer_home
+    start_installation "$1"
+else
+    export HOME=$installer_home
+    main_menu
+fi
+
+################################################################

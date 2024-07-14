@@ -1,0 +1,79 @@
+#  ____   __    __  ____     ___  __   __ _  ____  __  ___ 
+# (  _ \ /  \  /  \(_  _)   / __)/  \ (  ( \(  __)(  )/ __)
+#  ) _ ((  O )(  O ) )(    ( (__(  O )/    / ) _)  )(( (_ \
+# (____/ \__/  \__/ (__)    \___)\__/ \_)__)(__)  (__)\___/
+# Boot Config for each target device
+boot:
+
+# Example
+#- dtb: path to dtb directory or the dtb file
+#  dtb_overlays:
+#    - path to the dtb overlay file
+#  cmdline: cmdline for kernel to boot
+#  compatible:
+#    - device tag
+
+# Generic
+- dtb: /dtbs
+  dtb_overlays: null
+  cmdline: rw quiet splash
+  compatible:
+    - generic
+
+# Asahi (Apple Silicon)
+- dtb: /usr/lib/asahi-boot/dtb
+  dtb_overlays: null
+  cmdline: rw quiet splash
+  compatible:
+    - asahi
+    - apple*
+
+# Radxa RK3588
+- dtb: /dtbs/%PKGBASE%
+  dtb_overlays: null
+  cmdline: earlycon=uart8250,mmio32,0xfeb50000 console=ttyFIQ0 console=tty1 consoleblank=0 loglevel=0 panic=10 rootwait rw init=/sbin/init rootfstype=ext4 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 irqchip.gicv3_pseudo_nmi=0 switolb=1 coherent_pool=2M
+  compatible:
+    - radxa-rock-5*
+    - radxa-cm5*
+    - radxa-nx5*
+
+# Radxa Zero 3 and Rock 2A
+- dtb: /dtbs/%PKGBASE%
+  dtb_overlays: null
+  cmdline: console=ttyFIQ0,1500000n8 quiet splash loglevel=4 rw earlycon consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1
+  compatible:
+    - radxa-zero-3*
+    - radxa-rock-2a
+
+# Khadas Edge & Edge 2
+- dtb: /dtbs/%PKGBASE%
+  dtb_overlays: null
+  cmdline: earlycon=uart8250,mmio32,0xfeb50000 console=ttyFIQ0 console=tty0 quiet splash irqchip.gicv3_pseudo_nmi=0 lcd_panel=${lcd_panel} fan=auto consoleblank=0 loglevel=0 panic=10 rootwait rw init=/sbin/init rootfstype=ext4 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 switolb=1 coherent_pool=2M
+  compatible:
+    - khadas-edge*
+
+# Orange Pi and other non-mainline models
+- dtb: /dtbs/%PKGBASE%
+  dtb_overlays: null
+  cmdline: rw quiet splash
+  compatible:
+    - xunlong-orangepi*
+    - orangepi*
+    - rockchip-rk3588*
+    - friendlyelec*
+    - indiedroid*
+    - mixtile*
+    - embedfire*
+    - firefly*
+    - turing*
+    - armsom*
+    - hinlink*
+    - mekotronics*
+    - stationpc*
+
+# Fydetab Duo
+- dtb: /dtbs/%PKGBASE%/rockchip/rk3588s-tablet-12c-linux.dtb
+  dtb_overlays: null
+  cmdline: rw quiet splash
+  compatible:
+    - fydetab*

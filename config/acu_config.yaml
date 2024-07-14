@@ -1,0 +1,66 @@
+#   __    ___  _  _     ___  __   __ _  ____  __  ___  _  _  ____   __  ____  __  __   __ _  ____ 
+#  / _\  / __)/ )( \   / __)/  \ (  ( \(  __)(  )/ __)/ )( \(  _ \ / _\(_  _)(  )/  \ (  ( \/ ___)
+# /    \( (__ ) \/ (  ( (__(  O )/    / ) _)  )(( (_ \) \/ ( )   //    \ )(   )((  O )/    /\___ \
+# \_/\_/ \___)\____/   \___)\__/ \_)__)(__)  (__)\___/\____/(__\_)\_/\_/(__) (__)\__/ \_)__)(____/
+# ACU configurations - Arch Linux Installer for ARM
+configurations:
+
+  ## ACU Themes and Colors ##
+
+  # available colors are $BLACK $GREY $RED $GREEN $YELLOW $ORANGE $BLUE $DKBLUE $MAGENTA $CYAN $WHITE $LTMAGENTA $LTBLUE $LTGREY $DKRED $DKGREEN $NC
+  # NOTE: WARNING and DEBUG must not be same as THEME
+
+  # ACU Theme
+  # Theme Name displayed in ACU Settings (Optional)
+  THEME_NAME: Installer
+
+  # Theme Color
+  THEME: $CYAN
+
+  # Warning Messages Color
+  #WARNING: $YELLOW
+
+  # Debug Messages Color
+  #DEBUG: $LTGREY
+
+  # Theme with Background Color (Experimental)
+  BACKGROUND: $BGWHITE
+
+  ## ACU Configurable Variables ##
+
+  # do not update (overwrite) this configuration file during an update
+  # if you edited this configuration file, uncomment this to prevent ACU overwriting it during an update
+  #no_config_update: 1
+
+  # load device configuration determined by tags (e.g. radxa-rock-5b)
+  #device_config: generic
+
+  # do not confirm when installing a package using pacman -S / -U or makepkg -si
+  #no_confirm: 1
+
+  # do not print warning ($WARNING) messages
+  no_warning: 1
+
+  # disable color or cursor position in output
+  no_styling: 1
+
+  # do not clear terminal outputs
+  #no_clear: 1
+
+  # print debug ($DEBUG) messages
+  #debug_log: 1
+
+  # auto update acu when launch without asking
+  #auto_update: 1
+
+  ## ACU Configurable Files and Path ##
+
+  # directory for storing source files
+  source_repo_dir: .acu/cache/sources
+
+  # Repositories List
+  # repositories_list - file (or url) to load repositories list
+  # repositories_list_update - Sync local file from url when fetching updates (optional)
+  repositories_list: .acu/config/repo.yaml
+  repositories_list_update: https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/config/repo.yaml
+

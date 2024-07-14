@@ -1,0 +1,128 @@
+#  ____   __   ____  ____    __  __ _  ____  ____  __   __    __   
+# (  _ \ /  \ / ___)(_  _)  (  )(  ( \/ ___)(_  _)/ _\ (  )  (  )  
+#  ) __/(  O )\___ \  )(     )( /    /\___ \  )( /    \/ (_/\/ (_/\
+# (__)   \__/ (____/ (__)   (__)\_)__)(____/ (__)\_/\_/\____/\____/
+# Post Installation for SBCs
+postinstall:
+########################################################################
+  # Minimum ACU Version
+  - min_acu_verion: 0.0.7
+########################################################################
+  # Category List
+  - categories:
+      - category_name: Post-Install
+        category_description: Post Installation for SBCs
+########################################################################
+  # Post Install List
+  - items:
+########################################################################
+  # Items Usage / Examples
+#      - package_name: Name to identify the package (small letter no space) (used for: acu install <package>)
+#        pretty_name: Name to be shown on the app list (can contain capital letter and space) (used for: acu apps)
+#        category: Specific a category that this package belongs to from the category_name of the list above
+#        description: Description of the package 
+#        compatible:
+#          - Device tag list that this package is compatible with (this is optional when a package is suitable for any devices)
+#        packages:
+#          - Packages to be installed (this will be passed to acu install before running commands)
+#        commands: |
+#          # Commands to run when installing this packages
+#          # This can be multiple lines
+#          # This is mostly used for post install, which is optional
+
+      # Rock 5
+      - package_name: rock5-post-install
+        pretty_name: Radxa Rock 5
+        category: Post-Install
+        description: SBC Post Install
+        compatible:
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-nx5*
+        commands: |
+          #1 Disable Sleep
+          echo "Disable suspend ..."
+          sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
+          echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
+
+      # Edge 2
+      - package_name: edge2-post-install
+        pretty_name: Khadas Edge 2
+        category: Post-Install
+        description: SBC Post Install
+        compatible:
+          - khadas-edge*
+        commands: |
+          #1 Switch Network Manager to iwd
+          echo "Fix:Switch WiFi backend to iwd ..."
+          sudo mkdir -p /etc/NetworkManager/conf.d
+          echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
+          #2 FAN control for Edge 2
+          echo "Installing FAN control for Edge 2 ..."
+          curl -LJO https://raw.githubusercontent.com/BredOS/sbc-pkgbuilds/main/edge2-post-install/fan.sh
+          sudo chmod +x fan.sh
+          sudo mv fan.sh /usr/local/bin/fan.sh
+          echo "Creating FAN control service ..."
+          echo -e "[Unit]\nDescription=FAN control\nDefaultDependencies=no\nAfter=local-fs.target\n\n[Service]\nExecStart=/usr/bin/sudo /usr/local/bin/fan.sh\nRemainAfterExit=no\n\n[Install]\nWantedBy=sysinit.target" | sudo tee /usr/lib/systemd/system/fan.service
+          sudo systemctl enable fan.service
+          #3 Enable AP6275P bluetooth
+          echo "Fix:AP6275P Bluetooth ..."
+          curl -LJO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/brcm_patchram_plus
+          sudo chmod +x brcm_patchram_plus
+          sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
+          echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error:Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info:${wifi_chip}"\n    echo "BT Status:${bt_status}"\nfi' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
+          sudo chmod +x /usr/local/bin/bt_ap6275p.sh
+          echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/sudo /usr/local/bin/bt_ap6275p.sh\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
+          sudo systemctl enable bt_ap6275p.service
+
+      # FydeTab Duo
+      - package_name: fydetab-post-install
+        pretty_name: FydeTab Duo
+        category: Post-Install
+        description: SBC Post Install
+        compatible:
+          - rockchip-rk3588s-tablet-12c-linux
+        commands: |
+          #1 Switch Network Manager to iwd
+          echo "Fix:Switch WiFi backend to iwd ..."
+          sudo mkdir -p /etc/NetworkManager/conf.d
+          echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
+          #2 Enable AP6275P bluetooth
+          echo "Fix:AP6275P Bluetooth ..."
+          curl -LJO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/brcm_patchram_plus
+          sudo chmod +x brcm_patchram_plus
+          sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
+          echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error:Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info:${wifi_chip}"\n    echo "BT Status:${bt_status}"\nfi' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
+          sudo chmod +x /usr/local/bin/bt_ap6275p.sh
+          echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/sudo /usr/local/bin/bt_ap6275p.sh\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
+          sudo systemctl enable bt_ap6275p.service
+
+      # Orange Pi 5
+      - package_name: orangepi5-post-install
+        pretty_name: Orange Pi 5
+        category: Post-Install
+        description: SBC Post Install
+        compatible:
+          - xunlong-orangepi-5*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-orangepi*
+        commands: |
+          #1 Disable Sleep
+          echo "Disable suspend ..."
+          sudo mkdir -p /usr/lib/systemd/system/sleep.conf.d
+          echo -e "[Sleep]\nAllowSuspend=no\nAllowHibernation=no\nAllowSuspendThenHibernate=no\nAllowHybridSleep=no" | sudo tee /usr/lib/systemd/system/sleep.conf.d/nosuspend.conf
+          #2 Enable AP6275P bluetooth
+          echo "Fix:AP6275P Bluetooth ..."
+          curl -LJO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/brcm_patchram_plus
+          sudo chmod +x brcm_patchram_plus
+          sudo mv brcm_patchram_plus /usr/bin/brcm_patchram_plus
+          echo -e '#!/bin/bash\nbt_status=$(cat /proc/device-tree/wireless-bluetooth/status | tr -d "\\0")\nwifi_chip=$(cat /proc/device-tree/wireless-wlan/wifi_chip_type | tr -d "\\0")\nif [[ ${wifi_chip} == "ap6275p" && ${bt_status} == "okay" ]]; then\n    echo "Enabling BT from ap6275p..."\n    rfkill unblock all\n    brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 \\\n    --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9 &\n    echo $! > /var/run/brcm_patchram_plus.pid\nelse\n    echo "Error:Your BT ap6275p firmware is probably not loaded"\n    echo "WiFi Chip Info:${wifi_chip}"\n    echo "BT Status:${bt_status}"\nfi' | sudo tee /usr/local/bin/bt_ap6275p.sh >/dev/null 
+          sudo chmod +x /usr/local/bin/bt_ap6275p.sh
+          echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/sudo /usr/local/bin/bt_ap6275p.sh\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
+          sudo systemctl enable bt_ap6275p.service
+          #3 Enable the USB 2.0 port
+          echo "Fix:Enable the USB 2.0 port ..."
+          echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n\n[Service]\nExecStart=/usr/bin/sh -c \\"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\\"\nType=oneshot\n\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
+          sudo systemctl enable enable-usb2
+
+########################################################################
