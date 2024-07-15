@@ -14,8 +14,11 @@ a community-built Arch Linux Installer for ARM (Aarch64) based devices.
 - Radxa Zero 3 Series (Zero 3W/3E)
 ![Testers Needed](https://img.shields.io/badge/Testers%20Needed-F44336)
 
-- Orange Pi 5 series (Orange Pi 5, 5 Plus and 5B)
+- Orange Pi 5 series (Orange Pi 5/5B/5 Plus/5 Pro)
 - Khadas Edge Series (Edge 1/2)
+- NanoPi R6 Series (NanoPi R6C/R6S/NanoPC T6)
+![Testers Needed](https://img.shields.io/badge/Testers%20Needed-F44336)
+
 ### Raspberry Pi (boardcom)
 - Raspberry Pi (4B/5B/Zero 2W & other aarch64 model)
 ![Testers Needed](https://img.shields.io/badge/Testers%20Needed-F44336)
