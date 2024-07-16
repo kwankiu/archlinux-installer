@@ -70,8 +70,8 @@ jobs:
           #- mixtile-core3588e
           #- embedfire-lubancat-4 #rockchip-rk3588s-lubancat-4
           #- turing-rk1
-          #- armsom-sige7 #rockchip-rk3588-armsom-sige7
-          #- armsom-w3 #rockchip-rk3588-armsom-w3
+          - armsom-sige7 #rockchip-rk3588-armsom-sige7
+          - armsom-w3 #rockchip-rk3588-armsom-w3
           - fydetab-duo #rockchip-rk3588s-tablet-12c-linux
           # Others
           # Add more models as needed
@@ -123,10 +123,10 @@ jobs:
                 # URL to download u-boot for the board
                 uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-6_arm64.deb"
                 ;;
-              friendlyelec-*)
+              friendlyelec-* | armsom-*)
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model#*-}_2017.09+20240626.git5202c429-1_arm64.deb"
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model#*-}_2017.09+20240626.git5202c429-3_arm64.deb"
                 ;;
               fydetab-*)
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=usr/lib/u-boot -b"

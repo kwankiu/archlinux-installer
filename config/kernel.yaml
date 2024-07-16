@@ -122,6 +122,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
           - friendlyelec-nanopi-r6*
           - friendlyelec-nanopc-*
           - friendlyelec-cm*
@@ -134,6 +135,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
           - friendlyelec-nanopi-r6*
           - friendlyelec-nanopc-*
           - friendlyelec-cm*
@@ -164,6 +166,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
           - friendlyelec-nanopi-r6*
           - friendlyelec-nanopc-*
           - friendlyelec-cm*
