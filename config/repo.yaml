@@ -11,7 +11,7 @@ repositories:
  
 - repo_name: apps
   repo_type: acu
-  repo_url: https://raw.githubusercontent.com/kwankiu/acu/dev/example/apps.yaml
+  repo_url: https://raw.githubusercontent.com/kwankiu/acu/dev/examples/apps.yaml
  
 - repo_name: desktop
   repo_type: acu
