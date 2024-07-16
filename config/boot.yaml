@@ -60,7 +60,8 @@ boot:
     - xunlong-orangepi*
     - orangepi*
     - rockchip-rk3588*
-    - friendlyelec*
+    - nanopi*
+    - nanopc*
     - indiedroid*
     - mixtile*
     - embedfire*

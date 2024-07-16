@@ -60,10 +60,10 @@ jobs:
           #- orangepi-3b
           #- orangepi-cm5
           # Nano Pi
-          - friendlyelec-nanopc-t6
-          - friendlyelec-nanopi-r6c
-          - friendlyelec-nanopi-r6s
-          #- friendlyelec-cm3588
+          - nanopc-t6
+          - nanopi-r6c
+          - nanopi-r6s
+          #- nanopi-cm3588
           # Other Rockchip RK35XX
           #- indiedroid-nova #9tripod-rk3588s
           #- mixtile-blade3 #rockchip-rk3588-blade3-v101-linux
@@ -123,10 +123,10 @@ jobs:
                 # URL to download u-boot for the board
                 uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-6_arm64.deb"
                 ;;
-              friendlyelec-* | armsom-*)
+              nanopi-* | nanopc-* | armsom-*)
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model#*-}_2017.09+20240626.git5202c429-3_arm64.deb"
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240626.git5202c429-3_arm64.deb"
                 ;;
               fydetab-*)
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=usr/lib/u-boot -b"
