@@ -1219,8 +1219,11 @@ installer_menu() {
         local tags=(${postinstall_compatible[i]})
         for ((j = 0; j < ${#tags[@]}; j++)); do
             if [ "${tags[j]}" == "$install_target" ] || ([[ "${tags[j]}" == *"*" ]] && [[ "$install_target" = "${tags[j]%?}"* ]]); then
-                additionalpkg="${postinstall_package_name[i]} "
-                break
+                if [ -z "$additionalpkg" ]; then
+                    additionalpkg="${postinstall_package_name[i]}"
+                else
+                    additionalpkg="${additionalpkg} ${postinstall_package_name[i]}"
+                fi
             fi
         done
     done
@@ -1427,7 +1430,7 @@ if [ -d "$compiled_pkg_folder" ] && [ -z "$skip_install_pkg" ]; then
             alert "System will reboot now."
             if ! reboot --force; then
                 alert "Unable to reboot automatically, please reboot your device manually."
-            fi 
+            fi
         else
             alert "Failed to install Required Packages. The image may be broken, try flashing the image again."
             sleep 5
