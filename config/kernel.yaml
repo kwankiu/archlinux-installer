@@ -233,9 +233,9 @@ kernel:
         additional: null
 
       # Orange Pi Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi
+      - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git
         description: Orange Pi fork of Linux Rockchip BSP Kernel
-        version: 5.10.110
+        version: 5.10.160
         repo:
           - 7Ji
         compatible:
@@ -246,29 +246,6 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
-        experimental: null
-        firmware:
-          - linux-firmware-orangepi-git
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
-      # Orange Pi Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git
-        description: Orange Pi fork of Linux Rockchip BSP Kernel
-        version: 5.10.160
-        repo:
-          - 7Ji
-        compatible:
-          - xunlong-orangepi-5*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
-        recommended: null
         experimental: null
         firmware:
           - linux-firmware-orangepi-git
