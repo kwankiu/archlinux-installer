@@ -320,6 +320,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
         firmware:
           - linux-firmware-armbian-git
         graphics:
@@ -346,6 +347,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -370,6 +372,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
         firmware: null
         graphics:
           - mesa
