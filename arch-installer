@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24071801
+installerver=24071802
 
 # Required ACU version
 acuver=0.1.2-dev
@@ -1220,9 +1220,9 @@ installer_menu() {
         for ((j = 0; j < ${#tags[@]}; j++)); do
             if [ "${tags[j]}" == "$install_target" ] || ([[ "${tags[j]}" == *"*" ]] && [[ "$install_target" = "${tags[j]%?}"* ]]); then
                 if [ -z "$additionalpkg" ]; then
-                    additionalpkg="${postinstall_package_name[i]}"
+                    additionalpkg="${postinstall_package_name[i]} "
                 else
-                    additionalpkg="${additionalpkg} ${postinstall_package_name[i]}"
+                    additionalpkg+="${postinstall_package_name[i]} "
                 fi
             fi
         done
