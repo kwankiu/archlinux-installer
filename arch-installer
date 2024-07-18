@@ -1420,13 +1420,6 @@ if [ -d "$compiled_pkg_folder" ] && [ -z "$skip_install_pkg" ]; then
             alert "Enabling Time Sync ..."
             systemctl enable systemd-timesyncd
 
-            # USB Fix for OPI5
-            if [[ "$install_target" == *"-orangepi-"* ]]; then
-                alert "Running USB2 Fix"
-                echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n[Service]\nExecStart=/usr/bin/sh -c \"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\"\nType=oneshot\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
-                sudo systemctl enable enable-usb2
-            fi
-
             alert "System will reboot now."
             if ! reboot --force; then
                 alert "Unable to reboot automatically, please reboot your device manually."
