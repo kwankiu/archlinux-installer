@@ -113,6 +113,9 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;36m'
 NC='\033[0m' # No Color
 
+# Status bar theme color
+BARCOLOR='\033[107;30m'
+
 # Echo with colors
 colorecho() {
     color="$1"
@@ -162,35 +165,38 @@ dash_string() {
     done
 }
 
-# Generate Status Bar
+# Status Bar
 status_bar() {
-    # Get the terminal width
-    terminal_width=$(tput cols)
+    while true; do
+        tput cup 0 0
+        # Get the terminal width
+        terminal_width=$(tput cols)
 
-    # Calculate the width of each item
-    item_left=$(( (terminal_width - 4) / 3 ))  # Subtracting 4 for the brackets and spaces
-    item_center=$(( ((terminal_width - 4) / 6) + 3 ))  # Subtracting 4 for the brackets and spaces
-    item_right=$(( ((terminal_width - 4) / 2) - 3 ))  # Subtracting 4 for the brackets and spaces
+        # Calculate the width of each item
+        item_left=$(( (terminal_width - 4) / 3 ))  # Subtracting 4 for the brackets and spaces
+        item_center=$(( ((terminal_width - 4) / 6) + 3 ))  # Subtracting 4 for the brackets and spaces
+        item_right=$(( ((terminal_width - 4) / 2) - 3 ))  # Subtracting 4 for the brackets and spaces
 
-    # Define the strings for left, center, and right items
-    left_item="[$title_string$menu_header]"
-    center_item="$(date +"%b %e %H:%M")"
-    if [ "$internet_available" = 1 ]; then
-        right_item="[Internet Connected]"
-    elif [ "$internet_available" = 2 ]; then
-        right_item="[No Internet]"
-    else
-        right_item="[Waiting for Network]"
-    fi
-    # Print the items with alignment
-    printf "%-${item_left}s%${item_center}s%${item_right}s\n" "$left_item" "$center_item" "$right_item"
+        # Define the strings for left, center, and right items
+        left_item="[$title_string$menu_header]"
+        center_item="$(date +"%b %e %H:%M")"
+        if [ "$internet_available" = 1 ]; then
+            right_item="[Internet Connected]"
+        elif [ "$internet_available" = 2 ]; then
+            right_item="[No Internet]"
+        else
+            right_item="[Waiting for Network]"
+        fi
+        # Print the items with alignment
+        printf "$BARCOLOR   %-${item_left}s%${item_center}s%${item_right}s    $NC" "$left_item" "$center_item" "$right_item"
+        sleep 0.5
+    done
 }
 
 # Print Title Logo
 title() {
   clear
   text="$1"
-  colorecho "$BLUE" "$(status_bar)"
   echo "$(dash_string)"
   colorecho "$BLUE" "$(titlelogo_string)"
   echo "$(dash_string)"
@@ -325,7 +331,7 @@ select_option() {
     done
 
     # launch TUI using dialog
-    choice=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+    choice=$(dialog --colors  \
         --title " $dialog_title " --ok-label "Next" --nocancel \
         --menu "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \Zn" 0 0 0 "${options_string[@]}" \
     3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
@@ -369,7 +375,7 @@ alert() {
     done
 
         # launch TUI using dialog
-    if ! dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+    if ! dialog --colors  \
             --title " $dialog_title " \
             --infobox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
         # CLI Fallback
@@ -400,7 +406,7 @@ info() {
     done
 
         # launch TUI using dialog
-    if ! dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+    if ! dialog --colors  \
             --title " $dialog_title " \
             --msgbox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
         # CLI Fallback
@@ -433,7 +439,7 @@ confirm() {
     done
 
     # launch TUI using dialog
-    if dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+    if dialog --colors  \
         --title " $dialog_title " --yes-label "${menu_confirm_label[0]:-"Yes"}" --no-label "${menu_confirm_label[1]:-"No"}" \
         --yesno "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
         return 0
@@ -474,7 +480,7 @@ input() {
     done
 
     # launch TUI using dialog
-    local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+    local value=$(dialog --colors  \
         --title " $dialog_title " --nocancel \
         --inputbox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0 \
     3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
@@ -525,7 +531,7 @@ form() {
     menu_form_type=()
 
     # launch TUI using dialog
-    local value=$(dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+    local value=$(dialog --colors  \
         --title " $dialog_title " --ok-label "Next" --nocancel --insecure \
         --mixedform "\n\Zb\Z4$(titlelogo_string) \n\n $menu_option_title \n\Zn (Use arrow key to switch column, press enter to confirm)" 0 0 0 \
         "${options_string[@]}" \
@@ -1484,6 +1490,7 @@ network_menu
 check_installer_updates
 
 # Start Installation / Main Menu
+status_bar &
 if [ -f "$1" ]; then
     sudo chown -R $(whoami) $installer_home 
     export HOME=$installer_home
