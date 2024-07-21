@@ -379,6 +379,38 @@ alert() {
         
 }
 
+# TUI MSG Box
+info() {
+
+    export DIALOGRC=$dialog_theme_config
+    local i=0
+
+    # menu header
+    if [ -n "$menu_header" ]; then
+        if [[ "$menu_header" != *" - "* ]]; then 
+            dialog_title="$menu_header"
+            menu_header=" - $menu_header"
+        fi
+    else
+        dialog_title="Info"
+    fi
+
+    for opt; do
+        ((i++))
+    done
+
+        # launch TUI using dialog
+    if ! dialog --colors --backtitle " \Zu\Z4 $(status_bar) "  \
+            --title " $dialog_title " \
+            --msgbox "\n\Zb\Z4$(titlelogo_string 2)\Zn \n$opt\n\n" 0 0; then
+        # CLI Fallback
+        title
+        colorecho "$BLUE" "${dialog_title//\\Z[0-7bun]/} $NC| ${opt//\\Z[0-7bun]/}"
+        select_option_cli "OK"
+    fi
+        
+}
+
 # TUI Confirm Box
 confirm() {
 
@@ -1330,10 +1362,9 @@ installer_menu() {
 # Main Menu
 main_menu() {
 
-    # Welcome Menu
     menu_header=""
     menu_option_title=""
-    options=("Install Arch Linux (TUI/CLI)" "About this Installer" "Exit Installer") #TODO: Try / Install Arch Linux (GUI)
+    options=("Install Arch Linux" "Network Options" "Advanced Options" "About this Installer" "Exit Installer") #TODO: Try / Install Arch Linux (GUI)
     select_option "${options[@]}"
     selected=$?
 
@@ -1352,8 +1383,18 @@ main_menu() {
     #    exit 0
     #    ;;
     1)
-        alert "\n Installer Version: $installerver \n ACU Version: $acuver"
-        sleep 3
+        menu_header="Network Options"
+        info "\n Installer Version: $installerver \n ACU Version: $acuver"
+        main_menu
+        exit 0
+        ;;
+    2)
+        main_menu
+        exit 0
+        ;;
+    3)
+        menu_header="About this Installer"
+        info "\n Installer Version: $installerver \n ACU Version: $acuver"
         main_menu
         exit 0
         ;;
