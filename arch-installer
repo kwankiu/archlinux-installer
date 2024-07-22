@@ -106,6 +106,12 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 ################################################################
 # Tools for formatting / styling
 
+# Customize terminal/tty console colors
+echo -en "\e]P41a73e8" #darkblue
+echo -en "\e]PC1a73e8" #blue
+echo -en "\e]PE53cced" #cyan
+echo -en "\e]P7dedede" #lightgray
+
 # Define terminal color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -114,7 +120,12 @@ BLUE='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Status bar theme color
-BARCOLOR='\033[107;30m'
+BARCOLOR='\033[40;97m'
+
+# Define cursor positions
+SAVECURSOR='\033[s'
+RESTORECURSOR='\033[u'
+TOPLEFTCURSOR='\033[1;1H'
 
 # Echo with colors
 colorecho() {
@@ -134,6 +145,22 @@ sudo () {
         command sudo "$@"
     fi
 }
+
+# Store values across subshell/scripts
+store_var() {
+    mkdir -p /tmp/arch-installer
+    echo "$2" > /tmp/arch-installer/$1
+}
+
+# Read values accessible across subshell/scripts
+read_var() {
+    if [ -f "/tmp/arch-installer/$1" ]; then
+        cat /tmp/arch-installer/$1
+    fi
+}
+
+# Delete tmp files when script stopped
+trap "rm -rf /tmp/arch-installer; exit" INT
 
 # Generate Title Logo
 titlelogo_string() {
@@ -168,6 +195,11 @@ dash_string() {
 # Status Bar
 status_bar() {
     while true; do
+
+        # Check Internet Status
+        internet_available=$(internet_status) 
+        store_var "internet_available" "$internet_available"
+
         # Get the terminal width
         terminal_width=$(tput cols)
 
@@ -176,9 +208,18 @@ status_bar() {
         item_center=$(( ((terminal_width - 4) / 6) + 3 ))  # Subtracting 4 for the brackets and spaces
         item_right=$(( ((terminal_width - 4) / 2) - 3 ))  # Subtracting 4 for the brackets and spaces
 
-        # Define the strings for left, center, and right items
-        left_item="[$title_string$menu_header]"
+        # Left Item
+        menu_header=$(read_var "menu_header")
+        if [ -n "$menu_header" ]; then
+            left_item="[$title_string - $menu_header]"
+        else
+            left_item="[$title_string]"
+        fi
+
+        # Center Item
         center_item="$(date +"%b %e %H:%M")"
+
+        #Right Item
         if [ "$internet_available" = 1 ]; then
             right_item="[Internet Connected]"
         elif [ "$internet_available" = 2 ]; then
@@ -186,11 +227,10 @@ status_bar() {
         else
             right_item="[Waiting for Network]"
         fi
+
         # Print the items with alignment
-        printf "\033[s"
-        tput cup 0 0
-        printf "$BARCOLOR   %-${item_left}s%${item_center}s%${item_right}s    $NC" "$left_item" "$center_item" "$right_item"
-        printf "\033[u"
+        printf "${SAVECURSOR}${TOPLEFTCURSOR}$BARCOLOR   %-${item_left}s%${item_center}s%${item_right}s   $NC${RESTORECURSOR}" "$left_item" "$center_item" "$right_item"
+
         sleep 0.5
     done
 }
@@ -313,9 +353,9 @@ select_option() {
     print_option()     { echo "$1"; }
 
     # menu header
+    store_var "menu_header" "$menu_header"
     if [ -n "$menu_header" ]; then
         dialog_title="$menu_header"
-        menu_header=" - $menu_header"
     else
         dialog_title="Welcome to Arch Linux !"
     fi
@@ -363,11 +403,9 @@ alert() {
     local i=0
 
     # menu header
+    store_var "menu_header" "$menu_header"
     if [ -n "$menu_header" ]; then
-        if [[ "$menu_header" != *" - "* ]]; then 
-            dialog_title="$menu_header"
-            menu_header=" - $menu_header"
-        fi
+        dialog_title="$menu_header"
     else
         dialog_title="Info"
     fi
@@ -394,11 +432,9 @@ info() {
     local i=0
 
     # menu header
+    store_var "menu_header" "$menu_header"
     if [ -n "$menu_header" ]; then
-        if [[ "$menu_header" != *" - "* ]]; then 
-            dialog_title="$menu_header"
-            menu_header=" - $menu_header"
-        fi
+        dialog_title="$menu_header"
     else
         dialog_title="Info"
     fi
@@ -427,11 +463,9 @@ confirm() {
     local cfm
 
     # menu header
+    store_var "menu_header" "$menu_header"
     if [ -n "$menu_header" ]; then
-        if [[ "$menu_header" != *" - "* ]]; then 
-            dialog_title="$menu_header"
-            menu_header=" - $menu_header"
-        fi
+        dialog_title="$menu_header"
     else
         dialog_title="Confirm"
     fi
@@ -468,11 +502,9 @@ input() {
     local i=0
 
     # menu header
+    store_var "menu_header" "$menu_header"
     if [ -n "$menu_header" ]; then
-        if [[ "$menu_header" != *" - "* ]]; then 
-            dialog_title="$menu_header"
-            menu_header=" - $menu_header"
-        fi
+        dialog_title="$menu_header"
     else
         dialog_title="Enter an input"
     fi
@@ -507,9 +539,9 @@ form() {
     print_option()     { echo "$1"; }
 
     # menu header
+    store_var "menu_header" "$menu_header"
     if [ -n "$menu_header" ]; then
         dialog_title="$menu_header"
-        menu_header=" - $menu_header"
     else
         dialog_title="Welcome to Arch Linux !"
     fi
@@ -576,90 +608,222 @@ form() {
 ################################################################
 # Internet Connection & Updates Check
 internet_available=0
-check_internet() {
+internet_status() {
         for server in "${ping_servers[@]}"; do
             if ping -q -c 1 "$server" >/dev/null 2>&1; then
                 internet_found_at="$server"
                 internet_available=1 # internet connected
-                ckin='s'
-                echo $ckin
-                return
+                break
             elif ip link show | grep "state UP"; then
                 internet_available=2 # network connected but no internet access
+            else
+                internet_available=0 # no connection
             fi
         done
+        echo "$internet_available"
 }
 
-network_menu()
-{
-    menu_header="Network Setup"
+network_menu() {
+    # Get Internet Status
+    internet_available=$(read_var "internet_available")
+    if [ "$internet_available" = 1 ]; then
+            internet_status="Connected"
+    elif [ "$internet_available" = 2 ]; then
+            internet_status="Connected (No Internet)"
+    else
+            internet_status="Disconnected"
+    fi
 
-    # Check if there is a Wireless Interface and get the first one
-    for dev in /sys/class/net/*; do
-        if [ -e "$dev"/wireless ]; then
-            iwdev=${dev##*/};
-            break;
-        fi
-    done
-
-    local last_check=$(( $(date +%s) - 2 ))
-    local last_internet
-
-    while [[ "$ckin" != [wWsS] ]]; do
-        read -t 0.1 -n 1 tmp && ckin=$tmp
-        # Perform internet check every 2 seconds
-        current_time=$(date +%s)
-        if [ $((current_time - last_check)) -ge 2 ]; then
-            # Check internet connectivity in the background
-            check_internet
-            last_check=$current_time
-        fi
-        # Keep tracking for wireless adapter if not found
-        if [ -z "$iwdev" ]; then
-            for dev in /sys/class/net/*; do
-                if [ -e "$dev"/wireless ]; then
-                    iwdev=${dev##*/};
-                    break;
-                fi
-            done
-            wl_adapter="No adapter found"
-        else
-            wl_adapter=$iwdev
-        fi
-        # Network Status
-        if [ "$internet_available" = 1 ]; then
-            network_status="             Internet is available via $internet_found_at"
-        elif [ "$internet_available" = 2 ]; then
-            network_status="            Network Connected. Waiting for Internet ..."
-        else
-            network_status="                    Waiting for Network ..."
-        fi
-        menu_option_title="\n\Z2$network_status\n\n\ZnEnter a key:\n\n"
-        if [ $((current_time - last_check)) -ge 4 ] || [ "$last_internet" != "$internet_available" ]; then
-            alert "$menu_option_title w) Connect to a WiFi network ($wl_adapter) \n s) Skip Internet Check (Installation may fail)"
-            last_internet=$internet_available
-        fi
-    done
-    # Restore terminal settings
-    clear
-
-    case $ckin in
-        [wW])
-            alert "Connecting to a WiFi network..."
-            if [ -z "$iwdev" ]; then
-                read -p "Please specify the network device (e.g. wlan0): " iwdev
+    # Find Wireless Interface and get the first one if exist
+    if [ -n "$custom_iwdev" ]; then
+        iwdev=$custom_iwdev
+    else
+        for dev in /sys/class/net/*; do
+            if [ -e "$dev"/wireless ]; then
+                iwdev=${dev##*/};
+                break;
             fi
-            if [ -x "$(command -v sudo)" ]; then
-                sudo wifi-menu $iwdev
-            else
-                wifi-menu $iwdev
+        done
+    fi
+
+    # Network Menu
+    menu_header="Network Options"
+    menu_option_title=""
+    options=("Back" "Network Status -> $internet_status" "Connect to a WiFi -> ${iwssid:-"Disconnected"}" "Change WiFi adapter -> ${iwdev:-"no adapter"}" "Update NTP Time Sync" "Ethernet Restart" "Edit Mirrorlist")
+    select_option "${options[@]}"
+    selected=$?
+
+    case $selected in
+    0)
+        main_menu
+        ;;
+    1)
+        menu_header="Network Status"
+
+        alert "Performing network connection test ..."
+        # Test connection
+        http_status="FAIL"
+        if curl -s http://example.com/ >/dev/null; then
+            http_status="OK"
+        fi
+        https_status="FAIL"
+        if curl -s https://example.com/ >/dev/null; then
+            https_status="OK"
+        fi
+        github_status="FAIL"
+        if curl -s https://github.com/ >/dev/null; then
+            github_status="OK"
+        fi
+        ghusercon_status="FAIL"
+        if curl -s https://raw.githubusercontent.com/ >/dev/null; then
+            ghusercon_status="OK"
+        fi
+        ipapi_status="FAIL"
+        if curl -s https://ipapi.co/ >/dev/null; then
+            ipapi_status="OK"
+        fi
+        # Get Local IP
+        local_ip=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | head -n 1)
+        info "Internet Status: $internet_status \nLocal IP address: ${local_ip:-"Unavailable"} \nHTTP Connection: $http_status \nHTTPS Connection: $https_status \nConnection to github.com: $github_status\nConnection to githubusercontent.com: $ghusercon_status\nConnection to ipapi.co: $ipapi_status \nInterface Status: \n$(ip link)"
+        network_menu
+        ;;
+    2)
+        menu_header="Connect to a WiFi"
+        if sudo wifi-menu $iwdev; then
                 alert "Enabling netctl Auto Connect ..."
                 systemctl enable netctl-auto@$iwdev.service
+        fi
+        network_menu
+        ;;
+    3)
+        menu_header="Change WiFi Adapter"
+        # Get all Wireless Interface
+        iwdevlist=()
+        for dev in /sys/class/net/*; do
+            if [ -e "$dev"/wireless ]; then
+                iwdevlist+=("${dev##*/}")
             fi
-            check_internet             
-            ;;
-    esac
+        done
+        select_option "Back" "Specify a wireless interface" "${iwdevlist[@]}"
+        selected=$?
 
+        case $selected in
+            0)
+                echo
+                ;;
+            1)
+                custom_iwdev=$(input "Please specify the network device (e.g. wlan0): ")
+                ;;
+            *)
+                custom_iwdev="${iwdevlist[selected]}"
+                ;;
+        esac
+        network_menu
+        ;;
+    4)
+        menu_header="Update NTP Time Sync"
+        alert "Updating NTP Time Sync ..."
+        sudo rm -rf /etc/systemd/network/*
+        sudo systemctl restart systemd-networkd
+        sleep 1
+        sudo timedatectl set-ntp false
+        sudo timedatectl set-ntp true
+        network_menu
+        ;;
+    5)
+        menu_header="Ethernet Restart"
+        alert "Restarting Ethernet ..."
+        sudo systemctl restart systemd-networkd
+        sudo systemctl restart dhcpcd
+        sleep 1
+        network_menu
+        ;;
+    6)
+        menu_header="Edit Mirrorlist"
+        alert "Edit Mirrorlist - Starting nano editor ..."
+        sudo nano /etc/pacman.d/mirrorlist
+        network_menu
+        ;;
+    esac
+}
+
+advanced_menu() {
+    menu_header="Advanced Options"
+    menu_option_title=""
+    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "Exit to Shell" "Soft Reboot System" "Reboot System" "Russian roulette")
+    select_option "${options[@]}"
+    selected=$?
+
+    case $selected in
+    0)
+        main_menu
+        ;;
+    1)
+        menu_header="Device Infomation"
+        info "$(acu sysinfo)"
+        advanced_menu
+        ;;
+    2)
+        menu_header="Edit Pacman Configuration"
+        alert "Edit Pacman Configuration - Starting nano editor ..."
+        sudo nano /etc/pacman.conf
+        advanced_menu
+        ;;
+    3)
+        menu_header="Bypass Internet Check"
+        if confirm "Are you sure to bypass the Internet Check? \nInternet connection is required to perform an installation, if you bypass this, installation may fail."; then
+            bypass_internet=1
+        elif [ -n "$bypass_internet" ]; then
+            bypass_internet=""
+        fi
+        advanced_menu
+        ;;
+    4)
+        menu_header="Exit to Shell"
+        if confirm "Are you sure to exit this installer to shell? \nTips: To re-enter this installer, type > installer < or reboot."; then
+            exit 0
+        fi
+        advanced_menu
+        ;;
+    5)
+        menu_header="Soft Reboot System"
+        if confirm "Are you sure to soft reboot this system?."; then
+            sudo systemctl soft-reboot
+        fi
+        advanced_menu
+        ;;
+    6)
+        menu_header="Reboot System"
+        if confirm "Are you sure to force reboot this system?."; then
+            sudo reboot --force
+        fi
+        advanced_menu
+        ;;
+    7)
+        menu_header="Russian roulette"
+        if confirm "Let's play a mini game - Russian roulette?"; then
+            alert "Welcome to the Arch Linux Russian Roulette Challenge!"
+            sleep 2
+            alert "Are you feeling like a true Arch Linux warrior? Let's find out!"
+            sleep 2
+            info "Ready?"
+            local chambers=6
+            local bullet_chamber=$((RANDOM % chambers + 1))
+            info "The Arch Linux revolver has $chambers chambers. One of them contains a bullet. \n Press OK to spin the cylinder and take your shot..."
+            local shot_chamber=$((RANDOM % chambers + 1))
+            if [ $shot_chamber -eq $bullet_chamber ]; then
+                info "BANG Oh no, the bullet has struck! Better luck next time, brave Arch user."
+                info "Performing sudo rm -rf / ........................................................ (just kidding)..."
+            else
+                info "click Phew, you've survived this round! Praise the Arch gods!"
+            fi
+        fi
+        advanced_menu
+        ;;
+    esac
+}
+
+check_ssl() {
     # Loop until curl is successful or max attempts reached
     attempt=0
     until curl -sSf https://raw.githubusercontent.com/ >/dev/null 2>&1 || [ "$attempt" -ge 15 ]; do
@@ -686,8 +850,7 @@ network_menu()
     done
 
     if [ "$attempt" -ge 5 ]; then
-        systemctl status systemd-timesyncd # for debugging
-        alert "Failed to establish SSL internet connection after $attempt attempts. \n\n Restart your device and try again or press Ctrl+C to exit this installer for manual operation."
+        menu_option_title="Failed to establish SSL internet connection after $attempt attempts."
         options=("Continue Anyway (may break)" "Restart Now")
         select_option "${options[@]}"
         answer=$?
@@ -738,6 +901,8 @@ check_installer_updates() {
                 sleep 3
             fi
         fi
+    else
+                info " No updates available.\n Installer Version: $installerver \n ACU Version: $acuver \n Release Channel: $branch"
     fi
 }
 
@@ -844,8 +1009,10 @@ install_part1() {
     echo "installer $installation_file --part2" | tee -a /home/$install_username/.bashrc
 
     alert "System will reboot now."
-    if ! reboot --force; then
-        alert "Unable to reboot automatically, please reboot your device manually."
+    if ! systemctl soft-reboot; then
+        if ! reboot --force; then
+            alert "Unable to reboot automatically, please reboot your device manually."
+        fi
     fi
 }
 
@@ -992,7 +1159,17 @@ start_installation() {
     menu_header="Installation Summary"
     menu_confirm_label=("Install" "Cancel")
     if [ "$install_run_part2" = 1 ] && [ ! "$(id -u)" -eq 0 ]; then
-        install_part2 "$installation_file"
+        attempt=0
+        until [ "$(read_var "internet_available")" = 1 ] || [ "$attempt" -ge 10 ]; do
+                alert "Waiting for internet connection ..."
+                sleep 2
+                ((attempt++))
+        done
+        if [ "$attempt" -ge 8 ]; then
+            network_menu #WIPWIPWIPWIP
+        else
+            install_part2 "$installation_file"
+        fi
     elif [ "$install_confirm" = 1 ] || confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Config\Zn \n Target: $install_target \n \Zb\Z4Localization\Zn \n Language: ${install_language:-"(skipped)"} \n Time Zone: ${install_time_zone:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: $install_username \n Password: *** \n Disable Root Account: $install_disable_root_account \n \Zb\Z4System / Packages\Zn \n Hostname: $install_hostname \n Repositories: ${install_repo:-"(default)"} \n Linux Kernel: $install_kernel \n Firmware: ${install_firmware:-"(none)"} \n Graphics Acceleration: ${install_graphics:-"(none)"} \n Video Acceleration: ${install_video:-"(none)"} \n Kernel Additional: ${install_kernel_additional:-"(none)"} \n Desktop Environment: ${install_desktop_environment:-"(skipped)"} \n Additional Packages: ${install_additional_packages:-"(none)"} \n"; then 
         install_part1 "$installation_file"
     else
@@ -1372,42 +1549,39 @@ main_menu() {
 
     menu_header=""
     menu_option_title=""
-    options=("Install Arch Linux" "Network Options" "Advanced Options" "About this Installer" "Exit Installer") #TODO: Try / Install Arch Linux (GUI)
+    options=("Install Arch Linux" "Network Options" "Advanced Options" "Check for updates" "Exit Installer")
     select_option "${options[@]}"
     selected=$?
 
     case $selected in
     0)
-        installer_menu
+        internet_available=$(read_var "internet_available")
+        if [ "$internet_available" = 1 ] || [ "$bypass_internet" = 1 ]; then
+            check_ssl
+            installer_menu
+        else
+            info "Error: Internet Connection is required."
+            main_menu
+        fi
         ;;
-    #1) #TODO
-    #    if confirm "   This will download a 1GB image. Are you sure to continue (Coming Soon)?"; then
-    #        alert "Coming Soon"
-    #        sleep 3
-    #        main_menu
-    #    else
-    #        main_menu
-    #    fi
-    #    exit 0
-    #    ;;
     1)
         menu_header="Network Options"
-        info "\n Installer Version: $installerver \n ACU Version: $acuver"
-        main_menu
+        network_menu
         exit 0
         ;;
     2)
-        main_menu
+        menu_header="Advanced Options"
+        advanced_menu
         exit 0
         ;;
     3)
-        menu_header="About this Installer"
-        info "\n Installer Version: $installerver \n ACU Version: $acuver"
+        menu_header="Check for updates"
+        check_installer_updates
         main_menu
         exit 0
         ;;
     *)
-        if confirm "   Are you sure to exit the installer? The system will shutdown."; then
+        if confirm "   Are you sure to exit this installer? The system will shutdown."; then
             sudo shutdown -h now
         else
             main_menu
@@ -1484,12 +1658,6 @@ fi
 if [ ! -f "$dialog_theme_config" ]; then
     create_dialog_theme
 fi
-
-# Network option menu
-network_menu
-
-# Check Updates
-check_installer_updates
 
 # Start Installation / Main Menu
 status_bar &
