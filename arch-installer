@@ -780,7 +780,7 @@ install_part1() {
     fi
 
     alert "Installing sudo ..."
-    pacman -Sy sudo --noconfirm
+    pacman -Sy sudo glibc --noconfirm
 
     alert "Removing default account ..."
     acu user remove alarm
