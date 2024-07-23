@@ -81,6 +81,7 @@ postinstall:
           echo "Switch WiFi backend to iwd ..."
           sudo mkdir -p /etc/NetworkManager/conf.d
           echo -e "[device]\nwifi.backend=iwd" | sudo tee /etc/NetworkManager/conf.d/wifi_backend.conf
+          sudo rm -rf /etc/netctl/*
           #2 Enable AP6275P bluetooth
           echo "Enable AP6275P Bluetooth ..."
           curl -LJO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/brcm_patchram_plus
