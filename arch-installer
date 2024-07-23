@@ -661,9 +661,6 @@ network_menu() {
     selected=$?
 
     case $selected in
-    0)
-        main_menu
-        ;;
     1)
         menu_header="Network Status"
 
@@ -762,9 +759,6 @@ advanced_menu() {
     selected=$?
 
     case $selected in
-    0)
-        main_menu
-        ;;
     1)
         menu_header="Device Infomation"
         info "$(acu sysinfo)"
@@ -1206,15 +1200,19 @@ start_installation() {
     menu_confirm_label=("Install" "Cancel")
     if [ "$install_run_part2" = 1 ] && [ ! "$(id -u)" -eq 0 ]; then
         attempt=0
-        until [ "$(read_var "internet_available")" = 1 ] || [ "$attempt" -ge 10 ]; do
+        until [ "$(read_var "internet_available")" = 1 ] || [ "$attempt" -ge 20 ]; do
+                if [ "$attempt" -ge 10 ]; then
+                    network_menu
+                fi
                 alert "Waiting for internet connection ..."
                 sleep 2
                 ((attempt++))
         done
-        if [ "$attempt" -ge 8 ]; then
-            network_menu #WIPWIPWIPWIP
-        else
+        if [ "$(read_var "internet_available")" = 1 ]; then
             install_part2 "$installation_file"
+        else
+            info "Installation Failed (Unable to connect to the internet)."
+            main_menu
         fi
     elif [ "$install_confirm" = 1 ] || confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Config\Zn \n Target: $install_target \n \Zb\Z4Localization\Zn \n Language: ${install_language:-"(skipped)"} \n Time Zone: ${install_time_zone:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: $install_username \n Password: *** \n Disable Root Account: $install_disable_root_account \n \Zb\Z4System / Packages\Zn \n Hostname: $install_hostname \n Repositories: ${install_repo:-"(default)"} \n Linux Kernel: $install_kernel \n Firmware: ${install_firmware:-"(none)"} \n Graphics Acceleration: ${install_graphics:-"(none)"} \n Video Acceleration: ${install_video:-"(none)"} \n Kernel Additional: ${install_kernel_additional:-"(none)"} \n Desktop Environment: ${install_desktop_environment:-"(skipped)"} \n Additional Packages: ${install_additional_packages:-"(none)"} \n"; then 
         install_part1 "$installation_file"
@@ -1621,11 +1619,13 @@ main_menu() {
     1)
         menu_header="Network Options"
         network_menu
+        main_menu
         exit 0
         ;;
     2)
         menu_header="Advanced Options"
         advanced_menu
+        main_menu
         exit 0
         ;;
     3)
