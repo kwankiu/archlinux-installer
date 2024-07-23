@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24072301
+installerver=24072302
 
 # Required ACU version
 acuver=0.1.2-dev
@@ -110,6 +110,8 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 echo -en "\e]P41a73e8" #darkblue
 echo -en "\e]PC1a73e8" #blue
 echo -en "\e]PE53cced" #cyan
+echo -en "\e]P25b762f" #darkgreen
+echo -en "\e]PA89b83f" #green
 echo -en "\e]P7dedede" #lightgray
 
 # Define terminal color codes
@@ -194,6 +196,7 @@ dash_string() {
 
 # Status Bar
 status_bar() {
+    local checked_for_updates
     while true; do
 
         # Check Internet Status
@@ -231,6 +234,13 @@ status_bar() {
         # Print the items with alignment
         printf "${SAVECURSOR}${TOPLEFTCURSOR}$BARCOLOR   %-${item_left}s%${item_center}s%${item_right}s   $NC${RESTORECURSOR}" "$left_item" "$center_item" "$right_item"
 
+        if [ "$internet_available" = 1 ]; then
+            if [ -z "$checked_for_updates" ]; then
+                check_installer_updates
+                checked_for_updates=1
+            fi
+        fi
+
         sleep 0.5
     done
 }
@@ -242,9 +252,6 @@ title() {
   echo "$(dash_string)"
   colorecho "$BLUE" "$(titlelogo_string)"
   echo "$(dash_string)"
-  if [ "$branch" = "dev" ]; then
-    colorecho "$YELLOW" "You are running a development build installer. It is experimental and may not work properly."
-  fi
 }
 
 ################################################################
@@ -865,44 +872,82 @@ check_ssl() {
 
 # Check Installer Updates
 check_installer_updates() {
-    alert "Checking for installer updates..."
+    if [ "$1" = "--util" ]; then
+        if [ "$(read_var "updates_available")" = 1 ]; then
+            alert "Getting updates infomation..."
+        else
+            alert "Checking for installer updates..."
+        fi
+    fi
     remote_installerver=$(curl -s "$remote_installer_url" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
     remote_acuver=$(curl -s "$remote_installer_url" | grep -m1 'acuver=[0-9]*' | cut -d= -f2)
     if [ "$remote_installerver" -gt "$installerver" ]; then
-        menu_header="Installer Updates Available"
-        menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available. \n\Zn Do you want to update this installer?"
-        options=("Update this Installer" "Do not update this installer")
-        select_option "${options[@]}"
-        answer=$?
-        if [ "$answer" = 0 ]; then
-            # Updating Installer
-            alert "Downloading Installer ..."
-            local response_code=$(sudo curl --write-out '%{response_code}' -LJO "$remote_installer_url")
-            if [ "$response_code" = 200 ]; then
-                alert "Updating Installer ..."
-                # If install_target is set
-                if [ -n "$install_target" ]; then
-                    sudo sed -i "s/^#install_target=\".*\"/install_target=\"$install_target\"/g" arch-installer
+        if [ "$1" = "--util" ]; then
+            menu_header="Updates Available"
+            menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available. \n\Zn Do you want to update this installer?"
+            options=("Update this Installer" "Do not update this installer")
+            select_option "${options[@]}"
+            answer=$?
+            if [ "$answer" = 0 ]; then
+                # Updating Installer
+                alert "Downloading Installer ..."
+                local response_code=$(sudo curl --write-out '%{response_code}' -LJO "$remote_installer_url")
+                if [ "$response_code" = 200 ]; then
+                    alert "Updating Installer ..."
+                    # If install_target is set
+                    if [ -n "$install_target" ]; then
+                        sudo sed -i "s/^#install_target=\".*\"/install_target=\"$install_target\"/g" arch-installer
+                    fi
+                    sudo chmod +x arch-installer
+                    sudo cp -r arch-installer /usr/bin/installer
+                    sudo rm -rf arch-installer
+                    # Update ACU
+                    echo "Updating ACU (Configuration Utility) ..."
+                    sudo curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
+                    sudo chmod +x /usr/bin/acu
+                    # Reboot
+                    alert "Installer updated. System will reboot now."
+                    if ! sudo reboot --force; then
+                        alert "Unable to reboot automatically, please reboot your device manually."
+                    fi
+                else
+                    alert "An Error is occurred. Installer is not updated."
+                    sleep 3
                 fi
-                sudo chmod +x arch-installer
-                sudo cp -r arch-installer /usr/bin/installer
-                sudo rm -rf arch-installer
-                # Update ACU
-                echo "Updating ACU (Configuration Utility) ..."
-                sudo curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
-                sudo chmod +x /usr/bin/acu
-                # Reboot
-                alert "Installer updated. System will reboot now."
-                if ! sudo reboot --force; then
-                    alert "Unable to reboot automatically, please reboot your device manually."
-                fi
-            else
-                alert "An Error is occurred. Installer is not updated."
-                sleep 3
+            elif [ "$answer" = 1 ]; then
+                store_var "updates_available" 0
             fi
+        else
+            store_var "menu_header" "Updates Available"
+            store_var "updates_available" 1
         fi
-    else
-                info " No updates available.\n Installer Version: $installerver \n ACU Version: $acuver \n Release Channel: $branch"
+    elif [ "$1" = "--util" ]; then
+        menu_header="Check for Updates"
+        menu_option_title=" \Z1No updates available.\n\Zn  Latest Version:  $remote_installerver \n  Current Version: $installerver \n  ACU Version:     $acuver \n  Release Channel: $branch"
+        select_option "Back" "Check updates again" "Change release channel (Experimental)" "Update/Reinstall Installer"
+        selected=$?
+
+        case $selected in
+        1)
+            check_installer_updates --util
+            ;;
+        2)
+            menu_header="Change release channel (Experimental)"
+            options=("Back" "main" "dev")
+            select_option "${options[@]}"
+            answer=$?
+            if [ ! "$answer" = 0 ]; then
+                branch="${options[answer]}"
+            fi
+            check_installer_updates --util
+            ;;
+        3)
+            local local_installerver=$installerver
+            installerver=0
+            check_installer_updates --util
+            installerver=$local_installerver
+            ;;
+        esac
     fi
 }
 
@@ -1555,8 +1600,16 @@ main_menu() {
 
     case $selected in
     0)
+        # Development Build Reminder
+        if [ "$branch" = "dev" ]; then
+            info "You are running a development build installer. \nIt is experimental and may not work properly."
+        fi
+        # Check Internet before starting installer setup
         internet_available=$(read_var "internet_available")
         if [ "$internet_available" = 1 ] || [ "$bypass_internet" = 1 ]; then
+            if [ "$(read_var "updates_available")" = 1 ]; then
+                check_installer_updates --util
+            fi
             check_ssl
             installer_menu
         else
@@ -1576,7 +1629,7 @@ main_menu() {
         ;;
     3)
         menu_header="Check for updates"
-        check_installer_updates
+        check_installer_updates --util
         main_menu
         exit 0
         ;;
