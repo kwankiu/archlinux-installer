@@ -1635,7 +1635,7 @@ main_menu() {
         exit 0
         ;;
     *)
-        if confirm "   Are you sure to exit this installer? The system will shutdown."; then
+        if confirm "   Are you sure to exit this installer? The system will shutdown. \n\n   (Tips: To exit to shell, go to Advanced Options -> Exit to Shell)"; then
             sudo shutdown -h now
         else
             main_menu
