@@ -755,7 +755,7 @@ network_menu() {
 advanced_menu() {
     menu_header="Advanced Options"
     menu_option_title=""
-    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor" "Russian roulette" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System")
+    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor (Experimental)" "Russian roulette (Mini Game)" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System")
     select_option "${options[@]}"
     selected=$?
 
