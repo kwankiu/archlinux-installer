@@ -757,7 +757,7 @@ network_menu() {
 advanced_menu() {
     menu_header="Advanced Options"
     menu_option_title=""
-    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "Exit to Shell" "Soft Reboot System" "Reboot System" "Russian roulette")
+    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System" "Russian roulette")
     select_option "${options[@]}"
     selected=$?
 
@@ -932,7 +932,7 @@ check_installer_updates() {
             check_installer_updates --util
             ;;
         2)
-            menu_header="Change release channel (Experimental)"
+            menu_header="Change release channel"
             options=("Back" "main" "dev")
             select_option "${options[@]}"
             answer=$?
