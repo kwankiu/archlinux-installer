@@ -937,7 +937,7 @@ if [ ! "$argbootpt" = 1 ]; then
     boot_mount_dir=$root_mount_dir/boot
 fi
 
-if [ "$config_boot" = 1 ]; then
+if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
     # Find the UUIDs of the root partition
     root_uuid=$(sudo blkid $root_partition | awk '{print $2}' | tr -d '"')
     root_part_uuid=$(sudo blkid -o export $root_partition | grep PARTUUID | awk -F= '{print $2}')
