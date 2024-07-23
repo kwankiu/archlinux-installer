@@ -1288,7 +1288,7 @@ installer_menu() {
     while [ $lapicount -lt 10 ]; do
         netlang=$(curl -s https://ipapi.co/languages)
         if echo "$netlang" | grep -q "RateLimited"; then
-            echo "Error"
+            echo "Unable to get languages from API, Retrying ..."
             sleep 2
             lapicount=$((lapicount + 1))
         else
