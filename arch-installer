@@ -1025,8 +1025,11 @@ install_part1() {
         sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $install_parallel_downloads/" /etc/pacman.conf
     fi
 
-    alert "Installing sudo ..."
-    pacman -Sy sudo glibc --noconfirm
+    # Install sudo if not installed
+    if ! pacman -Q sudo > /dev/null 2>&1; then
+        alert "Installing sudo ..."
+        pacman -Sy sudo glibc --noconfirm
+    fi
 
     alert "Removing default account ..."
     acu user remove alarm
