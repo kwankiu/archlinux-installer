@@ -786,7 +786,7 @@ advanced_menu() {
             # launch TUI using dialog
             local value=$(dialog --colors  \
                 --title " $menu_header " --ok-label "Open" --cancel-label "Back" --insecure \
-                --dselect / 0 0 \
+                --fselect / 0 0 \
             3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
             )
             if [ -n "$value" ]; then
