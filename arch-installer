@@ -233,7 +233,7 @@ status_bar() {
         fi
 
         # Print the items with alignment
-        printf "${SAVECURSOR}${TOPLEFTCURSOR}$BARCOLOR   %-${item_left}s%${item_center}s%${item_right}s   $NC${RESTORECURSOR}" "$left_item" "$center_item" "$right_item"
+        printf "${SAVECURSOR}${TOPLEFTCURSOR}$BARCOLOR  %-${item_left}s%${item_center}s%${item_right}s  $NC${RESTORECURSOR}" "$left_item" "$center_item" "$right_item"
 
         if [ "$internet_available" = 1 ]; then
             if [ -z "$checked_for_updates" ]; then
