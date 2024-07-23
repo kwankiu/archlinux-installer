@@ -109,9 +109,10 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 # Customize terminal/tty console colors
 echo -en "\e]P41a73e8" #darkblue
 echo -en "\e]PC1a73e8" #blue
+echo -en "\e]P653cced" #darkcyan
 echo -en "\e]PE53cced" #cyan
-echo -en "\e]P25b762f" #darkgreen
-echo -en "\e]PA89b83f" #green
+echo -en "\e]P21ea446" #darkgreen
+echo -en "\e]PA1ea446" #green
 echo -en "\e]P7dedede" #lightgray
 
 # Define terminal color codes
