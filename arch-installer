@@ -879,7 +879,7 @@ check_installer_updates() {
             alert "Checking for installer updates..."
         fi
     fi
-    remote_installerver=$(curl -s "$remote_installer_url" | grep -o 'installerver=[0-9]*' | cut -d= -f2)
+    remote_installerver=$(curl -s "$remote_installer_url" | grep -m1 'installerver=[0-9]*' | cut -d= -f2)
     remote_acuver=$(curl -s "$remote_installer_url" | grep -m1 'acuver=[0-9]*' | cut -d= -f2)
     if [ "$remote_installerver" -gt "$installerver" ]; then
         if [ "$1" = "--util" ]; then
@@ -942,10 +942,11 @@ check_installer_updates() {
             check_installer_updates --util
             ;;
         3)
-            local local_installerver=$installerver
-            installerver=0
+            local localver=$installerver
+            local dummyver=0
+            installerver=$dummyver
             check_installer_updates --util
-            installerver=$local_installerver
+            installerver=$localver
             ;;
         esac
     fi
