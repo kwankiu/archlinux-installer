@@ -808,11 +808,12 @@ advanced_menu() {
             info "Ready?"
             local chambers=6
             local bullet_chamber=$((RANDOM % chambers + 1))
-            info "The Arch Linux revolver has $chambers chambers. One of them contains a bullet. \n Press OK to spin the cylinder and take your shot..."
             local shot_chamber=$((RANDOM % chambers + 1))
+            info "The Arch Linux revolver has $chambers chambers. One of them contains a bullet. \n Press OK to spin the cylinder and take your shot..."
             if [ $shot_chamber -eq $bullet_chamber ]; then
                 info "BANG Oh no, the bullet has struck! Better luck next time, brave Arch user."
-                info "Performing sudo rm -rf / ........................................................ (just kidding)..."
+                info "Performing sudo rm -rf / ..."
+                info "Hey, relax! Just kidding lol ..."
             else
                 info "click Phew, you've survived this round! Praise the Arch gods!"
             fi
