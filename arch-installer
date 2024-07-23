@@ -755,7 +755,7 @@ network_menu() {
 advanced_menu() {
     menu_header="Advanced Options"
     menu_option_title=""
-    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System" "Russian roulette")
+    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor" "Russian roulette" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System")
     select_option "${options[@]}"
     selected=$?
 
@@ -781,27 +781,24 @@ advanced_menu() {
         advanced_menu
         ;;
     4)
-        menu_header="Exit to Shell"
-        if confirm "Are you sure to exit this installer to shell? \nTips: To re-enter this installer, type > installer < or reboot."; then
-            exit 0
-        fi
+        file_editor() {
+            menu_header="File Editor"
+            # launch TUI using dialog
+            local value=$(dialog --colors  \
+                --title " $menu_header " --ok-label "Open" --cancel-label "Back" --insecure \
+                --dselect / 0 0 \
+            3>&1 1>&2 2>&3 3>&- # Swap stdout with stderr to capture returned dialog text
+            )
+            if [ -n "$value" ]; then
+                alert "File Editor - Starting nano editor ..."
+                sudo nano $value
+                file_editor
+            fi
+        }
+        file_editor
         advanced_menu
         ;;
     5)
-        menu_header="Soft Reboot System"
-        if confirm "Are you sure to soft reboot this system?."; then
-            sudo systemctl soft-reboot
-        fi
-        advanced_menu
-        ;;
-    6)
-        menu_header="Reboot System"
-        if confirm "Are you sure to force reboot this system?."; then
-            sudo reboot --force
-        fi
-        advanced_menu
-        ;;
-    7)
         menu_header="Russian roulette"
         if confirm "Let's play a mini game - Russian roulette?"; then
             alert "Welcome to the Arch Linux Russian Roulette Challenge!"
@@ -819,6 +816,27 @@ advanced_menu() {
             else
                 info "click Phew, you've survived this round! Praise the Arch gods!"
             fi
+        fi
+        advanced_menu
+        ;;
+    6)
+        menu_header="Exit to Shell"
+        if confirm "Are you sure to exit this installer to shell? \nTips: To re-enter this installer, type > installer < or reboot."; then
+            exit 0
+        fi
+        advanced_menu
+        ;;
+    7)
+        menu_header="Soft Reboot System"
+        if confirm "Are you sure to soft reboot this system?."; then
+            sudo systemctl soft-reboot
+        fi
+        advanced_menu
+        ;;
+    8)
+        menu_header="Reboot System"
+        if confirm "Are you sure to force reboot this system?."; then
+            sudo reboot --force
         fi
         advanced_menu
         ;;
