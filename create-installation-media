@@ -957,7 +957,7 @@ if [ "$config_boot" = 1 ]; then
         sudo arch-chroot $root_mount_dir /bin/bash <<END
         pacman-key --init
         pacman-key --populate archlinuxarm
-        pacman -Sy grub device-mapper efibootmgr --noconfirm
+        pacman -Sy grub device-mapper efibootmgr glibc --noconfirm
         grub-install --target=arm64-efi --efi-directory=/boot --removable
         grub-mkconfig -o /boot/grub/grub.cfg
 END
