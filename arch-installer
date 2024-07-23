@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24072304
+installerver=24072401
 
 # Required ACU version
 acuver=0.1.2-dev
@@ -895,7 +895,7 @@ check_installer_updates() {
     fi
     remote_installerver=$(curl -s "$remote_installer_url" | grep -m1 'installerver=[0-9]*' | cut -d= -f2)
     remote_acuver=$(curl -s "$remote_installer_url" | grep -m1 'acuver=[0-9]*' | cut -d= -f2)
-    if [ "$remote_installerver" -gt "$installerver" ]; then
+    if [ "${remote_installerver:="0"}" -gt "$installerver" ]; then
         if [ "$1" = "--util" ]; then
             menu_header="Updates Available"
             menu_option_title="\Z2A newer version ($remote_installerver) of this installer is available. \n\Zn Do you want to update this installer?"
@@ -1369,7 +1369,7 @@ installer_menu() {
     user_setup() {
         menu_header="User Account"
         menu_option_title="Create a new user account:"
-        menu_form_value=("user" "" "" "y")
+        menu_form_value=("user" "" "" "n")
         menu_form_type=("" "1" "1")
         local result=($(form "Username" "Password" "Confirm Password" "Disable Root Login? [Y/n]"))
         if [ "${#result[@]}" -gt 4 ]; then
