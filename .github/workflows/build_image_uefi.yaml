@@ -55,7 +55,7 @@ jobs:
           - mekotronics-r58x
           - mekotronics-r58-mini
           - hinlink-h88k
-          #- fydetab-duo #rockchip-rk3588s-tablet-12c-linux
+          - fydetab-duo #rockchip-rk3588s-tablet-12c-linux
           # Add more models as needed
 
     steps:
@@ -68,8 +68,8 @@ jobs:
           for model in ${{ matrix.model_name }}; do
             echo "Building image for $model"
             case $model in
-              radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | indiedroid-* | fydetab-*)
-                if [[ "$model" == "orangepi"* ]] || [[ "$model" == "indiedroid"* ]] || [[ "$model" == "fydetab"* ]]; then
+              radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | indiedroid-*)
+                if [[ "$model" == "orangepi"* ]] || [[ "$model" == "indiedroid"* ]]; then
                   bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.11.2/${model}_UEFI_Release_v0.11.2.img"
                 elif [[ "$model" == "radxa-rock-5c" ]]; then
                   bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/rock-5c_UEFI_Debug_c166f5a.img"
@@ -80,6 +80,11 @@ jobs:
                 fi
                 bootfw="$(basename $bootfw_url)"
                 args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
+                ;;
+              fydetab-*)
+                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/fydetab-duo_UEFI_Debug_fc0a209.img"
+                bootfw="$(basename $bootfw_url)"
+                args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               asahi)
                 args="--kernel=linux-asahi -b"
