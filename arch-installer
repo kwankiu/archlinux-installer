@@ -970,8 +970,8 @@ check_installer_updates() {
 # Installation - Part 1 (in root)
 add_boot_part_fstab() {
     alert "Updating fstab ..."
-    boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk 'NR==2{print $1}')
-
+    # Get the boot partition before rootfs partition (rootfs_part - 1)
+    boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk -v partnum=${rootfs_partition: -1} 'NR==partnum{print $1}')
     # Check if the boot_partition is not empty
     if [ -z "$boot_partition" ]; then
         echo "Unable to determine boot partition on $rootfs_disk"
@@ -1017,7 +1017,7 @@ install_part1() {
     fi
 
     alert "Resizing File System ..."
-    growpart $rootfs_disk 2
+    growpart $rootfs_disk "${rootfs_partition: -1}" # Extract partition number from the last digit
     resize2fs $rootfs_partition
 
     # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
