@@ -32,9 +32,9 @@ jobs:
           # Radxa
           - radxa-rock-5a
           - radxa-rock-5b
-          #- radxa-rock-5c
+          - radxa-rock-5c
           - radxa-rock-5-itx
-          #- radxa-cm5
+          - radxa-cm5
           # Orange Pi
           - orangepi-5 #rockchip-rk3588s-orangepi-5
           - orangepi-5plus
@@ -71,6 +71,10 @@ jobs:
               radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | indiedroid-* | fydetab-*)
                 if [[ "$model" == "orangepi"* ]] || [[ "$model" == "indiedroid"* ]] || [[ "$model" == "fydetab"* ]]; then
                   bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.11.2/${model}_UEFI_Release_v0.11.2.img"
+                elif [[ "$model" == "radxa-rock-5c" ]]; then
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/rock-5c_UEFI_Debug_c166f5a.img"
+                elif [[ "$model" == "radxa-cm5" ]]; then
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/radxa-cm5_UEFI_Debug_c166f5a.img"
                 else
                   bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.11.2/${model#*-}_UEFI_Release_v0.11.2.img"
                 fi
