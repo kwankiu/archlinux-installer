@@ -110,7 +110,7 @@ kernel:
       # Joshua's Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-joshua-git
         description: Joshua Linux Rockchip BSP Kernel
-        version: 5.10.209
+        version: 5.10-rkr8
         repo:
           - 7Ji
         compatible:
@@ -154,7 +154,7 @@ kernel:
       # Joshua's Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-joshua-git
         description: Joshua Linux Rockchip BSP Kernel
-        version: 6.1.75
+        version: 6.1-rkr3
         repo:
           - 7Ji
         compatible:
@@ -210,7 +210,7 @@ kernel:
       # Radxa Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-radxa
         description: Radxa Linux Rockchip BSP Kernel
-        version: 6.1.43
+        version: 6.1-rkr1
         repo:
           - rockchip
           - 7Ji
@@ -283,7 +283,7 @@ kernel:
       # Armbian's Rockchip BSP6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-armbian-git
         description: Armbian Linux Rockchip BSP6.1 Kernel
-        version: 6.1.43
+        version: 6.1-rkr1
         repo:
           - rockchip
           - 7Ji
@@ -312,7 +312,7 @@ kernel:
       # Armbian's Edge Mainline Kernel
       - base: linux-aarch64-rockchip-armbian-git
         description: Linux Mainline kernel with armbian's patches for rk3588
-        version: 6.10.rc7
+        version: 6.10.y
         repo:
           - 7Ji
         compatible: null
