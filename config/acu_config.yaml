@@ -44,6 +44,9 @@ configurations:
   # disable color or cursor position in output
   no_styling: 1
 
+  # disable logo / title in output
+  no_title: 1
+
   # do not clear terminal outputs
   #no_clear: 1
 

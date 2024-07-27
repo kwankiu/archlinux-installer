@@ -19,10 +19,10 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24072402
+installerver=24072701
 
 # Required ACU version
-acuver=0.1.2-dev
+acuver=0.1.3-dev
 
 # Installer Branch / Tag
 branch=dev
@@ -762,7 +762,7 @@ advanced_menu() {
     case $selected in
     1)
         menu_header="Device Infomation"
-        info "$(acu sysinfo)"
+        info "\n$(acu sysinfo | sed 's/$/\\n/')"
         advanced_menu
         ;;
     2)
