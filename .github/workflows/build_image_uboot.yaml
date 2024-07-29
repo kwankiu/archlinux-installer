@@ -72,7 +72,6 @@ jobs:
           #- turing-rk1
           - armsom-sige7 #rockchip-rk3588-armsom-sige7
           - armsom-w3 #rockchip-rk3588-armsom-w3
-          - fydetab-duo #rockchip-rk3588s-tablet-12c-linux
           # Others
           # Add more models as needed
 
@@ -97,9 +96,9 @@ jobs:
               radxa-*)
                 # Use different kernel and u-boot path for different boards
                 if [[ "$model" == "radxa-rock"* ]]; then
-                  args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
                 else
-                  args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
                 # URL to download u-boot for the board
                 if [[ "$model" == "radxa-zero"* ]]; then
@@ -110,7 +109,7 @@ jobs:
                 fi
                 ;;
               khadas-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
                 # URL to download u-boot for the board
                 if [ "$model" == "khadas-edge2" ]; then
                     uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.8-2017.09_arm64.deb"
@@ -119,23 +118,14 @@ jobs:
                 fi
                 ;;
               orangepi-*)
-                args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=usr/lib/u-boot -b"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
                 uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-6_arm64.deb"
                 ;;
               nanopi-* | nanopc-* | armsom-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
                 uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240626.git5202c429-3_arm64.deb"
-                ;;
-              fydetab-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=usr/lib/u-boot -b"
-                # Create path
-                mkdir -p usr/lib/u-boot
-                # Download idblock.bin
-                curl -L https://github.com/openFyde/foundation-rk3588/raw/main/rk3588-image-maker/rk3588-uboot-bin/rk3588_spl_loader_v1.07.111.bin -o usr/lib/u-boot/idblock.bin
-                # Download uboot.img
-                curl -L https://github.com/openFyde/foundation-rk3588/raw/main/rk3588-image-maker/rk3588-uboot-bin/uboot.img -o usr/lib/u-boot/uboot.img
                 ;;
               *)
                 # Generic
