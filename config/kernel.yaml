@@ -107,10 +107,10 @@ kernel:
           - ffmpeg
         additional: null
 
-      # Joshua's Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-bsp5.10-joshua-git
+      # Joshua's Rockchip 6.1 Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-joshua-git
         description: Joshua Linux Rockchip BSP Kernel
-        version: 5.10-rkr8
+        version: 6.1-rkr3
         repo:
           - 7Ji
         compatible:
@@ -143,18 +143,16 @@ kernel:
         firmware:
           - linux-firmware-joshua-git
         graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
+          - mesa
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
 
-      # Joshua's Rockchip 6.1 Kernel
-      - base: linux-aarch64-rockchip-bsp6.1-joshua-git
+      # Joshua's Rockchip 5.10 Kernel
+      - base: linux-aarch64-rockchip-bsp5.10-joshua-git
         description: Joshua Linux Rockchip BSP Kernel
-        version: 6.1-rkr3
+        version: 5.10-rkr8
         repo:
           - 7Ji
         compatible:
@@ -175,7 +173,9 @@ kernel:
         firmware:
           - linux-firmware-joshua-git
         graphics:
-          - mesa
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
