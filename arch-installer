@@ -1012,7 +1012,7 @@ install_part1() {
     rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
     rootfs_disk="${rootfs_disk%p*}"
 
-    if [ ! -e "/boot/extlinux/extlinux.conf" ]; then
+    if [ ! -d "/boot/extlinux" ] && [ ! -d "/boot/EFI" ]; then
         add_boot_part_fstab
     fi
 
