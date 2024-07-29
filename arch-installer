@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24072901
+installerver=24072902
 
 # Required ACU version
 acuver=0.1.3-dev
@@ -1433,7 +1433,7 @@ installer_menu() {
                 if [ "${kernel_tags[j]}" == "$install_target" ] || ([[ "${kernel_tags[j]}" == *"*" ]] && [[ "$install_target" = "${kernel_tags[j]%?}"* ]]); then
                     is_rmd_kernel=(${kernel_recommended[i]})
                     for ((k = 0; k < ${#is_rmd_kernel[@]}; k++)); do
-                        if [ "${is_rmd_kernel[k]}" == "$install_target" ]; then
+                        if [ "${is_rmd_kernel[k]}" == "$install_target" ] || ([[ "${is_rmd_kernel[k]}" == *"*" ]] && [[ "$install_target" = "${is_rmd_kernel[k]%?}"* ]]); then
                             is_rmd_kernel="(Recommended) "
                             break
                         else
