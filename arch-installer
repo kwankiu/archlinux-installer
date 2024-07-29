@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24072701
+installerver=24072901
 
 # Required ACU version
 acuver=0.1.3-dev
@@ -198,6 +198,7 @@ dash_string() {
 # Status Bar
 status_bar() {
     local checked_for_updates
+    local ntp_synced
     while true; do
 
         # Check Internet Status
@@ -237,8 +238,18 @@ status_bar() {
 
         if [ "$internet_available" = 1 ]; then
             if [ -z "$checked_for_updates" ]; then
-                check_installer_updates
-                checked_for_updates=1
+                if curl -s https://raw.githubusercontent.com/ >/dev/null; then
+                    check_installer_updates
+                    checked_for_updates=1
+                elif [ -z "$ntp_synced" ]; then
+                    #NTP Sync
+                    sudo rm -rf /etc/systemd/network/*
+                    sudo systemctl restart systemd-networkd
+                    sleep 1
+                    sudo timedatectl set-ntp false
+                    sudo timedatectl set-ntp true
+                    ntp_synced=1
+                fi
             fi
         fi
 
@@ -631,6 +642,15 @@ internet_status() {
         echo "$internet_available"
 }
 
+get_ssid() {
+    if [ $(nmcli -f TYPE connection show | head -n 2 | tail -n 1) = "wifi" ]; then
+        echo "$(nmcli -t -f NAME connection show | head -n 1)"
+    elif [ -n "$(wpa_cli status | grep -Po 'ssid=\K.*')" ]; then
+        echo "$(wpa_cli status | grep -Po 'ssid=\K.*')"
+    else
+        echo "Disconnected"
+    fi
+}
 network_menu() {
     # Get Internet Status
     internet_available=$(read_var "internet_available")
@@ -657,7 +677,7 @@ network_menu() {
     # Network Menu
     menu_header="Network Options"
     menu_option_title=""
-    options=("Back" "Network Status -> $internet_status" "Connect to a WiFi -> ${iwssid:-"Disconnected"}" "Change WiFi adapter -> ${iwdev:-"no adapter"}" "Update NTP Time Sync" "Ethernet Restart" "Edit Mirrorlist")
+    options=("Back" "Network Status -> $internet_status" "Connect to a WiFi -> $(get_ssid)" "Change WiFi adapter -> ${iwdev:-"no adapter"}" "Update NTP Time Sync" "Ethernet Restart" "Edit Mirrorlist")
     select_option "${options[@]}"
     selected=$?
 
@@ -689,7 +709,7 @@ network_menu() {
         fi
         # Get Local IP
         local_ip=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | head -n 1)
-        info "Internet Status: $internet_status \nLocal IP address: ${local_ip:-"Unavailable"} \nHTTP Connection: $http_status \nHTTPS Connection: $https_status \nConnection to github.com: $github_status\nConnection to githubusercontent.com: $ghusercon_status\nConnection to ipapi.co: $ipapi_status \nInterface Status: \n$(ip link)"
+        info "Internet Status: $internet_status \nWiFi SSID (if available): $(get_ssid) \nLocal IP address: ${local_ip:-"Unavailable"} \nHTTP Connection: $http_status \nHTTPS Connection: $https_status \nConnection to github.com: $github_status\nConnection to githubusercontent.com: $ghusercon_status\nConnection to ipapi.co: $ipapi_status \nInterface Status: \n$(ip link)"
         network_menu
         ;;
     2)
