@@ -22,7 +22,7 @@ jobs:
       matrix:
         model_name:
           # Generic
-          - generic
+          #- generic
           # Asahi (Apple Silicon)
           #- asahi
           # Raspberry Pi
@@ -57,8 +57,9 @@ jobs:
           - orangepi-5b
           - orangepi-5-plus
           - orangepi-5-pro
+          - orangepi-5-max
+          - orangepi-cm5
           #- orangepi-3b
-          #- orangepi-cm5
           # Nano Pi
           - nanopc-t6
           - nanopi-r6c
@@ -71,6 +72,7 @@ jobs:
           #- embedfire-lubancat-4 #rockchip-rk3588s-lubancat-4
           #- turing-rk1
           - armsom-sige7 #rockchip-rk3588-armsom-sige7
+          - armsom-aim7 #rockchip-rk3588-armsom-aim7
           - armsom-w3 #rockchip-rk3588-armsom-w3
           # Others
           # Add more models as needed
@@ -117,15 +119,10 @@ jobs:
                     uboot_url="https://dl.khadas.com/repos/edge/pool/main/l/linux-u-boot-edge-vendor/linux-u-boot-edge-vendor_0.8.3-2017.09_arm64.deb"
                 fi
                 ;;
-              orangepi-*)
+              orangepi-* | nanopi-* | nanopc-* | armsom-*)
                 args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-6_arm64.deb"
-                ;;
-              nanopi-* | nanopc-* | armsom-*)
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
-                # URL to download u-boot for the board
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240626.git5202c429-3_arm64.deb"
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240626.git5202c429-4_arm64.deb"
                 ;;
               *)
                 # Generic
