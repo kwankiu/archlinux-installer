@@ -19,10 +19,10 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24080301
+installerver=24080401
 
 # Required ACU version
-acuver=0.1.3-dev
+acuver=0.1.4-dev
 
 # Installer Branch / Tag
 branch=dev
@@ -47,6 +47,9 @@ install_config="$installer_home/install.yaml"
 
 # Remote Installer URL
 remote_installer_url="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/arch-installer"
+
+# Remote Installer Config URL
+remote_installer_config_url="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/acu_config.yaml"
 
 # Full Language list
 lang_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/language.yaml"
@@ -901,6 +904,8 @@ check_installer_updates() {
                     echo "Updating ACU (Configuration Utility) ..."
                     sudo curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
                     sudo chmod +x /usr/bin/acu
+                    echo "Updating Installer ACU Config ..."
+                    sudo curl -o /usr/lib/installer/.acu/config/config.yaml -L "$remote_installer_config_url"
                     # Reboot
                     alert "Installer updated. System will reboot now."
                     if ! sudo reboot --force; then
