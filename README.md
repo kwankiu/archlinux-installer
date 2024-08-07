@@ -6,7 +6,8 @@ a community-built Arch Linux Installer for ARM (Aarch64) based devices.
 
 [![Total Github Downloads](https://img.shields.io/github/downloads/kwankiu/archlinux-installer/total.svg?&color=E95420&label=Total%20Downloads)](https://github.com/kwankiu/archlinux-installer/releases)
 
-![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
+<img src="https://i.imgur.com/hHD6wKi.jpeg" width="850">
+<img src="https://i.imgur.com/3ynZCthl.png" width="850">
 
 ## Supported devices:
 ### Rockchip
