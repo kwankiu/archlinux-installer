@@ -45,7 +45,7 @@ Images for Radxa Rock 5 series are available on the [RPI Imager repository](http
 
 There are no images available for Asahi.
 
-~~However, you can install Arch Linux ARM using the dev version of Asahi Installer. After that, you can download and run this installer.~~
+[However, you can install Arch Linux ARM using the dev version of Asahi Installer. After that, you can download and run this installer.](https://github.com/kwankiu/archlinux-installer/discussions/40#discussion-6456051)
 
 ![Coming Soon](https://img.shields.io/badge/Coming%20Soon-4CAF50)
 
