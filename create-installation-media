@@ -23,7 +23,7 @@ branch=dev
 
 # URL for Kernel and Arch Linux Rootfs
 adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/tags/kernel"
-rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
+rootfs_url="https://github.com/1usOS/rootfs/releases/download/archlinuxarm/ArchLinuxARM-aarch64-latest.tar.gz"
 
 # Required ACU version
 acuver=0.1.5-dev
@@ -900,7 +900,8 @@ if [ "$argkrl" = "linux" ]; then
 
 else
 
-    sudo rm -rf $root_mount_dir/boot/*
+    # Remove existing kernel
+    sudo rm -rf $root_mount_dir/boot/* $root_mount_dir/etc/mkinitcpio.d/*
 
     if [ "$argbootpt" = 1 ]; then
         # Copy contents to boot partition
@@ -1066,7 +1067,7 @@ fi
 
 # Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
 sudo mkdir -p "${root_mount_dir}${compiled_pkg_dir}"
-add_wifi_pkg
+#add_wifi_pkg
 if [ ! -z "$argaddpkg" ]; then
     add_pkg
 fi
