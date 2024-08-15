@@ -1,0 +1,97 @@
+#!/bin/bash
+
+################################################################
+# Tools for formatting / styling
+
+# Define terminal color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Echo with colors
+colorecho() {
+    color="$1"
+    text="$2"
+    printf "${color}${text}${NC}\n"
+}
+################################################################
+# Configure variables
+gh_repo="kwankiu/archlinux-installer"
+release_tag="b08-dev"
+file_prefix=""
+file_suffix="-archlinux-installer"
+file_extension=".img.xz"
+
+################################################################
+# Loop through the arguments
+for arg in "$@"; do
+    case "$arg" in
+    -h | --help)
+        colorecho "$BLUE" "Get Installer"
+        echo "Usage: $0 <optional_argument>"
+
+        colorecho "$GREEN" "Options"
+        echo "-h / --help : Usage and Infomation of this Tool."
+        echo "--tag : Specify a release tag for image downloads."
+        echo "--device : Specify a target device for image downloads."
+        exit 1
+        ;;
+    --tag=*)
+        release_tag="${arg#*=}"
+        ;;
+    --device=*)
+        install_target="${arg#*=}"
+        ;;
+    -*)
+        colorecho "$RED" "Invalid command or argument."
+        exit 1
+        ;;
+    esac
+done
+
+################################################################
+# Auto detect install target from devicetree
+    if [ -z "$install_target" ]; then
+        if [ -f "/proc/device-tree/compatible" ]; then
+            install_target="$(sed 's/\x00/ /g; s/,/ /g' /proc/device-tree/compatible | awk '{print $1, $2}' | tr ' ' '-')"
+        fi
+    fi
+################################################################
+
+if [ -n "$install_target" ]; then
+    colorecho "$GREEN" "Looking for the latest image for $install_target ..."
+    case $install_target in
+        radxa-*)
+            ;;
+        khadas-*)
+            install_target="$(echo "${install_target}" | awk -F'-' '{print substr($2,1)}')-khadas"
+            ;;
+        rockchip-rk3588*)
+            install_target="${install_target#*-*-}"
+            ;;
+        friendlyelec*)
+            install_target="${install_target#*-}"
+            ;;
+        *)
+            colorecho "$RED" "Unable to determine target device"
+            exit 1
+            ;;
+    esac
+    image_url="https://github.com/${gh_repo}/releases/download/${release_tag}/${install_target}${file_suffix}${file_extension}"
+    curl -LO $image_url
+else
+    colorecho "$GREEN" "Unable to retrieve device model, looking for the latest generic image ..."
+    install_target="generic"
+    image_url="https://github.com/${gh_repo}/releases/download/UEFI-${release_tag}/${install_target}${file_suffix}-UEFI${file_extension}"
+    curl -LO $image_url
+fi
+
+# Flash image with OOWOW if exists
+if [ -f "/opt/oowow" ]; then
+    colorecho "$GREEN" "Flashing image $(basename $image_url) using OOWOW"
+    image_write2emmc $(basename $image_url)
+else
+    colorecho "$GREEN" "Downloaded image $(basename $image_url)"
+fi
