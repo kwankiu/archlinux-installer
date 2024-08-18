@@ -896,7 +896,7 @@ if [ "$argkrl" = "linux" ]; then
         colorecho "$GREEN" "Copying Boot Partition ..."
         sudo cp -r $root_mount_dir/boot/* "$boot_mount_dir"
         sudo rm -rf $root_mount_dir/boot/*
-    fi 
+    fi
 
 else
 
@@ -948,10 +948,15 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
     # Create extlinux.conf / grub.cfg
     if [ "$argbootld" = "grub" ]; then
     # GRUB
-        colorecho "$GREEN" "Chroot into system ..."
+        colorecho "$GREEN" "Setting up grub ..."
         if [ "$argbootpt" = 1 ]; then
+            # Mount boot partition
             colorecho "$GREEN" "Mounting /boot into chroot ..."
             sudo mount $boot_partition $root_mount_dir/boot
+        fi
+        # alarm's linux-aarch64 kernel workaround
+        if [ "$argkrl" = "linux" ]; then
+            sudo mv $root_mount_dir/boot/Image $root_mount_dir/boot/vmlinuz-linux
         fi
         colorecho "$GREEN" "Installing Grub and Generating grub.cfg ..."
         sudo arch-chroot $root_mount_dir /bin/bash <<END
@@ -961,6 +966,8 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
         grub-install --target=arm64-efi --efi-directory=/boot --removable
         grub-mkconfig -o /boot/grub/grub.cfg
 END
+
+        colorecho "$GREEN" "Un-mounting /boot ..."
         if [ "$argbootpt" = 1 ]; then
             sudo umount $root_mount_dir/boot
         fi

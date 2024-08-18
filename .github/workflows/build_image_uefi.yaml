@@ -25,7 +25,7 @@ jobs:
           # Generic
           - generic
           # Asahi (Apple Silicon)
-          - asahi
+          #- asahi
           ## Raspberry Pi UEFI ##
           #- raspberrypi
           ## RK3588-EDK2 ##
@@ -55,7 +55,7 @@ jobs:
           - mekotronics-r58x
           - mekotronics-r58-mini
           - hinlink-h88k
-          - fydetab-duo #rockchip-rk3588s-tablet-12c-linux
+          #- fydetab-duo #rockchip-rk3588s-tablet-12c-linux
           # Add more models as needed
 
     steps:
