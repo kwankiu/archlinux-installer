@@ -6,25 +6,16 @@ a community-built Arch Linux Installer for ARM (Aarch64) based devices.
 
 [![Total Github Downloads](https://img.shields.io/github/downloads/kwankiu/archlinux-installer/total.svg?&color=E95420&label=Total%20Downloads)](https://github.com/kwankiu/archlinux-installer/releases)
 
-![alt neofetch screenshot](https://i.imgur.com/3ynZCthl.png)
+<img src="https://i.imgur.com/hHD6wKi.jpeg" width="850">
+<img src="https://i.imgur.com/3ynZCthl.png" width="850">
 
 ## Supported devices:
-### Rockchip
-- Radxa Rock 5 series (Rock 5A/5B/5B Plus/5C/5D/ITX/CM5/NX5)
-- Radxa Zero 3 Series (Zero 3W/3E)
-![Testers Needed](https://img.shields.io/badge/Testers%20Needed-F44336)
-
-- Orange Pi 5 series (Orange Pi 5/5B/5 Plus/5 Pro)
-- Khadas Edge Series (Edge 1/2)
-- NanoPi R6 Series (NanoPi R6C/R6S/NanoPC T6)
-![Testers Needed](https://img.shields.io/badge/Testers%20Needed-F44336)
-
-### Raspberry Pi (boardcom)
+- Rockchip (Radxa, Khadas, Orange Pi, etc)
 - Raspberry Pi (4B/5B/Zero 2W & other aarch64 model)
-![Testers Needed](https://img.shields.io/badge/Testers%20Needed-F44336)
-### Asahi (apple silicon)
-- Asahi (Apple Silicon Macs)
-![Coming Soon](https://img.shields.io/badge/Coming%20Soon-4CAF50)
+- Asahi (Apple Silicon Macs) ![Coming Soon](https://img.shields.io/badge/Coming%20Soon-4CAF50)
+- and More
+
+Please check this [page](https://github.com/kwankiu/archlinux-installer/wiki/Supported-devices) for all supported devices.
 
 # Get the installer
 
@@ -44,7 +35,7 @@ Images for Radxa Rock 5 series are available on the [RPI Imager repository](http
 
 There are no images available for Asahi.
 
-~~However, you can install Arch Linux ARM using the dev version of Asahi Installer. After that, you can download and run this installer.~~
+[However, you can install Arch Linux ARM using the dev version of Asahi Installer. After that, you can download and run this installer.](https://github.com/kwankiu/archlinux-installer/discussions/40#discussion-6456051)
 
 ![Coming Soon](https://img.shields.io/badge/Coming%20Soon-4CAF50)
 

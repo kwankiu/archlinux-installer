@@ -38,11 +38,17 @@ configurations:
   # do not confirm when installing a package using pacman -S / -U or makepkg -si
   #no_confirm: 1
 
+  # do not synchronize package databases when using the install command
+  #no_sync: 1
+
   # do not print warning ($WARNING) messages
   no_warning: 1
 
   # disable color or cursor position in output
   no_styling: 1
+
+  # disable logo / title in output
+  no_title: 1
 
   # do not clear terminal outputs
   #no_clear: 1
@@ -50,7 +56,7 @@ configurations:
   # print debug ($DEBUG) messages
   #debug_log: 1
 
-  # auto update acu when launch without asking
+  # auto update (unset=1, 0: Do not check updates, 1: Auto check updates but do not install, 2: Auto check & install updates at launch)
   #auto_update: 1
 
   ## ACU Configurable Files and Path ##

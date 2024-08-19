@@ -31,9 +31,12 @@ kernel:
 #        additional:
 #          - other packages to install
 
+## Maintained by: ALARM ##
+## Compatible with: Generic / All ##
+
       # Linux Mainline Kernel
       - base: linux-aarch64
-        description: Linux Mainstream Stable Kernel
+        description: Linux Stable Kernel
         version: latest stable
         repo: null
         compatible:
@@ -52,8 +55,11 @@ kernel:
         graphics:
           - mesa
         video:
+          - pipewire-jack
           - ffmpeg
         additional: null
+
+## Compatible with: Raspberry Pi ##
 
       # Linux Raspberry Pi Kernel
       - base: linux-rpi
@@ -69,12 +75,13 @@ kernel:
         graphics:
           - mesa
         video:
+          - pipewire-jack
           - ffmpeg-rpi
         additional: null
 
       # Linux Raspberry Pi 16K Kernel
       - base: linux-rpi-16k
-        description: Linux Raspberry Pi BSP Kernel with 16k pagesize for bcm2712/RPi5 ONLY
+        description: (For bcm2712/RPi5 ONLY) Linux Raspberry Pi BSP 16k pagesize Kernel
         version: 6.6
         repo: null
         compatible:
@@ -86,8 +93,12 @@ kernel:
         graphics:
           - mesa
         video:
+          - pipewire-jack
           - ffmpeg-rpi
         additional: null
+
+## Maintained by: Samuel (kwankiu) / Joske / Asahi Linux ##
+## Compatible with: Asahi Linux / Apple Silicon ##
 
       # Linux Asahi Kernel
       - base: linux-asahi
@@ -104,13 +115,17 @@ kernel:
         graphics:
           - mesa-asahi-edge
         video:
+          - pipewire-jack
           - ffmpeg
         additional: null
 
-      # Joshua's Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-bsp5.10-joshua-git
+## Maintained by: 7Ji-PKGBUILDs / Joshua-Riek ##
+## Compatible with: Rockchip ##
+
+      # Joshua's Rockchip 6.1 Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-joshua-git
         description: Joshua Linux Rockchip BSP Kernel
-        version: 5.10.209
+        version: 6.1-rkr3
         repo:
           - 7Ji
         compatible:
@@ -122,6 +137,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
           - friendlyelec-nanopi-r6*
           - friendlyelec-nanopc-*
           - friendlyelec-cm*
@@ -134,9 +150,40 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
           - friendlyelec-nanopi-r6*
           - friendlyelec-nanopc-*
           - friendlyelec-cm*
+        experimental: null
+        firmware:
+          - linux-firmware-joshua-git
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg-mpp-git
+        additional: null
+
+      # Joshua's Rockchip 5.10 Kernel
+      - base: linux-aarch64-rockchip-bsp5.10-joshua-git
+        description: Joshua Linux Rockchip BSP Kernel
+        version: 5.10-rkr8
+        repo:
+          - 7Ji
+        compatible:
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-nx5*
+          - radxa-zero-3*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
+          - friendlyelec-nanopi-r6*
+          - friendlyelec-nanopc-*
+          - friendlyelec-cm*
+        recommended: null
         experimental: null
         firmware:
           - linux-firmware-joshua-git
@@ -149,13 +196,15 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
-      # Joshua's Rockchip 6.1 Kernel
-      - base: linux-aarch64-rockchip-bsp6.1-joshua-git
-        description: Joshua Linux Rockchip BSP Kernel
-        version: 6.1.75
+      # Joshua's Rockchip Mainline Kernel
+      - base: linux-aarch64-rockchip-joshua-git
+        description: Joshua Linux Mainline kernel with patches for Rockchip/RK3588
+        version: 6.11-rc
         repo:
           - 7Ji
-        compatible:
+        compatible: null
+        recommended: null
+        experimental:
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-nx5*
@@ -164,11 +213,10 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
           - friendlyelec-nanopi-r6*
           - friendlyelec-nanopc-*
           - friendlyelec-cm*
-        recommended: null
-        experimental: null
         firmware:
           - linux-firmware-joshua-git
         graphics:
@@ -177,6 +225,8 @@ kernel:
           - pipewire-jack
           - ffmpeg-mpp-git
         additional: null
+
+## Maintained by: 7Ji-PKGBUILDs / Radxa ##
 
       # Radxa Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-radxa-git
@@ -207,7 +257,7 @@ kernel:
       # Radxa Rockchip 6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-radxa
         description: Radxa Linux Rockchip BSP Kernel
-        version: 6.1.43
+        version: 6.1-rkr1
         repo:
           - rockchip
           - 7Ji
@@ -229,9 +279,11 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
+## Maintained by: 7Ji-PKGBUILDs / Orange Pi ##
+
       # Orange Pi Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git
-        description: Orange Pi fork of Linux Rockchip BSP Kernel
+        description: OrangePi Linux Rockchip BSP Kernel
         version: 5.10.160
         repo:
           - 7Ji
@@ -255,9 +307,11 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
+## Maintained by: Samuel (kwankiu) / Fyde Innovations ##
+
       # FydeTab Duo Rockchip 5.10 Kernel
       - base: linux-aarch64-rockchip-bsp5.10-fydetab
-        description: FydeTab Duo Rockchip 5.10 Kernel
+        description: FydeTab Duo Linux Rockchip BSP Kernel
         version: 5.10.160
         repo:
           - rockchip
@@ -277,10 +331,12 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
+## Maintained by: Samuel (kwankiu) / Armbian ##
+
       # Armbian's Rockchip BSP6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-armbian-git
-        description: Armbian Linux Rockchip BSP6.1 Kernel
-        version: 6.1.43
+        description: Armbian Linux Rockchip BSP Kernel
+        version: 6.1-rkr1
         repo:
           - rockchip
           - 7Ji
@@ -294,6 +350,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
         firmware:
           - linux-firmware-armbian-git
         graphics:
@@ -305,33 +362,11 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
-      # Armbian's Edge Mainline Kernel
-      - base: linux-aarch64-rockchip-armbian-git
-        description: Linux Mainline kernel with armbian's patches for rk3588
-        version: 6.10.rc7
-        repo:
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5*
-          - radxa-zero-3*
-          - khadas-edge*
-          - xunlong-orangepi-5*
-          - rockchip-rk3588-orangepi*
-          - rockchip-rk3588s-orangepi*
-        firmware:
-          - linux-firmware-joshua-git
-        graphics:
-          - mesa
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
+## Maintained by: 7Ji-PKGBUILDs ##
 
       # 7Ji's Mainline Kernel
       - base: linux-aarch64-7ji
-        description: 7Ji Linux Mainline Kernel with patches for Amlogic and RK3588
+        description: 7Ji Linux Mainline Kernel with patches for Amlogic & RK3588
         version: lastest stable
         repo:
           - 7Ji
@@ -344,6 +379,7 @@ kernel:
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
         firmware: null
         graphics:
           - mesa

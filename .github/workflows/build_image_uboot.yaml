@@ -57,22 +57,23 @@ jobs:
           - orangepi-5b
           - orangepi-5-plus
           - orangepi-5-pro
+          - orangepi-5-max
+          - orangepi-cm5
           #- orangepi-3b
-          #- orangepi-cm5
           # Nano Pi
-          - friendlyelec-nanopc-t6
-          - friendlyelec-nanopi-r6c
-          - friendlyelec-nanopi-r6s
-          #- friendlyelec-cm3588
+          - nanopc-t6
+          - nanopi-r6c
+          - nanopi-r6s
+          #- nanopi-cm3588
           # Other Rockchip RK35XX
           #- indiedroid-nova #9tripod-rk3588s
           #- mixtile-blade3 #rockchip-rk3588-blade3-v101-linux
           #- mixtile-core3588e
           #- embedfire-lubancat-4 #rockchip-rk3588s-lubancat-4
           #- turing-rk1
-          #- armsom-sige7 #rockchip-rk3588-armsom-sige7
-          #- armsom-w3 #rockchip-rk3588-armsom-w3
-          #- fydetab-duo #rockchip-rk3588s-tablet-12c-linux
+          - armsom-sige7 #rockchip-rk3588-armsom-sige7
+          - armsom-aim7 #rockchip-rk3588-armsom-aim7
+          - armsom-w3 #rockchip-rk3588-armsom-w3
           # Others
           # Add more models as needed
 
@@ -97,9 +98,9 @@ jobs:
               radxa-*)
                 # Use different kernel and u-boot path for different boards
                 if [[ "$model" == "radxa-rock"* ]]; then
-                  args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
                 else
-                  args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
                 # URL to download u-boot for the board
                 if [[ "$model" == "radxa-zero"* ]]; then
@@ -110,7 +111,7 @@ jobs:
                 fi
                 ;;
               khadas-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
                 # URL to download u-boot for the board
                 if [ "$model" == "khadas-edge2" ]; then
                     uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.8-2017.09_arm64.deb"
@@ -118,24 +119,10 @@ jobs:
                     uboot_url="https://dl.khadas.com/repos/edge/pool/main/l/linux-u-boot-edge-vendor/linux-u-boot-edge-vendor_0.8.3-2017.09_arm64.deb"
                 fi
                 ;;
-              orangepi-*)
-                args="--kernel=linux-aarch64-rockchip-rk3588-bsp5.10-orangepi --addpkg=linux-firmware-orangepi-git --bootfirmware=usr/lib/u-boot -b"
+              orangepi-* | nanopi-* | nanopc-* | armsom-*)
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240401.git7f7ff61a-6_arm64.deb"
-                ;;
-              friendlyelec-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
-                # URL to download u-boot for the board
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model#*-}_2017.09+20240626.git5202c429-1_arm64.deb"
-                ;;
-              fydetab-*)
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=usr/lib/u-boot -b"
-                # Create path
-                mkdir -p usr/lib/u-boot
-                # Download idblock.bin
-                curl -L https://github.com/openFyde/foundation-rk3588/raw/main/rk3588-image-maker/rk3588-uboot-bin/rk3588_spl_loader_v1.07.111.bin -o usr/lib/u-boot/idblock.bin
-                # Download uboot.img
-                curl -L https://github.com/openFyde/foundation-rk3588/raw/main/rk3588-image-maker/rk3588-uboot-bin/uboot.img -o usr/lib/u-boot/uboot.img
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240626.git5202c429-4_arm64.deb"
                 ;;
               *)
                 # Generic
