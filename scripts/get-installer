@@ -55,7 +55,7 @@ done
 # Auto detect install target from devicetree
     if [ -z "$install_target" ]; then
         if [ -f "/proc/device-tree/compatible" ]; then
-            install_target="$(sed 's/\x00/ /g; s/,/ /g' /proc/device-tree/compatible | awk '{print $1, $2}' | tr ' ' '-')"
+            install_target="$(sed 's/\x00/ /g; s/,/ /g' /proc/device-tree/compatible | awk '{print $1, $2}' | tr ' ' '-' | head -n 1)"
         fi
     fi
 ################################################################
