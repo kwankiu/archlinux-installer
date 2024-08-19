@@ -19,7 +19,6 @@ colorecho() {
 ################################################################
 # Configure variables
 gh_repo="kwankiu/archlinux-installer"
-release_tag="b08-dev"
 file_prefix=""
 file_suffix="-archlinux-installer"
 file_extension=".img.xz"
@@ -52,6 +51,10 @@ for arg in "$@"; do
 done
 
 ################################################################
+# Get latest release tag
+    if [ -z "$release_tag" ]; then
+        release_tag="$(curl -s "https://api.github.com/repos/${gh_repo}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
+    fi
 # Auto detect install target from devicetree
     if [ -z "$install_target" ]; then
         if [ -f "/proc/device-tree/compatible" ]; then
