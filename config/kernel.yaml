@@ -55,6 +55,7 @@ kernel:
         graphics:
           - mesa
         video:
+          - pipewire-jack
           - ffmpeg
         additional: null
 
@@ -74,6 +75,7 @@ kernel:
         graphics:
           - mesa
         video:
+          - pipewire-jack
           - ffmpeg-rpi
         additional: null
 
@@ -91,6 +93,7 @@ kernel:
         graphics:
           - mesa
         video:
+          - pipewire-jack
           - ffmpeg-rpi
         additional: null
 
@@ -112,6 +115,7 @@ kernel:
         graphics:
           - mesa-asahi-edge
         video:
+          - pipewire-jack
           - ffmpeg
         additional: null
 
