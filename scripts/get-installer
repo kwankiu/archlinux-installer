@@ -16,6 +16,19 @@ colorecho() {
     text="$2"
     printf "${color}${text}${NC}\n"
 }
+
+# Sudo override
+sudo () {
+    local command=$@
+    if [ "$(id -u)" -eq 0 ]; then
+        #echo "Running in root."
+        command "$@"
+    else
+        #echo "Running with sudo."
+        command sudo "$@"
+    fi
+}
+
 ################################################################
 # Configure variables
 gh_repo="kwankiu/archlinux-installer"
@@ -42,6 +55,9 @@ for arg in "$@"; do
         ;;
     --device=*)
         install_target="${arg#*=}"
+        ;;
+    --disk=*)
+        install_disk="${arg#*=}"
         ;;
     -*)
         colorecho "$RED" "Invalid command or argument."
@@ -91,10 +107,20 @@ else
     curl -LO $image_url
 fi
 
-# Flash image with OOWOW if exists
+# Get downloaded image name
+image_name="$(basename $image_url)"
+
 if [ -f "/opt/oowow" ]; then
-    colorecho "$GREEN" "Flashing image $(basename $image_url) using OOWOW"
-    image_write2emmc $(basename $image_url)
+    # Flash with OOWOW
+    colorecho "$GREEN" "Flashing image $image_name using OOWOW"
+    image_write2emmc $image_name
+
+elif [ -n "$install_disk" ]; then
+    # Flash to disk
+    colorecho "$GREEN" "Extracting image $image_name ..."
+    unxz $image_name
+    colorecho "$GREEN" "Flashing image ${image_name%.xz} to $install_disk"
+    sudo dd if="${image_name%.xz}" of="$install_disk" bs=1M
 else
-    colorecho "$GREEN" "Downloaded image $(basename $image_url)"
+    colorecho "$GREEN" "Downloaded image $image_name"
 fi
