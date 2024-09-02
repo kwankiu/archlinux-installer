@@ -109,7 +109,7 @@ colorecho() {
     fi
 
     if [ "$run_post_install" = 1 ] && [[ "$rootfs_url" = *"aarch64"* ]]; then
-        colorecho "$GREEN" "Running Post Install Setup ..."
+        colorecho "$GREEN" "Setting up chroot ..."
         sudo arch-chroot $rootfs_dir /bin/bash <<END
     echo "Enabling and Updating Time Sync ..."
     systemctl enable systemd-timesyncd
@@ -121,16 +121,20 @@ colorecho() {
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
+    # Disable CheckSpace to prevent chroot issues
+    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
+    # Speed up pacman downloads
+    sed -i "s|#ParallelDownloads = 5|ParallelDownloads = 100|" /etc/pacman.conf
+    # Setup Pacman Keys
     echo "Setting up alarm pacman key ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
 
-    echo "Installing sudo ..."
-    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
-    pacman -Sy sudo --noconfirm
+    echo "Install sudo and Perform Full System Upgrade ..."
+    pacman -Syu sudo --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
-    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/0.0.6-dev/acu"
+    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/main/acu"
     chmod +x /usr/bin/acu
     
     echo "Removing default alarm account"
@@ -154,16 +158,20 @@ END
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
+    # Disable CheckSpace to prevent chroot issues
+    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
+    # Speed up pacman downloads
+    sed -i "s|#ParallelDownloads = 5|ParallelDownloads = 100|" /etc/pacman.conf
+    # Setup Pacman Keys
     echo "Setting up pacman key ..."
     pacman-key --init
     pacman-key --populate archlinux
 
-    echo "Installing sudo ..."
-    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
-    pacman -Sy sudo --noconfirm
+    echo "Install sudo and Perform Full System Upgrade ..."
+    pacman -Syu sudo --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
-    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/0.0.6-dev/acu"
+    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/main/acu"
     chmod +x /usr/bin/acu
     
     echo "Setting up user account ..."
