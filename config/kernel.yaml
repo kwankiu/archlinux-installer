@@ -201,7 +201,7 @@ kernel:
       # Joshua's Rockchip Mainline Kernel
       - base: linux-aarch64-rockchip-joshua-git
         description: Joshua Linux Mainline kernel with patches for Rockchip/RK3588
-        version: 6.11-rc
+        version: 6.11
         repo:
           - 7Ji
         compatible: null
