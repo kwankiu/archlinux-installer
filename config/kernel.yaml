@@ -103,7 +103,7 @@ kernel:
       # Linux Asahi Kernel
       - base: linux-asahi
         description: Linux Asahi Kernel
-        version: 6.8
+        version: 6.11
         repo:
           - asahi
         compatible:
@@ -111,9 +111,11 @@ kernel:
         recommended:
           - apple*
         experimental: null
-        firmware: null
+        firmware:
+          - asahi-fwextract
+          - asahi-configs
         graphics:
-          - mesa-asahi-edge
+          - mesa-asahi
         video:
           - pipewire-jack
           - ffmpeg
