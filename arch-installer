@@ -770,6 +770,12 @@ network_menu() {
         ;;
     6)
         menu_header="Edit Mirrorlist"
+        if [ ! -f "/etc/pacman.d/mirrorlist.bak" ]; then
+            alert "Edit Mirrorlist - Downloading new mirrorlist ..."
+            sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+            curl -LO https://raw.githubusercontent.com/1usOS/PKGBUILDs/refs/heads/misc/pacman-mirrorlist/mirrorlist
+            sudo mv mirrorlist /etc/pacman.d/mirrorlist
+        fi
         alert "Edit Mirrorlist - Starting nano editor ..."
         sudo nano /etc/pacman.d/mirrorlist
         network_menu
