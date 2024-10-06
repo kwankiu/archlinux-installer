@@ -972,7 +972,11 @@ add_boot_part_fstab() {
     fi
 
     # Add the line to /etc/fstab
-    new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
+    if [ -d "/boot/efi" ]; then
+        new_line="$boot_partition /boot/efi vfat dmask=000,fmask=0111,user 0 0"
+    else
+        new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
+    fi
 
     # Check if the line already exists in /etc/fstab
     if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
@@ -1005,7 +1009,7 @@ install_part1() {
     rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
     rootfs_disk="${rootfs_disk%p*}"
 
-    if [ ! -d "/boot/extlinux" ] && [ ! -d "/boot/EFI" ]; then
+    if [ ! -d "/boot/extlinux" ] && [ ! -d "/boot/EFI" ] && [ ! -d "/boot/efi/EFI" ]; then
         add_boot_part_fstab
     fi
 
