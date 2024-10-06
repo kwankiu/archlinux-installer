@@ -1018,11 +1018,9 @@ install_part1() {
         if [ "${install_repo_list[i]}" = "7Ji" ]; then
             acu rem set 7Ji https://github.com/7Ji/archrepo/releases/download/\$arch pacman
         elif [ "${install_repo_list[i]}" = "rockchip" ]; then
-            acu rem set rockchip https://github.com/kwankiu/PKGBUILDs/releases/download/\$arch pacman
+            acu rem set rockchip https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         elif [ "${install_repo_list[i]}" = "asahi" ]; then
-            acu rem set asahi https://github.com/kwankiu/PKGBUILDs/releases/download/\$arch pacman
-        #elif [ "${install_repo_list[i]}" = "Experimental" ]; then
-        #    acu rem set Experimental https://github.com/kwankiu/PKGBUILDs/releases/download/experimental pacman
+            acu rem set asahi https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         fi
     done
 
