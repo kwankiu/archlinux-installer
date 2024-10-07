@@ -80,6 +80,7 @@ done
 ################################################################
 
 if [ -n "$install_target" ]; then
+    # Download target image
     colorecho "$GREEN" "Looking for the latest image for $install_target ..."
     case $install_target in
         radxa-*)
@@ -100,27 +101,45 @@ if [ -n "$install_target" ]; then
     esac
     image_url="https://github.com/${gh_repo}/releases/download/${release_tag}/${install_target}${file_suffix}${file_extension}"
     curl -LO $image_url
-else
+elif [ -n "$install_disk" ]; then
+    # Download generic image
     colorecho "$GREEN" "Unable to retrieve device model, looking for the latest generic image ..."
     install_target="generic"
     image_url="https://github.com/${gh_repo}/releases/download/UEFI-${release_tag}/${install_target}${file_suffix}-UEFI${file_extension}"
     curl -LO $image_url
+else
+    # Download the Installer to current root
+    colorecho "$GREEN" "Downloading the Installer to current root ..."
+    # Download the Installer
+    curl -LO https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/arch-installer
+    sudo mv arch-installer /usr/bin/installer
+    # Download ACU
+    curl -LO https://raw.githubusercontent.com/kwankiu/acu/main/acu
+    sudo mv acu /usr/bin/acu
+    # Download growpart
+    curl -LO https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart
+    sudo mv growpart /usr/bin/growpart
+    # Ensure execute permission
+    sudo chmod +x /usr/bin/*
+    # Download Installer Configuration File
+    sudo mkdir -p /usr/lib/installer/.acu/config
+    curl -LO https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/config/acu_config.yaml
+    sudo mv acu_config.yaml /usr/lib/installer/.acu/config/config.yaml
+    colorecho "$GREEN" "To start the installer, run 'installer' (as root)."
 fi
 
-# Get downloaded image name
-image_name="$(basename $image_url)"
-
 if [ -f "/opt/oowow" ]; then
+    # Get downloaded image name
+    image_name="$(basename $image_url)"
     # Flash with OOWOW
     colorecho "$GREEN" "Flashing image $image_name using OOWOW"
     image_write2emmc $image_name
-
 elif [ -n "$install_disk" ]; then
+    # Get downloaded image name
+    image_name="$(basename $image_url)"
     # Flash to disk
     colorecho "$GREEN" "Extracting image $image_name ..."
     unxz $image_name
     colorecho "$GREEN" "Flashing image ${image_name%.xz} to $install_disk"
     sudo dd if="${image_name%.xz}" of="$install_disk" bs=1M
-else
-    colorecho "$GREEN" "Downloaded image $image_name"
 fi
