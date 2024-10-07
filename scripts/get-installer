@@ -111,10 +111,10 @@ else
     # Download the Installer to current root
     colorecho "$GREEN" "Downloading the Installer to current root ..."
     # Download the Installer
-    curl -LO https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/arch-installer
+    curl -LO https://raw.githubusercontent.com/kwankiu/archlinux-installer/${release_tag}/arch-installer
     sudo mv arch-installer /usr/bin/installer
     # Download ACU
-    curl -LO https://raw.githubusercontent.com/kwankiu/acu/main/acu
+    curl -LO https://raw.githubusercontent.com/kwankiu/acu/${release_tag}/acu
     sudo mv acu /usr/bin/acu
     # Download growpart
     curl -LO https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart
@@ -123,7 +123,7 @@ else
     sudo chmod +x /usr/bin/*
     # Download Installer Configuration File
     sudo mkdir -p /usr/lib/installer/.acu/config
-    curl -LO https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/config/acu_config.yaml
+    curl -LO https://raw.githubusercontent.com/kwankiu/archlinux-installer/${release_tag}/config/acu_config.yaml
     sudo mv acu_config.yaml /usr/lib/installer/.acu/config/config.yaml
     colorecho "$GREEN" "To start the installer, run 'installer' (as root)."
 fi
