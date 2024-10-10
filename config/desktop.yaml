@@ -296,7 +296,7 @@ desktop:
           mkdir -p /home/$(whoami)/.config/hypr
           cp -r /usr/share/hyprland/hyprland.conf /home/$(whoami)/.config/hypr/hyprland.conf
           #Hyprland 0.42 Wallpaper Fix
-          sudo cp -r /usr/share/hyprland /usr/local/share/hypr
+          #sudo cp -r /usr/share/hyprland /usr/local/share/hypr
 
       # Archcraft
       - package_name: archcraft
