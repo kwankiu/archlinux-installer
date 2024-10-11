@@ -98,7 +98,7 @@ jobs:
           echo "ARGS=$args" >> $GITHUB_ENV
           echo "BOOTFW_URL=$bootfw_url" >> $GITHUB_ENV
   
-      - name: Download Bootloader
+      - name: Download UEFI Firmware
         if: ${{ env.BOOTFW_URL }}
         env:
           bootfw_url: ${{ env.BOOTFW_URL }}
@@ -113,7 +113,7 @@ jobs:
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer-uefi.img --bootloader=grub -c $args
           cp -r out/*-archlinux-*.img.xz .
 
-      - name: Add meta data to Image (OOWOW)
+      - name: Add xze metadata to Image (OOWOW)
         if: startsWith(matrix.model_name, 'khadas')
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/khadas/krescue/master/tools/xze) "${{ matrix.model_name }}-archlinux-installer-uefi.img.xz" \
