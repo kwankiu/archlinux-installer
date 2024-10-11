@@ -23,8 +23,6 @@ jobs:
         model_name:
           # Generic
           #- generic
-          # Asahi (Apple Silicon)
-          #- asahi
           # Raspberry Pi
           - raspberrypi
           # Radxa
@@ -87,10 +85,6 @@ jobs:
           for model in ${{ matrix.model_name }}; do
             echo "Building image for $model"
             case $model in
-              asahi)
-                # Notes: this should be rootfs only & WIP
-                args="--kernel=linux-asahi -b"
-                ;;
               raspberrypi)
                 # Notes: Raspberry Pi does not use extlinux and does not need to pack u-boot
                 args="--kernel=linux-rpi --addpkg=firmware-raspberrypi -b --bootpartstart=4MiB --bootloader=skip"
