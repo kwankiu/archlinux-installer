@@ -111,7 +111,7 @@ jobs:
           args: ${{ env.ARGS }}
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/dev/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer-uefi.img --bootloader=grub -c $args
-          cp -r out/*-archlinux-*.img.xz .
+          cp -r out/*-archlinux-*.*.xz .
 
       - name: Add xze metadata to Image (OOWOW)
         if: startsWith(matrix.model_name, 'khadas')
@@ -132,7 +132,7 @@ jobs:
       - name: Upload to GitHub Release
         uses: ncipollo/release-action@v1
         with:
-            artifacts: "*-archlinux-*.img.xz"
+            artifacts: "*-archlinux-*.*.xz"
             makeLatest: false
             allowUpdates: true
             omitBody: true
