@@ -116,7 +116,7 @@ jobs:
               orangepi-* | nanopi-* | nanopc-* | armsom-*)
                 args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240626.git5202c429-4_arm64.deb"
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240806.gitf73b1eed-2_arm64.deb"
                 ;;
               *)
                 # Generic
@@ -148,7 +148,7 @@ jobs:
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer.img -c $args
           cp -r out/*-archlinux-*.img.xz .
 
-      - name: Add meta data to Image (OOWOW)
+      - name: Add xze metadata to Image (OOWOW)
         if: startsWith(matrix.model_name, 'khadas')
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/khadas/krescue/master/tools/xze) "${{ matrix.model_name }}-archlinux-installer.img.xz" \
