@@ -292,11 +292,11 @@ desktop:
           #Hyprland Config
           sudo sed -i 's/kitty/alacritty/g' /usr/share/hyprland/hyprland.conf
           sudo sed -i 's/wofi --show/rofi -show/g' /usr/share/hyprland/hyprland.conf
-          sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar & hyprpaper & hypridle/g' /usr/share/hyprland/hyprland.conf
+          sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar \& hyprpaper \& hypridle/g' /usr/share/hyprland/hyprland.conf
           mkdir -p /home/$(whoami)/.config/hypr
           cp -r /usr/share/hyprland/hyprland.conf /home/$(whoami)/.config/hypr/hyprland.conf
-          #Hyprland 0.42 Wallpaper Fix
-          #sudo cp -r /usr/share/hyprland /usr/local/share/hypr
+          #Hyprland Default Wallpaper
+          echo -e "preload=/usr/share/hyprland/hyprland.png\nwallpaper=,contain:/usr/share/hyprland/hyprland.png" | sudo tee /home/$(whoami)/.config/hypr/hyprpaper.conf
 
       # Archcraft
       - package_name: archcraft
