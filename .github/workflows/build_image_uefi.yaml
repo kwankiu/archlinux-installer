@@ -25,7 +25,7 @@ jobs:
           # Generic
           - generic
           # Asahi (Apple Silicon)
-          #- asahi
+          - asahi
           ## Raspberry Pi UEFI ##
           #- raspberrypi
           ## RK3588-EDK2 ##
@@ -87,7 +87,7 @@ jobs:
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               asahi)
-                args="--kernel=linux-asahi -b"
+                args="--kernel=linux-asahi -e --bootpartstart=1MB --bootpartend=201MB"
                 ;;
               *)
                 # Generic
