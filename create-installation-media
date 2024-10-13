@@ -481,6 +481,8 @@ for arg in "$@"; do
         echo "-i / --image : Create a disk image with default image name (<model>-archlinux-<installer>.<image_format>) at out folder."
         echo "-k / --kernel : Create Arch Linux using default kernel option."
         echo "-b / --bootpart : Create Arch Linux with a seperated boot partition."
+        echo "-e / --esppart : Create Arch Linux with a seperated EFI system partition (ESP)."
+        echo "NOTE THAT --bootpart and --esppart MAY NOT be used together."
         echo "-c / --compress : Compress the Disk Image to .img.xz"
         echo "-m / --mtimg : Skip partitioning and use an image instead. (When this argument is used, --image=<image_name> will become the image to be used)"
         echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
@@ -566,6 +568,9 @@ for arg in "$@"; do
         ;;
     -b | --bootpart)
         argbootpt=1
+        ;;
+    -e | --esppart)
+        argesppt=1
         ;;
     -c | --compress)
         argxz=1
@@ -772,6 +777,11 @@ if [ "$argbootpt" = 1 ]; then
     boot_mount_dir=$(mktemp -d) #create tmp dir for boot partition
 fi
 
+# if esp part argument is set, make a esp partition, else we will use the /boot/EFI of rootfs
+if [ "$argesppt" = 1 ]; then
+    esp_mount_dir=$(mktemp -d) #create tmp dir for esp partition
+fi
+
 # if $argmountimg is not set, format and partition the image/disk, else use the specified image as base
 if [ -z "$argmountimg" ]; then
     # Unmount all partitions of the specified drive
@@ -841,6 +851,10 @@ if [ -z "$argmountimg" ]; then
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
         sudo parted $drive set $first_part boot on
         sudo parted $drive set $first_part esp on
+    elif [ "$argesppt" = 1 ]; then
+        sudo parted $drive mkpart primary fat32 $argbootptst $argbootpted
+        sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
+        sudo parted $drive set $first_part esp on    
     else
         sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
@@ -879,6 +893,10 @@ sudo mount -o rw $root_partition $root_mount_dir
 
 if [ "$argbootpt" = 1 ]; then
     sudo mount $boot_partition $boot_mount_dir
+fi
+
+if [ "$argesppt" = 1 ]; then
+    sudo mount $boot_partition $esp_mount_dir
 fi
 
 # Download and extract the latest ArchLinux tarball
@@ -953,6 +971,11 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
             # Mount boot partition
             colorecho "$GREEN" "Mounting /boot into chroot ..."
             sudo mount $boot_partition $root_mount_dir/boot
+        elif [ "$argesppt" = 1 ]; then
+            # Mount esp partition
+            colorecho "$GREEN" "Mounting /boot/efi into chroot ..."
+            sudo mkdir -p $root_mount_dir/boot/efi
+            sudo mount $boot_partition $root_mount_dir/boot/efi
         fi
         # alarm's linux-aarch64 kernel workaround
         if [ "$argkrl" = "linux" ]; then
@@ -963,13 +986,20 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
         pacman-key --init
         pacman-key --populate archlinuxarm
         pacman -Sy grub device-mapper efibootmgr glibc --noconfirm
-        grub-install --target=arm64-efi --efi-directory=/boot --removable
+        if [ -e "/boot/efi" ]; then
+            grub-install --removable
+        else
+            grub-install --target=arm64-efi --efi-directory=/boot --removable
+        fi
         grub-mkconfig -o /boot/grub/grub.cfg
 END
 
         colorecho "$GREEN" "Un-mounting /boot ..."
         if [ "$argbootpt" = 1 ]; then
             sudo umount $root_mount_dir/boot
+        fi
+        if [ "$argesppt" = 1 ]; then
+            sudo umount $root_mount_dir/boot/efi
         fi
 
     elif [ -z "$argbootld" ] || [ "$argbootld" = "extlinux" ]; then
@@ -1102,6 +1132,11 @@ sudo umount $root_mount_dir
 if [ "$argbootpt" = 1 ]; then
     sudo umount $boot_mount_dir
     sudo rm -rf $boot_mount_dir
+fi
+
+if [ "$argesppt" = 1 ]; then
+    sudo umount $esp_mount_dir
+    sudo rm -rf $esp_mount_dir
 fi
 
 # Clean up
