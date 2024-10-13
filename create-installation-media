@@ -1076,6 +1076,7 @@ if [ "$arginstaller" == "installer" ] || [ -z "$arginstaller" ]; then
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/acu_config.yaml
     sudo mkdir -p "$root_mount_dir/usr/lib/installer/.acu/config"
     sudo cp -r acu_config.yaml "$root_mount_dir/usr/lib/installer/.acu/config/config.yaml"
+    sudo rm -rf acu_config.yaml
 fi
 
 # Copy Installer
