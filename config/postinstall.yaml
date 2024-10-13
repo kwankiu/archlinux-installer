@@ -101,6 +101,8 @@ postinstall:
           echo "Add asahi hook and modules to mkinitcpio conf ..."
           sudo sed -i 's/MODULES=()/MODULES=(ext4 btrfs usbhid xhci_hcd)/g' /etc/mkinitcpio.conf
           sudo sed -i 's/HOOKS=(base /HOOKS=(base asahi /g' /etc/mkinitcpio.conf
+          echo "Rebuilding initramfs ..."
+          mkinitcpio -P
 
       # RK3588 USB2 HOST
       - package_name: rk3588-usb2-host
