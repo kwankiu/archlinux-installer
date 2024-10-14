@@ -917,8 +917,8 @@ if [ "$argkrl" = "linux" ]; then
     fi
 
 else
-
-    sudo rm -rf $root_mount_dir/boot/*
+    # Remove default kernel
+    sudo rm -rf $root_mount_dir/boot/* $root_mount_dir/etc/mkinitcpio.d/*
 
     if [ "$argbootpt" = 1 ]; then
         # Copy contents to boot partition
@@ -967,15 +967,16 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
     if [ "$argbootld" = "grub" ]; then
     # GRUB
         colorecho "$GREEN" "Setting up grub ..."
-        if [ "$argbootpt" = 1 ]; then
-            # Mount boot partition
-            colorecho "$GREEN" "Mounting /boot into chroot ..."
-            sudo mount $boot_partition $root_mount_dir/boot
-        elif [ "$argesppt" = 1 ]; then
-            # Mount esp partition
-            colorecho "$GREEN" "Mounting /boot/efi into chroot ..."
-            sudo mkdir -p $root_mount_dir/boot/efi
-            sudo mount $boot_partition $root_mount_dir/boot/efi
+        if [ "$argesppt" = 1 ]; then
+            grubefidir="/boot/efi"
+        else
+            grubefidir="/boot"
+        fi
+        if [ "$argbootpt" = 1 ] || [ "$argesppt" = 1 ]; then
+            # Mount boot/esp partition
+            colorecho "$GREEN" "Mounting $grubefidir into chroot ..."
+            sudo mkdir -p ${root_mount_dir}${grubefidir}
+            sudo mount $boot_partition ${root_mount_dir}${grubefidir}
         fi
         # alarm's linux-aarch64 kernel workaround
         if [ "$argkrl" = "linux" ]; then
@@ -986,22 +987,14 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
         pacman-key --init
         pacman-key --populate archlinuxarm
         pacman -Sy grub device-mapper efibootmgr glibc --noconfirm
-        if [ -e "/boot/efi" ]; then
-            grub-install --target=arm64-efi --efi-directory=/boot/efi --removable
-        else
-            grub-install --target=arm64-efi --efi-directory=/boot --removable
-        fi
+        sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"$bootcmdline\"/" /etc/default/grub
+        grub-install --target=arm64-efi --efi-directory=$grubefidir --removable
         grub-mkconfig -o /boot/grub/grub.cfg
 END
-
-        colorecho "$GREEN" "Un-mounting /boot ..."
-        if [ "$argbootpt" = 1 ]; then
-            sudo umount $root_mount_dir/boot
+        if [ "$argbootpt" = 1 ] || [ "$argesppt" = 1 ]; then
+            colorecho "$GREEN" "Un-mounting ${grubefidir} ..."
+            sudo umount ${root_mount_dir}${grubefidir}
         fi
-        if [ "$argesppt" = 1 ]; then
-            sudo umount $root_mount_dir/boot/efi
-        fi
-
     elif [ -z "$argbootld" ] || [ "$argbootld" = "extlinux" ]; then
     # EXTLINUX
         colorecho "$GREEN" "Generating new extlinux.conf ..."
