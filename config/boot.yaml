@@ -16,14 +16,14 @@ boot:
 # Generic
 - dtb: /dtbs
   dtb_overlays: null
-  cmdline: rw quiet splash
+  cmdline: rw loglevel=3 quiet splash
   compatible:
     - generic
 
 # Asahi (Apple Silicon)
 - dtb: /usr/lib/asahi-boot/dtb
   dtb_overlays: null
-  cmdline: rw quiet splash
+  cmdline: brcmfmac.feature_disable=0x82000 loglevel=3 quiet splash
   compatible:
     - asahi
     - apple*
@@ -55,7 +55,7 @@ boot:
 # Orange Pi and other non-mainline models
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
-  cmdline: rw quiet splash
+  cmdline: rw loglevel=3 quiet splash
   compatible:
     - xunlong-orangepi*
     - orangepi*
@@ -75,6 +75,6 @@ boot:
 # Fydetab Duo
 - dtb: /dtbs/%PKGBASE%/rockchip/rk3588s-tablet-12c-linux.dtb
   dtb_overlays: null
-  cmdline: rw quiet splash
+  cmdline: rw loglevel=3 quiet splash
   compatible:
     - fydetab*
