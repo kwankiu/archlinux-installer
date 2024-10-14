@@ -117,10 +117,10 @@ kernel:
         graphics:
           - mesa-asahi
         video:
+          - pipewire-jack
           - jalv
           - asahi-audio
           - alsa-ucm-conf-asahi
-          - pipewire-jack
           - ffmpeg
         additional: null
 
