@@ -987,7 +987,7 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
         pacman-key --populate archlinuxarm
         pacman -Sy grub device-mapper efibootmgr glibc --noconfirm
         if [ -e "/boot/efi" ]; then
-            grub-install --removable
+            grub-install --target=arm64-efi --efi-directory=/boot/efi --removable
         else
             grub-install --target=arm64-efi --efi-directory=/boot --removable
         fi
