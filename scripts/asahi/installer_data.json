@@ -1,0 +1,42 @@
+{
+    "os_list": [
+        {
+            "name": "Arch Linux ARM Installer",
+            "default_os_name": "Arch Linux",
+            "boot_object": "m1n1.bin",
+            "next_object": "m1n1/boot.bin",
+            "package": "https://github.com/kwankiu/archlinux-installer/releases/download/UEFI-b09-dev/asahi-archlinux-installer-uefi.zip",
+            "supported_fw": [
+                "12.3",
+                "12.3.1",
+                "13.5"
+            ],
+            "partitions": [
+                {
+                    "name": "EFI",
+                    "type": "EFI",
+                    "size": "500MB",
+                    "format": "fat",
+                    "copy_firmware": true,
+                    "copy_installer_data": true,
+                    "source": "esp"
+                },
+                {
+                    "name": "Root",
+                    "type": "Linux",
+                    "size": "4083154944B",
+                    "expand": true,
+                    "image": "root.img"
+                }
+            ]
+        },
+        {
+            "name": "Tethered boot (m1n1, for development)",
+            "default_os_name": "m1n1 proxy",
+            "expert": true,
+            "boot_object": "m1n1.bin",
+            "external_boot": true,
+            "partitions": []
+        }
+    ]
+}
