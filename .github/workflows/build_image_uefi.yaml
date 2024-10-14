@@ -41,9 +41,9 @@ jobs:
           # Khadas
           #- khadas-edge2
           # Nano Pi
-          - friendlyelec-nanopc-t6
-          - friendlyelec-nanopi-r6c
-          - friendlyelec-nanopi-r6s
+          - nanopc-t6
+          - nanopi-r6c
+          - nanopi-r6s
           # Firefly
           - firefly-roc-rk3588s-pc
           - firefly-itx-3588j
@@ -68,8 +68,8 @@ jobs:
           for model in ${{ matrix.model_name }}; do
             echo "Building image for $model"
             case $model in
-              radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | indiedroid-*)
-                if [[ "$model" == "orangepi"* ]] || [[ "$model" == "indiedroid"* ]]; then
+              radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | nanopi-* | nanopc-* | indiedroid-*)
+                if [[ "$model" == "orangepi"* ]] || [[ "$model" == "nanopi"* ]] || [[ "$model" == "nanopc"* ]] || [[ "$model" == "indiedroid"* ]]; then
                   bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.11.2/${model}_UEFI_Release_v0.11.2.img"
                 elif [[ "$model" == "radxa-rock-5c" ]]; then
                   bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/rock-5c_UEFI_Debug_c166f5a.img"
