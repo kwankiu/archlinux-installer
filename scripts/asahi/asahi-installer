@@ -1,6 +1,10 @@
 #!/bin/sh
 # SPDX-License-Identifier: MIT
 
+# Installer Branch / Tag
+branch=dev
+release_tag="UEFI-b09-dev"
+
 # Truncation guard
 if true; then
     set -e
@@ -21,15 +25,15 @@ if true; then
         exit 1
     fi
 
-    export VERSION_FLAG=https://cdn.asahilinux.org/installer-dev/latest
-    export INSTALLER_BASE=https://cdn.asahilinux.org/installer-dev
-    export INSTALLER_DATA=https://raw.githubusercontent.com/kwankiu/archlinux-installer/refs/heads/dev/scripts/asahi/installer_data.json
-    export REPO_BASE=https://cdn.asahilinux.org
-    export REPORT=https://stats.asahilinux.org/report
-    export REPORT_TAG=alx-dev
-
     #TMP="$(mktemp -d)"
     TMP=/tmp/asahi-install
+    
+    export VERSION_FLAG=https://cdn.asahilinux.org/installer/latest
+    export INSTALLER_BASE=https://cdn.asahilinux.org/installer
+    export INSTALLER_DATA=https://raw.githubusercontent.com/kwankiu/archlinux-installer/refs/heads/${branch}/scripts/asahi/installer_data.json
+    export REPO_BASE=$TMP
+    export REPORT=https://stats.asahilinux.org/report
+    export REPORT_TAG=alx-prod
 
     echo
     echo "Bootstrapping installer:"
@@ -48,14 +52,25 @@ if true; then
 
     PKG="installer-$PKG_VER.tar.gz"
 
-    echo "  Downloading..."
+    echo "  Downloading Asahi Installer..."
 
     curl --no-progress-meter -L -o "$PKG" "$INSTALLER_BASE/$PKG"
-    curl --no-progress-meter -L -O "$INSTALLER_DATA"
+    if ! curl --no-progress-meter -L -O "$INSTALLER_DATA"; then
+        echo "    Error downloading installer_data.json. GitHub might be blocked in your network."
+        echo "    Please consider using a VPN if you experience issues."
+        echo "    Trying workaround..."
+        curl --no-progress-meter -L -O "$INSTALLER_DATA_ALT"
+    fi
 
-    echo "  Extracting..."
+    echo "  Extracting Asahi Installer..."
 
     tar xf "$PKG"
+
+    echo "Downloading Arch Installer Package..."
+    mkdir -p os
+    cd os
+    curl -LO https://github.com/kwankiu/archlinux-installer/releases/download/${release_tag}/asahi-archlinux-installer-uefi.zip
+    cd ..
 
     echo "  Initializing..."
     echo
