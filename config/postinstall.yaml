@@ -104,6 +104,17 @@ postinstall:
           echo "Rebuilding initramfs ..."
           mkinitcpio -P
 
+      # Asahi Firmware Update
+      - package_name: asahi-firmware-update
+        pretty_name: Asahi Firmware Update
+        category: Post-Install
+        description: Asahi Firmware Update
+        compatible:
+          - apple*
+        commands: |
+          echo "==> Upgrading vendor firmware package..."
+          sudo asahi-fwupdate
+
       # RK3588 USB2 HOST
       - package_name: rk3588-usb2-host
         pretty_name: RK3588 USB2 Host

@@ -66,7 +66,7 @@ if true; then
 
     tar xf "$PKG"
 
-    echo "Downloading Arch Installer Package..."
+    echo "  Downloading OS Package..."
     mkdir -p os
     cd os
     curl -LO https://github.com/kwankiu/archlinux-installer/releases/download/${release_tag}/asahi-archlinux-installer-uefi.zip
