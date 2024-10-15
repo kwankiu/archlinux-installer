@@ -66,10 +66,12 @@ if true; then
 
     tar xf "$PKG"
 
-    echo "  Downloading OS Package..."
+    echo "  Creating OS Package..."
     mkdir -p os
     cd os
-    curl -LO https://github.com/kwankiu/archlinux-installer/releases/download/${release_tag}/asahi-archlinux-installer-uefi.zip
+    curl -LO https://github.com/kwankiu/archlinux-installer/releases/download/${release_tag}/asahi-archlinux-installer-uefi.img.xz
+    echo "  Running OS Package Tool..."
+    curl https://raw.githubusercontent.com/kwankiu/archlinux-installer/refs/heads/${branch}/scripts/asahi/os-package-tool | sh
     cd ..
 
     echo "  Initializing..."
