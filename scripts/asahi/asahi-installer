@@ -31,7 +31,7 @@ if true; then
     export VERSION_FLAG=https://cdn.asahilinux.org/installer/latest
     export INSTALLER_BASE=https://cdn.asahilinux.org/installer
     export INSTALLER_DATA=https://raw.githubusercontent.com/kwankiu/archlinux-installer/refs/heads/${branch}/scripts/asahi/installer_data.json
-    export REPO_BASE=$TMP
+    export REPO_BASE=http://localhost:8000/$TMP
     export REPORT=https://stats.asahilinux.org/report
     export REPORT_TAG=alx-prod
 
@@ -69,12 +69,13 @@ if true; then
     echo "  Creating OS Package..."
     mkdir -p os
     cd os
+    echo "  Downloading Source Package..."
     curl -LO https://github.com/kwankiu/archlinux-installer/releases/download/${release_tag}/asahi-archlinux-installer-uefi.img.xz
     echo "  Running OS Package Tool..."
     curl https://raw.githubusercontent.com/kwankiu/archlinux-installer/refs/heads/${branch}/scripts/asahi/os-package-tool | sh
     cd ..
-
-    echo "  Initializing..."
+    echo "  Initializing Local Web Server..."
+    python3 -m http.server &
     echo
 
     if [ "$USER" != "root" ]; then
