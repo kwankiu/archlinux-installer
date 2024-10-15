@@ -87,7 +87,7 @@ jobs:
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               asahi)
-                args="--kernel=linux-asahi -e --bootpartstart=1MB --bootpartend=201MB"
+                args="--kernel=linux-asahi --addpkg=linux-asahi-loader -e --bootpartstart=1MB --bootpartend=201MB"
                 ;;
               *)
                 # Generic
