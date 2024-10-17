@@ -31,7 +31,7 @@ if true; then
     export VERSION_FLAG=https://cdn.asahilinux.org/installer/latest
     export INSTALLER_BASE=https://cdn.asahilinux.org/installer
     export INSTALLER_DATA=https://raw.githubusercontent.com/kwankiu/archlinux-installer/refs/heads/${branch}/scripts/asahi/installer_data.json
-    export REPO_BASE=$TMP
+    export REPO_BASE=http://localhost:8000
     export REPORT=https://stats.asahilinux.org/report
     export REPORT_TAG=alx-prod
 
