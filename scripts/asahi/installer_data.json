@@ -5,7 +5,7 @@
             "default_os_name": "Arch Linux",
             "boot_object": "m1n1.bin",
             "next_object": "m1n1/boot.bin",
-            "package": "http://localhost:8000/os/asahi-archlinux-installer-uefi.zip",
+            "package": "asahi-archlinux-installer-uefi.zip",
             "supported_fw": [
                 "12.3",
                 "12.3.1",
