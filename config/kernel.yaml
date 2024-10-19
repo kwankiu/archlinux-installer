@@ -118,7 +118,7 @@ kernel:
           - mesa-asahi
         video:
           - pipewire-jack
-          - jalv
+          - ardour
           - asahi-audio
           - alsa-ucm-conf-asahi
           - ffmpeg
