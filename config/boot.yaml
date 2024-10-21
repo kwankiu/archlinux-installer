@@ -42,8 +42,9 @@ boot:
   dtb_overlays: null
   cmdline: console=ttyFIQ0,1500000n8 quiet splash loglevel=4 rw earlycon consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1
   compatible:
-    - radxa-zero-3*
-    - radxa-rock-2a
+    - radxa-zero-*
+    - radxa-rock-2*
+    - radxa-rock-3*
 
 # Khadas Edge & Edge 2
 - dtb: /dtbs/%PKGBASE%
