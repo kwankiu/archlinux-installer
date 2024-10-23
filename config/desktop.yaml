@@ -52,12 +52,10 @@ desktop:
           - gnome-shell
           - gnome-keyring
           - gnome-control-center
+          - gnome-backgrounds
           - gnome-console
           - gnome-disk-utility
-          - gnome-backgrounds
           - nautilus
-          - xdg-desktop-portal
-          - xdg-desktop-portal-gnome
           - xdg-user-dirs
           - librsvg
         commands: |
@@ -74,12 +72,10 @@ desktop:
           - phosh
           - gnome-keyring
           - gnome-control-center
+          - gnome-backgrounds
           - gnome-console
           - gnome-disk-utility
-          - gnome-backgrounds
           - nautilus
-          - xdg-desktop-portal
-          - xdg-desktop-portal-gnome
           - xdg-user-dirs
           - librsvg
         commands: |
