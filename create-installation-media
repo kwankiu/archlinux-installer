@@ -486,6 +486,7 @@ for arg in "$@"; do
         echo "-c / --compress : Compress the Disk Image to .img.xz"
         echo "-m / --mtimg : Skip partitioning and use an image instead. (When this argument is used, --image=<image_name> will become the image to be used)"
         echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
+        echo "--vmimages=<format1,format2,...> : Generate Virtual Machine images, check qemu-img for supported formats, you may specify more than one format separated by comma."
         echo "--size=<image_size> : Set disk image size (default is 4G)."
         echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
         echo "--kernel=<kernel_name> : Set kernel package to get from repo."
@@ -523,6 +524,9 @@ for arg in "$@"; do
         ;;
     --image=*)
         argimg="${arg#*=}"
+        ;;
+    --vmimages=*)
+        IFS=',' read -r -a argvmimgs <<< "${arg#*=}"
         ;;
     --disk=*)
         argdisk="${arg#*=}"
@@ -1142,6 +1146,44 @@ title
 if [ ! -z "$is_img" ]; then
     sudo losetup --detach $drive
     colorecho "$YELLOW" "Tips: Check if the image loop device is unmounted successfully."
+    # Generate VM images
+    if [ -n "$argvmimgs" ]; then
+        colorecho "$GREEN" "Generate Virtual Machine images (this may take some time, grab a coffee) ..."
+        # Check if qemu-img is available
+        if ! [ -x "$(command -v qemu-img)" ]; then
+            # Check Linux distribution
+            colorecho "$YELLOW" "qemu-img is not found, trying to install..."
+            if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+                # Debian/Ubuntu-based
+                sudo apt-get update
+                sudo apt-get install -y qemu-utils
+            elif [ -f /etc/redhat-release ]; then
+                # Red Hat-based
+                sudo yum update
+                sudo yum install -y qemu-img
+            elif [ -f /etc/arch-release ]; then
+                # Arch Linux
+                sudo pacman -S qemu-img --noconfirm
+            elif [ -x "$(command -v apk)" ]; then
+                # Alphine-based
+                apk add qemu-img
+            else
+                colorecho "$RED" "Error : We cant find or install qemu-img on your system. Exiting..."
+                exit 1
+            fi
+        fi
+        # Convert the image using qemu-img
+        for vmimg in "${argvmimgs[@]}"; do
+            colorecho "$GREEN" "Generating ${is_img%.img}.$vmimg ..."
+            qemu-img convert -f raw -O $vmimg ${is_img%.img}.img ${is_img%.img}.$vmimg
+            # Compress VM Images
+            if [ "$argxz" = 1 ]; then
+                colorecho "$GREEN" "Compressing ${is_img%.img}.$vmimg (this may take some time, grab a coffee) ..."
+                sudo xz -T 0 ${is_img%.img}.$vmimg
+            fi
+        done
+    fi
+    # Compress Images
     if [ "$argxz" = 1 ]; then
         colorecho "$GREEN" "Compressing Image (this may take some time, grab a coffee) ..."
         sudo xz -T 0 $is_img
