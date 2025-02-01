@@ -70,19 +70,19 @@ jobs:
             case $model in
               radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | nanopi-* | nanopc-* | indiedroid-*)
                 if [[ "$model" == "orangepi"* ]] || [[ "$model" == "nanopi"* ]] || [[ "$model" == "nanopc"* ]] || [[ "$model" == "indiedroid"* ]]; then
-                  bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.11.2/${model}_UEFI_Release_v0.11.2.img"
+                  bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.12.2/${model}_UEFI_Release_v0.12.2.img"
                 elif [[ "$model" == "radxa-rock-5c" ]]; then
-                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/rock-5c_UEFI_Debug_c166f5a.img"
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/rock-5c_UEFI_Debug_d68a1fd.img"
                 elif [[ "$model" == "radxa-cm5" ]]; then
-                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/radxa-cm5_UEFI_Debug_c166f5a.img"
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/radxa-cm5_UEFI_Debug_d68a1fd.img"
                 else
-                  bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.11.2/${model#*-}_UEFI_Release_v0.11.2.img"
+                  bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.12.2/${model#*-}_UEFI_Release_v0.12.2.img"
                 fi
                 bootfw="$(basename $bootfw_url)"
                 args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               fydetab-*)
-                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/fydetab-duo_UEFI_Debug_fc0a209.img"
+                bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.12.2/fydetab-duo_UEFI_Release_v0.12.2.img"
                 bootfw="$(basename $bootfw_url)"
                 args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
