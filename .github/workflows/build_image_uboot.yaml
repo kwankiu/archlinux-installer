@@ -159,7 +159,7 @@ jobs:
              match=BOARD=$(echo "${{ matrix.model_name }}" | awk -F'-' '{print toupper(substr($2,1,1)) substr($2,2)}') \
              link=https://github.com/kwankiu/archlinux-installer/wiki \
              duration=250 \
-             desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
+             desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g') on $(LANG=C TZ= date)"
           # Rename image name to begin with the board model (required to prevent OOWOW hiding the image)
           mv ${{ matrix.model_name }}-archlinux-installer.img.xz $(echo "${{ matrix.model_name }}" | awk -F'-' '{print substr($2,1)}')-khadas-archlinux-installer.img.xz
         continue-on-error: true
