@@ -95,7 +95,7 @@ jobs:
                 ;;
               *)
                 # Generic
-                args="--kernel=linux -b"
+                args="--kernel=linux -b --vmimages=qcow2,vmdk"
                 ;;
             esac
           done
