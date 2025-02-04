@@ -64,7 +64,7 @@ kernel:
       # Linux Raspberry Pi Kernel
       - base: linux-rpi
         description: Linux Raspberry Pi BSP Kernel
-        version: 6.6
+        version: 6.12
         repo: null
         compatible:
           - raspberrypi*
@@ -82,7 +82,7 @@ kernel:
       # Linux Raspberry Pi 16K Kernel
       - base: linux-rpi-16k
         description: (For bcm2712/RPi5 ONLY) Linux Raspberry Pi BSP 16k pagesize Kernel
-        version: 6.6
+        version: 6.12
         repo: null
         compatible:
           - raspberrypi*
