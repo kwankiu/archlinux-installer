@@ -28,7 +28,7 @@ boot:
     - asahi
     - apple*
 
-# Radxa RK3588
+# Radxa RK3588 Family
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
   cmdline: earlycon=uart8250,mmio32,0xfeb50000 console=ttyFIQ0 console=tty1 consoleblank=0 loglevel=0 panic=10 rootwait rw init=/sbin/init rootfstype=ext4 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 irqchip.gicv3_pseudo_nmi=0 switolb=1 coherent_pool=2M
@@ -37,7 +37,7 @@ boot:
     - radxa-cm5*
     - radxa-nx5*
 
-# Radxa Zero 3 and Rock 2A
+# Radxa Zero and Rock Series
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
   cmdline: console=ttyFIQ0,1500000n8 quiet splash loglevel=4 rw earlycon consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1
@@ -46,21 +46,19 @@ boot:
     - radxa-rock-2*
     - radxa-rock-3*
 
-# Khadas Edge & Edge 2
+# Khadas Edge Series
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
   cmdline: earlycon=uart8250,mmio32,0xfeb50000 console=ttyFIQ0 console=tty0 quiet splash irqchip.gicv3_pseudo_nmi=0 lcd_panel=${lcd_panel} fan=auto consoleblank=0 loglevel=0 panic=10 rootwait rw init=/sbin/init rootfstype=ext4 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 switolb=1 coherent_pool=2M
   compatible:
     - khadas-edge*
 
-# Orange Pi and other non-mainline models
+# Orange Pi, Nano Pi & other generic SBCs
 - dtb: /dtbs/%PKGBASE%
   dtb_overlays: null
   cmdline: rw loglevel=3 quiet splash
   compatible:
-    - xunlong-orangepi*
     - orangepi*
-    - rockchip-rk3588*
     - nanopi*
     - nanopc*
     - indiedroid*
@@ -72,10 +70,5 @@ boot:
     - hinlink*
     - mekotronics*
     - stationpc*
-
-# Fydetab Duo
-- dtb: /dtbs/%PKGBASE%/rockchip/rk3588s-tablet-12c-linux.dtb
-  dtb_overlays: null
-  cmdline: rw loglevel=3 quiet splash
-  compatible:
     - fydetab*
+    - buzztv*
