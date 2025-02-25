@@ -26,8 +26,7 @@ jobs:
           # Raspberry Pi
           - raspberrypi
           # Radxa
-          #- radxa-rock-2a
-          #- radxa-rock-2f
+          #- radxa-rock-2 #rock-2f & e20c shares rock-2a u-boot
           - radxa-rock-3a
           - radxa-rock-3b
           - radxa-rock-3c
@@ -60,7 +59,7 @@ jobs:
           - khadas-edge
           - khadas-edge2
           # Orange Pi
-          - orangepi-5 #rockchip-rk3588s-orangepi-5
+          - orangepi-5
           - orangepi-5b
           - orangepi-5-plus
           - orangepi-5-pro
