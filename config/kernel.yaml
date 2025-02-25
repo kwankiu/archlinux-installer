@@ -43,6 +43,9 @@ kernel:
           - generic
           - apple*
           - raspberrypi*
+          - radxa-zero*
+          - radxa-rock-3*
+          - radxa-rock-4*
         recommended: null
         experimental:
           - radxa-rock-5*
@@ -133,6 +136,8 @@ kernel:
         repo:
           - 7Ji
         compatible:
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-nx5*
@@ -175,6 +180,8 @@ kernel:
         repo:
           - 7Ji
         compatible:
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-nx5*
@@ -209,11 +216,14 @@ kernel:
         repo:
           - 7Ji
         compatible:
+          - radxa-rock-2*
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
+          - radxa-cm3*
           - radxa-cm5*
           - radxa-nx5*
           - radxa-zero3*
-          - radxa-rock-2a
         recommended: null
         experimental: null
         firmware:
@@ -235,14 +245,17 @@ kernel:
         repo:
           - rockchip
           - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
+        compatible:
+          - radxa-rock-2*
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
+          - radxa-cm3*
           - radxa-cm5*
           - radxa-nx5*
           - radxa-zero3*
-          - radxa-rock-2a
+        recommended: null
+        experimental: null
         firmware:
           - 8852bu-dkms-git
           - 8852be-dkms-git
@@ -296,8 +309,10 @@ kernel:
         compatible: null
         recommended: null
         experimental:
+          - radxa-zero*
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
-          - radxa-zero3*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*

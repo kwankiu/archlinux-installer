@@ -45,6 +45,9 @@ boot:
     - radxa-zero*
     - radxa-rock-2*
     - radxa-rock-3*
+    - radxa-rock-4*
+    - radxa-rock-pi-4*
+    - radxa-cm3*
 
 # Khadas Edge Series
 - dtb: /dtbs/%PKGBASE%
