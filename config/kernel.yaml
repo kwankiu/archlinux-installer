@@ -200,36 +200,6 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
-      # Joshua's Rockchip Mainline Kernel
-      - base: linux-aarch64-rockchip-joshua-git
-        description: Joshua Linux Mainline kernel with patches for Rockchip/RK3588
-        version: 6.11
-        repo:
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero3*
-          - khadas-edge*
-          - xunlong-orangepi-5*
-          - rockchip-rk3588-orangepi*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-armsom*
-          - friendlyelec-nanopi-r6*
-          - friendlyelec-nanopc-*
-          - friendlyelec-cm*
-        firmware:
-          - linux-firmware-joshua-git
-        graphics:
-          - mesa
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
 ## Maintained by: 7Ji-PKGBUILDs / Radxa ##
 
       # Radxa Rockchip 5.10 Kernel
@@ -313,58 +283,7 @@ kernel:
 
 ## Maintained by: Samuel (kwankiu) / Fyde Innovations ##
 
-      # FydeTab Duo Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-bsp5.10-fydetab
-        description: FydeTab Duo Linux Rockchip BSP Kernel
-        version: 5.10.160
-        repo:
-          - rockchip
-          - 7Ji
-        compatible:
-          - rockchip-rk3588s-tablet-12c-linux
-        recommended:
-          - rockchip-rk3588s-tablet-12c-linux
-        experimental: null
-        firmware: null
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
 ## Maintained by: Samuel (kwankiu) / Armbian ##
-
-      # Armbian's Rockchip BSP6.1 Kernel
-      - base: linux-aarch64-rockchip-bsp6.1-armbian-git
-        description: Armbian Linux Rockchip BSP Kernel
-        version: 6.1-rkr1
-        repo:
-          - rockchip
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - khadas-edge*
-          - xunlong-orangepi-5*
-          - rockchip-rk3588-orangepi*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-armsom*
-        firmware:
-          - linux-firmware-armbian-git
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
 
 ## Maintained by: 7Ji-PKGBUILDs ##
 
