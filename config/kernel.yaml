@@ -43,12 +43,13 @@ kernel:
           - generic
           - apple*
           - raspberrypi*
+        recommended: null
+        experimental:
           - radxa-zero*
           - radxa-rock-3*
           - radxa-rock-4*
-        recommended: null
-        experimental:
           - radxa-rock-5*
+          - khadas-vim*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
@@ -300,20 +301,70 @@ kernel:
 
 ## Maintained by: 7Ji-PKGBUILDs ##
 
+      # Flippy's Kernel for Amlogic
+      - base: linux-aarch64-flippy-git
+        description: Flippy's Kernel aiming to increase usability for Amlogic
+        version: 6.6
+        repo:
+          - 7Ji
+        compatible:
+          - khadas-vim*
+          - radxa-zero
+          - radxa-zero2
+        recommended:
+          - khadas-vim*
+          - radxa-zero
+          - radxa-zero2
+        experimental: null
+        firmware:
+          - linux-aarch64-flippy-git-dtb-amlogic
+          - linux-firmware-amlogic-ophub-git
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg
+        additional:
+          - ampart-git
+
+      # Flippy's Kernel for Allwinner
+      - base: linux-aarch64-flippy-git
+        description: Flippy's Kernel aiming to increase usability for Allwinner
+        version: 6.6
+        repo:
+          - 7Ji
+        compatible:
+          - friendlyarm-nanopi-neo*
+          - xunlong-orangepi-zero*
+        recommended:
+          - friendlyarm-nanopi-neo*
+          - xunlong-orangepi-zero*
+        experimental: null
+        firmware:
+          - linux-aarch64-flippy-git-dtb-allwinner
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg
+        additional: null
+
       # 7Ji's Mainline Kernel
       - base: linux-aarch64-7ji
         description: 7Ji Linux Mainline Kernel with patches for Amlogic & RK3588
         version: lastest stable
         repo:
           - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
+        compatible:
+          - khadas-vim*
+          - khadas-edge
           - radxa-zero*
           - radxa-rock-3*
           - radxa-rock-4*
+        recommended: null
+        experimental:
           - radxa-rock-5*
-          - khadas-edge*
+          - khadas-edge2
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
