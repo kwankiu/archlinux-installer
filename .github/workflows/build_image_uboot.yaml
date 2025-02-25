@@ -28,24 +28,33 @@ jobs:
           # Radxa
           #- radxa-rock-2a
           #- radxa-rock-2f
-          #- radxa-rock-3a
-          #- radxa-rock-3b
-          #- radxa-rock-3c
+          - radxa-rock-3a
+          - radxa-rock-3b
+          - radxa-rock-3c
+          - radxa-rock-pi-4a
+          - radxa-rock-pi-4a-plus
+          - radxa-rock-pi-4b
+          - radxa-rock-pi-4b-plus
+          - radxa-rock-pi-4c
+          - radxa-rock-4c-plus
+          - radxa-rock-4se
           - radxa-rock-5a
           - radxa-rock-5b
           - radxa-rock-5b-plus
           - radxa-rock-5c
           - radxa-rock-5d
           - radxa-rock-5-itx
-          #- radxa-cm3-io
-          #- radxa-cm3-rpi-cm4-io
-          #- radxa-cm3-sodimm-io
+          - radxa-cm3-io
+          - radxa-cm3-rpi-cm4-io
+          - radxa-cm3-sodimm-io
           #- radxa-cm3i-io
           #- radxa-e23
           #- radxa-e25
           - radxa-cm5-io
           - radxa-cm5-rpi-cm4-io
           - radxa-nx5-io
+          #- radxa-zero
+          #- radxa-zero-2pro
           - radxa-zero3
           # Khadas
           - khadas-edge
@@ -97,11 +106,13 @@ jobs:
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
                 # URL to download u-boot for the board
-                if [[ "$model" == "radxa-zero"* ]]; then
-                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
-                else
+                if [[ "$model" == "radxa-rock-5c" ]] || [[ "$model" == "radxa-cm5"* ]] || [[ "$model" == "radxa-nx5"* ]]; then
+                  # RK3582 Patch
                   uboot_url="https://github.com/kwankiu/archlinux-installer/releases/download/kernel/uboot-radxa-rknext_2017.09-1_arm64.deb"
-                  # uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
+                elif [[ "$model" == "radxa-rock-5"* ]] || [[ "$model" == "radxa-rock-2"* ]]; then
+                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
+                else
+                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
                 fi
                 ;;
               khadas-*)
