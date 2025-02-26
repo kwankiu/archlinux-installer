@@ -52,12 +52,14 @@ jobs:
           - radxa-cm5-io
           - radxa-cm5-rpi-cm4-io
           - radxa-nx5-io
-          #- radxa-zero
-          #- radxa-zero-2pro
+          - radxa-zero
+          - radxa-zero-2pro
           - radxa-zero3
           # Khadas
           - khadas-edge
           - khadas-edge2
+          - khadas-vim3
+          - khadas-vim4
           # Orange Pi
           - orangepi-5
           - orangepi-5b
@@ -101,6 +103,10 @@ jobs:
                 # Use different kernel and u-boot path for different boards
                 if [[ "$model" == "radxa-rock"* ]]; then
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
+                elif [[ "$model" == "radxa-rock-2"* ]]; then
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-radxa --bootfirmware=usr/lib/u-boot/${model#*-}"
+                elif [[ "$model" == "radxa-zero" ]] || [[ "$model" == "radxa-zero-2pro" ]]; then
+                  args="--kernel=linux-aarch64-flippy-git --addpkg=linux-firmware-amlogic-ophub-git --bootfirmware=usr/lib/u-boot/${model}"
                 else
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
@@ -115,12 +121,20 @@ jobs:
                 fi
                 ;;
               khadas-*)
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                if [[ "$model" == "khadas-vim"* ]]; then
+                  args="--kernel=linux-aarch64-flippy-git --addpkg=linux-firmware-amlogic-ophub-git --bootfirmware=usr/lib/u-boot"
+                else
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                fi
                 # URL to download u-boot for the board
                 if [ "$model" == "khadas-edge2" ]; then
                     uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.7.3-2017.09_arm64.deb"
                 elif [ "$model" == "khadas-edge" ]; then
                     uboot_url="https://dl.khadas.com/repos/edge/pool/main/l/linux-u-boot-edge-vendor/linux-u-boot-edge-vendor_0.8.3-2017.09_arm64.deb"
+                elif [ "$model" == "khadas-vim3" ]; then
+                    uboot_url="https://dl.khadas.com/repos/vim3/pool/main/l/linux-u-boot-vim3-vendor/linux-u-boot-vim3-vendor_1.7.3-2015.01-5.15_arm64.deb"
+                elif [ "$model" == "khadas-vim4" ]; then
+                    uboot_url="https://dl.khadas.com/repos/vim4/pool/main/l/linux-u-boot-vim4-vendor/linux-u-boot-vim4-vendor_1.7.3-2019.01_arm64.deb"
                 fi
                 ;;
               orangepi-* | nanopi-* | nanopc-* | armsom-*)
