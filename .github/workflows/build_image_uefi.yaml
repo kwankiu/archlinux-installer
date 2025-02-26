@@ -40,7 +40,7 @@ jobs:
           - orangepi-5 #rockchip-rk3588s-orangepi-5
           - orangepi-5plus
           # Khadas
-          #- khadas-edge2
+          - khadas-edge2
           # Nano Pi
           - nanopc-t6
           - nanopi-r6c
