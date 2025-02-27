@@ -786,7 +786,7 @@ network_menu() {
 advanced_menu() {
     menu_header="Advanced Options"
     menu_option_title=""
-    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor (Experimental)" "Russian roulette (Mini Game)" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System")
+    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor (Experimental)" "Install on another disk (Experimental)" "Russian roulette (Mini Game)" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System")
     select_option "${options[@]}"
     selected=$?
 
@@ -830,6 +830,44 @@ advanced_menu() {
         advanced_menu
         ;;
     5)
+        menu_header="Install on another disk"
+        # Get all available disk & remove the booted disk
+        disklist=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
+        for ((i = 0; i < ${#disklist[@]}; i += 3)); do
+            dmodel=${disklist[i + 2]//\\x20/ } # Replace escaped spaces with actual spaces
+            #options+=("/dev/${disklist[i]} - $dmodel (${disklist[i + 1]})")
+        done
+
+        # Get rootfs partition from the current mount point "/"
+        rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+        # Get disk path using rootfs partition path
+        rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
+        rootfs_disk="${rootfs_disk%p*}"
+
+        iwdevlist=()
+        for dev in /sys/class/net/*; do
+            if [ -e "$dev"/wireless ]; then
+                iwdevlist+=("${dev##*/}")
+            fi
+        done
+        select_option "Back" "Specify a disk path" "${iwdevlist[@]}"
+        selected=$?
+
+        case $selected in
+            0)
+                advanced_menu
+                return
+                ;;
+            1)
+                custom_iwdev=$(input "Please specify the disk path (e.g. /dev/mmcblk0): ")
+                ;;
+            *)
+                custom_iwdev="${iwdevlist[selected]}"
+                ;;
+        esac
+        advanced_menu
+        ;;
+    6)
         menu_header="Russian roulette"
         if confirm "Let's play a mini game - Russian roulette?"; then
             alert "Welcome to the Arch Linux Russian Roulette Challenge!"
@@ -851,21 +889,21 @@ advanced_menu() {
         fi
         advanced_menu
         ;;
-    6)
+    7)
         menu_header="Exit to Shell"
         if confirm "Are you sure to exit this installer to shell? \nTips: To re-enter this installer, type > installer < or reboot."; then
             exit 0
         fi
         advanced_menu
         ;;
-    7)
+    8)
         menu_header="Soft Reboot System"
         if confirm "Are you sure to soft reboot this system?."; then
             sudo systemctl soft-reboot 2>/dev/null
         fi
         advanced_menu
         ;;
-    8)
+    9)
         menu_header="Reboot System"
         if confirm "Are you sure to force reboot this system?."; then
             sudo reboot --force
