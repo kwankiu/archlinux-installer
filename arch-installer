@@ -863,7 +863,9 @@ advanced_menu() {
                 custom_disk="/dev/${disklist[((selected - 2) * 3)]}"
                 ;;
         esac
-        if confirm "Are you sure to copy this installer and its bootable system to $custom_disk? The selected disk $custom_disk will be erased, and all data will be lost."; then
+        if [ "$custom_disk" = "$rootfs_disk" ]; then
+            info "Error: Installer is already booted on this disk."
+        elif confirm "Are you sure to copy this installer and its bootable system to $custom_disk? The selected disk $custom_disk will be erased, and all data will be lost."; then
             alert "Formating disk $custom_disk ..."
             sudo dd if=/dev/zero of=$custom_disk bs=1M count=10
             alert "Copying current disk to $custom_disk ..."
