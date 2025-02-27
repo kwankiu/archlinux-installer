@@ -831,26 +831,24 @@ advanced_menu() {
         ;;
     5)
         menu_header="Install on another disk"
-        # Get all available disk & remove the booted disk
-        disklist=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
-        for ((i = 0; i < ${#disklist[@]}; i += 3)); do
-            dmodel=${disklist[i + 2]//\\x20/ } # Replace escaped spaces with actual spaces
-            #options+=("/dev/${disklist[i]} - $dmodel (${disklist[i + 1]})")
-        done
-
         # Get rootfs partition from the current mount point "/"
         rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
         # Get disk path using rootfs partition path
         rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
         rootfs_disk="${rootfs_disk%p*}"
-
-        iwdevlist=()
-        for dev in /sys/class/net/*; do
-            if [ -e "$dev"/wireless ]; then
-                iwdevlist+=("${dev##*/}")
+        # Get all available disk & remove the booted disk
+        diskoption=()
+        disklist=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
+        for ((i = 0; i < ${#disklist[@]}; i += 3)); do
+            dmodel=${disklist[i + 2]//\\x20/ } # Replace escaped spaces with actual spaces
+            if [ "/dev/${disklist[i]}" = "$rootfs_disk" ]; then
+                diskoption+=("(current disk) /dev/${disklist[i]} (${disklist[i + 1]})")
+            else
+                diskoption+=("/dev/${disklist[i]} - $dmodel (${disklist[i + 1]})")
             fi
         done
-        select_option "Back" "Specify a disk path" "${iwdevlist[@]}"
+        # select disk menu
+        select_option "Back" "Specify a disk path" "${diskoption[@]}"
         selected=$?
 
         case $selected in
@@ -859,12 +857,24 @@ advanced_menu() {
                 return
                 ;;
             1)
-                custom_iwdev=$(input "Please specify the disk path (e.g. /dev/mmcblk0): ")
+                custom_disk=$(input "Please specify the disk path (e.g. /dev/mmcblk0): ")
                 ;;
             *)
-                custom_iwdev="${iwdevlist[selected]}"
+                custom_disk="/dev/${disklist[((selected - 2) * 3)]}"
                 ;;
         esac
+        if confirm "Are you sure to copy this installer and its bootable system to $custom_disk ? The selected disk $custom_disk will be erased and all data will be loss."; then
+            alert "Formating disk $custom_disk ..."
+            sudo dd if=/dev/zero of=$custom_disk bs=1M count=100
+            alert "Copying current disk to $custom_disk ..."
+            sudo dd if=$rootfs_disk of=$custom_disk bs=1M
+            alert "Syncing disk $custom_disk ..."
+            sudo sync
+            info "The installer and its bootable system has been copied to $custom_disk, please eject the old disk or select the new disk on your next boot to continue the installation."
+            alert "System will reboot in 10 seconds ..."
+            sleep 10
+            sudo reboot --force
+        fi
         advanced_menu
         ;;
     6)
