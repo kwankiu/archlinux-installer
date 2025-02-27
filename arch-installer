@@ -1215,8 +1215,19 @@ start_installation() {
         return 1
     fi
     # Confirm begin installation
-    menu_header="Installation Summary"
-    menu_confirm_label=("Install" "Cancel")
+    confirm_installation() {
+        menu_header="Installation Summary"
+        menu_confirm_label=("Install" "Cancel")
+        if confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Config\Zn \n Target: $install_target \n \Zb\Z4Localization\Zn \n Language: ${install_language:-"(skipped)"} \n Time Zone: ${install_time_zone:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: $install_username \n Password: *** \n Disable Root Account: $install_disable_root_account \n \Zb\Z4System / Packages\Zn \n Hostname: $install_hostname \n Repositories: ${install_repo:-"(default)"} \n Linux Kernel: $install_kernel \n Firmware: ${install_firmware:-"(none)"} \n Graphics Acceleration: ${install_graphics:-"(none)"} \n Video Acceleration: ${install_video:-"(none)"} \n Kernel Additional: ${install_kernel_additional:-"(none)"} \n Desktop Environment: ${install_desktop_environment:-"(skipped)"} \n Additional Packages: ${install_additional_packages:-"(none)"} \n"; then
+            menu_header=""
+            menu_confirm_label=()
+            return 0
+        else
+            menu_header=""
+            menu_confirm_label=()
+            return 1
+        fi
+    }
     if [ "$install_run_part2" = 1 ] && [ ! "$(id -u)" -eq 0 ]; then
         attempt=0
         until [ "$(read_var "internet_available")" = 1 ] || [ "$attempt" -ge 30 ]; do
@@ -1233,7 +1244,7 @@ start_installation() {
             info "Installation Failed (Unable to connect to the internet)."
             main_menu
         fi
-    elif [ "$install_confirm" = 1 ] || confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Config\Zn \n Target: $install_target \n \Zb\Z4Localization\Zn \n Language: ${install_language:-"(skipped)"} \n Time Zone: ${install_time_zone:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: $install_username \n Password: *** \n Disable Root Account: $install_disable_root_account \n \Zb\Z4System / Packages\Zn \n Hostname: $install_hostname \n Repositories: ${install_repo:-"(default)"} \n Linux Kernel: $install_kernel \n Firmware: ${install_firmware:-"(none)"} \n Graphics Acceleration: ${install_graphics:-"(none)"} \n Video Acceleration: ${install_video:-"(none)"} \n Kernel Additional: ${install_kernel_additional:-"(none)"} \n Desktop Environment: ${install_desktop_environment:-"(skipped)"} \n Additional Packages: ${install_additional_packages:-"(none)"} \n"; then 
+    elif [ "$install_confirm" = 1 ] || confirm_installation; then 
         install_part1 "$installation_file"
     else
         return 1
