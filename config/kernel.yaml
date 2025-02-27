@@ -60,7 +60,8 @@ kernel:
         video:
           - pipewire-jack
           - ffmpeg
-        additional: null
+        additional:
+          - misc/grub
 
 ## Compatible with: Raspberry Pi ##
 
