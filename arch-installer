@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25022701
+installerver=25022702
 
 # Required ACU version
 acuver=0.1.5
@@ -861,7 +861,7 @@ advanced_menu() {
     7)
         menu_header="Soft Reboot System"
         if confirm "Are you sure to soft reboot this system?."; then
-            sudo systemctl soft-reboot
+            sudo systemctl soft-reboot 2>/dev/null
         fi
         advanced_menu
         ;;
@@ -1044,7 +1044,7 @@ install_part1() {
     # Install sudo if not installed
     if ! pacman -Q sudo > /dev/null 2>&1; then
         alert "Installing sudo ..."
-        pacman -Sy sudo glibc --noconfirm
+        pacman -Sy sudo glibc --noconfirm 2>/dev/null
     fi
 
     alert "Removing default account ..."
@@ -1069,7 +1069,7 @@ install_part1() {
     echo "installer $installation_file --part2" | tee -a /home/$install_username/.bashrc
 
     alert "System will reboot now."
-    if ! systemctl soft-reboot; then
+    if ! systemctl soft-reboot 2>/dev/null; then
         if ! reboot --force; then
             alert "Unable to reboot automatically, please reboot your device manually."
         fi
