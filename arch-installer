@@ -1033,6 +1033,8 @@ install_part1() {
             acu rem set asahi https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         fi
     done
+    # Add the misc repository
+    acu rem set misc https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
 
     if [ -n "$install_parallel_downloads" ]; then 
         alert "Configuring pacman (enabling ParallelDownloads)..."
