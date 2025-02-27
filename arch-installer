@@ -869,7 +869,8 @@ advanced_menu() {
             alert "Formating disk $custom_disk ..."
             sudo dd if=/dev/zero of=$custom_disk bs=1M count=10
             alert "Copying current disk to $custom_disk ..."
-            sudo dd if=$rootfs_disk of=$custom_disk bs=1M status=progress
+            # Get the total size of the installer root filesystem then add 1024 MB buffer
+            sudo dd if=$rootfs_disk of=$custom_disk bs=1M status=progress count=$(( $(df --block-size=1M / | awk 'NR==2 {print $2}') + 1024 ))
             alert "Syncing disk $custom_disk ..."
             sudo sync
             info "The installer and its bootable system have been copied to $custom_disk. Please eject the old disk or select the new disk on your next boot to continue the installation."
