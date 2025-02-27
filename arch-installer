@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25022702
+installerver=25022703
 
 # Required ACU version
 acuver=0.1.5
@@ -863,16 +863,16 @@ advanced_menu() {
                 custom_disk="/dev/${disklist[((selected - 2) * 3)]}"
                 ;;
         esac
-        if confirm "Are you sure to copy this installer and its bootable system to $custom_disk ? The selected disk $custom_disk will be erased and all data will be loss."; then
+        if confirm "Are you sure to copy this installer and its bootable system to $custom_disk? The selected disk $custom_disk will be erased, and all data will be lost."; then
             alert "Formating disk $custom_disk ..."
-            sudo dd if=/dev/zero of=$custom_disk bs=1M count=100
+            sudo dd if=/dev/zero of=$custom_disk bs=1M count=10
             alert "Copying current disk to $custom_disk ..."
-            sudo dd if=$rootfs_disk of=$custom_disk bs=1M
+            sudo dd if=$rootfs_disk of=$custom_disk bs=1M status=progress
             alert "Syncing disk $custom_disk ..."
             sudo sync
-            info "The installer and its bootable system has been copied to $custom_disk, please eject the old disk or select the new disk on your next boot to continue the installation."
-            alert "System will reboot in 10 seconds ..."
-            sleep 10
+            info "The installer and its bootable system have been copied to $custom_disk. Please eject the old disk or select the new disk on your next boot to continue the installation."
+            alert "The system will reboot in 5 seconds ..."
+            sleep 5
             sudo reboot --force
         fi
         advanced_menu
