@@ -320,7 +320,6 @@ kernel:
         additional: null
 
 ## Maintained by: Samuel (kwankiu) / Armbian ##
-## Compatible with: Rockchip ##
 
       # Armbian Rockchip BSP6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-armbian-git
