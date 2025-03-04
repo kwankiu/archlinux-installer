@@ -824,6 +824,15 @@ if [ -z "$argmountimg" ]; then
             colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
         fi
 
+        # Trust Firmware, needed for platforms like rockchip rk33xx
+        if [ -f "$argbootfw/trust.img" ]; then
+            sudo dd if="$argbootfw/trust.img" of="$drive" seek=24576 conv=notrunc
+            #if not specified, change boot part start sector to 24MiB
+            if [ -z "$argbootptst" ]; then
+                argbootptst="24MiB"
+            fi
+        fi
+
         sync
     fi
 
