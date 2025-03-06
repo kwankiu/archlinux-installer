@@ -74,7 +74,7 @@ postinstall:
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588-armsom*
-          - fydeos-fydetab*
+          - rockchip-rk3588s-tablet-12c-linux
           - rockchip-rk3588s-tablet-fydetab-linux
         commands: |
           #1 Switch Network Manager to iwd
