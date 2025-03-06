@@ -304,7 +304,7 @@ kernel:
         repo:
           - 7Ji
         compatible:
-          - fydeos-fydetab*
+          - rockchip-rk3588s-tablet-12c-linux
           - rockchip-rk3588s-tablet-fydetab-linux
         recommended: null
         experimental: null
