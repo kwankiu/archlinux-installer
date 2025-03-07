@@ -1030,7 +1030,7 @@ END
 
         if [ -n "$bootdtb" ] && [ "$bootdtb" != "null" ]; then
             if [[ "$bootdtb" == *".dtb" ]]; then
-                echo "    ftd $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+                echo "    fdt $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
             else
                 echo "    devicetreedir $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
             fi
@@ -1045,6 +1045,7 @@ END
 
         if [ ! "$argbootpt" = 1 ]; then
             sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" $boot_mount_dir/extlinux/extlinux.conf
+            sudo sed -i "s| /Image| /boot/Image|" $boot_mount_dir/extlinux/extlinux.conf
             sudo sed -i "s| /initramfs| /boot/initramfs|" $boot_mount_dir/extlinux/extlinux.conf
             sudo sed -i "s| /initrd| /boot/initrd|" $boot_mount_dir/extlinux/extlinux.conf
             sudo sed -i "s| /dtbs| /boot/dtbs|" $boot_mount_dir/extlinux/extlinux.conf
