@@ -752,7 +752,8 @@ fi
 if [ -z "$argkrl" ]; then
     title
     colorecho "$GREEN" "Select a kernel to install:"
-    options=("Linux Aarch64 Mainline Kernel" "(WIP) Install other Kernel from repo")
+    options=("linux-aarch64 - Linux Aarch64 Mainline Kernel")
+    options+=("Enter a kernel package (from adrepo)")
     select_option "${options[@]}"
     answer=$?
 else
