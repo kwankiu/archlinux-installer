@@ -32,7 +32,7 @@ jobs:
           # Radxa
           - radxa-rock-5a
           - radxa-rock-5b
-          #- radxa-rock-5bplus
+          - radxa-rock-5bplus
           - radxa-rock-5c
           - radxa-rock-5-itx
           - radxa-cm5
@@ -46,7 +46,7 @@ jobs:
           - nanopi-r6c
           - nanopi-r6s
           #- nanopi-m6
-          #- nanopc-cm3588-nas
+          - nanopc-cm3588-nas
           # Firefly
           - firefly-roc-rk3588s-pc
           - firefly-itx-3588j
@@ -58,7 +58,7 @@ jobs:
           - mekotronics-r58x
           - mekotronics-r58-mini
           - hinlink-h88k
-          #- fydetab-duo
+          - fydetab-duo
           #- buzztv-powerstation-6
           # Add more models as needed
 
@@ -74,21 +74,17 @@ jobs:
             case $model in
               radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | nanopi-* | nanopc-* | indiedroid-*)
                 if [[ "$model" == "orangepi"* ]] || [[ "$model" == "nanopi"* ]] || [[ "$model" == "nanopc"* ]] || [[ "$model" == "indiedroid"* ]]; then
-                  bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.12.2/${model}_UEFI_Release_v0.12.2.img"
-                elif [[ "$model" == "radxa-rock-5c" ]]; then
-                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/rock-5c_UEFI_Debug_d68a1fd.img"
-                elif [[ "$model" == "radxa-cm5" ]]; then
-                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/radxa-cm5_UEFI_Debug_d68a1fd.img"
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v12/${model}_UEFI_Release_v12.img"
                 else
-                  bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.12.2/${model#*-}_UEFI_Release_v0.12.2.img"
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v12/${model#*-}_UEFI_Release_v12.img"
                 fi
                 bootfw="$(basename $bootfw_url)"
                 args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               fydetab-*)
-                bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.12.2/fydetab-duo_UEFI_Release_v0.12.2.img"
+                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v12/fydetab-duo_UEFI_Release_v12.img"
                 bootfw="$(basename $bootfw_url)"
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-fydetab-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               asahi)
                 args="--kernel=linux-asahi --addpkg=linux-asahi-loader -e --bootpartstart=1MB --bootpartend=201MB"
