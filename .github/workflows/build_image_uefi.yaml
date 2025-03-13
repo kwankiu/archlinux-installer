@@ -84,7 +84,7 @@ jobs:
               fydetab-*)
                 bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v12/fydetab-duo_UEFI_Release_v12.img"
                 bootfw="$(basename $bootfw_url)"
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-fydetab-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-fydetab-git --addpkg=linux-firmware-joshua-git,firmware-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               asahi)
                 args="--kernel=linux-asahi --addpkg=linux-asahi-loader -e --bootpartstart=1MB --bootpartend=201MB"
