@@ -331,10 +331,11 @@ add_wifi_pkg() {
 
 # Download additional packages to $compiled_pkg_folder
 add_pkg() {
-    colorecho "$GREEN" "Downloading $argaddpkg ..."
-    echo -e "y" | ghrel_packages $argaddpkg
+    local pkgtoadd=$1
+    colorecho "$GREEN" "Downloading $pkgtoadd ..."
+    echo -e "y" | ghrel_packages $pkgtoadd
 
-    pkg_tar=($(echo -e "n" | ghrel_packages $argaddpkg | grep .*pkg.*))
+    pkg_tar=($(echo -e "n" | ghrel_packages $pkgtoadd | grep .*pkg.*))
 
     for pkg in "${pkg_tar[@]}"; do
         sudo cp -r "$pkg" "${root_mount_dir}${compiled_pkg_dir}"
@@ -490,7 +491,7 @@ for arg in "$@"; do
         echo "--size=<image_size> : Set disk image size (default is 4G)."
         echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
         echo "--kernel=<kernel_name> : Set kernel package to get from repo."
-        echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
+        echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot, you may specify multiple packages seperated by comma."
         echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
         echo "--model=<model> : Set a device model to generate boot config for."
         echo "--bootfirmware=<path> : Flash a boot firmware to the target disk or image. The specified path must be .img file or a directory that contains idbloader.img and uboot.itb"
@@ -1113,8 +1114,14 @@ fi
 # Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
 sudo mkdir -p "${root_mount_dir}${compiled_pkg_dir}"
 add_wifi_pkg
-if [ ! -z "$argaddpkg" ]; then
-    add_pkg
+if [ -n "$argaddpkg" ]; then
+    # Split the input by commas
+    IFS=',' read -r -a argaddpkg <<< "$argaddpkg"
+    # Loop through each package
+    for pkg in "${argaddpkg[@]}"; do
+        pkg=$(echo "$pkg" | xargs) # Trim whitespace
+        add_pkg "$pkg"
+    done
 fi
 ls "${root_mount_dir}${compiled_pkg_dir}" #DEBUG
 # Remove the temporary directory
