@@ -311,9 +311,7 @@ kernel:
         firmware:
           - linux-firmware-joshua-git
         graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
+          - mesa
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
