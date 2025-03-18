@@ -34,7 +34,7 @@ kernel:
 ## Maintained by: ALARM ##
 ## Compatible with: Generic / All ##
 
-      # Linux Mainline Kernel
+      # Linux Stable Kernel
       - base: linux-aarch64
         description: Linux Stable Kernel
         version: latest stable
@@ -45,6 +45,35 @@ kernel:
           - raspberrypi*
         recommended: null
         experimental:
+          - radxa-zero*
+          - radxa-rock-3*
+          - radxa-rock-4*
+          - radxa-rock-5*
+          - khadas-vim*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
+        firmware: null
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg
+        additional:
+          - misc/grub
+
+      # Linux Mainline Kernel
+      - base: linux-aarch64-rc
+        description: Linux Mainline Kernel
+        version: latest mainline
+        repo: null
+        compatible: null
+        recommended: null
+        experimental:
+          - generic
+          - apple*
+          - raspberrypi*
           - radxa-zero*
           - radxa-rock-3*
           - radxa-rock-4*
