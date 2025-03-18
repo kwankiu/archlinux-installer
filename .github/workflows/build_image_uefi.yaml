@@ -73,7 +73,7 @@ jobs:
             echo "Building image for $model"
             case $model in
               radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | nanopi-* | nanopc-* | indiedroid-*)
-                if [[ "$model" == "orangepi"* ]] || [[ "$model" == "nanopi"* ]] || [[ "$model" == "nanopc"* ]] || [[ "$model" == "indiedroid"* ]]; then
+                if [[ "$model" == "orangepi"* ]] || [[ "$model" == "nanopi"* ]] || [[ "$model" == "nanopc"* ]] || [[ "$model" == "indiedroid"* ]] || [[ "$model" == "radxa-cm"* ]]; then
                   bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.0/${model}_UEFI_Release_v1.0.img"
                 else
                   bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.0/${model#*-}_UEFI_Release_v1.0.img"
