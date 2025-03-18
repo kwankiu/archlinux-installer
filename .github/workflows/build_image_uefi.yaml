@@ -74,15 +74,15 @@ jobs:
             case $model in
               radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | nanopi-* | nanopc-* | indiedroid-*)
                 if [[ "$model" == "orangepi"* ]] || [[ "$model" == "nanopi"* ]] || [[ "$model" == "nanopc"* ]] || [[ "$model" == "indiedroid"* ]]; then
-                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v12/${model}_UEFI_Release_v12.img"
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.0/${model}_UEFI_Release_v1.0.img"
                 else
-                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v12/${model#*-}_UEFI_Release_v12.img"
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.0/${model#*-}_UEFI_Release_v1.0.img"
                 fi
                 bootfw="$(basename $bootfw_url)"
                 args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
               fydetab-*)
-                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v12/fydetab-duo_UEFI_Release_v12.img"
+                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.0/fydetab-duo_UEFI_Release_v1.0.img"
                 bootfw="$(basename $bootfw_url)"
                 args="--kernel=linux-aarch64-rockchip-bsp6.1-fydetab-git --addpkg=linux-firmware-joshua-git,firmware-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
                 ;;
