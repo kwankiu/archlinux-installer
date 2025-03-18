@@ -924,6 +924,14 @@ sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
 # Copy kernel files
 if [ "$argkrl" = "linux" ]; then
 
+    # Install / Update to Latest Kernel
+    colorecho "$GREEN" "Installing latest linux-aarch64 ..."
+    sudo arch-chroot $root_mount_dir /bin/bash <<END
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+    pacman -Sy linux-aarch64 linux-aarch64-headers linux-firmware --needed --noconfirm
+END
+
     if [ "$argbootpt" = 1 ]; then
         # Copy contents to boot partition
         colorecho "$GREEN" "Copying Boot Partition ..."
