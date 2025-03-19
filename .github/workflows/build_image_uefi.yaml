@@ -78,13 +78,11 @@ jobs:
                 else
                   bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.0/${model#*-}_UEFI_Release_v1.0.img"
                 fi
-                bootfw="$(basename $bootfw_url)"
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git -b --bootpartstart=9MiB --bootfirmware=firmware.img"
                 ;;
               fydetab-*)
-                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.0/fydetab-duo_UEFI_Release_v1.0.img"
-                bootfw="$(basename $bootfw_url)"
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-fydetab-git --addpkg=linux-firmware-joshua-git,firmware-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
+                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.0/${model}_UEFI_Release_v1.0.img"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-fydetab-git --addpkg=linux-firmware-joshua-git,firmware-fydetab -b --bootpartstart=9MiB --bootfirmware=firmware.img"
                 ;;
               asahi)
                 args="--kernel=linux-asahi --addpkg=linux-asahi-loader -e --bootpartstart=1MB --bootpartend=201MB"
@@ -103,7 +101,7 @@ jobs:
         env:
           bootfw_url: ${{ env.BOOTFW_URL }}
         run: |
-          curl -LJO ${bootfw_url}
+          curl -L ${bootfw_url} -o firmware.img
           ls -l
 
       - name: Build Image
