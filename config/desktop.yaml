@@ -30,17 +30,6 @@ desktop:
 #          # This can be multiple lines
 #          # This is mostly used for post install, which is optional
 
-      # Knome
-      - package_name: knome
-        pretty_name: Knome
-        category: Desktop
-        description: The next operating system for your computer
-        compatible: null
-        packages:
-          - knome
-        commands: |
-          while true; do echo "Happy April's Fool"; done
-
       # Gnome (Full)
       - package_name: gnome-full
         pretty_name: Gnome (Full)
