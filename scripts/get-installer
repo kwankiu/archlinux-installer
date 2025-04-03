@@ -90,9 +90,11 @@ if [ -n "$install_target" ]; then
             ;;
         rockchip-rk3588*)
             install_target="${install_target#*-*-}"
-            if [[ "$install_target" == *"12c"* ]] || [[ "${tags[j]}" == *"fydetab"* ]]; then
+            case "$install_target" in
+            *12c*|*fydetab*)
                 install_target="fydetab-duo"
-            fi
+                ;;
+            esac
             ;;
         friendlyelec*)
             install_target="${install_target#*-}"
@@ -102,11 +104,14 @@ if [ -n "$install_target" ]; then
             exit 1
             ;;
     esac
-    if [[ "$release_tag" == "UEFI"* ]]; then
+    case "$release_tag" in
+    UEFI*)
         image_url="https://github.com/${gh_repo}/releases/download/${release_tag}/${install_target}${file_suffix}-UEFI${file_extension}"
-    else
+        ;;
+    *)
         image_url="https://github.com/${gh_repo}/releases/download/${release_tag}/${install_target}${file_suffix}${file_extension}"
-    fi
+        ;;
+    esac
     curl -LO $image_url
 elif [ -n "$install_disk" ]; then
     # Download generic image
