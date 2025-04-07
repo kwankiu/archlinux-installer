@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25022704
+installerver=25040701
 
 # Required ACU version
 acuver=0.1.5
@@ -995,7 +995,10 @@ check_installer_updates() {
             select_option "${options[@]}"
             answer=$?
             if [ ! "$answer" = 0 ]; then
-                branch="${options[answer]}"
+                new_branch="${options[answer]}"
+                remote_installer_url="${remote_installer_url//$branch/$new_branch}"
+                remote_installer_config_url="${remote_installer_config_url//$branch/$new_branch}"
+                branch=$new_branch
             fi
             check_installer_updates --util
             ;;
