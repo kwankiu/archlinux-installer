@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25040701
+installerver=25040702
 
 # Required ACU version
 acuver=0.1.5
@@ -786,7 +786,7 @@ network_menu() {
 advanced_menu() {
     menu_header="Advanced Options"
     menu_option_title=""
-    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor (Experimental)" "Install on another disk (Experimental)" "Russian roulette (Mini Game)" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System")
+    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor" "Install on another disk (Experimental)" "Russian roulette (Mini Game)" "Exit to Shell" "Soft Reboot System" "Reboot System")
     select_option "${options[@]}"
     selected=$?
 
@@ -831,6 +831,7 @@ advanced_menu() {
         ;;
     5)
         menu_header="Install on another disk"
+        info "This feature is currently experimental, it copies the entire booted disk to the selected disk."
         # Get rootfs partition from the current mount point "/"
         rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
         # Get disk path using rootfs partition path
@@ -904,15 +905,19 @@ advanced_menu() {
         ;;
     7)
         menu_header="Exit to Shell"
-        if confirm "Are you sure to exit this installer to shell? \nTips: To re-enter this installer, type > installer < or reboot."; then
+        if confirm "Are you sure to exit this installer to shell?\n\nTips:\nTo re-enter this installer, type > installer < or reboot.\nThe default shell login is usually root/root"; then
             exit 0
         fi
         advanced_menu
         ;;
     8)
         menu_header="Soft Reboot System"
-        if confirm "Are you sure to soft reboot this system?."; then
-            sudo systemctl soft-reboot 2>/dev/null
+        if systemctl --help | grep -q "soft-reboot"; then
+            if confirm "Are you sure to soft reboot this system?."; then
+                sudo systemctl soft-reboot 2>/dev/null
+            fi
+        else
+            info "Soft reboot is not supported on this system. Please use regular reboot instead."
         fi
         advanced_menu
         ;;
