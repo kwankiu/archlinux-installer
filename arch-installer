@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25041502
+installerver=25041503
 
 # Required ACU version
 acuver=0.1.5
@@ -103,7 +103,7 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 #dialog() { return 1; }
 
 # Reboot override to prevent accidental reboot when debugging
-#reboot() { alert "The reboot command is disabled. You may need to reboot manually."; }
+#reboot() { info "The reboot command is disabled. You may need to reboot manually."; }
 
 # Ping server list for internet check
 #ping_servers=("invalid.example") # debug test case: simulate no internet 
@@ -1701,7 +1701,7 @@ main_menu() {
     0)
         # Ensure running as root
         if [ ! "$(id -u)" -eq 0 ]; then
-            alert "Error: Please run this installer as root to continue."
+            info "Error: Please run this installer as root to continue."
             exit 1
         fi
         # Development Build Reminder
