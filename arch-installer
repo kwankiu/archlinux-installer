@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25040702
+installerver=25041501
 
 # Required ACU version
 acuver=0.1.5
@@ -1208,7 +1208,12 @@ install_part2() {
     ################################################################
     # Full System Upgrade
     alert "Performing Full System Upgrade ..."
-    sudo pacman -Syyu --noconfirm
+    count=1
+    while ! sudo pacman -Syu --noconfirm; do
+        alert "Retrying ($count) Full System Upgrade ..."
+        ((count++))
+        ((count > 3)) && break
+    done
 
     ################################################################
     # Install desktop environment
