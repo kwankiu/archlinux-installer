@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25041503
+installerver=25041504
 
 # Required ACU version
 acuver=0.1.5
@@ -968,6 +968,7 @@ check_installer_updates() {
                     sudo curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
                     sudo chmod +x /usr/bin/acu
                     echo "Updating Installer ACU Config ..."
+                    sudo mkdir -p /usr/lib/installer/.acu/config
                     sudo curl -o /usr/lib/installer/.acu/config/config.yaml -L "$remote_installer_config_url"
                     # Reboot
                     alert "Installer updated. System will reboot now."
