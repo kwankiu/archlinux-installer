@@ -122,22 +122,12 @@ elif [ -n "$install_disk" ]; then
 else
     # Download the Installer to current root
     colorecho "$GREEN" "Downloading the Installer to current root ..."
-    # Download the Installer
-    curl -LO https://raw.githubusercontent.com/kwankiu/archlinux-installer/${release_tag}/arch-installer
-    sudo mv arch-installer /usr/bin/installer
-    # Download ACU
-    curl -LO https://raw.githubusercontent.com/kwankiu/acu/${release_tag}/acu
-    sudo mv acu /usr/bin/acu
+    colorecho "$GREEN" "Tips: To start the installer, run 'installer' (as root)."
     # Download growpart
-    curl -LO https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart
-    sudo mv growpart /usr/bin/growpart
-    # Ensure execute permission
-    sudo chmod +x /usr/bin/*
-    # Download Installer Configuration File
-    sudo mkdir -p /usr/lib/installer/.acu/config
-    curl -LO https://raw.githubusercontent.com/kwankiu/archlinux-installer/${release_tag}/config/acu_config.yaml
-    sudo mv acu_config.yaml /usr/lib/installer/.acu/config/config.yaml
-    colorecho "$GREEN" "To start the installer, run 'installer' (as root)."
+    sudo curl -L https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart -o /usr/bin/growpart
+    sudo chmod +x /usr/bin/growpart
+    # Download the Installer
+    bash <(curl https://raw.githubusercontent.com/kwankiu/archlinux-installer/${release_tag}/arch-installer) --reinstall
 fi
 
 if [ -f "/opt/oowow" ]; then
