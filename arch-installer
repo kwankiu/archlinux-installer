@@ -102,9 +102,6 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 # Dialog override for debugging CLI Fallback
 #dialog() { return 1; }
 
-# Reboot override to prevent accidental reboot when debugging
-#reboot() { info "The reboot command is disabled. You may need to reboot manually."; }
-
 # Ping server list for internet check
 #ping_servers=("invalid.example") # debug test case: simulate no internet 
 #ping_servers=("0.0.0.0") # debug test case: bypass internet
