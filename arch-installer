@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25041504
+installerver=25042801
 
 # Required ACU version
 acuver=0.1.5
@@ -62,6 +62,9 @@ de_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/c
 
 # Full Post Install list
 postinstall_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/postinstall.yaml"
+
+# (Optional) Update Mirrorlist URL
+mirrorlist_url="https://raw.githubusercontent.com/1usOS/PKGBUILDs/refs/heads/misc/pacman-mirrorlist/mirrorlist"
 
 # Ping server list for internet check
 # ping Google, Cloudflare and China Mobile DNS (for China users)
@@ -656,6 +659,18 @@ get_ssid() {
         echo "Disconnected"
     fi
 }
+
+mirrorlist_editor() {
+    if [ ! -f "/etc/pacman.d/mirrorlist.bak" ] && [ -n "$mirrorlist_url" ] && confirm "Would you like to update the mirrorlist?"; then
+        alert "Edit Mirrorlist - Downloading new mirrorlist ..."
+        sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+        curl -LO $mirrorlist_url
+        sudo mv mirrorlist /etc/pacman.d/mirrorlist
+    fi
+    alert "Edit Mirrorlist - Starting nano editor ..."
+    sudo nano /etc/pacman.d/mirrorlist
+}
+
 network_menu() {
     # Get Internet Status
     internet_available=$(read_var "internet_available")
@@ -771,14 +786,7 @@ network_menu() {
         ;;
     6)
         menu_header="Edit Mirrorlist"
-        if [ ! -f "/etc/pacman.d/mirrorlist.bak" ]; then
-            alert "Edit Mirrorlist - Downloading new mirrorlist ..."
-            sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-            curl -LO https://raw.githubusercontent.com/1usOS/PKGBUILDs/refs/heads/misc/pacman-mirrorlist/mirrorlist
-            sudo mv mirrorlist /etc/pacman.d/mirrorlist
-        fi
-        alert "Edit Mirrorlist - Starting nano editor ..."
-        sudo nano /etc/pacman.d/mirrorlist
+        mirrorlist_editor
         network_menu
         ;;
     esac
@@ -1022,47 +1030,51 @@ check_installer_updates() {
 
 ################################################################
 # Installation - Part 1 (in root)
-add_boot_part_fstab() {
-    alert "Updating fstab ..."
-    # Get the boot partition before rootfs partition (rootfs_part - 1)
-    boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk -v partnum=${rootfs_partition: -1} 'NR==partnum{print $1}')
-    # Check if the boot_partition is not empty
-    if [ -z "$boot_partition" ]; then
-        echo "Unable to determine boot partition on $rootfs_disk"
-        exit 1
-    fi
-
-    # Add the line to /etc/fstab
-    if [ -d "/boot/efi" ]; then
-        new_line="$boot_partition /boot/efi vfat dmask=000,fmask=0111,user 0 0"
-    else
-        new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
-    fi
-
-    # Check if the line already exists in /etc/fstab
-    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
-        echo "boot partition seems already configured in /etc/fstab to manage by system."
-    else
-        # Add the line to /etc/fstab
-        echo "$new_line" >> /etc/fstab
-        # Check if the addition was successful
-        if [ $? -eq 0 ]; then
-            cat /etc/fstab
-            echo "Line added to /etc/fstab successfully"
-        else
-            echo "Error adding line to /etc/fstab"
-        fi
-    fi
-}
-
 install_part1() {
     local installation_file=$1
     menu_header="Installation (Part 1)"
 
+    ################################################################
+    # Configure boot partition auto mount
+    add_boot_part_fstab() {
+        alert "Updating fstab ..."
+        # Get the boot partition before rootfs partition (rootfs_part - 1)
+        boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk -v partnum=${rootfs_partition: -1} 'NR==partnum{print $1}')
+        # Check if the boot_partition is not empty
+        if [ -z "$boot_partition" ]; then
+            echo "Unable to determine boot partition on $rootfs_disk"
+            exit 1
+        fi
+
+        # Add the line to /etc/fstab
+        if [ -d "/boot/efi" ]; then
+            new_line="$boot_partition /boot/efi vfat dmask=000,fmask=0111,user 0 0"
+        else
+            new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
+        fi
+
+        # Check if the line already exists in /etc/fstab
+        if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+            echo "boot partition seems already configured in /etc/fstab to manage by system."
+        else
+            # Add the line to /etc/fstab
+            echo "$new_line" >> /etc/fstab
+            # Check if the addition was successful
+            if [ $? -eq 0 ]; then
+                cat /etc/fstab
+                echo "Line added to /etc/fstab successfully"
+            else
+                echo "Error adding line to /etc/fstab"
+            fi
+        fi
+    }
+
+    ################################################################
     # Set Hostname
     alert "Setting hostname ..."
     hostnamectl set-hostname $install_hostname
 
+    ################################################################
     # Get rootfs partition from the current mount point "/"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
@@ -1070,19 +1082,23 @@ install_part1() {
     rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
     rootfs_disk="${rootfs_disk%p*}"
 
+    # Configure boot partition auto mount if not mounted
     if [ ! -d "/boot/extlinux" ] && [ ! -d "/boot/EFI" ] && [ ! -d "/boot/efi/EFI" ]; then
         add_boot_part_fstab
     fi
 
+    # Expand system partition to use unallocated space
     alert "Resizing File System ..."
     growpart $rootfs_disk "${rootfs_partition: -1}" # Extract partition number from the last digit
     resize2fs $rootfs_partition
 
+    ################################################################
     # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
     alert "Configuring pacman (populate alarm keys) ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
 
+    # Add additional pacman repositories
     alert "Configuring pacman (adding repositories) ..."
     local install_repo_list=($install_repo)
     for ((i = 0; i < ${#install_repo_list[@]}; i++)); do
@@ -1092,43 +1108,96 @@ install_part1() {
             acu rem set rockchip https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         elif [ "${install_repo_list[i]}" = "asahi" ]; then
             acu rem set asahi https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
+        elif [ "${install_repo_list[i]}" = "misc" ]; then
+            acu rem set misc https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         fi
     done
-    # Add the misc repository
-    acu rem set misc https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
 
+    # Sort and update pacman mirrors
+    if [ "$install_sort_mirrors" = "fastest" ]; then
+        alert "Configuring mirrors (rank fastest mirrors) ..."
+        # Backup existing pacman mirrorlist
+        cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+        # Check if rate-mirrors command exists
+        if [ ! -x "$(command -v rate-mirrors)" ]; then
+            alert "rate-mirrors not found. Falling back to random sorting."
+            install_sort_mirrors="random"
+        else
+            # Rank and update mirrorlist
+            for i in {1..3}; do
+                if output=$(rate-mirrors --allow-root archarm); then
+                    # Log ranking results
+                    echo "$output" | grep -E '^#' | tee /etc/pacman.d/mirrorlist.log
+                    # Save ranked mirrors
+                    (echo -e "#\n# Arch Linux ARM repository mirrorlist\n# Ranked with rate-mirrors on $(date +'%Y-%m-%d %H:%M:%S')\n# Log of ranking results is located at /etc/pacman.d/mirrorlist.log\n#" && echo "$output" | grep -vE '^#') | tee /etc/pacman.d/mirrorlist
+                    break
+                else
+                    alert "Retrying ($i) on rank fastest mirrors..."
+                fi
+            done
+            # Check if the command failed after all attempts
+            if [[ $i -eq 3 ]]; then
+                alert "Failed to rank mirrors after 3 attempts. Falling back to random sorting."
+                install_sort_mirrors="random"
+                # Restore mirrorlist
+                cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
+            fi
+        fi
+    fi
+
+    if [ "$install_sort_mirrors" = "random" ]; then
+        alert "Configuring mirrors (randomly sort mirrors) ..."
+        # Backup existing pacman mirrorlist
+        cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+        # Uncomment all mirrors
+        sed -i 's/^# *\(Server[ ]*=[ ]*\)/\1/' /etc/pacman.d/mirrorlist
+        # Remove all comments, spaces and empty lines
+        sed -i 's/^#.*//; s/^[[:space:]]*//; /^$/d' /etc/pacman.d/mirrorlist
+        # Add header and randomly sort mirrors
+        (echo -e "#\n# Arch Linux ARM repository mirrorlist\n# Randomly arranged on $(date +'%Y-%m-%d %H:%M:%S')\n#\n\n" && shuf /etc/pacman.d/mirrorlist) | tee /etc/pacman.d/mirrorlist > /dev/null
+    fi
+
+    # Configure Parallel Downloads
     if [ -n "$install_parallel_downloads" ]; then 
         alert "Configuring pacman (enabling ParallelDownloads)..."
         sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $install_parallel_downloads/" /etc/pacman.conf
     fi
 
+    ################################################################
     # Install sudo if not installed
     if ! pacman -Q sudo > /dev/null 2>&1; then
         alert "Installing sudo ..."
         pacman -Sy sudo glibc --noconfirm 2>/dev/null
     fi
 
+    # Remove default user accounts
     alert "Removing default account ..."
     acu user remove alarm
 
+    # Setup new user account
     alert "Setting up new user account ..."
     acu user add "$install_username" "$install_password"
     acu user manage "$install_username" sudopw
     acu user manage "$install_username" rebootpw
 
+    # Lock root account
     if [ "$install_disable_root_account" = 1 ]; then
         passwd -l root
     fi
 
+    ################################################################
+    # Remove installer auto start service
     if [ -e "/etc/systemd/system/installer.service" ]; then 
         systemctl disable installer.service
         rm -rf /etc/systemd/system/installer.service
     fi
 
+    # Configure installation part 2 auto run
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $install_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo "installer $installation_file --part2" | tee -a /home/$install_username/.bashrc
 
+    # Reboot to continue as user
     alert "System will reboot now."
     if ! systemctl soft-reboot 2>/dev/null; then
         if ! reboot --force; then
@@ -1561,6 +1630,31 @@ installer_menu() {
     selected_de=${desktop_package_name[de_options]}
 
     ################################################################
+    # Manage Mirrors
+
+    menu_header="Manage Mirrors"
+    menu_option_title="This determines which server to use when downloading packages"
+    options=("Find fastest mirrors (Recommended)")
+    #options=("Sort mirrors by country")
+    options+=("Use random mirrors")
+    options+=("Use default/current mirrors")
+    options+=("Edit mirrors maually")
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = 0 ]; then
+        sortmirrors="fastest"
+    elif [ "$choice" = 1 ]; then
+        sortmirrors="random"
+    else
+        sortmirrors=""
+    fi
+
+    if [ "$choice" = 3 ]; then
+        mirrorlist_editor
+    fi
+
+    ################################################################
     # Select additional packages #TODO
     #menu_header="Additional Packages"
     #menu_option_title="Select additional packages to install :"
@@ -1637,6 +1731,10 @@ installer_menu() {
     # Pacman Repositories
     if [ -n "$pacmanrepo" ] && [ "$pacmanrepo" != "null" ]; then
         echo "  repo: $pacmanrepo" | tee -a "$install_config" >/dev/null
+    fi
+    # Sort Mirrors
+    if [ -n "$sortmirrors" ]; then
+        echo "  sort_mirrors: $sortmirrors" | tee -a "$install_config" >/dev/null
     fi
     # Pacman ParallelDownloads
     if [ -n "$prldownloads" ]; then
