@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25042801
+installerver=25042802
 
 # Required ACU version
 acuver=0.1.5
@@ -1122,6 +1122,8 @@ install_part1() {
         if [ ! -x "$(command -v rate-mirrors)" ]; then
             alert "rate-mirrors not found. Falling back to random sorting."
             install_sort_mirrors="random"
+            # Restore mirrorlist
+            cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
         else
             # Rank and update mirrorlist
             for i in {1..3}; do
