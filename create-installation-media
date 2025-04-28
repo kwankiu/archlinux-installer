@@ -314,7 +314,7 @@ add_pkg() {
         pkg_tar=($(echo -e "n" | ghrel_packages $pkgtoadd | grep .*pkg.*))
     else
         echo -e "y" | archarm_packages $pkgtoadd $pkgrepo
-        pkg_tar+=($(echo -e "n" | archarm_packages $pkgtoadd $pkgrepo | grep .*pkg.*))
+        pkg_tar=($(echo -e "n" | archarm_packages $pkgtoadd $pkgrepo | grep .*pkg.*))
     fi
 
     for pkg in "${pkg_tar[@]}"; do
