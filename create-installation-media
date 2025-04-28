@@ -1107,6 +1107,8 @@ add_pkg dialog core
 add_pkg pcsclite extra
 add_pkg duktape extra
 add_pkg polkit-1 extra
+add_pkg glibc-2 core
+add_pkg "sudo" core
 add_pkg rate-mirrors
 if [ -n "$argaddpkg" ]; then
     # Split the input by commas
