@@ -21,9 +21,11 @@
 # Define main / dev branch
 branch=dev
 
-# URL for Kernel and Arch Linux Rootfs
-adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/tags/kernel"
+# Arch Linux Rootfs URL
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
+
+# Custom Binary Repo URL for building the installer or images
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/tags/kernel"
 
 # Required ACU version
 acuver=0.1.5
@@ -301,41 +303,19 @@ confirm_disk() {
 ################################################################
 # Functions to Get Packages
 
-# Download wifi related packages to $compiled_pkg_folder
-add_wifi_pkg() {
-    pkg_tar=()
-
-    echo -e "y" | archarm_packages wpa_supplicant-2 core
-    pkg_tar+=($(echo -e "n" | archarm_packages wpa_supplicant-2 core | grep .*pkg.*))
-
-    echo -e "y" | archarm_packages dialog core
-    pkg_tar+=($(echo -e "n" | archarm_packages dialog core | grep .*pkg.*))
-
-    echo -e "y" | archarm_packages pcsclite extra
-    pkg_tar+=($(echo -e "n" | archarm_packages pcsclite extra | grep .*pkg.*))
-
-    echo -e "y" | archarm_packages duktape extra
-    pkg_tar+=($(echo -e "n" | archarm_packages duktape extra | grep .*pkg.*))
-
-    echo -e "y" | archarm_packages polkit-1 extra
-    pkg_tar+=($(echo -e "n" | archarm_packages polkit-1 extra | grep .*pkg.*))
-
-    # copy package
-    for pkg in "${pkg_tar[@]}"; do
-        sudo cp -r "$pkg" "${root_mount_dir}${compiled_pkg_dir}"
-    done
-
-    # Clean up
-    sudo rm -rf "${pkg_tar[@]}"
-}
-
 # Download additional packages to $compiled_pkg_folder
 add_pkg() {
     local pkgtoadd=$1
+    local pkgrepo=$2
     colorecho "$GREEN" "Downloading $pkgtoadd ..."
-    echo -e "y" | ghrel_packages $pkgtoadd
 
-    pkg_tar=($(echo -e "n" | ghrel_packages $pkgtoadd | grep .*pkg.*))
+    if [ -z "$pkgrepo" ] || [ "$pkgrepo" = "adrepo" ]; then
+        echo -e "y" | ghrel_packages $pkgtoadd
+        pkg_tar=($(echo -e "n" | ghrel_packages $pkgtoadd | grep .*pkg.*))
+    else
+        echo -e "y" | archarm_packages $pkgtoadd $pkgrepo
+        pkg_tar+=($(echo -e "n" | archarm_packages $pkgtoadd $pkgrepo | grep .*pkg.*))
+    fi
 
     for pkg in "${pkg_tar[@]}"; do
         sudo cp -r "$pkg" "${root_mount_dir}${compiled_pkg_dir}"
@@ -389,10 +369,10 @@ ghrel_packages() {
         dgpkg=$1
     fi
 
-    ghrel_url=("$adrepo_url")
+    repo_url=("$adrepo_url")
     dgpkg_list=()
 
-    for which_url in "${ghrel_url[@]}"; do
+    for which_url in "${repo_url[@]}"; do
         colorecho "$GREEN" "Fetching $which_url ..."
         dgpkg_list+=($(curl -s "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
     done
@@ -434,10 +414,10 @@ archarm_packages() {
         dgpkg=$1
     fi
 
-    ghrel_url=("http://mirror.archlinuxarm.org/aarch64/$2")
+    repo_url=("http://mirror.archlinuxarm.org/aarch64/$2")
     dgpkg_list=()
 
-    for which_url in "${ghrel_url[@]}"; do
+    for which_url in "${repo_url[@]}"; do
         colorecho "$GREEN" "Fetching $which_url ..."
         dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o "^${dgpkg}.*")
     done
@@ -492,7 +472,7 @@ for arg in "$@"; do
         echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
         echo "--kernel=<kernel_name> : Set kernel package to get from repo."
         echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot, you may specify multiple packages seperated by comma."
-        echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
+        echo "--adrepourl=<url> : Use a custom binary repo instead of the default one, it overrides the default adrepo_url, used for building the installer or images."
         echo "--model=<model> : Set a device model to generate boot config for."
         echo "--bootfirmware=<path> : Flash a boot firmware to the target disk or image. The specified path must be .img file or a directory that contains idbloader.img and uboot.itb"
         echo "--bootloader=<bootloader> : Set which bootloader to use for config, available options are extlinux and grub (default is extlinux)."
@@ -1120,9 +1100,14 @@ if [ -n "$argscripts" ]; then
     sudo cp -r "$argscripts" "$root_mount_dir/usr/bin/script.sh"
 fi
 
-# Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
+# Download drivers and installer deps 
 sudo mkdir -p "${root_mount_dir}${compiled_pkg_dir}"
-add_wifi_pkg
+add_pkg wpa_supplicant-2 core
+add_pkg dialog core
+add_pkg pcsclite extra
+add_pkg duktape extra
+add_pkg polkit-1 extra
+add_pkg rate-mirrors
 if [ -n "$argaddpkg" ]; then
     # Split the input by commas
     IFS=',' read -r -a argaddpkg <<< "$argaddpkg"
