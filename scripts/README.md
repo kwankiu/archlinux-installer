@@ -1,7 +1,20 @@
-## Useful additional scripts for the installer / tools
-### WIP
+## Useful Scripts for the Installer and Tools
 
-- `asahi` contains  the necessary files to create an asahi installer script, as m1n1 may not be easily installed by flashing a prebuilt image
-- `get-installer` this script automatically fetch, download and flash the latest prebuilt image for your device
-- `arch-bootstrap-chroot` this script creates an Arch Linux ARM chroot at your working directory, works with both x86 and ARM64 host
-- `init-setup.sh` this script performs initial setup (update fstab, expand the system partition & filesystem and perform installation clean up), used at first boot
+This directory contains various scripts that enhance the functionality of the Arch Linux Installer. Below is a description of each script:
+
+### Scripts Overview
+
+- **`asahi/`**  
+  Contains a customized Asahi Installer specifically for setting up the Arch Linux Installer on Apple Silicon Macs. 
+  This is essential for users who do not already have Asahi Linux installed.
+
+- **`get-installer`**  
+  A utility script that automatically fetches, downloads, and flashes the latest prebuilt image or setup the installer for your device. Simplifies the setup process for supported devices.
+
+- **`arch-bootstrap-chroot`**  
+  This script enables the creation of an Arch Linux chroot environment in your working directory. It works seamlessly across both x86 and ARM64 hosts, making it highly versatile.
+
+- **`init-setup.sh`**  
+  A script designed to perform initial setup tasks during the first boot. It updates the `fstab`, expands the system partition and filesystem, and performs any necessary installation cleanup.
+
+Feel free to suggest improvements or contribute additional scripts to enhance installer functionality!
