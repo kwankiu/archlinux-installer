@@ -1108,6 +1108,8 @@ install_part1() {
             acu rem set rockchip https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         elif [ "${install_repo_list[i]}" = "asahi" ]; then
             acu rem set asahi https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
+        elif [ "${install_repo_list[i]}" = "asahi-alarm" ]; then
+            acu rem set asahi-alarm https://github.com/asahi-alarm/asahi-alarm/releases/download/\$arch pacman
         elif [ "${install_repo_list[i]}" = "misc" ]; then
             acu rem set misc https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         fi
