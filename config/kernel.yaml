@@ -157,6 +157,29 @@ kernel:
           - ffmpeg
         additional: null
 
+      # Linux Asahi Kernel
+      - base: linux-asahi
+        description: Linux Asahi Kernel
+        version: 6.14
+        repo:
+          - asahi-alarm
+        compatible: null
+        recommended: null
+        experimental:
+          - apple*
+        firmware:
+          - asahi-fwextract
+          - asahi-configs
+        graphics:
+          - asahi-alarm/mesa
+        video:
+          - pipewire-jack
+          - ardour
+          - asahi-audio
+          - alsa-ucm-conf-asahi
+          - ffmpeg
+        additional: null
+
 ## Maintained by: 7Ji-PKGBUILDs / Joshua-Riek ##
 ## Compatible with: Rockchip ##
 
