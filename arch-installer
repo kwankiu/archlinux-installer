@@ -19,10 +19,10 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25042803
+installerver=25050101
 
 # Required ACU version
-acuver=0.1.5
+acuver=0.1.6-dev
 
 # Installer Branch / Tag
 branch=main
@@ -1239,12 +1239,17 @@ install_part2() {
     ################################################################
     # Install Kernel
     alert "Removing existing kernels ..."
-    yes y|sudo pacman -R linux-aarch64
-    sudo rm -rf /boot/vmlinu* 
-    sudo rm -rf /boot/initr*
-    sudo rm -rf /boot/dtbs
-    sudo rm -rf /usr/lib/modules/*
-    sudo rm -rf /usr/src/*
+    # Find and remove all installed kernel
+    local kernels=($(pacman -Q | grep 'linux' | awk '{print $1}'))
+    for kernel in "${kernels[@]}"; do
+        if sudo pacman -Ql "$kernel" | grep -q 'pkgbase\|Image'; then
+            yes y|sudo pacman -R $kernel
+            yes y|sudo pacman -R ${kernel}-headers
+        fi
+    done
+    # Remove leftovers and manually installed kernel
+    sudo rm -rf /boot/vmlinuz* /boot/Imag* /boot/initr* /boot/dtbs
+    sudo rm -rf /usr/lib/modules/* /usr/src/*
     sudo rm -rf /etc/mkinitcpio.d/*
 
     alert "Installing Linux kernel ..."
