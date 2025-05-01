@@ -118,4 +118,14 @@ postinstall:
           echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n\n[Service]\nExecStart=/usr/bin/sh -c \\"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\\"\nType=oneshot\n\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
           sudo systemctl enable enable-usb2
 
+      # Enable Panthor DT Overlay
+      - package_name: enable-panthor-overlay
+        pretty_name: Enable Panthor
+        category: Post-Install
+        description: Enable Panthor DT Overlay
+        compatible: null
+        commands: |
+          echo "Add Panthor DT Overlay to boot config ..."
+          acu update-boot-config --dtoverlay=rockchip-rk3588-panthor-gpu.dtbo
+
 ########################################################################
