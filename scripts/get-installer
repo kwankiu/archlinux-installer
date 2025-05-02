@@ -119,7 +119,7 @@ elif [ -n "$install_disk" ]; then
     install_target="generic"
     image_url="https://github.com/${gh_repo}/releases/download/UEFI-${release_tag}/${install_target}${file_suffix}-UEFI${file_extension}"
     curl -LO $image_url
-else
+elif command -v bash >/dev/null; then
     # Download the Installer to current root
     colorecho "$GREEN" "Downloading the Installer to current root ..."
     colorecho "$GREEN" "Tips: To start the installer, run 'installer' (as root)."
@@ -127,7 +127,9 @@ else
     sudo curl -L https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart -o /usr/bin/growpart
     sudo chmod +x /usr/bin/growpart
     # Download the Installer
-    bash <(curl https://raw.githubusercontent.com/kwankiu/archlinux-installer/${release_tag}/arch-installer) --reinstall
+    curl https://raw.githubusercontent.com/kwankiu/archlinux-installer/${release_tag}/arch-installer | bash -s -- --reinstall
+else
+    colorecho "$GREEN" "Error bash is not available on your system."
 fi
 
 if [ -f "/opt/oowow" ]; then
