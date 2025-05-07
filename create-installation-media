@@ -910,6 +910,7 @@ if [ "$argkrl" = "linux" ]; then
     pacman-key --init
     pacman-key --populate archlinuxarm
     pacman -Sy linux-aarch64 linux-aarch64-headers linux-firmware --needed --noconfirm
+    yes | pacman -Scc
 END
 
     if [ "$argbootpt" = 1 ]; then
@@ -990,6 +991,7 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
         pacman-key --init
         pacman-key --populate archlinuxarm
         pacman -Sy grub device-mapper efibootmgr glibc --noconfirm
+        yes | pacman -Scc
         echo "Append the following cmdline to grub: $bootcmdline"
         sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"$bootcmdline\"/" /etc/default/grub
         grub-install --target=arm64-efi --efi-directory=$grubefidir --removable
