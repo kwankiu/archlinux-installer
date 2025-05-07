@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25050101
+installerver=25050801
 
 # Required ACU version
 acuver=0.1.6-dev
@@ -1245,8 +1245,12 @@ install_part2() {
     local kernels=($(pacman -Q | grep 'linux' | awk '{print $1}'))
     for kernel in "${kernels[@]}"; do
         if sudo pacman -Ql "$kernel" | grep -q 'pkgbase\|Image'; then
+            # Remove found kernel
             yes y|sudo pacman -R $kernel
-            yes y|sudo pacman -R ${kernel}-headers
+            if pacman -Q ${kernel}-headers &>/dev/null; then
+                # Remove found headers
+                yes y|sudo pacman -R ${kernel}-headers
+            fi
         fi
     done
     # Remove leftovers and manually installed kernel
