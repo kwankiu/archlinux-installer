@@ -114,8 +114,8 @@ jobs:
                 if [[ "$model" == "radxa-rock-5c" ]] || [[ "$model" == "radxa-cm5"* ]] || [[ "$model" == "radxa-nx5"* ]]; then
                   # RK3582 Patch
                   uboot_url="https://github.com/kwankiu/archlinux-installer/releases/download/kernel/uboot-radxa-rknext_2017.09-1_arm64.deb"
-                elif [[ "$model" == "radxa-rock-5"* ]] || [[ "$model" == "radxa-rock-2"* ]]; then
-                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
+                elif [[ "$model" == "radxa-rock-5"* ]] || [[ "$model" == "radxa-rock-2"* ]] || [[ "$model" == "radxa-zero3" ]]; then
+                  uboot_url="https://radxa-repo.github.io/bookworm-test/pool/main/u/u-boot-rk2410/u-boot-rk2410_2017.09-46-575d1a1_arm64.deb"
                 else
                   uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
                 fi
