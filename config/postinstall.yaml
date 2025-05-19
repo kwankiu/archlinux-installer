@@ -128,4 +128,16 @@ postinstall:
           echo "Add Panthor DT Overlay to boot config ..."
           acu update-boot-config --dtoverlay=rockchip-rk3588-panthor-gpu.dtbo
 
+      # Grub ALARM Kernel Fixup
+      - package_name: grub-fixup
+        pretty_name: Grub Fixup
+        category: Post-Install
+        description: Grub ALARM Kernel Fixup
+        compatible: null
+        commands: |
+          echo "Installing grub fixup ..."
+          sudo pacman -S misc/grub --noconfirm
+          echo "Updating boot config ..."
+          acu update-boot-config
+
 ########################################################################
