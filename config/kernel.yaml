@@ -61,7 +61,7 @@ kernel:
           - pipewire-jack
           - ffmpeg
         additional:
-          - misc/grub
+          - grub-fixup
 
       # Linux Mainline Kernel
       - base: linux-aarch64-rc
@@ -90,7 +90,7 @@ kernel:
           - pipewire-jack
           - ffmpeg
         additional:
-          - misc/grub
+          - grub-fixup
 
 ## Compatible with: Raspberry Pi ##
 
