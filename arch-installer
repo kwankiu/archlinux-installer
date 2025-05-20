@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25050801
+installerver=25052001
 
 # Required ACU version
 acuver=0.1.6
@@ -1082,8 +1082,12 @@ install_part1() {
     rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
     rootfs_disk="${rootfs_disk%p*}"
 
-    # Configure boot partition auto mount if not mounted
+    # Configure boot partition auto mount
+    #/boot should be a mountpoint but is not mounted
     if [ ! -d "/boot/extlinux" ] && [ ! -d "/boot/EFI" ] && [ ! -d "/boot/efi/EFI" ]; then
+        add_boot_part_fstab
+    #/boot is already a mountpoint, let fstab remount it anyways
+    elif mountpoint /boot; then
         add_boot_part_fstab
     fi
 
