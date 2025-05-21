@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=25052001
+installerver=25052101
 
 # Required ACU version
 acuver=0.1.6
@@ -1037,17 +1037,18 @@ install_part1() {
     ################################################################
     # Configure boot partition auto mount
     add_boot_part_fstab() {
-        alert "Updating fstab ..."
+        alert "Looking for boot or EFI partition ..."        
         # Get the boot partition before rootfs partition (rootfs_part - 1)
         boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk -v partnum=${rootfs_partition: -1} 'NR==partnum{print $1}')
         # Check if the boot_partition is not empty
         if [ -z "$boot_partition" ]; then
-            echo "Unable to determine boot partition on $rootfs_disk"
-            exit 1
+            echo "Error: Unable to determine boot partition on $rootfs_disk"
+            return
         fi
 
+        alert "Updating fstab ..."
         # Add the line to /etc/fstab
-        if [ -d "/boot/efi" ]; then
+        if ! mountpoint /boot && [ -d "/boot/efi" ]; then
             new_line="$boot_partition /boot/efi vfat dmask=000,fmask=0111,user 0 0"
         else
             new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
