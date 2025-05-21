@@ -48,18 +48,35 @@ desktop:
         description: Comprehensive Gnome desktop with essentials only
         compatible: null
         packages:
-          - gdm
           - gnome-shell
           - gnome-keyring
           - gnome-control-center
+          - gnome-backgrounds
           - gnome-console
           - gnome-disk-utility
-          - gnome-tweaks
-          - gnome-backgrounds
           - nautilus
-          - xdg-desktop-portal
-          - xdg-desktop-portal-gnome
           - xdg-user-dirs
+          - gdm
+          - librsvg
+        commands: |
+          sudo systemctl enable gdm
+
+      # Phosh
+      - package_name: phosh
+        pretty_name: Phosh
+        category: Desktop
+        description: Experimental Phone shell based on the GNOME stack
+        compatible: null
+        packages:
+          - phosh
+          - gnome-keyring
+          - gnome-control-center
+          - gnome-backgrounds
+          - gnome-console
+          - gnome-disk-utility
+          - nautilus
+          - xdg-user-dirs
+          - gdm
           - librsvg
         commands: |
           sudo systemctl enable gdm
@@ -99,12 +116,14 @@ desktop:
         compatible: null
         packages:
           - budgie
-          - gdm
           - arc-gtk-theme
           - papirus-icon-theme
+          - gnome-keyring
           - gnome-console
           - gnome-disk-utility
           - nautilus
+          - xdg-user-dirs
+          - gdm
           - librsvg
         commands: |
           sudo systemctl enable gdm
@@ -262,20 +281,20 @@ desktop:
           - xdg-user-dirs
           - polkit-gnome
           - alacritty
-          - thunar
+          - dolphin
           - pass
         commands: |
           sudo systemctl enable sddm
           sudo mkdir -p /etc/sddm.conf.d
           sudo mkdir -p /usr/share/wayland-sessions
-          echo -e '[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling Wayland compositor\nExec=Hyprland\nType=Application' | sudo tee /usr/share/wayland-sessions/hyprland.desktop
           #Hyprland Config
           sudo sed -i 's/kitty/alacritty/g' /usr/share/hyprland/hyprland.conf
-          sudo sed -i 's/dolphin/thunar/g' /usr/share/hyprland/hyprland.conf
           sudo sed -i 's/wofi --show/rofi -show/g' /usr/share/hyprland/hyprland.conf
-          sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar & hyprpaper & hypridle/g' /usr/share/hyprland/hyprland.conf
+          sudo sed -i 's/# exec-once = waybar & hyprpaper & firefox/exec-once = waybar \& hyprpaper \& hypridle/g' /usr/share/hyprland/hyprland.conf
           mkdir -p /home/$(whoami)/.config/hypr
           cp -r /usr/share/hyprland/hyprland.conf /home/$(whoami)/.config/hypr/hyprland.conf
+          #Hyprland Default Wallpaper
+          echo -e "preload=/usr/share/hyprland/hyprland.png\nwallpaper=,contain:/usr/share/hyprland/hyprland.png" | sudo tee /home/$(whoami)/.config/hypr/hyprpaper.conf
 
       # Archcraft
       - package_name: archcraft

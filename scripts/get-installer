@@ -16,6 +16,19 @@ colorecho() {
     text="$2"
     printf "${color}${text}${NC}\n"
 }
+
+# Sudo override
+sudo () {
+    local command=$@
+    if [ "$(id -u)" -eq 0 ]; then
+        #echo "Running in root."
+        command "$@"
+    else
+        #echo "Running with sudo."
+        command sudo "$@"
+    fi
+}
+
 ################################################################
 # Configure variables
 gh_repo="kwankiu/archlinux-installer"
@@ -43,6 +56,9 @@ for arg in "$@"; do
     --device=*)
         install_target="${arg#*=}"
         ;;
+    --disk=*)
+        install_disk="${arg#*=}"
+        ;;
     -*)
         colorecho "$RED" "Invalid command or argument."
         exit 1
@@ -64,6 +80,7 @@ done
 ################################################################
 
 if [ -n "$install_target" ]; then
+    # Download target image
     colorecho "$GREEN" "Looking for the latest image for $install_target ..."
     case $install_target in
         radxa-*)
@@ -73,6 +90,11 @@ if [ -n "$install_target" ]; then
             ;;
         rockchip-rk3588*)
             install_target="${install_target#*-*-}"
+            case "$install_target" in
+            *12c*|*fydetab*)
+                install_target="fydetab-duo"
+                ;;
+            esac
             ;;
         friendlyelec*)
             install_target="${install_target#*-}"
@@ -82,19 +104,46 @@ if [ -n "$install_target" ]; then
             exit 1
             ;;
     esac
-    image_url="https://github.com/${gh_repo}/releases/download/${release_tag}/${install_target}${file_suffix}${file_extension}"
+    case "$release_tag" in
+    UEFI*)
+        image_url="https://github.com/${gh_repo}/releases/download/${release_tag}/${install_target}${file_suffix}-UEFI${file_extension}"
+        ;;
+    *)
+        image_url="https://github.com/${gh_repo}/releases/download/${release_tag}/${install_target}${file_suffix}${file_extension}"
+        ;;
+    esac
     curl -LO $image_url
-else
+elif [ -n "$install_disk" ]; then
+    # Download generic image
     colorecho "$GREEN" "Unable to retrieve device model, looking for the latest generic image ..."
     install_target="generic"
     image_url="https://github.com/${gh_repo}/releases/download/UEFI-${release_tag}/${install_target}${file_suffix}-UEFI${file_extension}"
     curl -LO $image_url
+elif command -v bash >/dev/null; then
+    # Download the Installer to current root
+    colorecho "$GREEN" "Downloading the Installer to current root ..."
+    colorecho "$GREEN" "Tips: To start the installer, run 'installer' (as root)."
+    # Download growpart
+    sudo curl -L https://raw.githubusercontent.com/canonical/cloud-utils/main/bin/growpart -o /usr/bin/growpart
+    sudo chmod +x /usr/bin/growpart
+    # Download the Installer
+    curl https://raw.githubusercontent.com/kwankiu/archlinux-installer/${release_tag}/arch-installer | bash -s -- --reinstall
+else
+    colorecho "$GREEN" "Error bash is not available on your system."
 fi
 
-# Flash image with OOWOW if exists
 if [ -f "/opt/oowow" ]; then
-    colorecho "$GREEN" "Flashing image $(basename $image_url) using OOWOW"
-    image_write2emmc $(basename $image_url)
-else
-    colorecho "$GREEN" "Downloaded image $(basename $image_url)"
+    # Get downloaded image name
+    image_name="$(basename $image_url)"
+    # Flash with OOWOW
+    colorecho "$GREEN" "Flashing image $image_name using OOWOW"
+    image_write2emmc $image_name
+elif [ -n "$install_disk" ]; then
+    # Get downloaded image name
+    image_name="$(basename $image_url)"
+    # Flash to disk
+    colorecho "$GREEN" "Extracting image $image_name ..."
+    unxz $image_name
+    colorecho "$GREEN" "Flashing image ${image_name%.xz} to $install_disk"
+    sudo dd if="${image_name%.xz}" of="$install_disk" bs=1M
 fi

@@ -19,10 +19,10 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=24082001
+installerver=25052101
 
 # Required ACU version
-acuver=0.1.5
+acuver=0.1.6
 
 # Installer Branch / Tag
 branch=main
@@ -63,6 +63,9 @@ de_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/c
 # Full Post Install list
 postinstall_list="https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/postinstall.yaml"
 
+# (Optional) Update Mirrorlist URL
+mirrorlist_url="https://raw.githubusercontent.com/1usOS/PKGBUILDs/refs/heads/misc/pacman-mirrorlist/mirrorlist"
+
 # Ping server list for internet check
 # ping Google, Cloudflare and China Mobile DNS (for China users)
 ping_servers=("google.com" "1.1.1.1" "114.114.114.114") 
@@ -100,11 +103,12 @@ ping_servers=("google.com" "1.1.1.1" "114.114.114.114")
 #install_config="$installer_home/install.yaml"
 
 # Dialog override for debugging CLI Fallback
-#dialog () { return 1; }
+#dialog() { return 1; }
 
 # Ping server list for internet check
 #ping_servers=("invalid.example") # debug test case: simulate no internet 
 #ping_servers=("0.0.0.0") # debug test case: bypass internet
+
 
 ################################################################
 # Tools for formatting / styling
@@ -141,7 +145,7 @@ colorecho() {
 }
 
 # Sudo override
-sudo () {
+sudo() {
     local command=$@
     if [ "$(id -u)" -eq 0 ]; then
         #echo "Running in root."
@@ -655,6 +659,18 @@ get_ssid() {
         echo "Disconnected"
     fi
 }
+
+mirrorlist_editor() {
+    if [ ! -f "/etc/pacman.d/mirrorlist.bak" ] && [ -n "$mirrorlist_url" ] && confirm "Would you like to update the mirrorlist?"; then
+        alert "Edit Mirrorlist - Downloading new mirrorlist ..."
+        sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+        curl -LO $mirrorlist_url
+        sudo mv mirrorlist /etc/pacman.d/mirrorlist
+    fi
+    alert "Edit Mirrorlist - Starting nano editor ..."
+    sudo nano /etc/pacman.d/mirrorlist
+}
+
 network_menu() {
     # Get Internet Status
     internet_available=$(read_var "internet_available")
@@ -770,8 +786,7 @@ network_menu() {
         ;;
     6)
         menu_header="Edit Mirrorlist"
-        alert "Edit Mirrorlist - Starting nano editor ..."
-        sudo nano /etc/pacman.d/mirrorlist
+        mirrorlist_editor
         network_menu
         ;;
     esac
@@ -780,7 +795,7 @@ network_menu() {
 advanced_menu() {
     menu_header="Advanced Options"
     menu_option_title=""
-    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor (Experimental)" "Russian roulette (Mini Game)" "Exit to Shell (Experimental)" "Soft Reboot System (Experimental)" "Reboot System")
+    options=("Back" "Device Infomation"  "Edit Pacman Configuration" "Bypass Internet Check (not recommended)" "File Editor" "Install on another disk (Experimental)" "Russian roulette (Mini Game)" "Exit to Shell" "Soft Reboot System" "Reboot System")
     select_option "${options[@]}"
     selected=$?
 
@@ -824,6 +839,58 @@ advanced_menu() {
         advanced_menu
         ;;
     5)
+        menu_header="Install on another disk"
+        info "This feature is currently experimental, it copies the entire booted disk to the selected disk."
+        # Get rootfs partition from the current mount point "/"
+        rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
+        # Get disk path using rootfs partition path
+        rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
+        rootfs_disk="${rootfs_disk%p*}"
+        # Get all available disk & remove the booted disk
+        diskoption=()
+        disklist=($(lsblk -rdno NAME,SIZE,MODEL | awk -F' ' '{ if (NF == 2) { $3 = "Unknown" } }1'))
+        for ((i = 0; i < ${#disklist[@]}; i += 3)); do
+            dmodel=${disklist[i + 2]//\\x20/ } # Replace escaped spaces with actual spaces
+            if [ "/dev/${disklist[i]}" = "$rootfs_disk" ]; then
+                diskoption+=("(current disk) /dev/${disklist[i]} (${disklist[i + 1]})")
+            else
+                diskoption+=("/dev/${disklist[i]} - $dmodel (${disklist[i + 1]})")
+            fi
+        done
+        # select disk menu
+        select_option "Back" "Specify a disk path" "${diskoption[@]}"
+        selected=$?
+
+        case $selected in
+            0)
+                advanced_menu
+                return
+                ;;
+            1)
+                custom_disk=$(input "Please specify the disk path (e.g. /dev/mmcblk0): ")
+                ;;
+            *)
+                custom_disk="/dev/${disklist[((selected - 2) * 3)]}"
+                ;;
+        esac
+        if [ "$custom_disk" = "$rootfs_disk" ]; then
+            info "Error: Installer is already booted on this disk."
+        elif confirm "Are you sure to copy this installer and its bootable system to $custom_disk? The selected disk $custom_disk will be erased, and all data will be lost."; then
+            alert "Formating disk $custom_disk ..."
+            sudo dd if=/dev/zero of=$custom_disk bs=1M count=10
+            alert "Copying current disk to $custom_disk ..."
+            # Get the total size of the installer root filesystem then add 1024 MB buffer
+            sudo dd if=$rootfs_disk of=$custom_disk bs=1M status=progress count=$(( $(df --block-size=1M / | awk 'NR==2 {print $2}') + 1024 ))
+            alert "Syncing disk $custom_disk ..."
+            sudo sync
+            info "The installer and its bootable system have been copied to $custom_disk. Please eject the old disk or select the new disk on your next boot to continue the installation."
+            alert "The system will reboot in 5 seconds ..."
+            sleep 5
+            sudo reboot --force
+        fi
+        advanced_menu
+        ;;
+    6)
         menu_header="Russian roulette"
         if confirm "Let's play a mini game - Russian roulette?"; then
             alert "Welcome to the Arch Linux Russian Roulette Challenge!"
@@ -845,21 +912,25 @@ advanced_menu() {
         fi
         advanced_menu
         ;;
-    6)
+    7)
         menu_header="Exit to Shell"
-        if confirm "Are you sure to exit this installer to shell? \nTips: To re-enter this installer, type > installer < or reboot."; then
+        if confirm "Are you sure to exit this installer to shell?\n\nTips:\nTo re-enter this installer, type > installer < or reboot.\nThe default shell login is usually root/root"; then
             exit 0
         fi
         advanced_menu
         ;;
-    7)
+    8)
         menu_header="Soft Reboot System"
-        if confirm "Are you sure to soft reboot this system?."; then
-            sudo systemctl soft-reboot
+        if systemctl --help | grep -q "soft-reboot"; then
+            if confirm "Are you sure to soft reboot this system?."; then
+                sudo systemctl soft-reboot 2>/dev/null
+            fi
+        else
+            info "Soft reboot is not supported on this system. Please use regular reboot instead."
         fi
         advanced_menu
         ;;
-    8)
+    9)
         menu_header="Reboot System"
         if confirm "Are you sure to force reboot this system?."; then
             sudo reboot --force
@@ -905,6 +976,7 @@ check_installer_updates() {
                     sudo curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/$remote_acuver/acu"
                     sudo chmod +x /usr/bin/acu
                     echo "Updating Installer ACU Config ..."
+                    sudo mkdir -p /usr/lib/installer/.acu/config
                     sudo curl -o /usr/lib/installer/.acu/config/config.yaml -L "$remote_installer_config_url"
                     # Reboot
                     alert "Installer updated. System will reboot now."
@@ -938,7 +1010,10 @@ check_installer_updates() {
             select_option "${options[@]}"
             answer=$?
             if [ ! "$answer" = 0 ]; then
-                branch="${options[answer]}"
+                new_branch="${options[answer]}"
+                remote_installer_url="${remote_installer_url//$branch/$new_branch}"
+                remote_installer_config_url="${remote_installer_config_url//$branch/$new_branch}"
+                branch=$new_branch
             fi
             check_installer_updates --util
             ;;
@@ -955,43 +1030,52 @@ check_installer_updates() {
 
 ################################################################
 # Installation - Part 1 (in root)
-add_boot_part_fstab() {
-    alert "Updating fstab ..."
-    # Get the boot partition before rootfs partition (rootfs_part - 1)
-    boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk -v partnum=${rootfs_partition: -1} 'NR==partnum{print $1}')
-    # Check if the boot_partition is not empty
-    if [ -z "$boot_partition" ]; then
-        echo "Unable to determine boot partition on $rootfs_disk"
-        exit 1
-    fi
-
-    # Add the line to /etc/fstab
-    new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
-
-    # Check if the line already exists in /etc/fstab
-    if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
-        echo "boot partition seems already configured in /etc/fstab to manage by system."
-    else
-        # Add the line to /etc/fstab
-        echo "$new_line" >> /etc/fstab
-        # Check if the addition was successful
-        if [ $? -eq 0 ]; then
-            cat /etc/fstab
-            echo "Line added to /etc/fstab successfully"
-        else
-            echo "Error adding line to /etc/fstab"
-        fi
-    fi
-}
-
 install_part1() {
     local installation_file=$1
     menu_header="Installation (Part 1)"
 
+    ################################################################
+    # Configure boot partition auto mount
+    add_boot_part_fstab() {
+        alert "Looking for boot or EFI partition ..."        
+        # Get the boot partition before rootfs partition (rootfs_part - 1)
+        boot_partition=$(fdisk -l "$rootfs_disk" | grep "$rootfs_disk" | awk -v partnum=${rootfs_partition: -1} 'NR==partnum{print $1}')
+        # Check if the boot_partition is not empty
+        if [ -z "$boot_partition" ]; then
+            echo "Error: Unable to determine boot partition on $rootfs_disk"
+            return
+        fi
+
+        alert "Updating fstab ..."
+        # Add the line to /etc/fstab
+        if ! mountpoint /boot && [ -d "/boot/efi" ]; then
+            new_line="$boot_partition /boot/efi vfat dmask=000,fmask=0111,user 0 0"
+        else
+            new_line="$boot_partition /boot vfat dmask=000,fmask=0111,user 0 0"
+        fi
+
+        # Check if the line already exists in /etc/fstab
+        if grep -qF "/boot vfat dmask=000,fmask=0111,user 0 0" /etc/fstab; then
+            echo "boot partition seems already configured in /etc/fstab to manage by system."
+        else
+            # Add the line to /etc/fstab
+            echo "$new_line" >> /etc/fstab
+            # Check if the addition was successful
+            if [ $? -eq 0 ]; then
+                cat /etc/fstab
+                echo "Line added to /etc/fstab successfully"
+            else
+                echo "Error adding line to /etc/fstab"
+            fi
+        fi
+    }
+
+    ################################################################
     # Set Hostname
     alert "Setting hostname ..."
     hostnamectl set-hostname $install_hostname
 
+    ################################################################
     # Get rootfs partition from the current mount point "/"
     rootfs_partition=$(mount | grep "on / " | awk '{print $1}')
 
@@ -999,67 +1083,132 @@ install_part1() {
     rootfs_disk=$(echo "$rootfs_partition" | sed 's/[0-9]*$//')
     rootfs_disk="${rootfs_disk%p*}"
 
-    if [ ! -d "/boot/extlinux" ] && [ ! -d "/boot/EFI" ]; then
+    # Configure boot partition auto mount
+    #/boot should be a mountpoint but is not mounted
+    if [ ! -d "/boot/extlinux" ] && [ ! -d "/boot/EFI" ] && [ ! -d "/boot/efi/EFI" ]; then
+        add_boot_part_fstab
+    #/boot is already a mountpoint, let fstab remount it anyways
+    elif mountpoint /boot; then
         add_boot_part_fstab
     fi
 
+    # Expand system partition to use unallocated space
     alert "Resizing File System ..."
     growpart $rootfs_disk "${rootfs_partition: -1}" # Extract partition number from the last digit
     resize2fs $rootfs_partition
 
+    ################################################################
     # Initialize the pacman keyring and populate the Arch Linux ARM package signing keys
     alert "Configuring pacman (populate alarm keys) ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
 
+    # Add additional pacman repositories
     alert "Configuring pacman (adding repositories) ..."
     local install_repo_list=($install_repo)
     for ((i = 0; i < ${#install_repo_list[@]}; i++)); do
         if [ "${install_repo_list[i]}" = "7Ji" ]; then
             acu rem set 7Ji https://github.com/7Ji/archrepo/releases/download/\$arch pacman
         elif [ "${install_repo_list[i]}" = "rockchip" ]; then
-            acu rem set rockchip https://github.com/kwankiu/PKGBUILDs/releases/download/\$arch pacman
+            acu rem set rockchip https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         elif [ "${install_repo_list[i]}" = "asahi" ]; then
-            acu rem set asahi https://github.com/kwankiu/PKGBUILDs/releases/download/\$arch pacman
-        #elif [ "${install_repo_list[i]}" = "Experimental" ]; then
-        #    acu rem set Experimental https://github.com/kwankiu/PKGBUILDs/releases/download/experimental pacman
+            acu rem set asahi https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
+        elif [ "${install_repo_list[i]}" = "asahi-alarm" ]; then
+            acu rem set asahi-alarm https://github.com/asahi-alarm/asahi-alarm/releases/download/\$arch pacman
+        elif [ "${install_repo_list[i]}" = "misc" ]; then
+            acu rem set misc https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         fi
     done
 
+    # Sort and update pacman mirrors
+    if [ "$install_sort_mirrors" = "fastest" ]; then
+        alert "Configuring mirrors (rank fastest mirrors) ..."
+        # Backup existing pacman mirrorlist
+        cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+        # Check if rate-mirrors command exists
+        if [ ! -x "$(command -v rate-mirrors)" ]; then
+            alert "rate-mirrors not found. Falling back to random sorting."
+            install_sort_mirrors="random"
+            # Restore mirrorlist
+            cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
+        else
+            # Rank and update mirrorlist
+            for i in {1..3}; do
+                if output=$(rate-mirrors --allow-root archarm); then
+                    # Log ranking results
+                    echo "$output" | grep -E '^#' | tee /etc/pacman.d/mirrorlist.log
+                    # Save ranked mirrors
+                    (echo -e "#\n# Arch Linux ARM repository mirrorlist\n# Ranked with rate-mirrors on $(date +'%Y-%m-%d %H:%M:%S')\n# Log of ranking results is located at /etc/pacman.d/mirrorlist.log\n#" && echo "$output" | grep -vE '^#') | tee /etc/pacman.d/mirrorlist
+                    break
+                else
+                    alert "Retrying ($i) on rank fastest mirrors..."
+                fi
+            done
+            # Check if the command failed after all attempts
+            if [[ $i -eq 3 ]]; then
+                alert "Failed to rank mirrors after 3 attempts. Falling back to random sorting."
+                install_sort_mirrors="random"
+                # Restore mirrorlist
+                cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
+            fi
+        fi
+    fi
+
+    if [ "$install_sort_mirrors" = "random" ]; then
+        alert "Configuring mirrors (randomly sort mirrors) ..."
+        # Backup existing pacman mirrorlist
+        cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+        # Uncomment all mirrors
+        sed -i 's/^# *\(Server[ ]*=[ ]*\)/\1/' /etc/pacman.d/mirrorlist
+        # Remove all comments, spaces and empty lines
+        sed -i 's/^#.*//; s/^[[:space:]]*//; /^$/d' /etc/pacman.d/mirrorlist
+        # Add header and randomly sort mirrors
+        (echo -e "#\n# Arch Linux ARM repository mirrorlist\n# Randomly arranged on $(date +'%Y-%m-%d %H:%M:%S')\n#\n\n" && shuf /etc/pacman.d/mirrorlist) | tee /etc/pacman.d/mirrorlist > /dev/null
+    fi
+
+    # Configure Parallel Downloads
     if [ -n "$install_parallel_downloads" ]; then 
         alert "Configuring pacman (enabling ParallelDownloads)..."
         sed -i "s/^#ParallelDownloads\\s*=\\s*\\([0-9]\\{1,3\\}\\)\\?$/ParallelDownloads = $install_parallel_downloads/" /etc/pacman.conf
     fi
 
+    ################################################################
     # Install sudo if not installed
     if ! pacman -Q sudo > /dev/null 2>&1; then
         alert "Installing sudo ..."
-        pacman -Sy sudo glibc --noconfirm
+        pacman -Sy sudo glibc --noconfirm 2>/dev/null
     fi
 
+    # Remove default user accounts
     alert "Removing default account ..."
     acu user remove alarm
 
+    # Setup new user account
     alert "Setting up new user account ..."
     acu user add "$install_username" "$install_password"
     acu user manage "$install_username" sudopw
     acu user manage "$install_username" rebootpw
 
+    # Lock root account
     if [ "$install_disable_root_account" = 1 ]; then
         passwd -l root
     fi
 
+    ################################################################
+    # Remove installer auto start service
     if [ -e "/etc/systemd/system/installer.service" ]; then 
         systemctl disable installer.service
         rm -rf /etc/systemd/system/installer.service
     fi
 
+    # Configure installation part 2 auto run
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $install_username %I \$TERM" | tee /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo "installer $installation_file --part2" | tee -a /home/$install_username/.bashrc
 
+    # Reboot to continue as user
     alert "System will reboot now."
-    if ! systemctl soft-reboot; then
+    if ! systemctl soft-reboot 2>/dev/null; then
         if ! reboot --force; then
             alert "Unable to reboot automatically, please reboot your device manually."
         fi
@@ -1097,12 +1246,21 @@ install_part2() {
     ################################################################
     # Install Kernel
     alert "Removing existing kernels ..."
-    yes y|sudo pacman -R linux-aarch64
-    sudo rm -rf /boot/vmlinu* 
-    sudo rm -rf /boot/initr*
-    sudo rm -rf /boot/dtbs
-    sudo rm -rf /usr/lib/modules/*
-    sudo rm -rf /usr/src/*
+    # Find and remove all installed kernel
+    local kernels=($(pacman -Q | grep 'linux' | awk '{print $1}'))
+    for kernel in "${kernels[@]}"; do
+        if sudo pacman -Ql "$kernel" | grep -q 'pkgbase\|Image'; then
+            # Remove found kernel
+            yes y|sudo pacman -R $kernel
+            if pacman -Q ${kernel}-headers &>/dev/null; then
+                # Remove found headers
+                yes y|sudo pacman -R ${kernel}-headers
+            fi
+        fi
+    done
+    # Remove leftovers and manually installed kernel
+    sudo rm -rf /boot/vmlinuz* /boot/Imag* /boot/initr* /boot/dtbs
+    sudo rm -rf /usr/lib/modules/* /usr/src/*
     sudo rm -rf /etc/mkinitcpio.d/*
 
     alert "Installing Linux kernel ..."
@@ -1139,7 +1297,12 @@ install_part2() {
     ################################################################
     # Full System Upgrade
     alert "Performing Full System Upgrade ..."
-    sudo pacman -Syyu --noconfirm
+    count=1
+    while ! sudo pacman -Syu --noconfirm; do
+        alert "Retrying ($count) Full System Upgrade ..."
+        ((count++))
+        ((count > 3)) && break
+    done
 
     ################################################################
     # Install desktop environment
@@ -1207,8 +1370,19 @@ start_installation() {
         return 1
     fi
     # Confirm begin installation
-    menu_header="Installation Summary"
-    menu_confirm_label=("Install" "Cancel")
+    confirm_installation() {
+        menu_header="Installation Summary"
+        menu_confirm_label=("Install" "Cancel")
+        if confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Config\Zn \n Target: $install_target \n \Zb\Z4Localization\Zn \n Language: ${install_language:-"(skipped)"} \n Time Zone: ${install_time_zone:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: $install_username \n Password: *** \n Disable Root Account: $install_disable_root_account \n \Zb\Z4System / Packages\Zn \n Hostname: $install_hostname \n Repositories: ${install_repo:-"(default)"} \n Linux Kernel: $install_kernel \n Firmware: ${install_firmware:-"(none)"} \n Graphics Acceleration: ${install_graphics:-"(none)"} \n Video Acceleration: ${install_video:-"(none)"} \n Kernel Additional: ${install_kernel_additional:-"(none)"} \n Desktop Environment: ${install_desktop_environment:-"(skipped)"} \n Additional Packages: ${install_additional_packages:-"(none)"} \n"; then
+            menu_header=""
+            menu_confirm_label=()
+            return 0
+        else
+            menu_header=""
+            menu_confirm_label=()
+            return 1
+        fi
+    }
     if [ "$install_run_part2" = 1 ] && [ ! "$(id -u)" -eq 0 ]; then
         attempt=0
         until [ "$(read_var "internet_available")" = 1 ] || [ "$attempt" -ge 30 ]; do
@@ -1225,7 +1399,7 @@ start_installation() {
             info "Installation Failed (Unable to connect to the internet)."
             main_menu
         fi
-    elif [ "$install_confirm" = 1 ] || confirm "\Zb\Z2 Are you sure to begin installation with the following configurations? \Zn\n (The system will reboot several times during installation) \n\n \Zb\Z4Config\Zn \n Target: $install_target \n \Zb\Z4Localization\Zn \n Language: ${install_language:-"(skipped)"} \n Time Zone: ${install_time_zone:-"(skipped)"} \n \Zb\Z4User Account\Zn \n Username: $install_username \n Password: *** \n Disable Root Account: $install_disable_root_account \n \Zb\Z4System / Packages\Zn \n Hostname: $install_hostname \n Repositories: ${install_repo:-"(default)"} \n Linux Kernel: $install_kernel \n Firmware: ${install_firmware:-"(none)"} \n Graphics Acceleration: ${install_graphics:-"(none)"} \n Video Acceleration: ${install_video:-"(none)"} \n Kernel Additional: ${install_kernel_additional:-"(none)"} \n Desktop Environment: ${install_desktop_environment:-"(skipped)"} \n Additional Packages: ${install_additional_packages:-"(none)"} \n"; then 
+    elif [ "$install_confirm" = 1 ] || confirm_installation; then 
         install_part1 "$installation_file"
     else
         return 1
@@ -1474,6 +1648,31 @@ installer_menu() {
     selected_de=${desktop_package_name[de_options]}
 
     ################################################################
+    # Manage Mirrors
+
+    menu_header="Manage Mirrors"
+    menu_option_title="This determines which server to use when downloading packages"
+    options=("Find fastest mirrors (Recommended)")
+    #options=("Sort mirrors by country")
+    options+=("Use random mirrors")
+    options+=("Use default/current mirrors")
+    options+=("Edit mirrors maually")
+    select_option "${options[@]}"
+    choice=$?
+
+    if [ "$choice" = 0 ]; then
+        sortmirrors="fastest"
+    elif [ "$choice" = 1 ]; then
+        sortmirrors="random"
+    else
+        sortmirrors=""
+    fi
+
+    if [ "$choice" = 3 ]; then
+        mirrorlist_editor
+    fi
+
+    ################################################################
     # Select additional packages #TODO
     #menu_header="Additional Packages"
     #menu_option_title="Select additional packages to install :"
@@ -1506,6 +1705,8 @@ installer_menu() {
     startservices="NetworkManager.service bluetooth.service"
     # Pacman ParallelDownloads
     prldownloads=50
+    # Add the misc repo
+    pacmanrepo+=" misc"
 
     ################################################################
     # Generate Installation File
@@ -1550,6 +1751,10 @@ installer_menu() {
     # Pacman Repositories
     if [ -n "$pacmanrepo" ] && [ "$pacmanrepo" != "null" ]; then
         echo "  repo: $pacmanrepo" | tee -a "$install_config" >/dev/null
+    fi
+    # Sort Mirrors
+    if [ -n "$sortmirrors" ]; then
+        echo "  sort_mirrors: $sortmirrors" | tee -a "$install_config" >/dev/null
     fi
     # Pacman ParallelDownloads
     if [ -n "$prldownloads" ]; then
@@ -1610,6 +1815,11 @@ main_menu() {
 
     case $selected in
     0)
+        # Ensure running as root
+        if [ ! "$(id -u)" -eq 0 ]; then
+            info "Error: Please run this installer as root to continue."
+            exit 1
+        fi
         # Development Build Reminder
         if [ "$branch" = "dev" ]; then
             info "You are running a development build installer. \nIt is experimental and may not work properly."
@@ -1678,6 +1888,7 @@ for arg in "$@"; do
             echo "--create-installer-service : Create a service to auto start this installer on first boot"
             echo "--confirm : Skip the confirm prompt and proceed to installation"
             echo "--part2 : Run installation part2 (use this only if you have already done part1 installation)"
+            echo "--reinstall : Reinstall/Update this Installer to the latest version"
             exit 0
             ;;
         --create-installer-service)
@@ -1692,6 +1903,10 @@ for arg in "$@"; do
             ;;
         --part2)
             install_run_part2=1
+            ;;
+        --reinstall)
+            installerver=0
+            check_installer_updates --util
             ;;
         -*)
             colorecho "$RED" "Invalid command or argument."

@@ -34,7 +34,7 @@ kernel:
 ## Maintained by: ALARM ##
 ## Compatible with: Generic / All ##
 
-      # Linux Mainline Kernel
+      # Linux Stable Kernel
       - base: linux-aarch64
         description: Linux Stable Kernel
         version: latest stable
@@ -45,8 +45,11 @@ kernel:
           - raspberrypi*
         recommended: null
         experimental:
-          - radxa-rock-5a
-          - radxa-rock-5b
+          - radxa-zero*
+          - radxa-rock-3*
+          - radxa-rock-4*
+          - radxa-rock-5*
+          - khadas-vim*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
@@ -57,14 +60,44 @@ kernel:
         video:
           - pipewire-jack
           - ffmpeg
-        additional: null
+        additional:
+          - grub-fixup
+
+      # Linux Mainline Kernel
+      - base: linux-aarch64-rc
+        description: Linux Mainline Kernel
+        version: latest mainline
+        repo: null
+        compatible: null
+        recommended: null
+        experimental:
+          - generic
+          - apple*
+          - raspberrypi*
+          - radxa-zero*
+          - radxa-rock-3*
+          - radxa-rock-4*
+          - radxa-rock-5*
+          - khadas-vim*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
+        firmware: null
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg
+        additional:
+          - grub-fixup
 
 ## Compatible with: Raspberry Pi ##
 
       # Linux Raspberry Pi Kernel
       - base: linux-rpi
         description: Linux Raspberry Pi BSP Kernel
-        version: 6.6
+        version: 6.12
         repo: null
         compatible:
           - raspberrypi*
@@ -82,7 +115,7 @@ kernel:
       # Linux Raspberry Pi 16K Kernel
       - base: linux-rpi-16k
         description: (For bcm2712/RPi5 ONLY) Linux Raspberry Pi BSP 16k pagesize Kernel
-        version: 6.6
+        version: 6.12
         repo: null
         compatible:
           - raspberrypi*
@@ -103,7 +136,7 @@ kernel:
       # Linux Asahi Kernel
       - base: linux-asahi
         description: Linux Asahi Kernel
-        version: 6.8
+        version: 6.11
         repo:
           - asahi
         compatible:
@@ -111,11 +144,39 @@ kernel:
         recommended:
           - apple*
         experimental: null
-        firmware: null
+        firmware:
+          - asahi-fwextract
+          - asahi-configs
         graphics:
-          - mesa-asahi-edge
+          - mesa-asahi
         video:
           - pipewire-jack
+          - ardour
+          - asahi-audio
+          - alsa-ucm-conf-asahi
+          - ffmpeg
+        additional: null
+
+      # Linux Asahi Kernel
+      - base: linux-asahi
+        description: Linux Asahi Kernel
+        version: 6.14
+        repo:
+          - asahi-alarm
+        compatible: null
+        recommended: null
+        experimental:
+          - apple*
+        firmware:
+          - asahi-fwextract
+          - asahi-configs
+        graphics:
+          - asahi-alarm/mesa
+        video:
+          - pipewire-jack
+          - ardour
+          - asahi-audio
+          - alsa-ucm-conf-asahi
           - ffmpeg
         additional: null
 
@@ -129,10 +190,12 @@ kernel:
         repo:
           - 7Ji
         compatible:
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-nx5*
-          - radxa-zero-3*
+          - radxa-zero3*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
@@ -145,7 +208,7 @@ kernel:
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-nx5*
-          - radxa-zero-3*
+          - radxa-zero3*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
@@ -171,10 +234,12 @@ kernel:
         repo:
           - 7Ji
         compatible:
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-nx5*
-          - radxa-zero-3*
+          - radxa-zero3*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
@@ -196,36 +261,6 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
-      # Joshua's Rockchip Mainline Kernel
-      - base: linux-aarch64-rockchip-joshua-git
-        description: Joshua Linux Mainline kernel with patches for Rockchip/RK3588
-        version: 6.11-rc
-        repo:
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
-          - radxa-rock-5*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero-3*
-          - khadas-edge*
-          - xunlong-orangepi-5*
-          - rockchip-rk3588-orangepi*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-armsom*
-          - friendlyelec-nanopi-r6*
-          - friendlyelec-nanopc-*
-          - friendlyelec-cm*
-        firmware:
-          - linux-firmware-joshua-git
-        graphics:
-          - mesa
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
 ## Maintained by: 7Ji-PKGBUILDs / Radxa ##
 
       # Radxa Rockchip 5.10 Kernel
@@ -235,11 +270,14 @@ kernel:
         repo:
           - 7Ji
         compatible:
+          - radxa-rock-2*
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
+          - radxa-cm3*
           - radxa-cm5*
           - radxa-nx5*
-          - radxa-zero-3*
-          - radxa-rock-2a
+          - radxa-zero3*
         recommended: null
         experimental: null
         firmware:
@@ -260,15 +298,17 @@ kernel:
         version: 6.1-rkr1
         repo:
           - rockchip
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
+        compatible:
+          - radxa-rock-2*
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
+          - radxa-cm3*
           - radxa-cm5*
           - radxa-nx5*
-          - radxa-zero-3*
-          - radxa-rock-2a
+          - radxa-zero3*
+        recommended: null
+        experimental: null
         firmware:
           - 8852bu-dkms-git
           - 8852be-dkms-git
@@ -309,23 +349,21 @@ kernel:
 
 ## Maintained by: Samuel (kwankiu) / Fyde Innovations ##
 
-      # FydeTab Duo Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-bsp5.10-fydetab
-        description: FydeTab Duo Linux Rockchip BSP Kernel
-        version: 5.10.160
+      # FydeTab Rockchip BSP6.1 Kernel
+      - base: linux-aarch64-rockchip-bsp6.1-fydetab-git
+        description: FydeTab's fork of Joshua Linux Rockchip BSP Kernel
+        version: 6.1-rkr3
         repo:
-          - rockchip
           - 7Ji
         compatible:
           - rockchip-rk3588s-tablet-12c-linux
-        recommended:
-          - rockchip-rk3588s-tablet-12c-linux
+          - rockchip-rk3588s-tablet-fydetab-linux
+        recommended: null
         experimental: null
-        firmware: null
+        firmware:
+          - linux-firmware-joshua-git
         graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
+          - mesa
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
@@ -333,30 +371,66 @@ kernel:
 
 ## Maintained by: Samuel (kwankiu) / Armbian ##
 
-      # Armbian's Rockchip BSP6.1 Kernel
+      # Armbian Rockchip BSP6.1 Kernel
       - base: linux-aarch64-rockchip-bsp6.1-armbian-git
         description: Armbian Linux Rockchip BSP Kernel
-        version: 6.1-rkr1
+        version: 6.1-rkr5
         repo:
           - rockchip
-          - 7Ji
-        compatible: null
-        recommended: null
-        experimental:
+        compatible:
+          - radxa-rock-3*
+          - radxa-rock-4*
           - radxa-rock-5*
           - radxa-cm5*
           - radxa-nx5*
+          - radxa-zero3*
           - khadas-edge*
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-armsom*
+          - friendlyelec-nanopi-r6*
+          - friendlyelec-nanopc-*
+          - friendlyelec-cm*
+        recommended: null
+        experimental: null
         firmware:
           - linux-firmware-armbian-git
         graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg-mpp-git
+        additional:
+          - enable-panthor-overlay
+
+      # Armbian Rockchip Kernel
+      - base: linux-aarch64-rockchip-armbian-git
+        description: Armbian Linux Mainline Kernel with rockchip support
+        version: 6.15.y
+        repo:
+          - rockchip
+        compatible:
+          - radxa-rock-3*
+          - radxa-rock-4*
+          - radxa-rock-5*
+          #- radxa-cm5*
+          #- radxa-nx5*
+          - radxa-zero3*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
+          - friendlyelec-nanopi-r6*
+          - friendlyelec-nanopc-*
+          - friendlyelec-cm*
+        recommended: null
+        experimental: null
+        firmware:
+          - linux-firmware-armbian-git
+        graphics:
+          - mesa
         video:
           - pipewire-jack
           - ffmpeg-mpp-git
@@ -364,18 +438,70 @@ kernel:
 
 ## Maintained by: 7Ji-PKGBUILDs ##
 
+      # Flippy's Kernel for Amlogic
+      - base: linux-aarch64-flippy-git
+        description: Flippy's Kernel aiming to increase usability for Amlogic
+        version: 6.6
+        repo:
+          - 7Ji
+        compatible:
+          - khadas-vim*
+          - radxa-zero
+          - radxa-zero2
+        recommended:
+          - khadas-vim*
+          - radxa-zero
+          - radxa-zero2
+        experimental: null
+        firmware:
+          - linux-aarch64-flippy-git-dtb-amlogic
+          - linux-firmware-amlogic-ophub-git
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg
+        additional:
+          - ampart-git
+
+      # Flippy's Kernel for Allwinner
+      - base: linux-aarch64-flippy-git
+        description: Flippy's Kernel aiming to increase usability for Allwinner
+        version: 6.6
+        repo:
+          - 7Ji
+        compatible:
+          - friendlyarm-nanopi-neo*
+          - xunlong-orangepi-zero*
+        recommended:
+          - friendlyarm-nanopi-neo*
+          - xunlong-orangepi-zero*
+        experimental: null
+        firmware:
+          - linux-aarch64-flippy-git-dtb-allwinner
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg
+        additional: null
+
       # 7Ji's Mainline Kernel
       - base: linux-aarch64-7ji
         description: 7Ji Linux Mainline Kernel with patches for Amlogic & RK3588
         version: lastest stable
         repo:
           - 7Ji
-        compatible: null
+        compatible:
+          - khadas-vim*
+          - khadas-edge
+          - radxa-zero*
+          - radxa-rock-3*
+          - radxa-rock-4*
         recommended: null
         experimental:
           - radxa-rock-5*
-          - radxa-zero-3*
-          - khadas-edge*
+          - khadas-edge2
           - xunlong-orangepi-5*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588s-orangepi*

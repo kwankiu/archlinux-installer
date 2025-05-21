@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Extract the image
+echo "  Extracting Source Image..."
+unxz asahi-archlinux-installer-uefi.img.xz
+
+# Attach the image without mounting and get the partition identifier
+echo "  Attaching Source Image..."
+PARTITION_ID=$(hdiutil attach asahi-archlinux-installer-uefi.img -nomount | grep "Linux Filesystem" | awk '{print $1}')
+
+# Check if the partition ID was found
+if [ -z "$PARTITION_ID" ]; then
+    echo "Error: Could not find the Linux Filesystem partition."
+    exit 1
+fi
+
+# Extract the partition
+echo "  Extracting Root Image..."
+sudo dd if="$PARTITION_ID" of=root.img bs=1m
+
+# Detach the image (detaching the whole disk)
+echo "  Detaching Source Image..."
+hdiutil detach $(echo "$PARTITION_ID" | sed 's/s[0-9]*$//')  # Detach the base disk
+
+echo "  Removing Source Image..."
+rm asahi-archlinux-installer-uefi.img
+
+echo "  Downloading ESP Image..."
+curl -LO https://github.com/kwankiu/archlinux-installer/releases/download/kernel/asahi-esp.zip
+
+echo "  Extracting ESP Image..."
+unzip asahi-esp.zip
+rm asahi-esp.zip
+
+echo "  Creating OS Package..."
+zip -r asahi-archlinux-installer-uefi.zip root.img esp
+
+echo "  Cleaning up..."
+rm -rf esp root.img __MACOSX .DS_Store

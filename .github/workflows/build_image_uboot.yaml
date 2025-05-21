@@ -23,37 +23,45 @@ jobs:
         model_name:
           # Generic
           #- generic
-          # Asahi (Apple Silicon)
-          #- asahi
           # Raspberry Pi
           - raspberrypi
           # Radxa
-          #- radxa-rock-2a
-          #- radxa-rock-2f
-          #- radxa-rock-3a
-          #- radxa-rock-3b
-          #- radxa-rock-3c
+          - radxa-rock-2 #rock-2f & e20c shares rock-2a u-boot
+          - radxa-rock-3a
+          - radxa-rock-3b
+          - radxa-rock-3c
+          - radxa-rock-pi-4a
+          - radxa-rock-pi-4a-plus
+          - radxa-rock-pi-4b
+          - radxa-rock-pi-4b-plus
+          - radxa-rock-pi-4c
+          - radxa-rock-4c-plus
+          - radxa-rock-4se
           - radxa-rock-5a
           - radxa-rock-5b
           - radxa-rock-5b-plus
           - radxa-rock-5c
           - radxa-rock-5d
           - radxa-rock-5-itx
-          #- radxa-cm3-io
-          #- radxa-cm3-rpi-cm4-io
-          #- radxa-cm3-sodimm-io
+          - radxa-cm3-io
+          - radxa-cm3-rpi-cm4-io
+          - radxa-cm3-sodimm-io
           #- radxa-cm3i-io
           #- radxa-e23
           #- radxa-e25
           - radxa-cm5-io
           - radxa-cm5-rpi-cm4-io
           - radxa-nx5-io
+          #- radxa-zero
+          #- radxa-zero-2pro
           - radxa-zero3
           # Khadas
           - khadas-edge
           - khadas-edge2
+          #- khadas-vim3
+          #- khadas-vim4
           # Orange Pi
-          - orangepi-5 #rockchip-rk3588s-orangepi-5
+          - orangepi-5
           - orangepi-5b
           - orangepi-5-plus
           - orangepi-5-pro
@@ -87,10 +95,6 @@ jobs:
           for model in ${{ matrix.model_name }}; do
             echo "Building image for $model"
             case $model in
-              asahi)
-                # Notes: this should be rootfs only & WIP
-                args="--kernel=linux-asahi -b"
-                ;;
               raspberrypi)
                 # Notes: Raspberry Pi does not use extlinux and does not need to pack u-boot
                 args="--kernel=linux-rpi --addpkg=firmware-raspberrypi -b --bootpartstart=4MiB --bootloader=skip"
@@ -99,30 +103,44 @@ jobs:
                 # Use different kernel and u-boot path for different boards
                 if [[ "$model" == "radxa-rock"* ]]; then
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model#*-}"
+                elif [[ "$model" == "radxa-rock-2"* ]]; then
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-radxa --bootfirmware=usr/lib/u-boot/${model#*-}"
+                elif [[ "$model" == "radxa-zero" ]] || [[ "$model" == "radxa-zero-2pro" ]]; then
+                  args="--kernel=linux-aarch64-flippy-git --addpkg=linux-firmware-amlogic-ophub-git --bootfirmware=usr/lib/u-boot/${model}"
                 else
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
                 # URL to download u-boot for the board
-                if [[ "$model" == "radxa-zero"* ]]; then
-                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
-                else
+                if [[ "$model" == "radxa-rock-5c" ]] || [[ "$model" == "radxa-cm5"* ]] || [[ "$model" == "radxa-nx5"* ]]; then
+                  # RK3582 Patch
                   uboot_url="https://github.com/kwankiu/archlinux-installer/releases/download/kernel/uboot-radxa-rknext_2017.09-1_arm64.deb"
-                  # uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-rknext_2017.09-25-f348cc9_arm64.deb"
+                elif [[ "$model" == "radxa-rock-5"* ]] || [[ "$model" == "radxa-rock-2"* ]] || [[ "$model" == "radxa-zero3" ]]; then
+                  uboot_url="https://radxa-repo.github.io/bookworm-test/pool/main/u/u-boot-rk2410/u-boot-rk2410_2017.09-46-575d1a1_arm64.deb"
+                else
+                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
                 fi
                 ;;
               khadas-*)
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                if [[ "$model" == "khadas-vim"* ]]; then
+                  args="--kernel=linux-aarch64-flippy-git --addpkg=linux-firmware-amlogic-ophub-git --bootfirmware=usr/lib/u-boot"
+                else
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
+                fi
                 # URL to download u-boot for the board
                 if [ "$model" == "khadas-edge2" ]; then
-                    uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.6.8-2017.09_arm64.deb"
+                    uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.7.3-2017.09_arm64.deb"
                 elif [ "$model" == "khadas-edge" ]; then
                     uboot_url="https://dl.khadas.com/repos/edge/pool/main/l/linux-u-boot-edge-vendor/linux-u-boot-edge-vendor_0.8.3-2017.09_arm64.deb"
+                elif [ "$model" == "khadas-vim3" ]; then
+                    uboot_url="https://dl.khadas.com/repos/vim3/pool/main/l/linux-u-boot-vim3-vendor/linux-u-boot-vim3-vendor_1.7.3-2015.01-5.15_arm64.deb"
+                elif [ "$model" == "khadas-vim4" ]; then
+                    uboot_url="https://dl.khadas.com/repos/vim4/pool/main/l/linux-u-boot-vim4-vendor/linux-u-boot-vim4-vendor_1.7.3-2019.01_arm64.deb"
                 fi
                 ;;
               orangepi-* | nanopi-* | nanopc-* | armsom-*)
                 args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot -b"
                 # URL to download u-boot for the board
-                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240626.git5202c429-4_arm64.deb"
+                uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2017.09+20240806.gitf73b1eed-2_arm64.deb"
                 ;;
               *)
                 # Generic
@@ -154,7 +172,7 @@ jobs:
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer.img -c $args
           cp -r out/*-archlinux-*.img.xz .
 
-      - name: Add meta data to Image (OOWOW)
+      - name: Add xze metadata to Image (OOWOW)
         if: startsWith(matrix.model_name, 'khadas')
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/khadas/krescue/master/tools/xze) "${{ matrix.model_name }}-archlinux-installer.img.xz" \
@@ -165,7 +183,7 @@ jobs:
              match=BOARD=$(echo "${{ matrix.model_name }}" | awk -F'-' '{print toupper(substr($2,1,1)) substr($2,2)}') \
              link=https://github.com/kwankiu/archlinux-installer/wiki \
              duration=250 \
-             desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
+             desc="Community-built Arch Linux Installer for ARM (Aarch64), Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g') on $(LANG=C TZ= date)"
           # Rename image name to begin with the board model (required to prevent OOWOW hiding the image)
           mv ${{ matrix.model_name }}-archlinux-installer.img.xz $(echo "${{ matrix.model_name }}" | awk -F'-' '{print substr($2,1)}')-khadas-archlinux-installer.img.xz
         continue-on-error: true

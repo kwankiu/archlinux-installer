@@ -32,7 +32,7 @@ colorecho() {
                 colorecho "$GREEN" "Create rootfs using ${arg#*=}"
                 if [ "${arg#*=}" = "x86_64" ] || [ "${arg#*=}" = "amd64" ]; then
                     rootfs_url="http://mirrors.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz"
-                elif [[ "${arg#*=}" = "http://"* ]] || [[ "${arg#*=}" = "http://"* ]]; then
+                elif [[ "${arg#*=}" = "http://"* ]] || [[ "${arg#*=}" = "https://"* ]]; then
                     rootfs_url="${arg#*=}"
                 elif [ "${arg#*=}" != "aarch64" ] && [ "${arg#*=}" != "arm64" ]; then
                     colorecho "$RED" "Invalid rootfs type or url."
@@ -74,18 +74,42 @@ colorecho() {
 
     # Check if arch-install-scripts is installed
     if [ -z "$(command -v arch-chroot)" ]; then
-      # Check Linux distribution
-      colorecho "$YELLOW" "arch-chroot is not found, trying to install arch-install-scripts ..."
-      if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
-        # Debian/Ubuntu-based
-        sudo apt-get install -y arch-install-scripts
-      elif [ -f /etc/arch-release ]; then
-        # Arch Linux
-        sudo pacman -S arch-install-scripts --noconfirm
-      else
-        colorecho "$RED" "Error : arch-install-scripts is not installed."
-        exit 1
-      fi
+      	# Check Linux distribution
+      	colorecho "$YELLOW" "arch-chroot is not found, trying to install arch-install-scripts ..."
+      	if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+        	# Debian/Ubuntu-based
+        	sudo apt-get update
+        	sudo apt-get install -y arch-install-scripts
+        elif [ -x "$(command -v apk)" ]; then
+            # Alphine-based
+            apk add arch-install-scripts
+      	elif [ -f /etc/arch-release ]; then
+        	# Arch Linux
+        	sudo pacman -S arch-install-scripts --noconfirm
+      	else
+        	colorecho "$RED" "Error : arch-install-scripts is not installed."
+        	exit 1
+      	fi
+    fi
+
+    # Check if bsdtar is installed
+    if ! [ -x "$(command -v bsdtar)" ]; then
+        # Check Linux distribution
+        colorecho "$YELLOW" "bsdtar command not found, trying to install..."
+        if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+            # Debian/Ubuntu-based
+            sudo apt-get update
+            sudo apt-get install -y libarchive-tools
+        elif [ -x "$(command -v apk)" ]; then
+            # Alphine-based
+            apk add libarchive-tools
+      	elif [ -f /etc/arch-release ]; then
+        	# Arch Linux
+        	sudo pacman -S libarchive --noconfirm
+        else
+            colorecho "$RED" "Error : We cant find or install bsdtar on your system. Exiting..."
+            exit 1
+        fi
     fi
 
     # Create directory and get rootfs
@@ -111,26 +135,24 @@ colorecho() {
     if [ "$run_post_install" = 1 ] && [[ "$rootfs_url" = *"aarch64"* ]]; then
         colorecho "$GREEN" "Running Post Install Setup ..."
         sudo arch-chroot $rootfs_dir /bin/bash <<END
-    echo "Enabling and Updating Time Sync ..."
-    systemctl enable systemd-timesyncd
-    sleep 1
-    timedatectl set-ntp false
-    timedatectl set-ntp true
-
     echo "Adding root to wheel group ..."
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
+    # Disable CheckSpace to prevent chroot issues
+    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
+    # Speed up pacman downloads
+    sed -i "s|#ParallelDownloads = 5|ParallelDownloads = 100|" /etc/pacman.conf
+    # Setup Pacman Keys
     echo "Setting up alarm pacman key ..."
     pacman-key --init
     pacman-key --populate archlinuxarm
 
-    echo "Installing sudo ..."
-    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
-    pacman -Sy sudo --noconfirm
+    echo "Install sudo and Perform Full System Upgrade ..."
+    pacman -Syu sudo --needed --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
-    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/0.0.6-dev/acu"
+    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/main/acu"
     chmod +x /usr/bin/acu
     
     echo "Removing default alarm account"
@@ -144,26 +166,24 @@ END
     elif [ "$run_post_install" = 1 ]; then
         colorecho "$GREEN" "Running Post Install Setup ..."
         sudo arch-chroot $rootfs_dir /bin/bash <<END
-    echo "Enabling and Updating Time Sync ..."
-    systemctl enable systemd-timesyncd
-    sleep 1
-    timedatectl set-ntp false
-    timedatectl set-ntp true
-
     echo "Adding root to wheel group ..."
     echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
     usermod -aG wheel root
 
+    # Disable CheckSpace to prevent chroot issues
+    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
+    # Speed up pacman downloads
+    sed -i "s|#ParallelDownloads = 5|ParallelDownloads = 100|" /etc/pacman.conf
+    # Setup Pacman Keys
     echo "Setting up pacman key ..."
     pacman-key --init
     pacman-key --populate archlinux
 
-    echo "Installing sudo ..."
-    sed -i "s|CheckSpace|#CheckSpace|" /etc/pacman.conf
-    pacman -Sy sudo --noconfirm
+    echo "Install sudo and Perform Full System Upgrade ..."
+    pacman -Syu sudo --needed --noconfirm
 
     echo "Installing ACU (Configuration Utility) ..."
-    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/0.0.6-dev/acu"
+    curl -o /usr/bin/acu -L "https://raw.githubusercontent.com/kwankiu/acu/main/acu"
     chmod +x /usr/bin/acu
     
     echo "Setting up user account ..."
@@ -176,11 +196,11 @@ END
     colorecho "$GREEN" "Starting chroot as user: $rootfs_user ..."
 
     if [ -z "$1" ] || [[ "$1" = "-"* ]]; then
-        sudo arch-chroot $rootfs_dir su $rootfs_user
+        sudo arch-chroot -u $rootfs_user $rootfs_dir
     else
         sudo cp -r $1 $rootfs_dir/usr/bin/script.sh
         sudo chmod +x $rootfs_dir/usr/bin/script.sh
-        sudo arch-chroot $rootfs_dir su $rootfs_user /bin/bash <<END
+        sudo arch-chroot -u $rootfs_user $rootfs_dir /bin/bash <<END
     /usr/bin/script.sh
 END
     fi

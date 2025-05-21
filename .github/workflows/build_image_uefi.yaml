@@ -25,13 +25,14 @@ jobs:
           # Generic
           - generic
           # Asahi (Apple Silicon)
-          #- asahi
+          - asahi
           ## Raspberry Pi UEFI ##
           #- raspberrypi
           ## RK3588-EDK2 ##
           # Radxa
           - radxa-rock-5a
           - radxa-rock-5b
+          - radxa-rock-5bplus
           - radxa-rock-5c
           - radxa-rock-5-itx
           - radxa-cm5
@@ -41,9 +42,11 @@ jobs:
           # Khadas
           - khadas-edge2
           # Nano Pi
-          - friendlyelec-nanopc-t6
-          - friendlyelec-nanopi-r6c
-          - friendlyelec-nanopi-r6s
+          - nanopc-t6
+          - nanopi-r6c
+          - nanopi-r6s
+          #- nanopi-m6
+          - nanopc-cm3588-nas
           # Firefly
           - firefly-roc-rk3588s-pc
           - firefly-itx-3588j
@@ -55,7 +58,8 @@ jobs:
           - mekotronics-r58x
           - mekotronics-r58-mini
           - hinlink-h88k
-          #- fydetab-duo #rockchip-rk3588s-tablet-12c-linux
+          - fydetab-duo
+          #- buzztv-powerstation-6
           # Add more models as needed
 
     steps:
@@ -68,42 +72,36 @@ jobs:
           for model in ${{ matrix.model_name }}; do
             echo "Building image for $model"
             case $model in
-              radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | indiedroid-*)
-                if [[ "$model" == "orangepi"* ]] || [[ "$model" == "indiedroid"* ]]; then
-                  bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.11.2/${model}_UEFI_Release_v0.11.2.img"
-                elif [[ "$model" == "radxa-rock-5c" ]]; then
-                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/rock-5c_UEFI_Debug_c166f5a.img"
-                elif [[ "$model" == "radxa-cm5" ]]; then
-                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/radxa-cm5_UEFI_Debug_c166f5a.img"
+              radxa-* | khadas-* | mixtile-* | mekotronics-* | stationpc-* | hinlink-* | firefly-* | orangepi-* | nanopi-* | nanopc-* | indiedroid-*)
+                if [[ "$model" == "orangepi"* ]] || [[ "$model" == "nanopi"* ]] || [[ "$model" == "nanopc"* ]] || [[ "$model" == "indiedroid"* ]] || [[ "$model" == "radxa-cm"* ]]; then
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.1/${model}_UEFI_Release_v1.1.img"
                 else
-                  bootfw_url="https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.11.2/${model#*-}_UEFI_Release_v0.11.2.img"
+                  bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.1/${model#*-}_UEFI_Release_v1.1.img"
                 fi
-                bootfw="$(basename $bootfw_url)"
-                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git -b --bootpartstart=9MiB --bootfirmware=firmware.img"
                 ;;
               fydetab-*)
-                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/debug/fydetab-duo_UEFI_Debug_fc0a209.img"
-                bootfw="$(basename $bootfw_url)"
-                args="--kernel=linux-aarch64-rockchip-bsp5.10-fydetab --bootfirmware=${bootfw} -b --bootpartstart=9MiB"
+                bootfw_url="https://github.com/kwankiu/edk2-rk3588/releases/download/v1.1/${model}_UEFI_Release_v1.1.img"
+                args="--kernel=linux-aarch64-rockchip-bsp6.1-fydetab-git --addpkg=linux-firmware-joshua-git,firmware-fydetab -b --bootpartstart=9MiB --bootfirmware=firmware.img"
                 ;;
               asahi)
-                args="--kernel=linux-asahi -b"
+                args="--kernel=linux-asahi --addpkg=linux-asahi-loader -e --bootpartstart=1MB --bootpartend=201MB"
                 ;;
               *)
                 # Generic
-                args="--kernel=linux -b"
+                args="--kernel=linux -b --vmimages=qcow2,vmdk"
                 ;;
             esac
           done
           echo "ARGS=$args" >> $GITHUB_ENV
           echo "BOOTFW_URL=$bootfw_url" >> $GITHUB_ENV
   
-      - name: Download Bootloader
+      - name: Download UEFI Firmware
         if: ${{ env.BOOTFW_URL }}
         env:
           bootfw_url: ${{ env.BOOTFW_URL }}
         run: |
-          curl -LJO ${bootfw_url}
+          curl -L ${bootfw_url} -o firmware.img
           ls -l
 
       - name: Build Image
@@ -111,9 +109,9 @@ jobs:
           args: ${{ env.ARGS }}
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/kwankiu/archlinux-installer/main/create-installation-media) --model=${{ matrix.model_name }} --image=${{ matrix.model_name }}-archlinux-installer-uefi.img --bootloader=grub -c $args
-          cp -r out/*-archlinux-*.img.xz .
+          cp -r out/*-archlinux-*.*.xz .
 
-      - name: Add meta data to Image (OOWOW)
+      - name: Add xze metadata to Image (OOWOW)
         if: startsWith(matrix.model_name, 'khadas')
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/khadas/krescue/master/tools/xze) "${{ matrix.model_name }}-archlinux-installer-uefi.img.xz" \
@@ -124,7 +122,7 @@ jobs:
              match=BOARD=$(echo "${{ matrix.model_name }}" | awk -F'-' '{print toupper(substr($2,1,1)) substr($2,2)}') \
              link=https://github.com/kwankiu/archlinux-installer/wiki \
              duration=250 \
-             desc="Community-built Arch Linux Installer for ARM (Aarch64), UEFI Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
+             desc="Community-built Arch Linux Installer for ARM (Aarch64), UEFI Image built for $(echo "${{ matrix.model_name }}" | sed 's/-/ /g; s/\b\(.\)/\u\1/g') on $(LANG=C TZ= date)"
           # Rename image name to begin with the board model (required to prevent OOWOW hiding the image)
           mv ${{ matrix.model_name }}-archlinux-installer-uefi.img.xz $(echo "${{ matrix.model_name }}" | awk -F'-' '{print substr($2,1)}')-khadas-archlinux-installer-uefi.img.xz
         continue-on-error: true
@@ -132,7 +130,7 @@ jobs:
       - name: Upload to GitHub Release
         uses: ncipollo/release-action@v1
         with:
-            artifacts: "*-archlinux-*.img.xz"
+            artifacts: "*-archlinux-*.*.xz"
             makeLatest: false
             allowUpdates: true
             omitBody: true

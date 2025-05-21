@@ -74,8 +74,8 @@ postinstall:
           - rockchip-rk3588s-orangepi*
           - rockchip-rk3588-orangepi*
           - rockchip-rk3588-armsom*
-          - fydeos-fydetab*
           - rockchip-rk3588s-tablet-12c-linux
+          - rockchip-rk3588s-tablet-fydetab-linux
         commands: |
           #1 Switch Network Manager to iwd
           echo "Switch WiFi backend to iwd ..."
@@ -90,6 +90,20 @@ postinstall:
           echo -e '[Unit]\nDescription=AP6275P Bluetooth service\nAfter=bluetooth.target\n\n[Service]\nType=forking\nExecStartPre=/usr/sbin/rfkill unblock all\nExecStart=/usr/bin/brcm_patchram_plus --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /lib/firmware/ap6275p/BCM4362A2.hcd /dev/ttyS9\nTimeoutSec=0\nRemainAfterExit=yes\n[Install]\nWantedBy=multi-user.target' | sudo tee /usr/lib/systemd/system/bt_ap6275p.service
           sudo systemctl enable bt_ap6275p.service
 
+      # Asahi mkinitpcio conf
+      - package_name: asahi-mkinitcpio-conf
+        pretty_name: Asahi mkinitpcio conf
+        category: Post-Install
+        description: Add asahi hook and modules to mkinitcpio conf
+        compatible:
+          - apple*
+        commands: |
+          echo "Add asahi hook and modules to mkinitcpio conf ..."
+          sudo sed -i 's/MODULES=()/MODULES=(ext4 btrfs usbhid xhci_hcd)/g' /etc/mkinitcpio.conf
+          sudo sed -i 's/HOOKS=(base /HOOKS=(base asahi /g' /etc/mkinitcpio.conf
+          echo "Rebuilding initramfs ..."
+          sudo mkinitcpio -P
+
       # RK3588 USB2 HOST
       - package_name: rk3588-usb2-host
         pretty_name: RK3588 USB2 Host
@@ -103,5 +117,27 @@ postinstall:
           echo "Enable the USB 2.0 port ..."
           echo -e "[Unit]\nDescription=Enable the USB 2.0 port\n\n[Service]\nExecStart=/usr/bin/sh -c \\"echo host > /sys/kernel/debug/usb/fc000000.usb/mode\\"\nType=oneshot\n\n[Install]\nWantedBy=default.target" | sudo tee /usr/lib/systemd/system/enable-usb2.service
           sudo systemctl enable enable-usb2
+
+      # Enable Panthor DT Overlay
+      - package_name: enable-panthor-overlay
+        pretty_name: Enable Panthor
+        category: Post-Install
+        description: Enable Panthor DT Overlay
+        compatible: null
+        commands: |
+          echo "Add Panthor DT Overlay to boot config ..."
+          acu update-boot-config --dtoverlay=rockchip-rk3588-panthor-gpu.dtbo
+
+      # Grub ALARM Kernel Fixup
+      - package_name: grub-fixup
+        pretty_name: Grub Fixup
+        category: Post-Install
+        description: Grub ALARM Kernel Fixup
+        compatible: null
+        commands: |
+          echo "Installing grub fixup ..."
+          sudo pacman -S misc/grub --noconfirm
+          echo "Updating boot config ..."
+          acu update-boot-config
 
 ########################################################################

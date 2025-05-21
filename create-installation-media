@@ -21,12 +21,14 @@
 # Define main / dev branch
 branch=main
 
-# URL for Kernel and Arch Linux Rootfs
-adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/tags/kernel"
+# Arch Linux Rootfs URL
 rootfs_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
+# Custom Binary Repo URL for building the installer or images
+adrepo_url="https://api.github.com/repos/kwankiu/archlinux-installer/releases/tags/kernel"
+
 # Required ACU version
-acuver=0.1.5
+acuver=0.1.6
 
 ################################################################
 # Tools
@@ -301,40 +303,19 @@ confirm_disk() {
 ################################################################
 # Functions to Get Packages
 
-# Download wifi related packages to $compiled_pkg_folder
-add_wifi_pkg() {
-    pkg_tar=()
-
-    echo -e "y" | archarm_packages wpa_supplicant-2 core
-    pkg_tar+=($(echo -e "n" | archarm_packages wpa_supplicant-2 core | grep .*pkg.*))
-
-    echo -e "y" | archarm_packages dialog core
-    pkg_tar+=($(echo -e "n" | archarm_packages dialog core | grep .*pkg.*))
-
-    echo -e "y" | archarm_packages pcsclite extra
-    pkg_tar+=($(echo -e "n" | archarm_packages pcsclite extra | grep .*pkg.*))
-
-    echo -e "y" | archarm_packages duktape extra
-    pkg_tar+=($(echo -e "n" | archarm_packages duktape extra | grep .*pkg.*))
-
-    echo -e "y" | archarm_packages polkit-1 extra
-    pkg_tar+=($(echo -e "n" | archarm_packages polkit-1 extra | grep .*pkg.*))
-
-    # copy package
-    for pkg in "${pkg_tar[@]}"; do
-        sudo cp -r "$pkg" "${root_mount_dir}${compiled_pkg_dir}"
-    done
-
-    # Clean up
-    sudo rm -rf "${pkg_tar[@]}"
-}
-
 # Download additional packages to $compiled_pkg_folder
 add_pkg() {
-    colorecho "$GREEN" "Downloading $argaddpkg ..."
-    echo -e "y" | ghrel_packages $argaddpkg
+    local pkgtoadd=$1
+    local pkgrepo=$2
+    colorecho "$GREEN" "Downloading $pkgtoadd ..."
 
-    pkg_tar=($(echo -e "n" | ghrel_packages $argaddpkg | grep .*pkg.*))
+    if [ -z "$pkgrepo" ] || [ "$pkgrepo" = "adrepo" ]; then
+        echo -e "y" | ghrel_packages $pkgtoadd
+        pkg_tar=($(echo -e "n" | ghrel_packages $pkgtoadd | grep .*pkg.*))
+    else
+        echo -e "y" | archarm_packages $pkgtoadd $pkgrepo
+        pkg_tar=($(echo -e "n" | archarm_packages $pkgtoadd $pkgrepo | grep .*pkg.*))
+    fi
 
     for pkg in "${pkg_tar[@]}"; do
         sudo cp -r "$pkg" "${root_mount_dir}${compiled_pkg_dir}"
@@ -388,10 +369,10 @@ ghrel_packages() {
         dgpkg=$1
     fi
 
-    ghrel_url=("$adrepo_url")
+    repo_url=("$adrepo_url")
     dgpkg_list=()
 
-    for which_url in "${ghrel_url[@]}"; do
+    for which_url in "${repo_url[@]}"; do
         colorecho "$GREEN" "Fetching $which_url ..."
         dgpkg_list+=($(curl -s "$which_url" | grep -v '.sig' | grep -B 1 ${dgpkg} | grep -oP '"browser_download_url": "\K[^"]+'))
     done
@@ -433,10 +414,10 @@ archarm_packages() {
         dgpkg=$1
     fi
 
-    ghrel_url=("http://mirror.archlinuxarm.org/aarch64/$2")
+    repo_url=("http://mirror.archlinuxarm.org/aarch64/$2")
     dgpkg_list=()
 
-    for which_url in "${ghrel_url[@]}"; do
+    for which_url in "${repo_url[@]}"; do
         colorecho "$GREEN" "Fetching $which_url ..."
         dgpkg_list=$(curl -sL "$which_url" | grep -v '.sig' | grep -o 'href="[^"]*"' | sed 's/href="//;s/"$//' | grep -o "^${dgpkg}.*")
     done
@@ -481,14 +462,17 @@ for arg in "$@"; do
         echo "-i / --image : Create a disk image with default image name (<model>-archlinux-<installer>.<image_format>) at out folder."
         echo "-k / --kernel : Create Arch Linux using default kernel option."
         echo "-b / --bootpart : Create Arch Linux with a seperated boot partition."
+        echo "-e / --esppart : Create Arch Linux with a seperated EFI system partition (ESP)."
+        echo "NOTE THAT --bootpart and --esppart MAY NOT be used together."
         echo "-c / --compress : Compress the Disk Image to .img.xz"
         echo "-m / --mtimg : Skip partitioning and use an image instead. (When this argument is used, --image=<image_name> will become the image to be used)"
         echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
+        echo "--vmimages=<format1,format2,...> : Generate Virtual Machine images, check qemu-img for supported formats, you may specify more than one format separated by comma."
         echo "--size=<image_size> : Set disk image size (default is 4G)."
         echo "--disk=<disk_path> : Create Arch Linux on the specified disk path (or the image mount point when used with -i or --image which is /dev/loop1 by default)."
         echo "--kernel=<kernel_name> : Set kernel package to get from repo."
-        echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot."
-        echo "--adrepourl=<url> : Use a custom repo instead of the default one, it updates the variable adrepo_url ."
+        echo "--addpkg=<package_name> : Get extra packages from repo (same as where it gets kernel packages) that is installed during first boot, you may specify multiple packages seperated by comma."
+        echo "--adrepourl=<url> : Use a custom binary repo instead of the default one, it overrides the default adrepo_url, used for building the installer or images."
         echo "--model=<model> : Set a device model to generate boot config for."
         echo "--bootfirmware=<path> : Flash a boot firmware to the target disk or image. The specified path must be .img file or a directory that contains idbloader.img and uboot.itb"
         echo "--bootloader=<bootloader> : Set which bootloader to use for config, available options are extlinux and grub (default is extlinux)."
@@ -521,6 +505,9 @@ for arg in "$@"; do
         ;;
     --image=*)
         argimg="${arg#*=}"
+        ;;
+    --vmimages=*)
+        IFS=',' read -r -a argvmimgs <<< "${arg#*=}"
         ;;
     --disk=*)
         argdisk="${arg#*=}"
@@ -566,6 +553,9 @@ for arg in "$@"; do
         ;;
     -b | --bootpart)
         argbootpt=1
+        ;;
+    -e | --esppart)
+        argesppt=1
         ;;
     -c | --compress)
         argxz=1
@@ -743,7 +733,8 @@ fi
 if [ -z "$argkrl" ]; then
     title
     colorecho "$GREEN" "Select a kernel to install:"
-    options=("Linux Aarch64 Mainline Kernel" "(WIP) Install other Kernel from repo")
+    options=("linux-aarch64 - Linux Aarch64 Mainline Kernel")
+    options+=("Enter a kernel package (from adrepo)")
     select_option "${options[@]}"
     answer=$?
 else
@@ -770,6 +761,11 @@ root_mount_dir=$(mktemp -d) #create tmp dir for rootfs partition
 # if boot part argument is set, make a boot partition, else we will use the /boot of rootfs
 if [ "$argbootpt" = 1 ]; then
     boot_mount_dir=$(mktemp -d) #create tmp dir for boot partition
+fi
+
+# if esp part argument is set, make a esp partition, else we will use the /boot/EFI of rootfs
+if [ "$argesppt" = 1 ]; then
+    esp_mount_dir=$(mktemp -d) #create tmp dir for esp partition
 fi
 
 # if $argmountimg is not set, format and partition the image/disk, else use the specified image as base
@@ -810,6 +806,15 @@ if [ -z "$argmountimg" ]; then
             colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
         fi
 
+        # Trust Firmware, needed for platforms like rockchip rk33xx
+        if [ -f "$argbootfw/trust.img" ]; then
+            sudo dd if="$argbootfw/trust.img" of="$drive" seek=24576 conv=notrunc
+            #if not specified, change boot part start sector to 24MiB
+            if [ -z "$argbootptst" ]; then
+                argbootptst="24MiB"
+            fi
+        fi
+
         sync
     fi
 
@@ -841,6 +846,10 @@ if [ -z "$argmountimg" ]; then
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
         sudo parted $drive set $first_part boot on
         sudo parted $drive set $first_part esp on
+    elif [ "$argesppt" = 1 ]; then
+        sudo parted $drive mkpart primary fat32 $argbootptst $argbootpted
+        sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
+        sudo parted $drive set $first_part esp on    
     else
         sudo parted $drive mkpart config fat32 $argbootptst $argbootpted
         sudo parted $drive mkpart rootfs ext4 $argbootpted 100%
@@ -881,6 +890,10 @@ if [ "$argbootpt" = 1 ]; then
     sudo mount $boot_partition $boot_mount_dir
 fi
 
+if [ "$argesppt" = 1 ]; then
+    sudo mount $boot_partition $esp_mount_dir
+fi
+
 # Download and extract the latest ArchLinux tarball
 colorecho "$GREEN" "Downloading Arch Linux rootfs ..."
 curl -LJO $rootfs_url
@@ -891,6 +904,15 @@ sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
 # Copy kernel files
 if [ "$argkrl" = "linux" ]; then
 
+    # Install / Update to Latest Kernel
+    colorecho "$GREEN" "Installing latest linux-aarch64 ..."
+    sudo arch-chroot $root_mount_dir /bin/bash <<END
+    pacman-key --init
+    pacman-key --populate archlinuxarm
+    pacman -Sy linux-aarch64 linux-aarch64-headers linux-firmware --needed --noconfirm
+    yes | pacman -Scc
+END
+
     if [ "$argbootpt" = 1 ]; then
         # Copy contents to boot partition
         colorecho "$GREEN" "Copying Boot Partition ..."
@@ -899,8 +921,8 @@ if [ "$argkrl" = "linux" ]; then
     fi
 
 else
-
-    sudo rm -rf $root_mount_dir/boot/*
+    # Remove default kernel
+    sudo rm -rf $root_mount_dir/boot/* $root_mount_dir/etc/mkinitcpio.d/*
 
     if [ "$argbootpt" = 1 ]; then
         # Copy contents to boot partition
@@ -949,10 +971,16 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
     if [ "$argbootld" = "grub" ]; then
     # GRUB
         colorecho "$GREEN" "Setting up grub ..."
-        if [ "$argbootpt" = 1 ]; then
-            # Mount boot partition
-            colorecho "$GREEN" "Mounting /boot into chroot ..."
-            sudo mount $boot_partition $root_mount_dir/boot
+        if [ "$argesppt" = 1 ]; then
+            grubefidir="/boot/efi"
+        else
+            grubefidir="/boot"
+        fi
+        if [ "$argbootpt" = 1 ] || [ "$argesppt" = 1 ]; then
+            # Mount boot/esp partition
+            colorecho "$GREEN" "Mounting $grubefidir into chroot ..."
+            sudo mkdir -p ${root_mount_dir}${grubefidir}
+            sudo mount $boot_partition ${root_mount_dir}${grubefidir}
         fi
         # alarm's linux-aarch64 kernel workaround
         if [ "$argkrl" = "linux" ]; then
@@ -963,15 +991,16 @@ if [ "$config_boot" = 1 ] || [ "$argbootld" = "grub" ]; then
         pacman-key --init
         pacman-key --populate archlinuxarm
         pacman -Sy grub device-mapper efibootmgr glibc --noconfirm
-        grub-install --target=arm64-efi --efi-directory=/boot --removable
+        yes | pacman -Scc
+        echo "Append the following cmdline to grub: $bootcmdline"
+        sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"$bootcmdline\"/" /etc/default/grub
+        grub-install --target=arm64-efi --efi-directory=$grubefidir --removable
         grub-mkconfig -o /boot/grub/grub.cfg
 END
-
-        colorecho "$GREEN" "Un-mounting /boot ..."
-        if [ "$argbootpt" = 1 ]; then
-            sudo umount $root_mount_dir/boot
+        if [ "$argbootpt" = 1 ] || [ "$argesppt" = 1 ]; then
+            colorecho "$GREEN" "Un-mounting ${grubefidir} ..."
+            sudo umount ${root_mount_dir}${grubefidir}
         fi
-
     elif [ -z "$argbootld" ] || [ "$argbootld" = "extlinux" ]; then
     # EXTLINUX
         colorecho "$GREEN" "Generating new extlinux.conf ..."
@@ -994,7 +1023,7 @@ END
 
         if [ -n "$bootdtb" ] && [ "$bootdtb" != "null" ]; then
             if [[ "$bootdtb" == *".dtb" ]]; then
-                echo "    ftd $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
+                echo "    fdt $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
             else
                 echo "    devicetreedir $bootdtb" | sudo tee -a "$boot_mount_dir/extlinux/extlinux.conf" >/dev/null
             fi
@@ -1009,6 +1038,7 @@ END
 
         if [ ! "$argbootpt" = 1 ]; then
             sudo sed -i "s| /vmlinuz| /boot/vmlinuz|" $boot_mount_dir/extlinux/extlinux.conf
+            sudo sed -i "s| /Image| /boot/Image|" $boot_mount_dir/extlinux/extlinux.conf
             sudo sed -i "s| /initramfs| /boot/initramfs|" $boot_mount_dir/extlinux/extlinux.conf
             sudo sed -i "s| /initrd| /boot/initrd|" $boot_mount_dir/extlinux/extlinux.conf
             sudo sed -i "s| /dtbs| /boot/dtbs|" $boot_mount_dir/extlinux/extlinux.conf
@@ -1046,6 +1076,7 @@ if [ "$arginstaller" == "installer" ] || [ -z "$arginstaller" ]; then
     curl -LJO https://raw.githubusercontent.com/kwankiu/archlinux-installer/$branch/config/acu_config.yaml
     sudo mkdir -p "$root_mount_dir/usr/lib/installer/.acu/config"
     sudo cp -r acu_config.yaml "$root_mount_dir/usr/lib/installer/.acu/config/config.yaml"
+    sudo rm -rf acu_config.yaml
 fi
 
 # Copy Installer
@@ -1071,11 +1102,24 @@ if [ -n "$argscripts" ]; then
     sudo cp -r "$argscripts" "$root_mount_dir/usr/bin/script.sh"
 fi
 
-# Download required package before internet (wifi or ethernet drivers, firmware, wifi-menu, etc)
+# Download drivers and installer deps 
 sudo mkdir -p "${root_mount_dir}${compiled_pkg_dir}"
-add_wifi_pkg
-if [ ! -z "$argaddpkg" ]; then
-    add_pkg
+add_pkg wpa_supplicant-2 core
+add_pkg dialog core
+add_pkg pcsclite extra
+add_pkg duktape extra
+add_pkg polkit-1 extra
+add_pkg glibc-2 core
+add_pkg "sudo" core
+add_pkg rate-mirrors
+if [ -n "$argaddpkg" ]; then
+    # Split the input by commas
+    IFS=',' read -r -a argaddpkg <<< "$argaddpkg"
+    # Loop through each package
+    for pkg in "${argaddpkg[@]}"; do
+        pkg=$(echo "$pkg" | xargs) # Trim whitespace
+        add_pkg "$pkg"
+    done
 fi
 ls "${root_mount_dir}${compiled_pkg_dir}" #DEBUG
 # Remove the temporary directory
@@ -1104,6 +1148,11 @@ if [ "$argbootpt" = 1 ]; then
     sudo rm -rf $boot_mount_dir
 fi
 
+if [ "$argesppt" = 1 ]; then
+    sudo umount $esp_mount_dir
+    sudo rm -rf $esp_mount_dir
+fi
+
 # Clean up
 colorecho "$YELLOW" "Cleaning up temporary files ..."
 sudo rm -rf $root_mount_dir ArchLinuxARM-aarch64-latest.tar.gz growpart
@@ -1113,6 +1162,44 @@ title
 if [ ! -z "$is_img" ]; then
     sudo losetup --detach $drive
     colorecho "$YELLOW" "Tips: Check if the image loop device is unmounted successfully."
+    # Generate VM images
+    if [ -n "$argvmimgs" ]; then
+        colorecho "$GREEN" "Generate Virtual Machine images (this may take some time, grab a coffee) ..."
+        # Check if qemu-img is available
+        if ! [ -x "$(command -v qemu-img)" ]; then
+            # Check Linux distribution
+            colorecho "$YELLOW" "qemu-img is not found, trying to install..."
+            if [ -f /etc/lsb-release ] || [ -x "$(command -v apt-get)" ]; then
+                # Debian/Ubuntu-based
+                sudo apt-get update
+                sudo apt-get install -y qemu-utils
+            elif [ -f /etc/redhat-release ]; then
+                # Red Hat-based
+                sudo yum update
+                sudo yum install -y qemu-img
+            elif [ -f /etc/arch-release ]; then
+                # Arch Linux
+                sudo pacman -S qemu-img --noconfirm
+            elif [ -x "$(command -v apk)" ]; then
+                # Alphine-based
+                apk add qemu-img
+            else
+                colorecho "$RED" "Error : We cant find or install qemu-img on your system. Exiting..."
+                exit 1
+            fi
+        fi
+        # Convert the image using qemu-img
+        for vmimg in "${argvmimgs[@]}"; do
+            colorecho "$GREEN" "Generating ${is_img%.img}.$vmimg ..."
+            qemu-img convert -f raw -O $vmimg ${is_img%.img}.img ${is_img%.img}.$vmimg
+            # Compress VM Images
+            if [ "$argxz" = 1 ]; then
+                colorecho "$GREEN" "Compressing ${is_img%.img}.$vmimg (this may take some time, grab a coffee) ..."
+                sudo xz -T 0 ${is_img%.img}.$vmimg
+            fi
+        done
+    fi
+    # Compress Images
     if [ "$argxz" = 1 ]; then
         colorecho "$GREEN" "Compressing Image (this may take some time, grab a coffee) ..."
         sudo xz -T 0 $is_img
