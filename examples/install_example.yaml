@@ -25,6 +25,7 @@ install:
 # System / Packages
   hostname: alarm
   parallel_downloads: 50
+  sort_mirrors: fastest
   kernel: linux-aarch64
   graphics: mesa
   video: ffmpeg
