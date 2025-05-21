@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 # Installer Branch / Tag
-branch=dev
-release_tag="UEFI-b09-dev"
+branch=main
+release_tag="UEFI-b09"
 
 # Truncation guard
 if true; then
