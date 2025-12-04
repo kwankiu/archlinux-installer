@@ -115,9 +115,9 @@ jobs:
                   # RK3582 Patch
                   uboot_url="https://github.com/kwankiu/archlinux-installer/releases/download/kernel/uboot-radxa-rknext_2017.09-1_arm64.deb"
                 elif [[ "$model" == "radxa-rock-5"* ]] || [[ "$model" == "radxa-rock-2"* ]] || [[ "$model" == "radxa-zero3" ]]; then
-                  uboot_url="https://radxa-repo.github.io/bookworm-test/pool/main/u/u-boot-rk2410/u-boot-rk2410_2017.09-46-575d1a1_arm64.deb"
+                  uboot_url="https://radxa-repo.github.io/bookworm/pool/main/u/u-boot-rk2410/u-boot-rk2410_2017.09-59-b872789_arm64.deb"
                 else
-                  uboot_url="https://github.com/radxa-repo/bullseye/raw/gh-pages/.pool/u-boot-latest_2023.10-9-eed05a18_arm64.deb"
+                  uboot_url="https://radxa-repo.github.io/bookworm/pool/main/u/u-boot-latest/u-boot-latest_2023.10-12-cc60ff40_arm64.deb"
                 fi
                 ;;
               khadas-*)
@@ -128,13 +128,13 @@ jobs:
                 fi
                 # URL to download u-boot for the board
                 if [ "$model" == "khadas-edge2" ]; then
-                    uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.7.3-2017.09_arm64.deb"
+                    uboot_url="https://dl.khadas.com/repos/edge2/pool/main/l/linux-u-boot-edge2-vendor/linux-u-boot-edge2-vendor_1.7.5-2017.09_arm64.deb"
                 elif [ "$model" == "khadas-edge" ]; then
                     uboot_url="https://dl.khadas.com/repos/edge/pool/main/l/linux-u-boot-edge-vendor/linux-u-boot-edge-vendor_0.8.3-2017.09_arm64.deb"
                 elif [ "$model" == "khadas-vim3" ]; then
-                    uboot_url="https://dl.khadas.com/repos/vim3/pool/main/l/linux-u-boot-vim3-vendor/linux-u-boot-vim3-vendor_1.7.3-2015.01-5.15_arm64.deb"
+                    uboot_url="https://dl.khadas.com/repos/vim3/pool/main/l/linux-u-boot-vim3-vendor/linux-u-boot-vim3-vendor_1.7.5-2015.01-5.15_arm64.deb"
                 elif [ "$model" == "khadas-vim4" ]; then
-                    uboot_url="https://dl.khadas.com/repos/vim4/pool/main/l/linux-u-boot-vim4-vendor/linux-u-boot-vim4-vendor_1.7.3-2019.01_arm64.deb"
+                    uboot_url="https://dl.khadas.com/repos/vim4/pool/main/l/linux-u-boot-vim4-vendor/linux-u-boot-vim4-vendor_1.7.5-2019.01_arm64.deb"
                 fi
                 ;;
               orangepi-* | nanopi-* | nanopc-* | armsom-*)
