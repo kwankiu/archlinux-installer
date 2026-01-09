@@ -107,6 +107,8 @@ jobs:
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-radxa --bootfirmware=usr/lib/u-boot/${model#*-}"
                 elif [[ "$model" == "radxa-zero" ]] || [[ "$model" == "radxa-zero-2pro" ]]; then
                   args="--kernel=linux-aarch64-flippy-git --addpkg=linux-firmware-amlogic-ophub-git --bootfirmware=usr/lib/u-boot/${model}"
+                elif [[ "$model" == "radxa-zero3" ]]; then
+                  args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot"
                 else
                   args="--kernel=linux-aarch64-rockchip-bsp6.1-joshua-git --addpkg=linux-firmware-joshua-git --bootfirmware=usr/lib/u-boot/${model}"
                 fi
@@ -114,6 +116,10 @@ jobs:
                 if [[ "$model" == "radxa-rock-5c" ]] || [[ "$model" == "radxa-cm5"* ]] || [[ "$model" == "radxa-nx5"* ]]; then
                   # RK3582 Patch
                   uboot_url="https://github.com/kwankiu/archlinux-installer/releases/download/kernel/uboot-radxa-rknext_2017.09-1_arm64.deb"
+                elif [[ "$model" == "radxa-zero" ]] || [[ "$model" == "radxa-zero-2pro" ]]; then
+                  uboot_url="https://radxa-repo.github.io/bookworm/pool/main/u/u-boot-latest/u-boot-latest_2025.10-1_all.deb"
+                elif [[ "$model" == "radxa-zero3" ]]; then
+                  uboot_url="https://launchpad.net/~jjriek/+archive/ubuntu/rockchip/+files/u-boot-${model}_2024.01-4_arm64.deb"
                 else
                   uboot_url="https://radxa-repo.github.io/bookworm/pool/main/u/u-boot-rk2410/u-boot-rk2410_2017.09-60-4d45230_arm64.deb"
                 fi
