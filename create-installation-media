@@ -791,22 +791,33 @@ if [ -z "$argmountimg" ]; then
             sudo dd if="$argbootfw" of="$drive" conv=notrunc
             echo -e "OK\nFix" | sudo parted $drive print ---pretend-input-tty
         elif [ -f "$argbootfw/idbloader.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
+            # Rockchip 1
             sudo dd if="$argbootfw/idbloader.img" of="$drive" seek=64 conv=notrunc
             sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootfw/u-boot-rockchip.bin" ]; then
+            # Rockchip 2
+            sudo dd if="$argbootfw/u-boot-rockchip.bin" of="$drive" seek=1 bs=32k conv=notrunc,fsync
         elif [ -f "$argbootfw/idblock.bin" ] && [ -f "$argbootfw/uboot.img" ]; then
+            # Rockchip RK35XX Khadas
             sudo dd if="$argbootfw/idblock.bin" of="$drive" seek=64 conv=notrunc
             sudo dd if="$argbootfw/uboot.img" of="$drive" seek=16384 conv=notrunc
         elif [ -f "$argbootfw/idbloader.img" ] && [ -f "$argbootfw/uboot.img" ]; then
+            # Rockchip RK33XX Khadas
             sudo dd if="$argbootfw/idbloader.img" of="$drive" seek=64 conv=notrunc
             sudo dd if="$argbootfw/uboot.img" of="$drive" seek=16384 conv=notrunc
         elif [ -f "$argbootfw/tpl-spl.img" ] && [ -f "$argbootfw/u-boot.itb" ]; then
+            # Allwinner
             sudo dd if="$argbootfw/tpl-spl.img" of="$drive" seek=64 conv=notrunc
             sudo dd if="$argbootfw/u-boot.itb" of="$drive" seek=16384 conv=notrunc
+        elif [ -f "$argbootfw/u-boot.bin.sd.bin" ]; then
+            # Amlogic
+            sudo dd if="$argbootfw/u-boot.bin.sd.bin" of="$drive" bs=1 count=444 conv=notrunc,fsync
+            sudo dd if="$argbootfw/u-boot.bin.sd.bin" of="$drive" bs=512 skip=1 seek=1 conv=notrunc,fsync
         else
             colorecho "$RED" "Error: Required u-boot files does not exist. Skipped."
         fi
 
-        # Trust Firmware, needed for platforms like rockchip rk33xx
+        # Trust Firmware, needed for platforms such as Rockchip RK33XX
         if [ -f "$argbootfw/trust.img" ]; then
             sudo dd if="$argbootfw/trust.img" of="$drive" seek=24576 conv=notrunc
             #if not specified, change boot part start sector to 24MiB
