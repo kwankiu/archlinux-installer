@@ -641,7 +641,7 @@ internet_status() {
                 internet_found_at="$server"
                 internet_available=1 # internet connected
                 break
-            elif ip link show | grep "state UP"; then
+            elif ip link show | grep -q "state UP"; then
                 internet_available=2 # network connected but no internet access
             else
                 internet_available=0 # no connection
