@@ -894,20 +894,68 @@ advanced_menu() {
         menu_header="Russian roulette"
         if confirm "Let's play a mini game - Russian roulette?"; then
             alert "Welcome to the Arch Linux Russian Roulette Challenge!"
-            sleep 2
-            alert "Are you feeling like a true Arch Linux warrior? Let's find out!"
-            sleep 2
-            info "Ready?"
-            local chambers=6
-            local bullet_chamber=$((RANDOM % chambers + 1))
-            local shot_chamber=$((RANDOM % chambers + 1))
-            info "The Arch Linux revolver has $chambers chambers. One of them contains a bullet. \n Press OK to spin the cylinder and take your shot..."
-            if [ $shot_chamber -eq $bullet_chamber ]; then
-                info "BANG Oh no, the bullet has struck! Better luck next time, brave Arch user."
-                info "Performing sudo rm -rf / ..."
-                info "Hey, relax! Just kidding lol ..."
-            else
-                info "click Phew, you've survived this round! Praise the Arch gods!"
+            sleep 1
+            
+            # Initialize 6 chambers
+            local total_chambers=6
+            # Randomly select the lethal chamber (1 to 6)
+            local bullet=$((RANDOM % total_chambers + 1))
+            # Track the current chamber being fired
+            local current=1
+            local game_over=0
+
+            info "The revolver is loaded with 1 bullet and 6 chambers."
+
+            # Loop until all chambers are fired or someone gets hit
+            while [ $current -le $total_chambers ]; do
+                # --- Player's Turn ---
+                # Calculate remaining chances to show the "popping" effect
+                local remaining=$((total_chambers - current + 1))
+                
+                if confirm "Chamber $current fired ($remaining left). Your turn! Pull the trigger?"; then
+                    if [ $current -eq $bullet ]; then
+                        info "BANG Oh no, the bullet has struck! Better luck next time, brave Arch user."
+                        info "Performing sudo rm -rf / ..."
+                        info "Hey, relax! Just kidding lol ..."
+                        game_over=1
+                        break
+                    else
+                        info "click... Phew! You survived this round."
+                    fi
+                else
+                    info "You coward! You ran away. Computer wins!"
+                    game_over=1
+                    break
+                fi
+
+                # Pop the chamber and move to the next
+                ((current++))
+                # Check if we ran out of chambers after player's turn
+                [ $current -gt $total_chambers ] && break
+                sleep 1
+
+                # --- Computer's Turn ---
+                remaining=$((total_chambers - current + 1))
+                info "Chamber $current fired ($remaining left). Computer's turn..."
+                sleep 1.5
+
+                if [ $current -eq $bullet ]; then
+                    info "BANG! The computer hit the bullet! You are the ultimate Arch survivor!"
+                    info "Sorry, your computer is dead, you won't be able to install Arch Linux."
+                    info "Hey, relax! Just kidding lol ..."
+                    game_over=1
+                    break
+                else
+                    info "click... The computer lives to see another day."
+                fi
+
+                # Pop the chamber and move to the next
+                ((current++))
+                sleep 1
+            done
+            
+            if [ $game_over -eq 0 ]; then
+                info "The gun was empty? All chambers cleared. You both survive!"
             fi
         fi
         advanced_menu
