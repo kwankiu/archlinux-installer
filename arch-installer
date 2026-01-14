@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=26011501
+installerver=26011502
 
 # Required ACU version
 acuver=0.1.6
@@ -1255,8 +1255,8 @@ install_part1() {
     echo "installer $installation_file --part2" | tee -a /home/$install_username/.bashrc
 
     # Reboot to continue as user
-    alert "System will reboot now."
-    if ! systemctl soft-reboot 2>/dev/null; then
+    alert "System will reboot now (it could take 2-5 minutes, unplug or force reboot your device if it does not reboot automatically)."
+    if ! systemctl reboot 2>/dev/null; then
         if ! reboot --force; then
             alert "Unable to reboot automatically, please reboot your device manually."
         fi
