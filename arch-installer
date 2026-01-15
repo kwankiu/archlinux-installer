@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=26011502
+installerver=26011503
 
 # Required ACU version
 acuver=0.1.6
@@ -1157,6 +1157,8 @@ install_part1() {
     for ((i = 0; i < ${#install_repo_list[@]}; i++)); do
         if [ "${install_repo_list[i]}" = "7Ji" ]; then
             acu rem set 7Ji https://github.com/7Ji/archrepo/releases/download/\$arch pacman
+        elif [ "${install_repo_list[i]}" = "boogie" ]; then
+            acu rem set boogie https://github.com/hbiyik/agrrepo/releases/download/alarm-\$arch pacman
         elif [ "${install_repo_list[i]}" = "rockchip" ]; then
             acu rem set rockchip https://github.com/1usOS/PKGBUILDs/releases/download/\$arch pacman
         elif [ "${install_repo_list[i]}" = "asahi" ]; then

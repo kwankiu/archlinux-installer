@@ -261,92 +261,6 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
-## Maintained by: 7Ji-PKGBUILDs / Radxa ##
-
-      # Radxa Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-bsp5.10-radxa-git
-        description: Radxa Linux Rockchip BSP Kernel
-        version: 5.10-rkr4.1
-        repo:
-          - 7Ji
-        compatible:
-          - radxa-rock-2*
-          - radxa-rock-3*
-          - radxa-rock-4*
-          - radxa-rock-5*
-          - radxa-cm3*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero3*
-        recommended: null
-        experimental: null
-        firmware:
-          - 8852bu-dkms-git
-          - 8852be-dkms-git
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
-      # Radxa Rockchip 6.1 Kernel
-      - base: linux-aarch64-rockchip-bsp6.1-radxa
-        description: Radxa Linux Rockchip BSP Kernel
-        version: 6.1-rkr1
-        repo:
-          - rockchip
-        compatible:
-          - radxa-rock-2*
-          - radxa-rock-3*
-          - radxa-rock-4*
-          - radxa-rock-5*
-          - radxa-cm3*
-          - radxa-cm5*
-          - radxa-nx5*
-          - radxa-zero3*
-        recommended: null
-        experimental: null
-        firmware:
-          - 8852bu-dkms-git
-          - 8852be-dkms-git
-        graphics:
-          - mesa
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
-## Maintained by: 7Ji-PKGBUILDs / Orange Pi ##
-
-      # Orange Pi Rockchip 5.10 Kernel
-      - base: linux-aarch64-rockchip-rk3588-bsp5.10-orangepi-git
-        description: OrangePi Linux Rockchip BSP Kernel
-        version: 5.10.160
-        repo:
-          - 7Ji
-        compatible:
-          - xunlong-orangepi-5*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
-        recommended:
-          - xunlong-orangepi-5*
-          - rockchip-rk3588s-orangepi*
-          - rockchip-rk3588-orangepi*
-        experimental: null
-        firmware:
-          - linux-firmware-orangepi-git
-        graphics:
-          - mesa-panfork-git
-          - mali-valhall-g610-firmware
-          - libmali-valhall-g610-x11-wayland-gbm
-        video:
-          - pipewire-jack
-          - ffmpeg-mpp-git
-        additional: null
-
 ## Maintained by: Samuel (kwankiu) / Fyde Innovations ##
 
       # FydeTab Rockchip BSP6.1 Kernel
@@ -354,7 +268,7 @@ kernel:
         description: FydeTab's fork of Joshua Linux Rockchip BSP Kernel
         version: 6.1-rkr3
         repo:
-          - 7Ji
+          - rockchip
         compatible:
           - rockchip-rk3588s-tablet-12c-linux
           - rockchip-rk3588s-tablet-fydetab-linux
@@ -429,6 +343,68 @@ kernel:
         experimental: null
         firmware:
           - linux-firmware-armbian-git
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg-mpp-git
+        additional: null
+
+## Maintained by: Boogie (hbiyik) ##
+
+      # Radxa Rockchip 5.10 Kernel
+      - base: linux-aarch64-rockchip-bsp5.10-radxa-git
+        description: Radxa Linux Rockchip BSP Kernel
+        version: 5.10-rkr4.1
+        repo:
+          - boogie
+        compatible:
+          - radxa-rock-2*
+          - radxa-rock-3*
+          - radxa-rock-4*
+          - radxa-rock-5*
+          - radxa-cm3*
+          - radxa-cm5*
+          - radxa-nx5*
+          - radxa-zero3*
+        recommended: null
+        experimental: null
+        firmware:
+          - 8852bu-dkms-git
+          - 8852be-dkms-git
+        graphics:
+          - mesa-panfork-git
+          - mali-valhall-g610-firmware
+          - libmali-valhall-g610-x11-wayland-gbm
+        video:
+          - pipewire-jack
+          - ffmpeg-mpp-git
+        additional: null
+
+      # Collabora Rockchip Kernel
+      - base: linux-aarch64-rk3588-collabora-git
+        description: Collabora RK3588 Enablement Linux Kernel
+        version: 6.18.y
+        repo:
+          - boogie
+        compatible:
+          - radxa-rock-3*
+          - radxa-rock-4*
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-nx5*
+          - radxa-zero3*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
+          - friendlyelec-nanopi-r6*
+          - friendlyelec-nanopc-*
+          - friendlyelec-cm*
+        recommended: null
+        experimental: null
+        firmware: null
         graphics:
           - mesa
         video:
