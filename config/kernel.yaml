@@ -436,6 +436,39 @@ kernel:
           - ffmpeg-mpp-git
         additional: null
 
+## Maintained by: Boogie (hbiyik) ##
+
+      # Collabora Rockchip Kernel
+      - base: linux-aarch64-rk3588-collabora-git
+        description: Collabora RK3588 Enablement Linux Kernel
+        version: 6.18.y
+        repo:
+          - boogie
+        compatible:
+          - radxa-rock-3*
+          - radxa-rock-4*
+          - radxa-rock-5*
+          - radxa-cm5*
+          - radxa-nx5*
+          - radxa-zero3*
+          - khadas-edge*
+          - xunlong-orangepi-5*
+          - rockchip-rk3588-orangepi*
+          - rockchip-rk3588s-orangepi*
+          - rockchip-rk3588-armsom*
+          - friendlyelec-nanopi-r6*
+          - friendlyelec-nanopc-*
+          - friendlyelec-cm*
+        recommended: null
+        experimental: null
+        firmware: null
+        graphics:
+          - mesa
+        video:
+          - pipewire-jack
+          - ffmpeg-mpp-git
+        additional: null
+
 ## Maintained by: 7Ji-PKGBUILDs ##
 
       # Flippy's Kernel for Amlogic
