@@ -19,7 +19,7 @@
 
 # Installer Version
 # format : YYMMDDNN which NN is 01-99 of commits on the same day
-installerver=26013101
+installerver=26031801
 
 # Required ACU version
 acuver=0.1.6
@@ -1335,6 +1335,16 @@ install_part2() {
     fi
 
     ################################################################
+    # Full System Upgrade
+    alert "Performing Full System Upgrade ..."
+    count=1
+    while ! sudo pacman -Syu --noconfirm; do
+        alert "Retrying ($count) Full System Upgrade ..."
+        ((count++))
+        ((count > 3)) && break
+    done
+
+    ################################################################
     # Install Graphics Acceleration
     alert "Installing Graphics Acceleration"
     if [ -n "$install_graphics" ]; then
@@ -1347,16 +1357,6 @@ install_part2() {
     if [ -n "$install_video" ]; then
         acu -y install $install_video
     fi
-
-    ################################################################
-    # Full System Upgrade
-    alert "Performing Full System Upgrade ..."
-    count=1
-    while ! sudo pacman -Syu --noconfirm; do
-        alert "Retrying ($count) Full System Upgrade ..."
-        ((count++))
-        ((count > 3)) && break
-    done
 
     ################################################################
     # Install desktop environment
