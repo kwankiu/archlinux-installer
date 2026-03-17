@@ -466,6 +466,7 @@ for arg in "$@"; do
         echo "NOTE THAT --bootpart and --esppart MAY NOT be used together."
         echo "-c / --compress : Compress the Disk Image to .img.xz"
         echo "-m / --mtimg : Skip partitioning and use an image instead. (When this argument is used, --image=<image_name> will become the image to be used)"
+        echo "-s / --sandbox : Enable sandbox for pacman, we disable it by default on ALARM due to the lack of landlock support by older kernels and installation in chroot."
         echo "--image=<image_name> : Create a disk image with the specified image name at out folder."
         echo "--vmimages=<format1,format2,...> : Generate Virtual Machine images, check qemu-img for supported formats, you may specify more than one format separated by comma."
         echo "--size=<image_size> : Set disk image size (default is 4G)."
@@ -562,6 +563,9 @@ for arg in "$@"; do
         ;;
     -m | --mtimg)
         argmountimg=1
+        ;;
+    -s | --sandbox)
+        argsandbox=1
         ;;
     -*)
         colorecho "$RED" "Invalid command or argument."
@@ -911,6 +915,12 @@ curl -LJO $rootfs_url
 
 colorecho "$GREEN" "Copying Arch Linux rootfs ..."
 sudo bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C $root_mount_dir
+
+# Disable Sandbox by default
+if [ -z "$argsandbox" ]; then
+    sudo sed -i "s/^#DisableSandbox/DisableSandbox/" $root_mount_dir/etc/pacman.conf
+    cat $root_mount_dir/etc/pacman.conf #debug
+fi
 
 # Copy kernel files
 if [ "$argkrl" = "linux" ]; then
